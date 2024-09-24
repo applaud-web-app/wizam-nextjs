@@ -1,4 +1,10 @@
-import { Menu } from "@/types/menu";
+// Define the Menu type inline
+interface Menu {
+  id: number;       // Unique identifier for each menu item
+  title: string;    // Title of the menu item
+  path: string;     // Path or URL for the menu item
+  newTab: boolean;  // Boolean indicating if the link opens in a new tab
+}
 
 const menuData: Menu[] = [
   {
