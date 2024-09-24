@@ -16,13 +16,11 @@ const ForgetPassword = () => {
     setLoading(true);
     setError(null);
 
-    // Add logic here to handle password reset, e.g., API call to send reset link
     try {
-      // Assuming we have an API route to send a reset password email.
-      // await sendPasswordResetEmail(email);
+      // Assume API call here to send a reset password email
       setSubmitted(true);
       setLoading(false);
-    } catch (err) {
+    } catch {
       setError("An error occurred while sending the reset link.");
       setLoading(false);
     }
