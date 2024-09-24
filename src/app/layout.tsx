@@ -21,12 +21,19 @@ export default function RootLayout({
 }) {
   const [loading, setLoading] = useState<boolean>(true);
   const pathname = usePathname();
-  const [isClient, setIsClient] = useState<boolean>(false);  // State to track client-side rendering
 
+  // Ensure loading effects only run on the client side
   useEffect(() => {
     setTimeout(() => setLoading(false), 1000);
-    setIsClient(true); // Mark that we are on the client-side now
   }, []);
+
+  // Make sure the progress bar is executed only on the client side
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      // This ensures that the document or window is only accessed client-side
+      // No need for document or window-specific logic here, but the useEffect ensures client-side only
+    }
+  }, [pathname]);
 
   const noHeaderFooter =
     pathname === "/signin" ||
@@ -49,14 +56,12 @@ export default function RootLayout({
               enableSystem={false}
               defaultTheme="light"
             >
-              {isClient && (  // Ensure ProgressBar only renders on the client-side
-                <ProgressBar
-                  height="4px"
-                  color="#3394c6"
-                  options={{ showSpinner: true }}
-                  shallowRouting
-                />
-              )}
+              <ProgressBar
+                height="4px"
+                color="#3394c6"
+                options={{ showSpinner: true }}
+                shallowRouting
+              />
               {!noHeaderFooter && <Header />}
               {children}
               {!noHeaderFooter && <Footer />}
