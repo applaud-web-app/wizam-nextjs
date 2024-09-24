@@ -1,0 +1,1 @@
+# wizam-nextjs
