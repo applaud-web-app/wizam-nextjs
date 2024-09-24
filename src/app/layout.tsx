@@ -14,8 +14,6 @@ import Header from "@/components/MainHeader";
 import Footer from "@/components/MainFooter";
 import { AppProgressBar as ProgressBar } from 'next-nprogress-bar';
 
-
-
 export default function RootLayout({
   children,
 }: {
@@ -23,9 +21,11 @@ export default function RootLayout({
 }) {
   const [loading, setLoading] = useState<boolean>(true);
   const pathname = usePathname();
+  const [isClient, setIsClient] = useState<boolean>(false);  // State to track client-side rendering
 
   useEffect(() => {
     setTimeout(() => setLoading(false), 1000);
+    setIsClient(true); // Mark that we are on the client-side now
   }, []);
 
   const noHeaderFooter =
@@ -49,21 +49,21 @@ export default function RootLayout({
               enableSystem={false}
               defaultTheme="light"
             >
-              <ProgressBar
+              {isClient && (  // Ensure ProgressBar only renders on the client-side
+                <ProgressBar
                   height="4px"
                   color="#3394c6"
                   options={{ showSpinner: true }}
                   shallowRouting
                 />
+              )}
               {!noHeaderFooter && <Header />}
               {children}
-               
               {!noHeaderFooter && <Footer />}
               <ScrollToTop />
             </ThemeProvider>
           </SessionProvider>
         )}
-        
       </body>
     </html>
   );
