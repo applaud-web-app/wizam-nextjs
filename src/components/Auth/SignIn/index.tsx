@@ -16,12 +16,11 @@ const SignIn = () => {
     e.preventDefault();
     setLoading(true);
     setError(null);
-
-    // Handle sign-in logic, e.g., API call
+  
     try {
-      // Add sign-in logic here
+      // Add your sign-in logic here, e.g., API call
       setLoading(false);
-    } catch (err) {
+    } catch {
       setError("An error occurred during sign-in.");
       setLoading(false);
     }

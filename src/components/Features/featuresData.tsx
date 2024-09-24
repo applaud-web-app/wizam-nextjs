@@ -1,6 +1,13 @@
-import { Feature } from "@/types/feature";
-import { FiBookOpen, FiActivity, FiUserCheck, FiBarChart2, FiHelpCircle } from "react-icons/fi"; // Feather icons from react-icons
+import { FiBookOpen, FiActivity, FiUserCheck} from "react-icons/fi"; // Feather icons from react-icons
 
+export interface Feature {
+  id: number;             // Unique identifier for each feature
+  icon: React.ReactNode;   // Icon component (from react-icons or similar)
+  title: string;           // Title of the feature
+  paragraph: string;       // Description of the feature
+  btn?: string;            // Optional button text
+  btnLink?: string;        // Optional button link URL
+}
 const featuresData: Feature[] = [
   {
     id: 1,

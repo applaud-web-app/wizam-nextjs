@@ -18,29 +18,28 @@ const ResetPassword = () => {
     setPasswordVisible(!passwordVisible);
   };
 
-  // Handle form submission
-  const handleReset = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError(null);
+const handleReset = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setLoading(true);
+  setError(null);
 
-    // Basic form validation
-    if (newPassword !== confirmPassword) {
-      setError("Passwords do not match!");
-      setLoading(false);
-      return;
-    }
+  // Basic form validation
+  if (newPassword !== confirmPassword) {
+    setError("Passwords do not match!");
+    setLoading(false);
+    return;
+  }
 
-    // Add logic here to handle password reset, e.g., API call
-    try {
-      // Simulate successful reset
-      setSubmitted(true);
-      setLoading(false);
-    } catch (err) {
-      setError("An error occurred while resetting your password.");
-      setLoading(false);
-    }
-  };
+  // Add logic here to handle password reset, e.g., API call
+  try {
+    // Simulate successful reset
+    setSubmitted(true);
+    setLoading(false);
+  } catch {
+    setError("An error occurred while resetting your password.");
+    setLoading(false);
+  }
+};
 
   return (
     <section className="relative min-h-screen flex flex-col items-center px-4 md:px-0">

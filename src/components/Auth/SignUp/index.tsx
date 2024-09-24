@@ -13,7 +13,6 @@ import ReactFlagsSelect from "react-flags-select";
 const SignUp = () => {
   const [firstName, setFirstName] = useState<string>("");
   const [lastName, setLastName] = useState<string>("");
-  const [country, setCountry] = useState<string>("United Kingdom");
   const [phoneNumber, setPhoneNumber] = useState<string>("");
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
