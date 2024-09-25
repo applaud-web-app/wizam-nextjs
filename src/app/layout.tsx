@@ -6,10 +6,12 @@ import { SessionProvider } from "next-auth/react";
 import { ThemeProvider } from "next-themes";
 import "../styles/index.css";
 import PreLoader from "@/components/Common/PreLoader";
-import { usePathname } from "next/navigation";
+import { usePathname } from "next/navigation"; 
 import Header from "@/components/MainHeader";
 import Footer from "@/components/MainFooter";
 import { AppProgressBar as ProgressBar } from 'next-nprogress-bar';
+
+// Dynamically import components that use window/document
 
 export default function RootLayout({
   children,
@@ -18,13 +20,6 @@ export default function RootLayout({
 }) {
   const [loading, setLoading] = useState<boolean>(true);
   const pathname = usePathname();
-
-  // Ensure Flowbite runs on the client side only
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      require('flowbite');  
-    }
-  }, []);
 
   useEffect(() => {
     setTimeout(() => setLoading(false), 1000);
@@ -41,15 +36,16 @@ export default function RootLayout({
   return (
     <html suppressHydrationWarning={true} className="!scroll-smooth" lang="en">
       <head />
-      <body>
+      <body className="light">
         {loading ? (
           <PreLoader />
         ) : (
           <SessionProvider>
             <ThemeProvider
               attribute="class"
-              enableSystem={false}
-              defaultTheme="light"
+              enableSystem={false} // Disable system theme detection
+              forcedTheme="light" // Force light theme
+              defaultTheme="light" // Light theme as default
             >
               <ProgressBar
                 height="4px"
