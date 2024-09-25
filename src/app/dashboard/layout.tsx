@@ -27,7 +27,7 @@ export default function DashboardLayout({
           <Sidebar isOpen={sidebarOpen} toggleSidebar={toggleSidebar} />
 
           {/* Main Content */}
-          <main className="flex-1 p-6 lg:ml-64">
+          <main className="flex-1 p-6 ">
             {children}
           </main>
         </div>
