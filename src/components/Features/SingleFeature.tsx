@@ -27,13 +27,7 @@ const SingleFeature = ({ feature }: { feature: Feature }) => {
           {title}
         </h3>
         <p className="mb-1 text-body-color dark:text-gray-300">{paragraph}</p>
-        {btn && btnLink && (
-          <Link href={btnLink}>
-            <span className="inline-block mt-4 px-6 py-2 text-white bg-yellow-500 rounded-lg hover:bg-yellow-600 transition">
-              {btn}
-            </span>
-          </Link>
-        )}
+      
       </div>
     </div>
   );

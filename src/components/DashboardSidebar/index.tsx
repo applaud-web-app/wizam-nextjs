@@ -10,16 +10,10 @@ interface SidebarProps {
 export default function Sidebar({ isOpen, toggleSidebar }: SidebarProps) {
   return (
     <>
-      {/* Overlay for mobile */}
-      {isOpen && (
-        <div
-          className="fixed inset-0 bg-black opacity-50 z-40 lg:hidden"
-          onClick={toggleSidebar} // Close sidebar when clicking on the overlay
-        ></div>
-      )}
+      {isOpen && <div className="fixed inset-0 bg-black opacity-50 z-40 lg:hidden" onClick={toggleSidebar}></div>}
 
       <aside
-        className={`fixed inset-y-0 left-0 z-50 w-64 transform bg-gray-800 text-white lg:translate-x-0 transition-transform ${
+        className={`fixed inset-y-0 left-0 z-50 w-64 transform bg-gray-900 text-white lg:translate-x-0 transition-transform ${
           isOpen ? "translate-x-0" : "-translate-x-full"
         } lg:static lg:w-64`}
       >
@@ -28,13 +22,7 @@ export default function Sidebar({ isOpen, toggleSidebar }: SidebarProps) {
 
           {/* Profile in Sidebar */}
           <div className="flex items-center space-x-4 mb-8">
-            <Image
-              src="/images/user.png" // Replace with actual user image path
-              width={40}
-              height={40}
-              alt="Profile"
-              className="w-10 h-10 rounded-full border border-spacing-1 object-cover"
-            />
+            <Image src="/images/user.png" width={40} height={40} alt="Profile" className="rounded-full" />
             <div>
               <h3 className="text-lg font-semibold text-white">John Doe</h3>
               <span className="text-sm text-gray-400">Admin</span>
@@ -45,31 +33,31 @@ export default function Sidebar({ isOpen, toggleSidebar }: SidebarProps) {
           <nav>
             <h3 className="text-sm text-gray-400 uppercase tracking-wide">Main</h3>
             <Link href="/dashboard">
-              <span className="block py-2.5 px-4 text-white hover:bg-gray-700">
+              <span className="block py-2.5 px-4 text-white hover:bg-gray-800">
                 <FiHome className="inline mr-2 text-primary" /> Home
               </span>
             </Link>
             <Link href="/dashboard/analytics">
-              <span className="block py-2.5 px-4 text-white hover:bg-gray-700">
+              <span className="block py-2.5 px-4 text-white hover:bg-gray-800">
                 <FiPieChart className="inline mr-2 text-primary" /> Analytics
               </span>
             </Link>
 
             <h3 className="text-sm text-gray-400 mt-6 uppercase tracking-wide">Manage</h3>
             <Link href="/dashboard/users">
-              <span className="block py-2.5 px-4 text-white hover:bg-gray-700">
+              <span className="block py-2.5 px-4 text-white hover:bg-gray-800">
                 <FiUsers className="inline mr-2 text-primary" /> Users
               </span>
             </Link>
             <Link href="/dashboard/reports">
-              <span className="block py-2.5 px-4 text-white hover:bg-gray-700">
+              <span className="block py-2.5 px-4 text-white hover:bg-gray-800">
                 <FiFileText className="inline mr-2 text-primary" /> Reports
               </span>
             </Link>
 
             <h3 className="text-sm text-gray-400 mt-6 uppercase tracking-wide">Settings</h3>
             <Link href="/dashboard/settings">
-              <span className="block py-2.5 px-4 text-white hover:bg-gray-700">
+              <span className="block py-2.5 px-4 text-white hover:bg-gray-800">
                 <FiSettings className="inline mr-2 text-primary" /> Settings
               </span>
             </Link>
@@ -77,7 +65,7 @@ export default function Sidebar({ isOpen, toggleSidebar }: SidebarProps) {
 
           {/* Logout */}
           <Link href="/logout">
-            <span className="block mt-8 py-2.5 px-4 text-white hover:bg-gray-700">
+            <span className="block mt-8 py-2.5 px-4 text-white hover:bg-gray-800">
               <FiLogOut className="inline mr-2 text-primary" /> Logout
             </span>
           </Link>
