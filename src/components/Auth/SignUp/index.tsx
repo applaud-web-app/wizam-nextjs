@@ -51,7 +51,7 @@ const SignUp = () => {
   };
 
   return (
-    <section className="relative min-h-screen flex flex-col items-center">
+    <section className="relative min-h-screen flex flex-col items-center bg-gray-50">
       {/* Header */}
       <header className="w-full py-4 z-20">
         <div className="container mx-auto flex items-center justify-between px-4">
@@ -70,16 +70,16 @@ const SignUp = () => {
 
       {/* Background Image */}
       <div
-        className="absolute inset-0 bg-cover bg-center"
+        className="absolute inset-0 bg-cover bg-center opacity-10"
         style={{ backgroundImage: "url('/images/frame.png')" }}
       ></div>
 
       {/* Main Form Container */}
-      <div className="container mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8 py-10 px-4 lg:px-0 lg:gap-16 z-10">
+      <div className="container mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6 py-10 px-4 md:px-8 z-10">
         {/* Left Section */}
-        <div className="flex flex-col justify-between h-full col-span-1">
+        <div className="flex flex-col justify-between h-full col-span-1 lg:col-span-1 mb-6 lg:mb-0">
           <div>
-            <h3 className="text-xl font-semibold mb-6 text-gray-800">Get Started Quickly</h3>
+            <h3 className="text-xl font-semibold mb-6 text-gray-800 text-center lg:text-left">Get Started Quickly</h3>
             <ul className="space-y-4 text-gray-700 text-justify">
               <li className="flex items-start space-x-2">
                 <FaRegCircleCheck className="text-primary font-semibold mt-1" />
@@ -102,7 +102,7 @@ const SignUp = () => {
               </li>
             </ul>
           </div>
-          <footer className="mt-12 text-left text-sm text-gray-500 z-10">
+          <footer className="mt-12 text-center lg:text-left text-sm text-gray-500 z-10">
             <p>
               © Wizam •{" "}
               <Link href="/contact" className="hover:underline">
@@ -117,13 +117,13 @@ const SignUp = () => {
         </div>
 
         {/* Signup Form */}
-        <div className="w-full bg-white shadow-lg rounded-lg col-span-2">
-          <div className="p-10">
-            <h2 className="text-2xl font-semibold text-left text-gray-800 mb-6">
+        <div className="w-full bg-white shadow-lg rounded-lg col-span-1 lg:col-span-2">
+          <div className="p-6 md:p-10">
+            <h2 className="text-2xl font-semibold text-left text-gray-800 mb-6 text-center lg:text-left">
               Create your Wizam account
             </h2>
 
-            <form className="grid grid-cols-1 gap-8 md:grid-cols-2" onSubmit={handleSignup}>
+            <form className="grid grid-cols-1 gap-6 md:grid-cols-2" onSubmit={handleSignup}>
               {/* First Name */}
               <div>
                 <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-2">
@@ -218,7 +218,7 @@ const SignUp = () => {
                   <button
                     type="button"
                     onClick={togglePasswordVisibility}
-                    className="absolute inset-y-0 right-3 flex items-center text-gray-500"
+                    className="absolute right-3 top-3 text-gray-400"
                   >
                     {showPassword ? <FaEyeSlash /> : <FaEye />}
                   </button>
@@ -231,7 +231,7 @@ const SignUp = () => {
                   Confirm Password
                 </label>
                 <input
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   id="confirmPassword"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
