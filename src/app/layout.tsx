@@ -6,12 +6,19 @@ import { SessionProvider } from "next-auth/react";
 import { ThemeProvider } from "next-themes";
 import "../styles/index.css";
 import PreLoader from "@/components/Common/PreLoader";
-import { usePathname } from "next/navigation"; 
+import { usePathname } from "next/navigation";
 import Header from "@/components/MainHeader";
 import Footer from "@/components/MainFooter";
 import { AppProgressBar as ProgressBar } from 'next-nprogress-bar';
 
-// Dynamically import components that use window/document
+// Import the Nunito font from next/font/google
+import { Nunito } from 'next/font/google';
+
+// Load the Nunito font
+const nunito = Nunito({
+  subsets: ['latin'],
+  weight: ['400', '600', '700'], // You can load multiple weights as needed
+});
 
 export default function RootLayout({
   children,
@@ -34,7 +41,11 @@ export default function RootLayout({
     pathname.startsWith("/dashboard");
 
   return (
-    <html suppressHydrationWarning={true} className="!scroll-smooth" lang="en">
+    <html
+      suppressHydrationWarning={true}
+      className={`${nunito.className} !scroll-smooth`}  // Apply Nunito font globally
+      lang="en"
+    >
       <head />
       <body className="light">
         {loading ? (

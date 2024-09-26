@@ -1,28 +1,25 @@
+import { FiUsers, FiFileText, FiBarChart2, FiCheckCircle, FiPercent, FiThumbsUp, FiThumbsDown } from "react-icons/fi";
+import ResumeExamTable from "@/components/ResumeExamTable";
+import UpcomingExamsTable from "@/components/UpcomingExamsTable";
+import DashboardCard from "@/components/DashboardCards";
+
 export default function DashboardPage() {
-    return (
-      <div className="dashboard-page">
-        <h1 className="text-xl font-bold mb-4 md:text-2xl lg:text-3xl text-gray-800">Dashboard Overview</h1>
-  
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {/* Card 1: Users */}
-          <div className="bg-white p-6 rounded-lg shadow-sm hover:shadow-lg transition-shadow duration-300 border border-gray-200">
-            <h2 className="text-lg font-semibold text-gray-700">Users</h2>
-            <p className="text-gray-500 mt-2 text-sm">1,200 Active Users</p>
-          </div>
-  
-          {/* Card 2: Reports */}
-          <div className="bg-white p-6 rounded-lg shadow-sm hover:shadow-lg transition-shadow duration-300 border border-gray-200">
-            <h2 className="text-lg font-semibold text-gray-700">Reports</h2>
-            <p className="text-gray-500 mt-2 text-sm">150 Reports Generated</p>
-          </div>
-  
-          {/* Card 3: Analytics */}
-          <div className="bg-white p-6 rounded-lg shadow-sm hover:shadow-lg transition-shadow duration-300 border border-gray-200">
-            <h2 className="text-lg font-semibold text-gray-700">Analytics</h2>
-            <p className="text-gray-500 mt-2 text-sm">5 New Analytics Reports</p>
-          </div>
-        </div>
+  return (
+    <div className="dashboard-page">
+      {/* Responsive grid layout */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        {/* Cards with icons and unique colors */}
+        <DashboardCard title="Users" content="1,200 Active Users" icon={<FiUsers />} iconColor="text-blue-500" />
+        <DashboardCard title="Reports" content="150 Reports Generated" icon={<FiFileText />} iconColor="text-yellow-500" />
+        <DashboardCard title="Analytics" content="5 New Analytics Reports" icon={<FiBarChart2 />} iconColor="text-purple-500" />
+        <DashboardCard title="Completed Exams" content="300 Completed Exams" icon={<FiCheckCircle />} iconColor="text-green-500" />
+        <DashboardCard title="Average Score" content="75%" icon={<FiPercent />} iconColor="text-indigo-500" />
+        <DashboardCard title="Passed" content="240 Passed Exams" icon={<FiThumbsUp />} iconColor="text-green-500" />
+        <DashboardCard title="Failed" content="60 Failed Exams" icon={<FiThumbsDown />} iconColor="text-red-500" />
       </div>
-    );
-  }
-  
+
+      <ResumeExamTable />
+      <UpcomingExamsTable />
+    </div>
+  );
+}
