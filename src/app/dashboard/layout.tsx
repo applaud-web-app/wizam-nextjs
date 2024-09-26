@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Header from "@/components/DashboardHeader";
 import Sidebar from "@/components/DashboardSidebar";
+import Footer from "@/components/DashboardFooter";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -27,21 +28,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </main>
           </div>
 
-          {/* Fixed Footer */}
-          <footer className="bg-gray-800 text-white py-4 px-3 fixed bottom-0 inset-x-0">
-            <div className="container mx-auto flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
-              {/* Company Name and Copyright */}
-              <div className="text-sm text-gray-400">
-                <p>© 2024 Wizam. All rights reserved.</p>
-              </div>
+          <Footer />
 
-              {/* Links */}
-              <div className="space-x-6 text-sm">
-                <a href="/terms-and-conditions" className="text-gray-400 hover:text-white transition-colors">Terms and Conditions</a>
-                <a href="/privacy-policy" className="text-gray-400 hover:text-white transition-colors">Privacy Policy</a>
-              </div>
-            </div>
-          </footer>
+         
         </div>
       </body>
     </html>
