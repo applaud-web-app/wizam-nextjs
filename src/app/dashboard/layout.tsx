@@ -5,11 +5,10 @@ import Header from "@/components/DashboardHeader";
 import Sidebar from "@/components/DashboardSidebar";
 import Footer from "@/components/DashboardFooter";
 
-// Import Josefin Sans font from next/font/google
-import { Josefin_Sans } from 'next/font/google';
 
-// Load the Josefin Sans font with weight 400
-const josefinSans = Josefin_Sans({
+import { Jost } from 'next/font/google';
+
+const jost = Jost({
   subsets: ['latin'],
   weight: '400',  // Only load weight 400
 });
@@ -20,7 +19,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
 
   return (
-    <html lang="en" className={josefinSans.className}> {/* Apply the Josefin Sans font globally */}
+    <html lang="en" className={jost.className}> 
       <body className="bg-gray-50 flex flex-col min-h-screen">
         {/* Full page layout with flexbox */}
         <div className="flex flex-col flex-1">
