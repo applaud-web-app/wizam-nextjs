@@ -50,27 +50,27 @@ const Header = () => {
     <>
       {/* Header Component */}
       <header
-        className={` z-40 w-full top-0 flex items-center justify-between ${
+        className={`z-40 w-full top-0 flex items-center justify-between ${
           sticky
-            ? " fixed bg-white/80 dark:bg-dark/10 backdrop-blur-lg shadow-lg border-b border-stroke dark:border-dark-3/20"
+            ? "fixed bg-white/90 dark:bg-dark/80 backdrop-blur-lg shadow-lg border-b border-stroke dark:border-dark-3/20"
             : "relative bg-white dark:bg-dark"
         }`}
       >
         <div className="container mx-auto flex justify-between items-center p-4">
           {/* Logo (Left-aligned) */}
-          <div className="w-60 max-w-full">
+          <div className="w-40 lg:w-60">
             <Link href="/">
               <Image
                 src="/images/logo/wizam-logo.png"
                 alt="logo"
-                width={sticky ? 120 : 150}
+                width={150}
                 height={30}
                 className="dark:hidden"
               />
               <Image
                 src="/images/logo/wizam-logo.png"
                 alt="logo"
-                width={sticky ? 120 : 150}
+                width={150}
                 height={30}
                 className="hidden dark:block"
               />
@@ -138,7 +138,7 @@ const Header = () => {
           {/* Hamburger Menu (Mobile) */}
           <button
             onClick={handleNavbarToggle}
-            className="lg:hidden focus:outline-none"
+            className="lg:hidden flex flex-col space-y-1.5 focus:outline-none"
           >
             <span
               className={`block h-0.5 w-6 bg-dark dark:bg-white transition-transform ${
@@ -161,7 +161,7 @@ const Header = () => {
           <nav
             className={`${
               navbarOpen
-                ? "absolute right-0 top-full mt-2 w-full bg-white shadow-lg dark:bg-dark-2 transition-all duration-300 ease-in-out"
+                ? "absolute right-0 top-full w-full bg-white dark:bg-dark shadow-lg z-50 transition-all duration-300 ease-in-out"
                 : "hidden"
             } lg:hidden`}
           >
@@ -216,33 +216,33 @@ const Header = () => {
 
       {/* Search Overlay */}
       {searchOpen && (
-         <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center px-4">
-         {/* Modal Box */}
-         <div className="relative bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-lg shadow-lg">
-           {/* Close Button */}
-           <button
-             className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 dark:text-gray-300 dark:hover:text-white text-2xl"
-             onClick={handleSearchToggle}
-           >
-             <AiOutlineClose />
-           </button>
- 
-           {/* Search Input Field */}
-           <div className="flex items-center space-x-3 mb-4">
-             <IoSearchSharp className="text-gray-500 text-2xl dark:text-gray-400" />
-             <input
-               type="text"
-               placeholder="Search for courses, articles, or resources..."
-               className="w-full p-3 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-             />
-           </div>
- 
-           {/* Search Prompt Text */}
-           <p className="text-sm text-gray-500 dark:text-gray-400">
-             Start typing to search across our platform.
-           </p>
-         </div>
-       </div>
+        <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center px-4">
+          {/* Modal Box */}
+          <div className="relative bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-lg shadow-lg">
+            {/* Close Button */}
+            <button
+              className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 dark:text-gray-300 dark:hover:text-white text-2xl"
+              onClick={handleSearchToggle}
+            >
+              <AiOutlineClose />
+            </button>
+
+            {/* Search Input Field */}
+            <div className="flex items-center space-x-3 mb-4">
+              <IoSearchSharp className="text-gray-500 text-2xl dark:text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search for courses, articles, or resources..."
+                className="w-full p-3 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+
+            {/* Search Prompt Text */}
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              Start typing to search across our platform.
+            </p>
+          </div>
+        </div>
       )}
     </>
   );
