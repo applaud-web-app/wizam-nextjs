@@ -29,19 +29,24 @@ const SignIn = () => {
   const handleSignIn = async (values: { email: string; password: string }) => {
     setLoading(true);
     setError(null); // Clear any previous errors
-
+  
     try {
       // Make an API request to your Laravel API for login
-      const response = await axios.post('https://wizam.awmtab.in/api/login', {
-        email: values.email,
-        password: values.password,
-      });
-
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_API_URL}/login`,
+        {
+          email: values.email,
+          password: values.password,
+        },
+        {
+          withCredentials: true, // Include credentials (cookies) in the request
+        }
+      );
+  
       // Check if the response contains status true/false
       if (response.data.status === true) {
-        // Save token, you might want to store this in localStorage or cookies
-        localStorage.setItem('token', response.data.token);
-
+        // The token is now in the cookies, no need to manually store it
+  
         // Show success toast notification
         toast.success("Login successful!", {
           position: "top-right",
@@ -51,14 +56,14 @@ const SignIn = () => {
           pauseOnHover: true,
           draggable: true,
         });
-
+  
         // Redirect to another page after a brief delay to let the toast show
         setTimeout(() => {
-          router.push('/about'); // Redirect to the /about page after login
-        }, 3000);
+          router.push("/about"); // Redirect to the /about page after login
+        }, 2000);
       } else {
         // Display an error toast when status is false
-        const errorMessage = response.data.message || 'Invalid credentials. Please try again.';
+        const errorMessage = response.data.message || "Invalid credentials. Please try again.";
         setError(errorMessage);
         toast.error(errorMessage, {
           position: "top-right",
@@ -71,7 +76,7 @@ const SignIn = () => {
       }
     } catch (error) {
       // Display a generic error toast if the request fails (e.g., network issue)
-      const errorMessage = 'An error occurred during sign-in.';
+      const errorMessage = "An error occurred during sign-in.";
       setError(errorMessage);
       toast.error(errorMessage, {
         position: "top-right",
@@ -85,6 +90,7 @@ const SignIn = () => {
       setLoading(false); // Reset the loading state
     }
   };
+  
 
   // Form validation schema using Yup
   const validationSchema = Yup.object({

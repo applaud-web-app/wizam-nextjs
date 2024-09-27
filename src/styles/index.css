@@ -21,7 +21,7 @@ body {
   }
 }
 
-a{
+a,button{
   cursor: pointer;
 }
 .auth-area {
