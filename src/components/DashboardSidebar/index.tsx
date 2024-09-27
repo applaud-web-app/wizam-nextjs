@@ -21,13 +21,21 @@ export default function Sidebar({ isOpen, toggleSidebar }: SidebarProps) {
           <h2 className="text-2xl font-bold text-white mb-8">Dashboard</h2>
 
           {/* Profile in Sidebar */}
-          <div className="flex items-center space-x-4 mb-8">
-            <Image src="/images/user.png" width={40} height={40} alt="Profile" className="rounded-full" />
-            <div>
-              <h3 className="text-lg font-semibold text-white">John Doe</h3>
-              <span className="text-sm text-gray-400">Admin</span>
+          <div className="mb-8">
+            <div className="flex items-center space-x-4 mb-3">
+              <Image src="/images/user.png" width={40} height={40} alt="Profile" className="rounded-full" />
+              <div>
+                <h3 className="text-lg font-semibold text-white">John Doe</h3>
+                <p className="text-sm text-gray-400">Admin</p>
+              
+              </div>
             </div>
+            <p className="text-sm text-gray-300">Syllabus</p>
+            <p className="text-sm text-gray-100">English Coaching</p>
+            <Link href="/" className="text-primary underline d-block">Change Syllabus</Link>
           </div>
+         
+        
 
           {/* Navigation Links */}
           <nav>

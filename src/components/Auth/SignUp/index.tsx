@@ -46,7 +46,7 @@ const SignUp = () => {
   // Handle form submission
   const handleSignup = async (values: any, { setSubmitting }: any) => {
     try {
-      const response = await axios.post("https://wizam.awmtab.in/api/register", {
+      const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/register`, {
         name: `${values.firstName} ${values.lastName}`,
         email: values.email,
         password: values.password,
