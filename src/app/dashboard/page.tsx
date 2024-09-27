@@ -19,7 +19,7 @@ export default function DashboardPage() {
       </div>
 
       <ResumeExamTable />
-      <UpcomingExamsTable />
+      {/* <UpcomingExamsTable /> */}
     </div>
   );
 }
