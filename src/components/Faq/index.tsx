@@ -3,15 +3,16 @@
 import Image from "next/image";
 import { useState, FC } from "react";
 import SectionTitle from "../Common/SectionTitle";
+import Link from "next/link";
 
 
 interface AccordionItemProps {
   header: string;
   text: string;
-  count: number;
+ 
 }
 
-const AccordionItem: FC<AccordionItemProps> = ({ header, text, count }) => {
+const AccordionItem: FC<AccordionItemProps> = ({ header, text }) => {
   const [active, setActive] = useState(false);
 
   const handleToggle = () => {
@@ -26,8 +27,8 @@ const AccordionItem: FC<AccordionItemProps> = ({ header, text, count }) => {
         aria-expanded={active}
       >
         <div className="flex items-center">
-          {/* Count */}
-          <div className="mr-3 text-lg font-semibold text-gray-600">{count}.</div>
+       
+        
           
           {/* FAQ Header */}
           <h4 className="mt-1 text-lg font-semibold text-dark dark:text-white">
@@ -87,40 +88,34 @@ const Faq = () => {
             <AccordionItem
               header="How long does it take to get my first blog post?"
               text="It takes 2-3 weeks to get your first blog post ready. That includes in-depth research and the creation of your monthly content marketing strategy before writing your first blog post."
-              count={1} // Count for this FAQ
-            />
+                          />
             <AccordionItem
               header="What is included in the service?"
               text="We include everything you need to succeed: custom research, blog writing, content strategy, and regular updates to ensure your content stays relevant."
-              count={2} // Count for this FAQ
-            />
+                          />
             <AccordionItem
               header="How do I track my progress?"
               text="We provide detailed analytics and reporting tools to track your progress, helping you understand how your content performs and which areas need improvement."
-              count={3} // Count for this FAQ
-            />
+                          />
         
             <AccordionItem
               header="Can I cancel my subscription at any time?"
               text="Yes, you can cancel your subscription at any time with no penalties. We want you to be happy with our service and aim to keep everything flexible."
-              count={4} // Count for this FAQ
-            />
+                          />
             <AccordionItem
               header="Do you provide content updates?"
               text="Yes, we constantly monitor and update your content to ensure it's always fresh and relevant to your audience. Our team works to keep your strategy aligned with your goals."
-              count={5} // Count for this FAQ
-            />
+                          />
             <AccordionItem
               header="Do you offer customer support?"
               text="Absolutely! We offer 24/7 customer support to assist you with any questions or concerns you might have throughout the process."
-              count={6} // Count for this FAQ
-            />
+                          />
           </div>
            {/* More Exams Button */}
         <div className="text-center mt-8">
-          <button className="px-6 py-3 rounded-full bg-primary text-white font-medium transition hover:bg-primary-dark">
+          <Link href={'/faq'} className="px-6 py-3 rounded-full bg-primary text-white font-medium transition hover:bg-primary-dark">
             More FAQs
-          </button>
+          </Link>
         </div>
         
       </div>

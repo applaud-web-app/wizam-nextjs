@@ -11,7 +11,8 @@
 body {
   color: var(--foreground);
   background: var(--background);
-  
+  overflow-x: hidden;
+  height: 100%;
 }
 
 @layer utilities {
@@ -127,4 +128,13 @@ a{
 .header-logo {
   width: 120px;
   height: auto;
+}
+
+.table-responsive {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.dashboard-page{
+  overflow: hidden;
 }

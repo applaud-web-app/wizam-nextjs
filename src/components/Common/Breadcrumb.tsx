@@ -25,21 +25,7 @@ const Breadcrumb: React.FC<BreadcrumbProps> = ({
             </p>
           )}
 
-          {/* Breadcrumb Navigation
-          <nav aria-label="breadcrumb">
-            <ul className="flex items-center justify-center text-sm sm:text-base gap-2 sm:gap-3">
-              <li>
-                <Link
-                  href="/"
-                  className="text-gray-300 hover:text-white transition dark:text-gray-400 dark:hover:text-white"
-                >
-                  Home
-                </Link>
-              </li>
-              <li className="text-gray-400">/</li>
-              <li className="text-gray-300 dark:text-gray-400">{pageName}</li>
-            </ul>
-          </nav> */}
+        
         </div>
       </div>
     </div>

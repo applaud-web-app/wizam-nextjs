@@ -38,14 +38,15 @@ export default function ResumeExamCard() {
         </a>
       </div>
 
+      {/* Table container with horizontal scrolling on small screens */}
       <div className="overflow-x-auto">
         <table className="min-w-full table-auto">
           <thead className="bg-primary text-white">
             <tr>
               <th className="p-3 text-left rounded-tl-lg">S.No</th>
               <th className="p-3 text-left">Exam Title</th>
-              <th className="p-3 text-left hidden sm:table-cell">Duration</th>
-              <th className="p-3 text-left hidden sm:table-cell">Questions</th>
+              <th className="p-3 text-left">Duration</th>
+              <th className="p-3 text-left">Questions</th>
               <th className="p-3 text-left rounded-tr-lg">Status</th>
             </tr>
           </thead>
@@ -54,8 +55,8 @@ export default function ResumeExamCard() {
               <tr key={index} className="hover:bg-gray-50">
                 <td className="p-4">{index + 1}</td>
                 <td className="p-4">{exam.title}</td>
-                <td className="p-4 hidden sm:table-cell">{exam.duration}</td>
-                <td className="p-4 hidden sm:table-cell">{exam.questions}</td>
+                <td className="p-4">{exam.duration}</td>
+                <td className="p-4">{exam.questions}</td>
                 <td className="p-4">{getStatusBadge(exam.status)}</td>
               </tr>
             ))}

@@ -1,17 +1,21 @@
 "use client";
 
+import { FC, useState, useRef, useEffect } from "react";
+import axios from "axios";
 import Breadcrumb from "@/components/Common/Breadcrumb";
 import CallToAction from "@/components/CallToAction";
-import { FC, useState, useRef, useEffect } from "react";
+import NoData from "@/components/Common/NoData";
+import Loader from "@/components/Common/Loader";
+import { IoSearchSharp } from "react-icons/io5"; // Import the search icon
+
 
 // Accordion Component for FAQs
 interface AccordionItemProps {
   header: string;
   text: string;
-  count: number;
 }
 
-const AccordionItem: FC<AccordionItemProps> = ({ header, text, count }) => {
+const AccordionItem: FC<AccordionItemProps> = ({ header, text }) => {
   const [active, setActive] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
   const [height, setHeight] = useState("0px");
@@ -37,7 +41,6 @@ const AccordionItem: FC<AccordionItemProps> = ({ header, text, count }) => {
         aria-expanded={active}
       >
         <div className="flex items-center">
-          <div className="mr-3 text-lg font-semibold text-gray-600">{count}.</div>
           <h4 className="mt-1 text-lg font-semibold text-dark dark:text-white">
             {header}
           </h4>
@@ -73,74 +76,99 @@ const AccordionItem: FC<AccordionItemProps> = ({ header, text, count }) => {
   );
 };
 
+interface FaqItem {
+  question: string;
+  answer: string;
+}
+
 const FAQPage = () => {
+  const [faqs, setFaqs] = useState<FaqItem[]>([]);
+  const [filteredFaqs, setFilteredFaqs] = useState<FaqItem[]>([]); // For filtered FAQs
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState(""); // State to store the search query
+
+  useEffect(() => {
+    // Fetch data from the API using axios
+    const fetchFAQs = async () => {
+      try {
+        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/faq`);
+        const { data } = response.data;
+        
+        if (Array.isArray(data)) {
+          setFaqs(data);
+          setFilteredFaqs(data); // Initially show all FAQs
+        } else {
+          throw new Error("API response is not an array");
+        }
+      } catch (error: any) {
+        setError(error.response ? error.response.data.message : error.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchFAQs();
+  }, []);
+
+  useEffect(() => {
+    // Filter FAQs based on the search query
+    if (searchQuery === "") {
+      setFilteredFaqs(faqs); // Show all FAQs if search query is empty
+    } else {
+      setFilteredFaqs(
+        faqs.filter(faq =>
+          faq.question.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          faq.answer.toLowerCase().includes(searchQuery.toLowerCase())
+        )
+      );
+    }
+  }, [searchQuery, faqs]);
+
+  if (loading) {
+    return <Loader />;
+  }
+
+  if (error) {
+    return <p>Error: {error}</p>;
+  }
+
   return (
     <main>
-      <Breadcrumb pageName="Frequently Asked Questions" />
+     <Breadcrumb pageName="Frequently Asked Questions" />
+
       <section className="relative py-16 dark:bg-dark">
         <div className="container mx-auto px-4">
+          {/* Search Bar */}
+          <div className="mb-8 relative w-full max-w-[768px] mx-auto">
+            {/* Search Icon */}
+            <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+              <IoSearchSharp className="text-primary text-xl dark:text-gray-400" />
+            </div>
+
+            {/* Search Input */}
+            <input
+              type="text"
+              placeholder="You can search by keywords or questions..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)} // Update search query
+              className="w-full pl-12 p-4 border rounded-lg border-gray-300 dark:border-gray-600 dark:bg-dark-2 dark:text-white focus:outline-none focus:ring-1 focus:ring-primary"
+            />
+          </div>
+
           {/* Accordion Section */}
           <div className="w-full max-w-[768px] mx-auto">
-            <AccordionItem
-              header="How long does it take to get my first blog post?"
-              text="It takes 2-3 weeks to get your first blog post ready. That includes in-depth research and the creation of your monthly content marketing strategy before writing your first blog post."
-              count={1}
-            />
-            <AccordionItem
-              header="What is included in the service?"
-              text="We include everything you need to succeed: custom research, blog writing, content strategy, and regular updates to ensure your content stays relevant."
-              count={2}
-            />
-            <AccordionItem
-              header="How do I track my progress?"
-              text="We provide detailed analytics and reporting tools to track your progress, helping you understand how your content performs and which areas need improvement."
-              count={3}
-            />
-            <AccordionItem
-              header="Can I cancel my subscription at any time?"
-              text="Yes, you can cancel your subscription at any time with no penalties. We want you to be happy with our service and aim to keep everything flexible."
-              count={4}
-            />
-            <AccordionItem
-              header="Do you provide content updates?"
-              text="Yes, we constantly monitor and update your content to ensure it's always fresh and relevant to your audience. Our team works to keep your strategy aligned with your goals."
-              count={5}
-            />
-            <AccordionItem
-              header="Do you offer customer support?"
-              text="Absolutely! We offer 24/7 customer support to assist you with any questions or concerns you might have throughout the process."
-              count={6}
-            />
-            <AccordionItem
-              header="What kind of exams do you cover?"
-              text="We cover a wide range of exams including professional certifications, competitive exams, and academic tests."
-              count={7}
-            />
-            <AccordionItem
-              header="Is the content updated regularly?"
-              text="Yes, our content is updated regularly to ensure it aligns with the latest exam patterns and syllabus changes."
-              count={8}
-            />
-            <AccordionItem
-              header="Can I access the materials on mobile devices?"
-              text="Yes, all our materials are mobile-friendly and can be accessed from any device."
-              count={9}
-            />
-            <AccordionItem
-              header="Do you offer free practice tests?"
-              text="We offer a variety of free practice tests along with premium paid content to suit your preparation needs."
-              count={10}
-            />
-            <AccordionItem
-              header="What payment methods are accepted?"
-              text="We accept various payment methods, including credit cards, debit cards, and online wallets."
-              count={11}
-            />
-            <AccordionItem
-              header="How can I contact support?"
-              text="You can reach our support team 24/7 via email or live chat. We are always here to assist you with any queries."
-              count={12}
-            />
+            {filteredFaqs.length > 0 ? (
+              filteredFaqs.map((faq, index) => (
+                <AccordionItem
+                  key={index}
+                  header={faq.question}
+                  text={faq.answer}
+                />
+              ))
+            ) : (
+              <NoData message="No FAQs match your search." />
+            )}
           </div>
         </div>
       </section>

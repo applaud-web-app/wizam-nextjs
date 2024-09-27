@@ -40,16 +40,16 @@ export default function UpcomingExamsCard() {
         </a>
       </div>
 
-      <div className="overflow-x-auto">
-        <table className="min-w-full table-auto">
+      <div className="table-responsive">
+        <table className="w-full table-auto">
           <thead className="bg-primary text-white">
             <tr>
               <th className="p-3 text-left rounded-tl-lg">S.No</th>
               <th className="p-3 text-left">Exam Title</th>
-              <th className="p-3 text-left hidden sm:table-cell">Available Between</th>
-              <th className="p-3 text-left hidden sm:table-cell">Fees</th>
-              <th className="p-3 text-left hidden md:table-cell">Duration</th>
-              <th className="p-3 text-left hidden md:table-cell">Questions</th>
+              <th className="p-3 text-left">Available Between</th>
+              <th className="p-3 text-left">Fees</th>
+              <th className="p-3 text-left">Duration</th>
+              <th className="p-3 text-left">Questions</th>
               <th className="p-3 text-left rounded-tr-lg">Status</th>
             </tr>
           </thead>
@@ -58,10 +58,10 @@ export default function UpcomingExamsCard() {
               <tr key={index} className="hover:bg-gray-100">
                 <td className="p-4">{index + 1}</td>
                 <td className="p-4">{exam.title}</td>
-                <td className="p-4 hidden sm:table-cell">{exam.availableBetween}</td>
-                <td className="p-4 hidden sm:table-cell">{exam.fees}</td>
-                <td className="p-4 hidden md:table-cell">{exam.duration}</td>
-                <td className="p-4 hidden md:table-cell">{exam.questions}</td>
+                <td className="p-4">{exam.availableBetween}</td>
+                <td className="p-4">{exam.fees}</td>
+                <td className="p-4">{exam.duration}</td>
+                <td className="p-4">{exam.questions}</td>
                 <td className="p-4">{getStatusBadge(exam.status)}</td>
               </tr>
             ))}
