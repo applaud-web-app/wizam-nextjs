@@ -49,12 +49,12 @@ const SignUp = () => {
       const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/register`, {
         name: `${values.firstName} ${values.lastName}`,
         email: values.email,
+        phone: values.phoneNumber,
         password: values.password,
         password_confirmation: values.confirmPassword,
         country: values.country,
-        phone_number: values.phoneNumber,
       });
-
+  
       // Check for 'status' in the response and show appropriate toast
       if (response.data.status) {
         toast.success("Registration successful!", {
@@ -65,7 +65,7 @@ const SignUp = () => {
           pauseOnHover: true,
           draggable: true,
         });
-
+  
         // Redirect to SignIn page after success
         setTimeout(() => {
           window.location.href = "/signin";

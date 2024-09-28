@@ -10,43 +10,45 @@ import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup"; // Validation Schema
 import { toast } from "react-toastify"; // Import toast from react-toastify
 import 'react-toastify/dist/ReactToastify.css'; // Import toastify styles
+import Cookies from "js-cookie";
 
 const SignIn = () => {
-  const [showPassword, setShowPassword] = useState<boolean>(false);
-  const [loading, setLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
-
+  const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
   const router = useRouter(); // For redirecting to other pages
 
   // Check if user is already signed in
   useEffect(() => {
-    const token = localStorage.getItem('token');
+    const token = Cookies.get('jwt'); 
+    console.log('Cookies after login:', document.cookie);
+    console.log('Retrieved JWT:', token); 
     if (token) {
       router.push('/'); // Redirect to home page if token exists
     }
   }, [router]);
 
-  const handleSignIn = async (values: { email: string; password: string }) => {
+  const handleSignIn = async (values:any) => {
     setLoading(true);
-    setError(null); // Clear any previous errors
-  
+
     try {
       // Make an API request to your Laravel API for login
       const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/login`,
-        {
-          email: values.email,
-          password: values.password,
-        },
+        `${process.env.NEXT_PUBLIC_API_URL}/login`, // Ensure this URL matches your Laravel endpoint
+        values, // Send email and password directly
         {
           withCredentials: true, // Include credentials (cookies) in the request
         }
       );
-  
+
       // Check if the response contains status true/false
       if (response.data.status === true) {
-        // The token is now in the cookies, no need to manually store it
-  
+        console.log(response.data);
+        // Optionally, store token in local storage if needed
+        const token = response.data.token; // Extract token from the response
+        // Set the token in a cookie
+        Cookies.set('jwt', token, { expires: 1 }); // Set cookie to expire in 1 day
+        
+
         // Show success toast notification
         toast.success("Login successful!", {
           position: "top-right",
@@ -56,7 +58,7 @@ const SignIn = () => {
           pauseOnHover: true,
           draggable: true,
         });
-  
+
         // Redirect to another page after a brief delay to let the toast show
         setTimeout(() => {
           router.push("/about"); // Redirect to the /about page after login
@@ -64,7 +66,6 @@ const SignIn = () => {
       } else {
         // Display an error toast when status is false
         const errorMessage = response.data.message || "Invalid credentials. Please try again.";
-        setError(errorMessage);
         toast.error(errorMessage, {
           position: "top-right",
           autoClose: 5000,
@@ -74,10 +75,9 @@ const SignIn = () => {
           draggable: true,
         });
       }
-    } catch (error) {
+    } catch (error:any) {
       // Display a generic error toast if the request fails (e.g., network issue)
-      const errorMessage = "An error occurred during sign-in.";
-      setError(errorMessage);
+      const errorMessage = error.response?.data?.message || "An error occurred during sign-in.";
       toast.error(errorMessage, {
         position: "top-right",
         autoClose: 5000,
@@ -90,7 +90,6 @@ const SignIn = () => {
       setLoading(false); // Reset the loading state
     }
   };
-  
 
   // Form validation schema using Yup
   const validationSchema = Yup.object({
@@ -126,8 +125,6 @@ const SignIn = () => {
       <div className="relative mt-16 bg-white rounded-lg shadow-lg max-w-lg w-full z-10">
         <div className="p-14">
           <h2 className="text-2xl font-bold text-left text-gray-800">Sign in to your account</h2>
-
-          {error && <p className="text-center text-sm text-red-600 mt-4">{error}</p>}
 
           <Formik
             initialValues={{ email: "", password: "" }}

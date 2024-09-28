@@ -1,17 +1,19 @@
 "use client";
 
-import { signOut, useSession } from "next-auth/react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
 import { IoSearchSharp } from "react-icons/io5";
 import { AiOutlineClose } from "react-icons/ai";
 import menuData from "./menuData";
+import Cookies from "js-cookie";
+import { useRouter } from "next/navigation"; // Use router to redirect
 
 const Header = () => {
-  const { data: session } = useSession();
   const pathUrl = usePathname();
+  const router = useRouter();  
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   // Navbar state
   const [navbarOpen, setNavbarOpen] = useState(false);
@@ -42,6 +44,19 @@ const Header = () => {
     window.addEventListener("keydown", closeSearchOnEscape);
     return () => window.removeEventListener("keydown", closeSearchOnEscape);
   }, []);
+
+  useEffect(() => {
+    const token = Cookies.get('jwt'); 
+    console.log('Retrieved JWT:', token); 
+    setIsLoggedIn(!!token);
+  }, []);
+
+
+  const handleLogout = () => {
+    Cookies.remove('jwt');
+    setIsLoggedIn(false); 
+    router.push('/signin');
+  };
 
   // Toggle the mobile navbar
   const handleNavbarToggle = () => setNavbarOpen(!navbarOpen);
@@ -105,13 +120,10 @@ const Header = () => {
               <IoSearchSharp />
             </button>
 
-            {session?.user ? (
+            {isLoggedIn  ? (
               <>
-                <span className="text-base font-medium text-dark dark:text-white">
-                  {session?.user?.name}
-                </span>
                 <button
-                  onClick={() => signOut()}
+                  onClick={() => handleLogout()}
                   className="bg-primary text-white py-2 px-6 rounded-full hover:bg-secondary transition"
                 >
                   Sign Out
@@ -181,16 +193,13 @@ const Header = () => {
               ))}
 
               {/* Mobile Authentication */}
-              {session?.user ? (
+              {isLoggedIn ? (
                 <>
-                  <span className="text-base font-medium text-dark dark:text-white px-4">
-                    {session?.user?.name}
-                  </span>
                   <button
-                    onClick={() => signOut()}
+                    onClick={() => handleLogout()}
                     className="bg-primary text-white py-2 px-6 mx-4 rounded-full hover:bg-secondary transition w-full"
                   >
-                    Sign Out
+                    Sign Out 
                   </button>
                 </>
               ) : (
@@ -199,7 +208,7 @@ const Header = () => {
                     href="/signin"
                     className="bg-primary/10 border border-primary text-primary text-center py-2 px-6  rounded-full hover:bg-primary hover:text-white transition w-full"
                   >
-                    Sign In
+                    Sign In 
                   </Link>
                   <Link
                     href="/signup"
