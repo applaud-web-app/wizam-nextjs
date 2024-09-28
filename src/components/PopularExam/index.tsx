@@ -1,42 +1,56 @@
-import SectionTitle from "../Common/SectionTitle"; // Assuming you have a SectionTitle component
-import Image from 'next/image';
+"use client"; // Use client-side features
+
+import { useEffect, useState } from "react";
+import axios from "axios";
+import SectionTitle from "../Common/SectionTitle";
+import Image from "next/image";
 import { FaArrowRight } from "react-icons/fa";
-import Link from 'next/link'; // Import Next.js Link component
+import Link from "next/link"; // Import Next.js Link component
+import NoData from "../Common/NoData";
+
+// Define the PopularExam type for the API data
+type PopularExam = {
+  img_url: string;
+  title: string;
+  description: string;
+  price: string | null;
+  is_free: number;
+  slug: string;
+};
+
+const trimDescription = (description: string, maxLength: number): string => {
+  // Strip HTML tags using a regular expression
+  const plainText = description.replace(/(<([^>]+)>)/gi, "");
+  if (plainText.length > maxLength) {
+    return `${plainText.substring(0, maxLength)}...`;
+  }
+  return plainText;
+};
 
 const PopularExams = () => {
-  // Array of exam data
-  const exams = [
-    {
-      id: 1,
-      title: "Dental Nursing Preparation Exam 2024 NEBDN",
-      description:
-        "Prepare for the 2024 NEBDN exam with updated questions and solutions crafted by top dental experts. Based on the latest exam patterns.",
-      price: "£14.90",
-      oldPrice: "£18.90",
-      image: "/images/exam/exam-1.jpg",
-      link: "/exams/dental-nursing-prep-2024" // Link to exam details page
-    },
-    {
-      id: 2,
-      title: "Pharmacy Technician Exam Preparation 2024",
-      description:
-        "Ace the 2024 pharmacy technician certification with comprehensive material tailored to meet the latest industry standards and exam structure.",
-      price: "£19.90",
-      oldPrice: "£24.90",
-      image: "/images/exam/exam-1.jpg",
-      link: "/exams/pharmacy-technician-prep-2024"
-    },
-    {
-      id: 3,
-      title: "Medical Assistant Certification Exam Prep 2024",
-      description:
-        "Get ready for the 2024 Medical Assistant certification with detailed practice questions and expert-verified solutions covering all key topics.",
-      price: "£16.50",
-      oldPrice: "£20.00",
-      image: "/images/exam/exam-1.jpg",
-      link: "/exams/medical-assistant-prep-2024"
-    },
-  ];
+  const [exams, setExams] = useState<PopularExam[]>([]); // State to store exams
+  const [loading, setLoading] = useState<boolean>(true); // Loading state
+  const [error, setError] = useState<string | null>(null); // Error state
+
+  // Fetch the popular exams from the API using Axios
+  useEffect(() => {
+    const fetchExams = async () => {
+      try {
+        const response = await axios.get("https://wizam.awmtab.in/api/popular-exams");
+        if (response.data.status && response.data.data) {
+          setExams(response.data.data);
+        } else {
+          setError("Failed to fetch popular exams.");
+        }
+      } catch (error) {
+        setError("An error occurred while fetching the popular exams.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchExams();
+  }, []);
 
   return (
     <section className="pb-12 pt-20 lg:pb-[70px] lg:pt-[120px]">
@@ -46,12 +60,16 @@ const PopularExams = () => {
 
         {/* Grid Layout for Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {exams.map((exam) => (
-           
-              <Link href={exam.link} key={exam.id} passHref className="block bg-white shadow-md rounded-lg overflow-hidden transition hover:shadow-lg">
+          {loading ? (
+            <p className="text-center w-full text-lg text-gray-600">Loading...</p>
+          ) : error ? (
+            <p className="text-center w-full text-lg text-red-600">{error}</p>
+          ) : exams.length > 0 ? (
+            exams.map((exam, i) => (
+              <Link href={`/exams/${exam.slug}`} key={i} passHref className="block bg-white shadow-md rounded-lg overflow-hidden transition hover:shadow-lg">
                 {/* Image */}
                 <Image
-                  src={exam.image}
+                  src={exam.img_url}
                   width={500}
                   height={500}
                   alt={`Exam Image for ${exam.title}`}
@@ -62,35 +80,44 @@ const PopularExams = () => {
                   <h3 className="text-xl font-semibold text-gray-900 mb-2">
                     {exam.title}
                   </h3>
-                  {/* Description */}
-                  <p className="text-gray-600 mb-4">{exam.description}</p>
-                  <hr className="h-px my-6 bg-gray-200 border-0 dark:bg-gray-700"></hr>
+                  {/* Description (trimmed to 100 characters) */}
+                  <p className="text-gray-600 mb-4">
+                    {trimDescription(exam.description, 150)}
+                  </p>
+                  <hr className="h-px my-6 bg-gray-200 border-0 dark:bg-gray-700" />
                   {/* Price */}
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <span className="text-2xl font-semibold text-gray-900">
-                        {exam.price}
-                      </span>
-                      <span className="text-gray-400 line-through">
-                        {exam.oldPrice}
-                      </span>
+                      {exam.is_free ? (
+                        <span className="text-2xl font-semibold text-gray-900">Free</span>
+                      ) : (
+                        <span className="text-2xl font-semibold text-gray-900">
+                          £{exam.price}
+                        </span>
+                      )}
                     </div>
                     <div className="flex items-center text-primary font-semibold">
                       <FaArrowRight size={24} />
                     </div>
                   </div>
                 </div>
-              
-            </Link>
-          ))}
+              </Link>
+            ))
+          ) : (
+            <NoData message="No popular exams available" />
+          )}
         </div>
 
         {/* More Exams Button */}
-        <div className="text-center mt-8">
-          <button className="px-6 py-3 rounded-full bg-primary text-white font-medium transition hover:bg-primary-dark">
-            More Exams
-          </button>
-        </div>
+        {exams.length > 0 && (
+          <div className="text-center mt-8">
+            <Link href="/exams">
+              <span className="px-6 py-3 rounded-full bg-primary text-white font-medium transition hover:bg-primary-dark">
+                More Exams
+              </span>
+            </Link>
+          </div>
+        )}
       </div>
     </section>
   );

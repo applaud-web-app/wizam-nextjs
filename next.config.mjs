@@ -4,7 +4,12 @@ const nextConfig = {
       ignoreDuringBuilds: true,
     },
     images: {
-      domains: ['wizam.awmtab.in'], 
+      remotePatterns: [
+        {
+          protocol: 'https',
+          hostname: '**', // This allows images from any domain
+        },
+      ],
     },
   };
   
