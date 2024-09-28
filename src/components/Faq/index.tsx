@@ -1,15 +1,16 @@
 "use client";
 
 import Image from "next/image";
-import { useState, FC } from "react";
+import { useState, useEffect, FC } from "react";
+import axios from "axios";
 import SectionTitle from "../Common/SectionTitle";
 import Link from "next/link";
-
+import Loader from "../Common/Loader";
+import NoData from "../Common/NoData";
 
 interface AccordionItemProps {
   header: string;
   text: string;
- 
 }
 
 const AccordionItem: FC<AccordionItemProps> = ({ header, text }) => {
@@ -20,16 +21,13 @@ const AccordionItem: FC<AccordionItemProps> = ({ header, text }) => {
   };
 
   return (
-    <div className="mb-5 w-full rounded-lg bg-white p-4 border   sm:p-5 lg:px-6 xl:px-6">
+    <div className="mb-5 w-full rounded-lg bg-white p-4 border sm:p-5 lg:px-6 xl:px-6">
       <button
         className="faq-btn flex w-full justify-between items-center text-left"
         onClick={handleToggle}
         aria-expanded={active}
       >
         <div className="flex items-center">
-       
-        
-          
           {/* FAQ Header */}
           <h4 className="mt-1 text-lg font-semibold text-dark dark:text-white">
             {header}
@@ -56,11 +54,7 @@ const AccordionItem: FC<AccordionItemProps> = ({ header, text }) => {
         </div>
       </button>
 
-      <div
-        className={` duration-200 ease-in-out ${
-          active ? "block" : "hidden"
-        }`}
-      >
+      <div className={`duration-200 ease-in-out ${active ? "block" : "hidden"}`}>
         <p className="py-3 text-base leading-relaxed text-body-color dark:text-dark-6">
           {text}
         </p>
@@ -69,59 +63,73 @@ const AccordionItem: FC<AccordionItemProps> = ({ header, text }) => {
   );
 };
 
+// Define the structure of the FAQ data from the API
+interface FaqData {
+  question: string;
+  answer: string;
+}
+
 const Faq = () => {
+  const [faqs, setFaqs] = useState<FaqData[]>([]); // State to store fetched FAQs
+  const [loading, setLoading] = useState<boolean>(true); // Loading state
+  const [error, setError] = useState<string | null>(null); // Error state
+
+  useEffect(() => {
+    const fetchFaqs = async () => {
+      try {
+        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/faq`);
+        if (response.data.status && response.data.data) {
+          setFaqs(response.data.data);
+        } else {
+          setError("Failed to load FAQs.");
+        }
+      } catch (error) {
+        setError("An error occurred while fetching FAQs.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchFaqs();
+  }, []);
+
   return (
-    <section className="relative   bg-[#ebf5fa] pb-8 pt-20 dark:bg-dark lg:pb-[50px] lg:pt-[140px]">
+    <section className="relative bg-[#ebf5fa] pb-8 pt-20 dark:bg-dark lg:pb-[50px] lg:pt-[140px]">
       <div className="container">
         {/* Section Title */}
-      
+        <SectionTitle title="Frequently Asked Questions" align="center" />
 
-        <SectionTitle 
-          title="Frequently Asked Questions" 
-         
-          align="center" 
-        />
+        <div className="w-full max-w-[768px] mx-auto">
+          {loading ? (
+            <Loader /> // You can create and use a Loader component or display a loading message
+          ) : error ? (
+            <p className="text-center text-red-500">{error}</p>
+          ) : faqs.length > 0 ? (
+            // Slice to show only the first 5 FAQs
+            faqs.slice(0, 5).map((faq, index) => (
+              <AccordionItem
+                key={index}
+                header={faq.question}
+                text={faq.answer}
+              />
+            ))
+          ) : (
+            <NoData message="No FAQs available" />
+          )}
+        </div>
 
-
-     
-          <div className="w-full max-w-[768px] mx-auto">
-            <AccordionItem
-              header="How long does it take to get my first blog post?"
-              text="It takes 2-3 weeks to get your first blog post ready. That includes in-depth research and the creation of your monthly content marketing strategy before writing your first blog post."
-                          />
-            <AccordionItem
-              header="What is included in the service?"
-              text="We include everything you need to succeed: custom research, blog writing, content strategy, and regular updates to ensure your content stays relevant."
-                          />
-            <AccordionItem
-              header="How do I track my progress?"
-              text="We provide detailed analytics and reporting tools to track your progress, helping you understand how your content performs and which areas need improvement."
-                          />
-        
-            <AccordionItem
-              header="Can I cancel my subscription at any time?"
-              text="Yes, you can cancel your subscription at any time with no penalties. We want you to be happy with our service and aim to keep everything flexible."
-                          />
-            <AccordionItem
-              header="Do you provide content updates?"
-              text="Yes, we constantly monitor and update your content to ensure it's always fresh and relevant to your audience. Our team works to keep your strategy aligned with your goals."
-                          />
-            <AccordionItem
-              header="Do you offer customer support?"
-              text="Absolutely! We offer 24/7 customer support to assist you with any questions or concerns you might have throughout the process."
-                          />
-          </div>
-           {/* More Exams Button */}
+        {/* More FAQs Button */}
         <div className="text-center mt-8">
-          <Link href={'/faq'} className="px-6 py-3 rounded-full bg-primary text-white font-medium transition hover:bg-primary-dark">
-            More FAQs
+          <Link href="/faq">
+            <span className="px-6 py-3 rounded-full bg-primary text-white font-medium transition hover:bg-primary-dark">
+              More FAQs
+            </span>
           </Link>
         </div>
-        
       </div>
 
-        {/* Decorative Image */}
-        <div className="absolute -top-8 left-0 right-0 w-full z-10">
+      {/* Decorative Image */}
+      <div className="absolute -top-8 left-0 right-0 w-full z-10">
         <Image
           src="/images/faq-vector.png"
           alt="decorative vector"
@@ -130,7 +138,6 @@ const Faq = () => {
           height={300}
         />
       </div>
-
     </section>
   );
 };

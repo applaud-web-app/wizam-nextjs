@@ -1,3 +1,7 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import axios from "axios";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -9,8 +13,31 @@ import {
 } from "react-icons/fa"; // Import React Icons
 import { MdOutlineArrowOutward } from "react-icons/md";
 
+// Type for Dynamic Pages fetched from the API
+interface Page {
+  title: string;
+  slug: string;
+}
 
 const Footer = () => {
+  const [pages, setPages] = useState<Page[]>([]); // State to store dynamic pages
+
+  // Fetch dynamic pages from the API
+  useEffect(() => {
+    const fetchPages = async () => {
+      try {
+        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/pages`);
+        if (response.data.status) {
+          setPages(response.data.data); // Set the fetched pages in state
+        }
+      } catch (error) {
+        console.error("Error fetching dynamic pages:", error);
+      }
+    };
+
+    fetchPages();
+  }, []);
+
   return (
     <footer className="bg-[#0b1e22] text-white py-16">
       <div className="container mx-auto px-4">
@@ -26,9 +53,6 @@ const Footer = () => {
                 height={30}
               />
             </Link>
-            {/* <p className="mt-4 text-sm text-gray-400 leading-relaxed">
-              The Knowledge Academy
-            </p> */}
           </div>
 
           {/* Content Links */}
@@ -63,31 +87,17 @@ const Footer = () => {
             </ul>
           </div>
 
-          {/* Company Links */}
+          {/* Dynamic Pages Links */}
           <div className="col-span-1 lg:col-span-1">
             <h4 className="mb-4 font-semibold text-xl leading-snug">Company</h4>
             <ul>
-            <li className="mb-2">
-              <Link href="/terms-and-conditions" className="hover:text-green-400">
-                Terms & Conditions
-              </Link>
-            </li>
-            <li className="mb-2">
-              <Link href="/privacy-policy" className="hover:text-green-400">
-                Privacy Policy
-              </Link>
-            </li>
-            <li className="mb-2">
-              <Link href="/cookie-policy" className="hover:text-green-400">
-                Cookie Policy
-              </Link>
-            </li>
-            <li>
-              <Link href="/refund-policy" className="hover:text-green-400">
-                Refund Policy
-              </Link>
-            </li>
-
+              {pages.map((page, index) => (
+                <li key={index} className="mb-2">
+                  <Link href={`/${page.slug}`} className="hover:text-green-400">
+                    {page.title}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
 
@@ -122,10 +132,10 @@ const Footer = () => {
               <input
                 type="email"
                 placeholder="Enter your email here"
-                className="w-full px-4 py-2 text-base  bg-[#76B51B]/10 border-none rounded-none focus:outline-none rounded-l-md text-gray-200"
+                className="w-full px-4 py-2 text-base bg-[#76B51B]/10 border-none rounded-none focus:outline-none rounded-l-md text-gray-200"
               />
-              <button className=" px-3 py-2 rounded-r-md absolute right-0">
-              <MdOutlineArrowOutward className="text-2xl text-[#76B51B]" /> 
+              <button className="px-3 py-2 rounded-r-md absolute right-0">
+                <MdOutlineArrowOutward className="text-2xl text-[#76B51B]" />
               </button>
             </form>
           </div>
