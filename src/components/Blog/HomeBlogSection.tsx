@@ -16,23 +16,31 @@ type BlogPost = {
   slug: string;
 };
 
+// Define the metadata type for section title and button
+interface ResourceData {
+  title: string;
+  button_text: string;
+  button_link: string;
+}
+
 // Define the props type for HomeBlogSection (Optional if passing props)
 interface HomeBlogSectionProps {}
 
 // Define the HomeBlogSection component
 const HomeBlogSection = ({}: HomeBlogSectionProps) => {
   const [posts, setPosts] = useState<BlogPost[]>([]); // State to store blog posts
+  const [resourceData, setResourceData] = useState<ResourceData | null>(null); // State to store section metadata
   const [loading, setLoading] = useState<boolean>(true); // Loading state
   const [error, setError] = useState<string | null>(null); // Error state
 
-  // Fetch the latest blog posts from the API using Axios
+  // Fetch the latest blog posts and resource data from the API using Axios
   useEffect(() => {
-    const fetchPosts = async () => {
+    const fetchPostsAndResourceData = async () => {
       try {
-        const response = await axios.get("https://wizam.awmtab.in/api/latest-resources");
-        if (response.data.status && response.data.data) {
-          // Assuming the API returns a list of posts in response.data.data
-          const fetchedPosts = response.data.data.map((item: any) => ({
+        // Fetch blog posts using the environment variable
+        const postsResponse = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/latest-resources`);
+        if (postsResponse.data.status && postsResponse.data.data) {
+          const fetchedPosts = postsResponse.data.data.map((item: any) => ({
             title: item.title,
             coverImage: item.image, // Assuming 'image' is the field in the API
             excerpt: item.short_description, // Assuming 'short_description' is the field
@@ -43,21 +51,30 @@ const HomeBlogSection = ({}: HomeBlogSectionProps) => {
         } else {
           setError("Failed to fetch blog posts.");
         }
+
+        // Fetch resource metadata (title, button text, button link) using the environment variable
+        const resourceResponse = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/resource-data`);
+        if (resourceResponse.data.status && resourceResponse.data.data) {
+          setResourceData(resourceResponse.data.data);
+        } else {
+          setError("Failed to fetch resource data.");
+        }
       } catch (error) {
-        setError("An error occurred while fetching the blog posts.");
+        setError("An error occurred while fetching data.");
       } finally {
         setLoading(false);
       }
     };
 
-    fetchPosts();
+    fetchPostsAndResourceData();
   }, []);
 
   return (
     <section className="bg-white pb-10 pt-20 dark:bg-dark lg:pb-20 lg:pt-[120px]">
       <div className="container mx-auto">
         <div className="mb-[60px]">
-          <SectionTitle title="Resources" align="center" />
+          {/* Use dynamic section title */}
+          <SectionTitle title={resourceData?.title || "Resources"} align="center" />
         </div>
 
         <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
@@ -66,10 +83,8 @@ const HomeBlogSection = ({}: HomeBlogSectionProps) => {
           ) : error ? (
             <p className="text-center w-full text-lg text-red-600">{error}</p>
           ) : posts.length > 0 ? (
-            // Display all blog posts, not just the first 3
             posts.map((blog, i) => (
-                <SingleBlog blog={blog} key={i} />
-             
+              <SingleBlog blog={blog} key={i} />
             ))
           ) : (
             <NoData message="No blog posts available" />
@@ -79,9 +94,9 @@ const HomeBlogSection = ({}: HomeBlogSectionProps) => {
         {/* More Resources Button */}
         {posts.length > 0 && (
           <div className="text-center mt-8">
-            <Link href="/blog">
+            <Link href={resourceData?.button_link || "/blog"}>
               <span className="px-6 py-3 rounded-full bg-primary text-white font-medium transition hover:bg-primary-dark">
-                More Resources
+                {resourceData?.button_text || "More Resources"}
               </span>
             </Link>
           </div>

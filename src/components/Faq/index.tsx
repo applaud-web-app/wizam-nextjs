@@ -69,19 +69,35 @@ interface FaqData {
   answer: string;
 }
 
+interface FaqMetaData {
+  title: string;
+  button_text: string;
+  button_link: string | null;
+}
+
 const Faq = () => {
   const [faqs, setFaqs] = useState<FaqData[]>([]); // State to store fetched FAQs
+  const [faqMeta, setFaqMeta] = useState<FaqMetaData | null>(null); // State to store section title, button text, and link
   const [loading, setLoading] = useState<boolean>(true); // Loading state
   const [error, setError] = useState<string | null>(null); // Error state
 
   useEffect(() => {
-    const fetchFaqs = async () => {
+    const fetchFaqData = async () => {
       try {
-        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/faq`);
-        if (response.data.status && response.data.data) {
-          setFaqs(response.data.data);
+        // Fetch FAQs
+        const faqResponse = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/faq`);
+        if (faqResponse.data.status && faqResponse.data.data) {
+          setFaqs(faqResponse.data.data);
         } else {
           setError("Failed to load FAQs.");
+        }
+
+        // Fetch FAQ metadata (title, button text, button link)
+        const faqMetaResponse = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/faq-data`);
+        if (faqMetaResponse.data.status && faqMetaResponse.data.data) {
+          setFaqMeta(faqMetaResponse.data.data);
+        } else {
+          setError("Failed to load FAQ section metadata.");
         }
       } catch (error) {
         setError("An error occurred while fetching FAQs.");
@@ -90,28 +106,24 @@ const Faq = () => {
       }
     };
 
-    fetchFaqs();
+    fetchFaqData();
   }, []);
 
   return (
     <section className="relative bg-[#ebf5fa] pb-8 pt-20 dark:bg-dark lg:pb-[50px] lg:pt-[140px]">
       <div className="container">
         {/* Section Title */}
-        <SectionTitle title="Frequently Asked Questions" align="center" />
+        <SectionTitle title={faqMeta?.title || "Frequently Asked Questions"} align="center" />
 
         <div className="w-full max-w-[768px] mx-auto">
           {loading ? (
-            <Loader /> // You can create and use a Loader component or display a loading message
+            <Loader /> // Loader component
           ) : error ? (
             <p className="text-center text-red-500">{error}</p>
           ) : faqs.length > 0 ? (
             // Slice to show only the first 5 FAQs
             faqs.slice(0, 5).map((faq, index) => (
-              <AccordionItem
-                key={index}
-                header={faq.question}
-                text={faq.answer}
-              />
+              <AccordionItem key={index} header={faq.question} text={faq.answer} />
             ))
           ) : (
             <NoData message="No FAQs available" />
@@ -120,9 +132,9 @@ const Faq = () => {
 
         {/* More FAQs Button */}
         <div className="text-center mt-8">
-          <Link href="/faq">
+          <Link href={faqMeta?.button_link || "/faq"}>
             <span className="px-6 py-3 rounded-full bg-primary text-white font-medium transition hover:bg-primary-dark">
-              More FAQs
+              {faqMeta?.button_text || "More FAQs"}
             </span>
           </Link>
         </div>
