@@ -5,26 +5,25 @@ import { useFormik } from "formik";
 import * as Yup from "yup";
 import axios from "axios";
 import { useState } from "react";
-import { ToastContainer, toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
 
 // Define the form validation schema using Yup
 const validationSchema = Yup.object({
   name: Yup.string().required("Name is required"),
   email: Yup.string().email("Invalid email address").required("Email is required"),
-  phone: Yup.string().matches(/^[0-9]+$/, "Phone number is not valid"),
-  study_mode: Yup.string().required("Please select a study mode"),
+  phone: Yup.string().matches(/^[0-9]+$/, "Phone number is not valid").nullable(),
+  study_mode: Yup.string(),
   course: Yup.string().required("Please select a course"),
-  hear_by: Yup.string().required("Please let us know how you heard about us"),
-  message: Yup.string().max(1000, "Message can't be longer than 1000 characters"),
+  hear_by: Yup.string(),
+  message: Yup.string().max(1000, "Message can't be longer than 1000 characters").nullable(),
   accept_condition: Yup.boolean().oneOf([true], "You must accept the terms"),
   contact_me: Yup.string().required("Please choose how you want to be contacted"),
 });
 
-const Contact = () => {
+const Contact: React.FC = () => {
   const [loading, setLoading] = useState(false);
+  const [submitMessage, setSubmitMessage] = useState<string | null>(null);
 
-  // Formik setup
+  // Formik setup with initial values and validation schema
   const formik = useFormik({
     initialValues: {
       name: "",
@@ -39,23 +38,22 @@ const Contact = () => {
     },
     validationSchema,
     onSubmit: async (values) => {
+      console.log("Submitting form with values:", values); // Log form values
       setLoading(true);
+      setSubmitMessage(null); // Reset message before submitting
 
       try {
         const response = await axios.post(`https://wizam.awmtab.in/api/contact-us`, values);
 
-        // Log the response to console
-        console.log("Response:", response);
-
         if (response.status === 200) {
-          toast.success("Your inquiry has been submitted successfully!");
+          setSubmitMessage("Your inquiry has been submitted successfully!");
           formik.resetForm();
         } else {
-          toast.error("Something went wrong. Please try again.");
+          setSubmitMessage("Something went wrong. Please try again.");
         }
-      } catch (error) {
-        console.error("Error:", error);
-        toast.error("An error occurred while submitting the form.");
+      } catch (error: any) {
+        console.error("Error during submission:", error.response || error.message);
+        setSubmitMessage("An error occurred while submitting the form.");
       } finally {
         setLoading(false);
       }
@@ -161,9 +159,6 @@ const Contact = () => {
                   <option value="Full-Time">Full-Time</option>
                   <option value="Part-Time">Part-Time</option>
                 </select>
-                {formik.touched.study_mode && formik.errors.study_mode ? (
-                  <p className="text-red-500 text-sm">{formik.errors.study_mode}</p>
-                ) : null}
               </div>
 
               <div className="mb-4">
@@ -253,10 +248,14 @@ const Contact = () => {
                 {loading ? "Submitting..." : "Submit"}
               </button>
             </form>
+
+            {/* Success Message */}
+            {submitMessage && (
+              <p className="mt-4 text-green-600 text-lg font-semibold">{submitMessage}</p>
+            )}
           </div>
         </div>
       </div>
-      <ToastContainer />
     </section>
   );
 };
