@@ -1,6 +1,63 @@
-import { FaMapMarkerAlt, FaPhoneAlt, FaEnvelope } from 'react-icons/fa';
+"use client";
+
+import { FaMapMarkerAlt, FaPhoneAlt, FaEnvelope } from "react-icons/fa";
+import { useFormik } from "formik";
+import * as Yup from "yup";
+import axios from "axios";
+import { useState } from "react";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
+// Define the form validation schema using Yup
+const validationSchema = Yup.object({
+  name: Yup.string().required("Name is required"),
+  email: Yup.string().email("Invalid email address").required("Email is required"),
+  phone: Yup.string().matches(/^[0-9]+$/, "Phone number is not valid"),
+  study_mode: Yup.string().required("Please select a study mode"),
+  course: Yup.string().required("Please select a course"),
+  hear_by: Yup.string().required("Please let us know how you heard about us"),
+  message: Yup.string().max(1000, "Message can't be longer than 1000 characters"),
+  accept_condition: Yup.boolean().oneOf([true], "You must accept the terms"),
+  contact_me: Yup.string().required("Please choose how you want to be contacted"),
+});
 
 const Contact = () => {
+  const [loading, setLoading] = useState(false);
+
+  // Formik setup
+  const formik = useFormik({
+    initialValues: {
+      name: "",
+      email: "",
+      phone: "",
+      study_mode: "",
+      course: "",
+      hear_by: "",
+      message: "",
+      accept_condition: false,
+      contact_me: "phone",
+    },
+    validationSchema,
+    onSubmit: async (values) => {
+      setLoading(true);
+
+      try {
+        const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/contact-us`, values);
+
+        if (response.status === 200) {
+          toast.success("Your inquiry has been submitted successfully!");
+          formik.resetForm();
+        } else {
+          toast.error("Something went wrong. Please try again.");
+        }
+      } catch (error) {
+        toast.error("An error occurred while submitting the form.");
+      } finally {
+        setLoading(false);
+      }
+    },
+  });
+
   return (
     <section id="contact" className="relative py-20 md:py-[120px] bg-gray-100">
       <div className="container px-4">
@@ -37,96 +94,165 @@ const Contact = () => {
           {/* Right Side: Form */}
           <div className="w-full lg:w-6/12 p-10">
             <h3 className="text-2xl font-semibold mb-6 text-dark">Quick Inquiry</h3>
-            <form>
+
+            <form onSubmit={formik.handleSubmit}>
               <div className="mb-4">
                 <input
                   type="text"
+                  name="name"
                   placeholder="Your Name"
-                  className="w-full bg-transparent rounded-md border border-stroke dark:border-dark-3 py-[10px] px-5 text-dark-6 outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-gray-2 disabled:border-gray-2"
+                  value={formik.values.name}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  className={`w-full bg-transparent rounded-md border py-[10px] px-5 ${
+                    formik.touched.name && formik.errors.name ? "border-red-500" : ""
+                  }`}
                 />
+                {formik.touched.name && formik.errors.name ? (
+                  <p className="text-red-500 text-sm">{formik.errors.name}</p>
+                ) : null}
               </div>
+
               <div className="mb-4">
                 <input
                   type="email"
+                  name="email"
                   placeholder="Your Email"
-                  className="w-full bg-transparent rounded-md border border-stroke dark:border-dark-3 py-[10px] px-5 text-dark-6 outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-gray-2 disabled:border-gray-2"
+                  value={formik.values.email}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  className={`w-full bg-transparent rounded-md border py-[10px] px-5 ${
+                    formik.touched.email && formik.errors.email ? "border-red-500" : ""
+                  }`}
                 />
+                {formik.touched.email && formik.errors.email ? (
+                  <p className="text-red-500 text-sm">{formik.errors.email}</p>
+                ) : null}
               </div>
+
               <div className="mb-4">
                 <input
                   type="text"
+                  name="phone"
                   placeholder="Your Phone Number"
-                  className="w-full bg-transparent rounded-md border border-stroke dark:border-dark-3 py-[10px] px-5 text-dark-6 outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-gray-2 disabled:border-gray-2"
+                  value={formik.values.phone}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  className="w-full bg-transparent rounded-md border py-[10px] px-5"
                 />
+                {formik.touched.phone && formik.errors.phone ? (
+                  <p className="text-red-500 text-sm">{formik.errors.phone}</p>
+                ) : null}
               </div>
+
               <div className="mb-4">
-                <select className="w-full bg-transparent rounded-md border border-stroke dark:border-dark-3 py-[10px] px-5 text-dark-6 outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-gray-2 disabled:border-gray-2">
-                  <option>Select Study Mode</option>
-                  <option>Full-Time</option>
-                  <option>Part-Time</option>
+                <select
+                  name="study_mode"
+                  value={formik.values.study_mode}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  className="w-full bg-transparent rounded-md border py-[10px] px-5"
+                >
+                  <option value="">Select Study Mode</option>
+                  <option value="Full-Time">Full-Time</option>
+                  <option value="Part-Time">Part-Time</option>
                 </select>
+                {formik.touched.study_mode && formik.errors.study_mode ? (
+                  <p className="text-red-500 text-sm">{formik.errors.study_mode}</p>
+                ) : null}
               </div>
+
               <div className="mb-4">
-                <select className="w-full bg-transparent rounded-md border border-stroke dark:border-dark-3 py-[10px] px-5 text-dark-6 outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-gray-2 disabled:border-gray-2">
-                  <option>Select Course</option>
-                  <option>Course 1</option>
-                  <option>Course 2</option>
+                <select
+                  name="course"
+                  value={formik.values.course}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  className="w-full bg-transparent rounded-md border py-[10px] px-5"
+                >
+                  <option value="">Select Course</option>
+                  <option value="course1">Course 1</option>
+                  <option value="course2">Course 2</option>
                 </select>
+                {formik.touched.course && formik.errors.course ? (
+                  <p className="text-red-500 text-sm">{formik.errors.course}</p>
+                ) : null}
               </div>
-              <div className="mb-4">
-                <select className="w-full bg-transparent rounded-md border border-stroke dark:border-dark-3 py-[10px] px-5 text-dark-6 outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-gray-2 disabled:border-gray-2">
-                  <option>How did you hear about us?</option>
-                  <option>Friend</option>
-                  <option>Social Media</option>
-                </select>
-              </div>
+
               <div className="mb-4">
                 <textarea
+                  name="message"
                   rows={4}
                   placeholder="Type your message here"
-                  className="w-full bg-transparent rounded-md border border-stroke dark:border-dark-3 py-[10px] px-5 text-dark-6 outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-gray-2 disabled:border-gray-2"
+                  value={formik.values.message}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  className="w-full bg-transparent rounded-md border py-[10px] px-5"
                 ></textarea>
+                {formik.touched.message && formik.errors.message ? (
+                  <p className="text-red-500 text-sm">{formik.errors.message}</p>
+                ) : null}
               </div>
+
               <div className="mb-6">
                 <div className="flex items-start space-x-2">
                   <input
                     type="checkbox"
-                    className="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
+                    name="accept_condition"
+                    checked={formik.values.accept_condition}
+                    onChange={formik.handleChange}
+                    className="h-4 w-4 text-primary border-gray-300 rounded"
                   />
-                  <p className="text-sm">Yes, I agree to the processing of my personal data in line with the school's privacy policy.</p>
+                  <p className="text-sm">Yes, I agree to the privacy policy.</p>
                 </div>
+                {formik.touched.accept_condition && formik.errors.accept_condition ? (
+                  <p className="text-red-500 text-sm">{formik.errors.accept_condition}</p>
+                ) : null}
               </div>
+
               <div className="mb-6">
                 <label className="block mb-2 text-sm font-medium">Contact me:</label>
                 <div className="flex items-center space-x-4">
                   <div className="flex items-center space-x-2">
                     <input
                       type="radio"
-                      name="contact-method"
-                      className="h-4 w-4 text-primary focus:ring-primary border-gray-300"
+                      name="contact_me"
+                      value="phone"
+                      checked={formik.values.contact_me === "phone"}
+                      onChange={formik.handleChange}
+                      className="h-4 w-4 text-primary border-gray-300"
                     />
                     <label>By Phone</label>
                   </div>
                   <div className="flex items-center space-x-2">
                     <input
                       type="radio"
-                      name="contact-method"
-                      className="h-4 w-4 text-primary focus:ring-primary border-gray-300"
+                      name="contact_me"
+                      value="email"
+                      checked={formik.values.contact_me === "email"}
+                      onChange={formik.handleChange}
+                      className="h-4 w-4 text-primary border-gray-300"
                     />
                     <label>By Email</label>
                   </div>
                 </div>
+                {formik.touched.contact_me && formik.errors.contact_me ? (
+                  <p className="text-red-500 text-sm">{formik.errors.contact_me}</p>
+                ) : null}
               </div>
+
               <button
                 type="submit"
                 className="w-full bg-secondary text-white py-3 rounded-full hover:bg-[#57a628]"
+                disabled={loading}
               >
-                Submit
+                {loading ? "Submitting..." : "Submit"}
               </button>
             </form>
           </div>
         </div>
       </div>
+      <ToastContainer />
     </section>
   );
 };
