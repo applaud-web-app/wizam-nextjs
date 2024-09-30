@@ -4,12 +4,14 @@ import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { FaHome } from "react-icons/fa";
+import { useRouter } from "next/navigation"; // Use router to redirect
 
 const ForgetPassword = () => {
   const [email, setEmail] = useState<string>("");
   const [submitted, setSubmitted] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
+  const router = useRouter();
 
   const handleReset = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -17,14 +19,31 @@ const ForgetPassword = () => {
     setError(null);
 
     try {
-      // Assume API call here to send a reset password email
-      setSubmitted(true);
-      setLoading(false);
-    } catch {
-      setError("An error occurred while sending the reset link.");
-      setLoading(false);
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/forgot-password`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ email }),
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            // setSubmitted(true);
+            router.push('email-sent');
+        } else {
+            // Handle specific error messages from the API
+            setError(data.message || "An error occurred while sending the reset link.");
+        }
+    } catch (error) {
+        setError("An error occurred while sending the reset link.");
+    } finally {
+        setLoading(false);
     }
   };
+
+
 
   return (
     <section className="relative min-h-screen flex flex-col items-center px-4 md:px-0">
