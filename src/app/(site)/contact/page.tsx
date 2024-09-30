@@ -1,3 +1,4 @@
+import CallToAction from "@/components/CallToAction";
 import Breadcrumb from "@/components/Common/Breadcrumb";
 import Contact from "@/components/Contact";
 import { Metadata } from "next";
@@ -13,6 +14,8 @@ const ContactPage = () => {
     <>
       <Breadcrumb pageName="Contact Us" />
       <Contact />
+      <CallToAction />
+
     </>
   );
 };

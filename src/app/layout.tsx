@@ -16,6 +16,7 @@ import "react-toastify/dist/ReactToastify.css"; // Import Toastify styles
 
 // Import the Nunito font from next/font/google
 import { Nunito } from "next/font/google";
+import { SiteProvider } from "@/context/SiteContext"; // Import SiteProvider
 
 // Load the Nunito font
 const nunito = Nunito({
@@ -30,7 +31,7 @@ export default function RootLayout({
 }) {
   const [loading, setLoading] = useState<boolean>(true);
   const pathname = usePathname();
-  const router = useRouter(); // Use router for possible redirects
+  const router = useRouter();
 
   useEffect(() => {
     setTimeout(() => setLoading(false), 1000);
@@ -77,7 +78,7 @@ export default function RootLayout({
   return (
     <html
       suppressHydrationWarning={true}
-      className={`${nunito.className} !scroll-smooth`} // Apply Nunito font globally
+      className={`${nunito.className} !scroll-smooth`}
       lang="en"
     >
       <head />
@@ -86,34 +87,36 @@ export default function RootLayout({
           <PreLoader />
         ) : (
           <SessionProvider>
-            <ThemeProvider
-              attribute="class"
-              enableSystem={false} // Disable system theme detection
-              forcedTheme="light" // Force light theme
-              defaultTheme="light" // Light theme as default
-            >
-              <ProgressBar
-                height="4px"
-                color="#3394c6"
-                options={{ showSpinner: true }}
-                shallowRouting
-              />
-              <ToastContainer // Add ToastContainer for notifications
-                position="top-right"
-                autoClose={5000}
-                hideProgressBar={false}
-                newestOnTop={false}
-                closeOnClick
-                rtl={false}
-                pauseOnFocusLoss
-                draggable
-                pauseOnHover
-              />
-              {!noHeaderFooter && <Header />}
-              {children}
-              {!noHeaderFooter && <Footer />}
-              <ScrollToTop />
-            </ThemeProvider>
+            <SiteProvider> {/* Wrap the entire app with SiteProvider */}
+              <ThemeProvider
+                attribute="class"
+                enableSystem={false}
+                forcedTheme="light"
+                defaultTheme="light"
+              >
+                <ProgressBar
+                  height="4px"
+                  color="#3394c6"
+                  options={{ showSpinner: true }}
+                  shallowRouting
+                />
+                <ToastContainer
+                  position="top-right"
+                  autoClose={5000}
+                  hideProgressBar={false}
+                  newestOnTop={false}
+                  closeOnClick
+                  rtl={false}
+                  pauseOnFocusLoss
+                  draggable
+                  pauseOnHover
+                />
+                {!noHeaderFooter && <Header />}
+                {children}
+                {!noHeaderFooter && <Footer />}
+                <ScrollToTop />
+              </ThemeProvider>
+            </SiteProvider>
           </SessionProvider>
         )}
       </body>

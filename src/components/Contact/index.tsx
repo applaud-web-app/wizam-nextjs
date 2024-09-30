@@ -4,14 +4,16 @@ import { FaMapMarkerAlt, FaPhoneAlt, FaEnvelope } from "react-icons/fa";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import axios from "axios";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 // Define the form validation schema using Yup
 const validationSchema = Yup.object({
   name: Yup.string().required("Name is required"),
   email: Yup.string().email("Invalid email address").required("Email is required"),
-  phone: Yup.string().matches(/^[0-9]+$/, "Phone number is not valid").nullable(),
-  study_mode: Yup.string(),
+  phone: Yup.string().matches(/^[0-9]+$/, "Phone number is not valid"),
+  study_mode: Yup.string().required("Please select a study mode"),
   course: Yup.string().required("Please select a course"),
   hear_by: Yup.string(),
   message: Yup.string().max(1000, "Message can't be longer than 1000 characters").nullable(),
@@ -21,9 +23,26 @@ const validationSchema = Yup.object({
 
 const Contact: React.FC = () => {
   const [loading, setLoading] = useState(false);
-  const [submitMessage, setSubmitMessage] = useState<string | null>(null);
+  const [courses, setCourses] = useState<{ id: number; name: string }[]>([]); // For storing courses
 
-  // Formik setup with initial values and validation schema
+  // Fetch courses from the API when the component mounts
+  useEffect(() => {
+    const fetchCourses = async () => {
+      try {
+        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/course`);
+        if (response.data.status) {
+          setCourses(response.data.data); // Store courses in the state
+        } else {
+          console.error("Failed to load courses");
+        }
+      } catch (error) {
+        console.error("Error fetching courses:", error);
+      }
+    };
+    fetchCourses();
+  }, []);
+
+  // Formik setup
   const formik = useFormik({
     initialValues: {
       name: "",
@@ -38,22 +57,26 @@ const Contact: React.FC = () => {
     },
     validationSchema,
     onSubmit: async (values) => {
-      console.log("Submitting form with values:", values); // Log form values
       setLoading(true);
-      setSubmitMessage(null); // Reset message before submitting
 
       try {
-        const response = await axios.post(`https://wizam.awmtab.in/api/contact-us`, values);
+        const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/contact-us`, values);
 
-        if (response.status === 200) {
-          setSubmitMessage("Your inquiry has been submitted successfully!");
-          formik.resetForm();
+        // Log the response to console for debugging
+        console.log("Response:", response);
+
+        // Handle the response based on the structure of the API
+        if (response.data.status === true) {
+          // Assuming `status: true` means the form was successfully submitted
+          toast.success("Your inquiry has been submitted successfully!");
+          formik.resetForm(); // Reset the form after successful submission
         } else {
-          setSubmitMessage("Something went wrong. Please try again.");
+          // If there's an issue, display an error message
+          toast.error("Something went wrong. Please try again.");
         }
       } catch (error: any) {
         console.error("Error during submission:", error.response || error.message);
-        setSubmitMessage("An error occurred while submitting the form.");
+        toast.error("An error occurred while submitting the form.");
       } finally {
         setLoading(false);
       }
@@ -159,8 +182,12 @@ const Contact: React.FC = () => {
                   <option value="Full-Time">Full-Time</option>
                   <option value="Part-Time">Part-Time</option>
                 </select>
+                {formik.touched.study_mode && formik.errors.study_mode ? (
+                  <p className="text-red-500 text-sm">{formik.errors.study_mode}</p>
+                ) : null}
               </div>
 
+              {/* Course Dropdown with dynamic data */}
               <div className="mb-4">
                 <select
                   name="course"
@@ -170,8 +197,11 @@ const Contact: React.FC = () => {
                   className="w-full bg-transparent rounded-md border py-[10px] px-5"
                 >
                   <option value="">Select Course</option>
-                  <option value="course1">Course 1</option>
-                  <option value="course2">Course 2</option>
+                  {courses.map((course) => (
+                    <option key={course.id} value={course.id}>
+                      {course.name}
+                    </option>
+                  ))}
                 </select>
                 {formik.touched.course && formik.errors.course ? (
                   <p className="text-red-500 text-sm">{formik.errors.course}</p>
@@ -248,14 +278,10 @@ const Contact: React.FC = () => {
                 {loading ? "Submitting..." : "Submit"}
               </button>
             </form>
-
-            {/* Success Message */}
-            {submitMessage && (
-              <p className="mt-4 text-green-600 text-lg font-semibold">{submitMessage}</p>
-            )}
           </div>
         </div>
       </div>
+      <ToastContainer />
     </section>
   );
 };

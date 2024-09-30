@@ -1,32 +1,12 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { useRouter } from "next/router";
+import axios from "axios";
 import { notFound } from "next/navigation";
 import Breadcrumb from "@/components/Common/Breadcrumb";
-
-// Mock exam data
-const examData = [
-  {
-    slug: "dental-nursing-preparation-exam-2024-nebdn",
-    title: "Dental Nursing Preparation Exam 2024 NEBDN",
-    description: "Comprehensive exam for dental nursing preparation.",
-    detailedContent: "This exam will prepare you for NEBDN 2024.",
-    duration: "1.5 Hrs",
-    questions: 20,
-    totalMarks: 40,
-    availableFrom: "Sep 16, 2024",
-    availableTo: "Jan 16, 2025",
-  },
-  {
-    slug: "pharmacy-technician-certification-exam-2024",
-    title: "Pharmacy Technician Certification Exam 2024",
-    description: "Detailed exam for pharmacy technician certification.",
-    detailedContent:
-      "Get ready for the 2024 pharmacy technician certification exam.",
-    duration: "2 Hrs",
-    questions: 30,
-    totalMarks: 60,
-    availableFrom: "Oct 1, 2024",
-    availableTo: "Feb 1, 2025",
-  },
-];
+import Loader from "@/components/Common/Loader";
+import NoData from "@/components/Common/NoData";
 
 interface ExamDetailProps {
   params: {
@@ -36,12 +16,47 @@ interface ExamDetailProps {
 
 const ExamDetailPage = ({ params }: ExamDetailProps) => {
   const { slug } = params;
+  const [exam, setExam] = useState<any>(null); // State to store the exam details
+  const [loading, setLoading] = useState(true); // Loading state
+  const [error, setError] = useState<string | null>(null); // Error state
 
-  // Find the exam that matches the slug
-  const exam = examData.find((exam) => exam.slug === slug);
+  // Fetch exam details from API based on the slug
+  useEffect(() => {
+    const fetchExamDetails = async () => {
+      try {
+        const response = await axios.get(
+          `${process.env.NEXT_PUBLIC_API_URL}/exam/${slug}`
+        );
 
-  if (!exam) {
+        if (response.data.status && response.data.data) {
+          setExam(response.data.data);
+        } else {
+          setError("Failed to fetch exam details.");
+        }
+      } catch (error) {
+        console.error("Error fetching exam details:", error);
+        setError("An error occurred while fetching the exam details.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchExamDetails();
+  }, [slug]);
+
+  // If loading, show a loading spinner
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-[300px]">
+        <Loader />
+      </div>
+    );
+  }
+
+  // If there's an error or no exam found, return 404 or error message
+  if (error || !exam) {
     notFound();
+    return <NoData message={error || "Exam not found."} />;
   }
 
   return (
@@ -54,7 +69,7 @@ const ExamDetailPage = ({ params }: ExamDetailProps) => {
             <div className="text-center">
               <p className="text-lg text-gray-500">Available Between</p>
               <p className="text-xl font-bold text-primary">
-                {exam.availableFrom} - {exam.availableTo}
+                {exam.availableFrom || "N/A"} - {exam.availableTo || "N/A"}
               </p>
             </div>
 
@@ -63,7 +78,9 @@ const ExamDetailPage = ({ params }: ExamDetailProps) => {
 
             <div className="text-center">
               <p className="text-lg text-gray-500">Duration</p>
-              <p className="text-xl font-bold text-gray-900">{exam.duration}</p>
+              <p className="text-xl font-bold text-gray-900">
+                {exam.duration || "N/A"}
+              </p>
             </div>
 
             {/* Divider */}
@@ -72,7 +89,7 @@ const ExamDetailPage = ({ params }: ExamDetailProps) => {
             <div className="text-center">
               <p className="text-lg text-gray-500">Questions</p>
               <p className="text-xl font-bold text-gray-900">
-                {exam.questions}
+                {exam.questions || "N/A"}
               </p>
             </div>
 
@@ -82,7 +99,7 @@ const ExamDetailPage = ({ params }: ExamDetailProps) => {
             <div className="text-center">
               <p className="text-lg text-gray-500">Total Marks</p>
               <p className="text-xl font-bold text-gray-900">
-                {exam.totalMarks}
+                {exam.totalMarks || "N/A"}
               </p>
             </div>
           </div>
@@ -90,38 +107,11 @@ const ExamDetailPage = ({ params }: ExamDetailProps) => {
 
         {/* Exam Instructions Section */}
         <div className="mt-8 rounded-lg border bg-white p-6">
-          <h2 className="text-xl font-semibold text-gray-800">
+          {/* <h2 className="text-xl font-semibold text-gray-800">
             Exam Instructions
-          </h2>
-          <ul className="mt-4 list-inside list-disc space-y-2 text-gray-700">
-            <li>Total duration of quiz is {exam.duration}.</li>
-            <li>The quiz contains {exam.questions} questions.</li>
-            <li>Minimum Pass Percentage is 60%.</li>
-          </ul>
-
-          <h2 className="mt-6 text-xl font-semibold text-gray-800">
-            Standard Instructions
-          </h2>
-          <ul className="mt-4 list-inside list-disc space-y-2 text-gray-700">
-            <li>
-              The clock will be set at the server. The countdown timer in the
-              top right corner of the screen will display the remaining time
-              available for you to complete the test.
-            </li>
-            <li>
-              Click on the question number in the Question Palette to go to that
-              numbered question directly. Note that this option does NOT save
-              your answer.
-            </li>
-            <li>
-              Click on Save & Next to save your answer and then go to the next
-              question.
-            </li>
-            <li>
-              The Question Palette displayed on the right side of the screen
-              will show the status of each question.
-            </li>
-          </ul>
+          </h2> */}
+         <div className="exam-instructions" dangerouslySetInnerHTML={{ __html: exam.description }}>
+         </div>
 
           {/* Checkbox and Start Exam Button */}
           <div className="mt-8">

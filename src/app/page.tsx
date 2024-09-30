@@ -5,6 +5,7 @@ import ScrollUp from "@/components/Common/ScrollUp";
 import Faq from "@/components/Faq";
 import Features from "@/components/Features";
 import Hero from "@/components/Hero";
+import HomeFilterBox from "@/components/HomeFilterBox";
 import PopularExams from "@/components/PopularExam";
 import WhyChoose from "@/components/WhyChoose";
 import { Metadata } from "next";
@@ -21,6 +22,7 @@ export default function Home() {
     <main>
       <ScrollUp />
       <Hero />
+      <HomeFilterBox />
       <PopularExams />
       <Features />
       <WhyChoose />

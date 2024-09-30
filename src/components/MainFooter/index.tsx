@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import axios from "axios";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -12,6 +11,7 @@ import {
   FaTwitter,
 } from "react-icons/fa"; // Import React Icons
 import { MdOutlineArrowOutward } from "react-icons/md";
+import { useSiteSettings } from "@/context/SiteContext"; // Import the useSiteSettings hook
 
 // Type for Dynamic Pages fetched from the API
 interface Page {
@@ -20,15 +20,17 @@ interface Page {
 }
 
 const Footer = () => {
+  const { siteSettings, loading, error } = useSiteSettings(); // Access site settings from context
   const [pages, setPages] = useState<Page[]>([]); // State to store dynamic pages
 
   // Fetch dynamic pages from the API
   useEffect(() => {
     const fetchPages = async () => {
       try {
-        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/pages`);
-        if (response.data.status) {
-          setPages(response.data.data); // Set the fetched pages in state
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/pages`);
+        const data = await response.json();
+        if (data.status) {
+          setPages(data.data); // Set the fetched pages in state
         }
       } catch (error) {
         console.error("Error fetching dynamic pages:", error);
@@ -38,8 +40,16 @@ const Footer = () => {
     fetchPages();
   }, []);
 
+  if (loading) {
+    return <p>Loading footer...</p>;
+  }
+
+  if (error || !siteSettings) {
+    return <p>Error loading site settings</p>;
+  }
+
   return (
-    <footer className="bg-[#0b1e22] text-white py-16">
+    <footer className="bg-[#0b1e22] text-white pt-16 pb-12">
       <div className="container mx-auto px-4">
         {/* Grid Layout for footer */}
         <div className="grid grid-cols-2 gap-8 md:grid-cols-2 lg:grid-cols-5">
@@ -47,12 +57,13 @@ const Footer = () => {
           <div className="col-span-2 lg:col-span-1">
             <Link href="/">
               <Image
-                src="/images/logo/logo-white.svg"
-                alt="Wizam Logo"
+                src={siteSettings.site_logo}
+                alt={`${siteSettings.site_name} Logo`}
                 width={140}
                 height={30}
               />
             </Link>
+            <p className="mt-4 text-gray-400">{siteSettings.tag_line}</p>
           </div>
 
           {/* Content Links */}
@@ -79,6 +90,7 @@ const Footer = () => {
                   Resources
                 </Link>
               </li>
+             
               <li>
                 <Link href="/contact" className="hover:text-green-400">
                   Contact Us
@@ -91,6 +103,11 @@ const Footer = () => {
           <div className="col-span-1 lg:col-span-1">
             <h4 className="mb-4 font-semibold text-xl leading-snug">Company</h4>
             <ul>
+            <li className="mb-2">
+                <Link href="/resources" className="hover:text-green-400">
+                  FAQ
+                </Link>
+              </li>
               {pages.map((page, index) => (
                 <li key={index} className="mb-2">
                   <Link href={`/${page.slug}`} className="hover:text-green-400">
@@ -105,15 +122,15 @@ const Footer = () => {
           <div className="col-span-2 lg:col-span-1">
             <h4 className="mb-4 font-semibold text-xl leading-snug">Contact</h4>
             <ul className="text-sm text-white">
-              <li className="mb-2">3 The Mount, Acton, London, W3 9NW</li>
+              <li className="mb-2">{siteSettings.address}</li>
               <li className="mb-2">
-                <Link href="tel:02089934500" className="hover:text-green-400">
-                  02089934500
+                <Link href={`tel:${siteSettings.number}`} className="hover:text-green-400">
+                  {siteSettings.number}
                 </Link>
               </li>
               <li>
-                <Link href="mailto:info@wizam.com" className="hover:text-green-400">
-                  info@wizam.com
+                <Link href={`mailto:${siteSettings.email}`} className="hover:text-green-400">
+                  {siteSettings.email}
                 </Link>
               </li>
             </ul>
@@ -144,24 +161,34 @@ const Footer = () => {
         {/* Footer Bottom with Social Icons */}
         <div className="mt-12 flex flex-wrap items-center justify-between border-t border-gray-600 pt-4">
           <p className="text-sm text-gray-400 leading-relaxed">
-            © 2024. All Rights Reserved.
+            {siteSettings.copyright}
           </p>
           <div className="flex space-x-4">
-            <Link href="/" aria-label="Facebook" className="text-gray-400 hover:text-green-400">
-              <FaFacebookF />
-            </Link>
-            <Link href="/" aria-label="LinkedIn" className="text-gray-400 hover:text-green-400">
-              <FaLinkedinIn />
-            </Link>
-            <Link href="/" aria-label="Instagram" className="text-gray-400 hover:text-green-400">
-              <FaInstagram />
-            </Link>
-            <Link href="/" aria-label="YouTube" className="text-gray-400 hover:text-green-400">
-              <FaYoutube />
-            </Link>
-            <Link href="/" aria-label="Twitter" className="text-gray-400 hover:text-green-400">
-              <FaTwitter />
-            </Link>
+            {siteSettings.facebook && (
+              <Link href={siteSettings.facebook} aria-label="Facebook" className="text-gray-400 hover:text-green-400">
+                <FaFacebookF />
+              </Link>
+            )}
+            {siteSettings.linkedin && (
+              <Link href={siteSettings.linkedin} aria-label="LinkedIn" className="text-gray-400 hover:text-green-400">
+                <FaLinkedinIn />
+              </Link>
+            )}
+            {siteSettings.instagram && (
+              <Link href={siteSettings.instagram} aria-label="Instagram" className="text-gray-400 hover:text-green-400">
+                <FaInstagram />
+              </Link>
+            )}
+            {siteSettings.youtube && (
+              <Link href={siteSettings.youtube} aria-label="YouTube" className="text-gray-400 hover:text-green-400">
+                <FaYoutube />
+              </Link>
+            )}
+            {siteSettings.twitter && (
+              <Link href={siteSettings.twitter} aria-label="Twitter" className="text-gray-400 hover:text-green-400">
+                <FaTwitter />
+              </Link>
+            )}
           </div>
         </div>
       </div>

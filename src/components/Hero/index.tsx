@@ -146,54 +146,7 @@ const Hero = () => {
         </div>
       </section>
 
-        {/* Exam Section */}
-        <section className="-mt-[120px] md:-mt-[200px] z-20 relative">
-        <div className="container mx-auto">
-          <div className="bg-white shadow-lg rounded-lg p-6 lg:p-8">
-            <div className="text-center mb-6 lg:mb-8">
-              <h2 className="text-2xl lg:text-3xl font-bold text-gray-900">
-                Start Exam Preparation from Here
-              </h2>
-            </div>
-
-            {/* Form Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 lg:gap-6 items-center">
-              {/* Select Course */}
-              <div className="w-full">
-                <select
-                  id="selectCourse"
-                  className="w-full bg-white border border-gray-300 rounded-md py-3 px-4 focus:outline-none focus:ring-2 focus:ring-secondary transition text-gray-700"
-                >
-                  <option value="">Select Course</option>
-                  <option value="course1">Course 1</option>
-                  <option value="course2">Course 2</option>
-                  <option value="course3">Course 3</option>
-                </select>
-              </div>
-
-              {/* Select Exam */}
-              <div className="w-full">
-                <select
-                  id="selectExam"
-                  className="w-full bg-white border border-gray-300 rounded-md py-3 px-4 focus:outline-none focus:ring-2 focus:ring-secondary transition text-gray-700"
-                >
-                  <option value="">Select Exam</option>
-                  <option value="exam1">Exam 1</option>
-                  <option value="exam2">Exam 2</option>
-                  <option value="exam3">Exam 3</option>
-                </select>
-              </div>
-
-              {/* Submit Button */}
-              <div className="w-full">
-                <button className="w-full rounded-md bg-secondary py-3 px-4 text-white font-medium transition duration-300 ease-in-out hover:bg-primary">
-                  Submit
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+      
     </>
   );
 };

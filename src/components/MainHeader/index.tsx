@@ -8,9 +8,11 @@ import { IoSearchSharp } from "react-icons/io5";
 import { AiOutlineClose } from "react-icons/ai";
 import menuData from "./menuData";
 import Cookies from "js-cookie";
-import { useRouter } from "next/navigation"; // Use router to redirect
+import { useRouter } from "next/navigation";
+import { useSiteSettings } from "@/context/SiteContext"; // Import the hook to use site settings
 
 const Header = () => {
+  const { siteSettings, loading, error } = useSiteSettings(); // Access site settings from the context
   const pathUrl = usePathname();
   const router = useRouter();  
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -31,35 +33,40 @@ const Header = () => {
     return () => window.removeEventListener("scroll", handleStickyNavbar);
   }, []);
 
-  // Handle search input visibility
+  // Toggle Search Overlay
   const handleSearchToggle = () => setSearchOpen(!searchOpen);
 
-  // Close the search overlay if Escape is pressed
+  // Close search with escape key
   useEffect(() => {
     const closeSearchOnEscape = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        setSearchOpen(false);
-      }
+      if (e.key === "Escape") setSearchOpen(false);
     };
     window.addEventListener("keydown", closeSearchOnEscape);
     return () => window.removeEventListener("keydown", closeSearchOnEscape);
   }, []);
 
+  // Check for JWT in cookies
   useEffect(() => {
-    const token = Cookies.get('jwt'); 
-    console.log('Retrieved JWT:', token); 
+    const token = Cookies.get("jwt");
     setIsLoggedIn(!!token);
   }, []);
 
-
   const handleLogout = () => {
-    Cookies.remove('jwt');
-    setIsLoggedIn(false); 
-    router.push('/signin');
+    Cookies.remove("jwt");
+    setIsLoggedIn(false);
+    router.push("/signin");
   };
 
   // Toggle the mobile navbar
   const handleNavbarToggle = () => setNavbarOpen(!navbarOpen);
+
+  if (loading) {
+    return null; // You can return a loader or null while the settings are loading
+  }
+
+  if (error || !siteSettings) {
+    return <p>Error loading site settings...</p>; // Handle the case where settings couldn't be fetched
+  }
 
   return (
     <>
@@ -75,20 +82,24 @@ const Header = () => {
           {/* Logo (Left-aligned) */}
           <div className="w-40 lg:w-60">
             <Link href="/">
-              <Image
-                src="/images/logo/wizam-logo.png"
-                alt="logo"
-                width={150}
-                height={30}
-                className="dark:hidden"
-              />
-              <Image
-                src="/images/logo/wizam-logo.png"
-                alt="logo"
-                width={150}
-                height={30}
-                className="hidden dark:block"
-              />
+              {siteSettings.site_logo && (
+                <Image
+                  src={siteSettings.site_logo}
+                  alt={`${siteSettings.site_name} logo`}
+                  width={150}
+                  height={30}
+                  className="dark:hidden"
+                />
+              )}
+              {siteSettings.light_site_logo && (
+                <Image
+                  src={siteSettings.light_site_logo}
+                  alt={`${siteSettings.site_name} logo`}
+                  width={150}
+                  height={30}
+                  className="hidden dark:block"
+                />
+              )}
             </Link>
           </div>
 
@@ -116,19 +127,18 @@ const Header = () => {
             <button
               className="text-xl text-dark dark:text-white"
               onClick={handleSearchToggle}
+              aria-label="Search"
             >
               <IoSearchSharp />
             </button>
 
-            {isLoggedIn  ? (
-              <>
-                <button
-                  onClick={() => handleLogout()}
-                  className="bg-primary text-white py-2 px-6 rounded-full hover:bg-secondary transition"
-                >
-                  Sign Out
-                </button>
-              </>
+            {isLoggedIn ? (
+              <button
+                onClick={handleLogout}
+                className="bg-primary text-white py-2 px-6 rounded-full hover:bg-secondary transition"
+              >
+                Sign Out
+              </button>
             ) : (
               <>
                 <Link
@@ -151,6 +161,7 @@ const Header = () => {
           <button
             onClick={handleNavbarToggle}
             className="lg:hidden flex flex-col space-y-1.5 focus:outline-none"
+            aria-label="Toggle Menu"
           >
             <span
               className={`block h-0.5 w-6 bg-dark dark:bg-white transition-transform ${
@@ -194,21 +205,19 @@ const Header = () => {
 
               {/* Mobile Authentication */}
               {isLoggedIn ? (
-                <>
-                  <button
-                    onClick={() => handleLogout()}
-                    className="bg-primary text-white py-2 px-6 mx-4 rounded-full hover:bg-secondary transition w-full"
-                  >
-                    Sign Out 
-                  </button>
-                </>
+                <button
+                  onClick={handleLogout}
+                  className="bg-primary text-white py-2 px-6 mx-4 rounded-full hover:bg-secondary transition w-full"
+                >
+                  Sign Out
+                </button>
               ) : (
                 <>
                   <Link
                     href="/signin"
                     className="bg-primary/10 border border-primary text-primary text-center py-2 px-6  rounded-full hover:bg-primary hover:text-white transition w-full"
                   >
-                    Sign In 
+                    Sign In
                   </Link>
                   <Link
                     href="/signup"
@@ -232,6 +241,7 @@ const Header = () => {
             <button
               className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 dark:text-gray-300 dark:hover:text-white text-2xl"
               onClick={handleSearchToggle}
+              aria-label="Close Search"
             >
               <AiOutlineClose />
             </button>
