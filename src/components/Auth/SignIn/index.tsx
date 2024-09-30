@@ -20,12 +20,10 @@ const SignIn = () => {
   // Check if user is already signed in
   useEffect(() => {
     const token = Cookies.get('jwt'); 
-    console.log('Cookies after login:', document.cookie);
-    console.log('Retrieved JWT:', token); 
     if (token) {
-      router.push('/'); // Redirect to home page if token exists
+      router.push('/'); 
     }
-  }, [router]);
+  }, []);
 
   const handleSignIn = async (values:any) => {
     setLoading(true);
@@ -62,7 +60,7 @@ const SignIn = () => {
         // Redirect to another page after a brief delay to let the toast show
         setTimeout(() => {
           router.push("/about"); // Redirect to the /about page after login
-        }, 2000);
+        }, 1000);
       } else {
         // Display an error toast when status is false
         const errorMessage = response.data.message || "Invalid credentials. Please try again.";

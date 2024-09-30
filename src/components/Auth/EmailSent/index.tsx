@@ -1,12 +1,24 @@
 "use client";
 
+import { useEffect } from "react";
 import React from "react";
 import Link from "next/link";
 import { FaHome  } from "react-icons/fa";
 import Image from "next/image";
+import Cookies from "js-cookie";
+import { useRouter } from "next/navigation";
 
 
 const EmailSent = () => {
+  const router = useRouter();
+   // Check if user is already signed in
+  useEffect(() => {
+    const token = Cookies.get('jwt'); 
+    if (token) {
+      router.push('/'); 
+    }
+  }, []);
+
   return (
     <section className="relative min-h-screen flex flex-col items-center px-4 md:px-0">
       {/* Header */}

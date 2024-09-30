@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState,useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { FaHome } from "react-icons/fa";
@@ -8,14 +8,25 @@ import { FaEye, FaEyeSlash } from "react-icons/fa"; // For password toggle
 import { FaRegCircleCheck } from "react-icons/fa6";
 import ReactFlagsSelect from "react-flags-select";
 import { Formik, Form, Field, ErrorMessage } from "formik";
+import { useRouter } from "next/navigation"; // Use router to redirect
 import * as Yup from "yup"; // For validation
 import axios from "axios";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css"; // Import Toastify styles
+import Cookies from "js-cookie";
 
 const SignUp = () => {
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [selectedCountry, setSelectedCountry] = useState<string>("");
+  const router = useRouter(); // For redirecting to other pages
+
+  // Check if user is already signed in
+  useEffect(() => {
+    const token = Cookies.get('jwt'); 
+    if (token) {
+      router.push('/'); 
+    }
+  }, []);
 
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
@@ -68,8 +79,8 @@ const SignUp = () => {
   
         // Redirect to SignIn page after success
         setTimeout(() => {
-          window.location.href = "/signin";
-        }, 3000);
+          router.push('/signin'); 
+        }, 2000);
       } else {
         toast.error(response.data.message || "An error occurred. Please try again.", {
           position: "top-right",

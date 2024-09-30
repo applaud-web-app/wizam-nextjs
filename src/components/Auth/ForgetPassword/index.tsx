@@ -1,10 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState,useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { FaHome } from "react-icons/fa";
 import { useRouter } from "next/navigation"; // Use router to redirect
+import { toast } from "react-toastify"; // Import toast from react-toastify
+import Cookies from "js-cookie";
 
 const ForgetPassword = () => {
   const [email, setEmail] = useState<string>("");
@@ -12,6 +14,14 @@ const ForgetPassword = () => {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const router = useRouter();
+
+  // Check if user is already signed in
+  useEffect(() => {
+    const token = Cookies.get('jwt'); 
+    if (token) {
+      router.push('/'); 
+    }
+  }, []);
 
   const handleReset = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,14 +40,42 @@ const ForgetPassword = () => {
         const data = await response.json();
 
         if (response.ok) {
-            // setSubmitted(true);
-            router.push('email-sent');
+          // Show success toast notification
+          toast.success("A password reset link has been sent to your email address. Please check your inbox (or spam folder) to proceed.", {
+            position: "top-right",
+            autoClose: 3000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+          });
+
+          // Redirect to another page after a brief delay to let the toast show
+          setTimeout(() => {
+            router.push("/email-sent"); // Redirect to the /about page after login
+          }, 1000);
+
         } else {
             // Handle specific error messages from the API
-            setError(data.message || "An error occurred while sending the reset link.");
+            // setError(data.message || "An error occurred while sending the reset link.");
+            toast.error(data.message || "An error occurred while sending the reset link.", {
+              position: "top-right",
+              autoClose: 3000,
+              hideProgressBar: false,
+              closeOnClick: true,
+              pauseOnHover: true,
+              draggable: true,
+            });
         }
     } catch (error) {
-        setError("An error occurred while sending the reset link.");
+        toast.error("An error occurred while sending the reset link.", {
+          position: "top-right",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        });
     } finally {
         setLoading(false);
     }
