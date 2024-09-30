@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/router";
 import axios from "axios";
 import { notFound } from "next/navigation";
 import Breadcrumb from "@/components/Common/Breadcrumb";
@@ -64,6 +63,9 @@ const ExamDetailPage = ({ params }: ExamDetailProps) => {
       <Breadcrumb pageName={exam.title} />
       <section className="container relative z-10 mx-auto -mt-12 pb-20">
         <div className="mb-3 rounded-lg bg-white shadow-lg">
+        
+   
+
           {/* Exam Header Section */}
           <div className="flex flex-col items-center space-y-4 p-6 sm:flex-row sm:justify-around sm:space-x-8 sm:space-y-0">
             <div className="text-center">
@@ -79,7 +81,7 @@ const ExamDetailPage = ({ params }: ExamDetailProps) => {
             <div className="text-center">
               <p className="text-lg text-gray-500">Duration</p>
               <p className="text-xl font-bold text-gray-900">
-                {exam.duration || "N/A"}
+                {exam.exam_duration || "N/A"}
               </p>
             </div>
 
@@ -89,7 +91,7 @@ const ExamDetailPage = ({ params }: ExamDetailProps) => {
             <div className="text-center">
               <p className="text-lg text-gray-500">Questions</p>
               <p className="text-xl font-bold text-gray-900">
-                {exam.questions || "N/A"}
+                {exam.questions_count || "N/A"}
               </p>
             </div>
 
@@ -99,7 +101,7 @@ const ExamDetailPage = ({ params }: ExamDetailProps) => {
             <div className="text-center">
               <p className="text-lg text-gray-500">Total Marks</p>
               <p className="text-xl font-bold text-gray-900">
-                {exam.totalMarks || "N/A"}
+                {exam.total_marks || "N/A"}
               </p>
             </div>
           </div>
@@ -107,11 +109,10 @@ const ExamDetailPage = ({ params }: ExamDetailProps) => {
 
         {/* Exam Instructions Section */}
         <div className="mt-8 rounded-lg border bg-white p-6">
-          {/* <h2 className="text-xl font-semibold text-gray-800">
-            Exam Instructions
-          </h2> */}
-         <div className="exam-instructions" dangerouslySetInnerHTML={{ __html: exam.description }}>
-         </div>
+          <div
+            className="exam-instructions"
+            dangerouslySetInnerHTML={{ __html: exam.description }}
+          ></div>
 
           {/* Checkbox and Start Exam Button */}
           <div className="mt-8">

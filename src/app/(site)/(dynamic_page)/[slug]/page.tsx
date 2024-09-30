@@ -57,7 +57,7 @@ export default async function DynamicPage({ params }: { params: Params }) {
 
   try {
     // Fetch page data dynamically from the API based on the slug using Axios
-    const { data } = await axios.get(`https://wizam.awmtab.in/api/page/${slug}`);
+    const { data } = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/page/${slug}`);
 
     if (!data.status || !data.data) {
       notFound();

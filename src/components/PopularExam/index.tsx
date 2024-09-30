@@ -36,7 +36,7 @@ const PopularExams = () => {
   useEffect(() => {
     const fetchExams = async () => {
       try {
-        const response = await axios.get("https://wizam.awmtab.in/api/popular-exams");
+        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/popular-exams`);
         if (response.data.status && response.data.data) {
           setExams(response.data.data);
         } else {
