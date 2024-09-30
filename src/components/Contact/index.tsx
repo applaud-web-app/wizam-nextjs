@@ -1,12 +1,13 @@
 "use client";
 
-import { FaMapMarkerAlt, FaPhoneAlt, FaEnvelope } from "react-icons/fa";
+import { FaMapMarkerAlt, FaPhoneAlt, FaEnvelope, FaFacebookF, FaInstagram, FaLinkedinIn, FaYoutube, FaTwitter } from "react-icons/fa";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import axios from "axios";
 import { useState, useEffect } from "react";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { useSiteSettings } from "@/context/SiteContext"; // Import SiteContext
 
 // Define the form validation schema using Yup
 const validationSchema = Yup.object({
@@ -22,6 +23,7 @@ const validationSchema = Yup.object({
 });
 
 const Contact: React.FC = () => {
+  const { siteSettings, loading: siteLoading } = useSiteSettings(); // Access Site Settings
   const [loading, setLoading] = useState(false);
   const [courses, setCourses] = useState<{ id: number; name: string }[]>([]); // For storing courses
 
@@ -65,13 +67,10 @@ const Contact: React.FC = () => {
         // Log the response to console for debugging
         console.log("Response:", response);
 
-        // Handle the response based on the structure of the API
         if (response.data.status === true) {
-          // Assuming `status: true` means the form was successfully submitted
           toast.success("Your inquiry has been submitted successfully!");
           formik.resetForm(); // Reset the form after successful submission
         } else {
-          // If there's an issue, display an error message
           toast.error("Something went wrong. Please try again.");
         }
       } catch (error: any) {
@@ -93,27 +92,49 @@ const Contact: React.FC = () => {
             <ul className="space-y-4">
               <li className="flex items-start space-x-3">
                 <FaMapMarkerAlt className="h-6 w-6" />
-                <p>3 The Mount, London W3 9NW, United Kingdom</p>
+                <p>{siteSettings?.address || "Loading address..."}</p>
               </li>
               <li className="flex items-start space-x-3">
                 <FaPhoneAlt className="h-6 w-6" />
-                <p>0208 993 4500</p>
+                <p>{siteSettings?.number || "Loading phone number..."}</p>
               </li>
               <li className="flex items-start space-x-3">
                 <FaEnvelope className="h-6 w-6" />
-                <p>info@wizami.com</p>
+                <p>{siteSettings?.email || "Loading email..."}</p>
               </li>
             </ul>
 
             <hr className="my-8 border-t border-white/20" />
 
-            <h4 className="text-xl font-semibold mb-4">Direction</h4>
-            <ul className="space-y-2 text-white">
-              <li>We are centrally located in Acton High Street, Acton, West London.</li>
-              <li>10-minute walk from Acton Town Underground Station.</li>
-              <li>25 minutes by tube from Piccadilly Circus.</li>
-              <li>Only 9 stops away from London Heathrow Airport.</li>
-            </ul>
+            {/* Social Media Links */}
+            <h4 className="text-xl font-semibold mb-4">Follow Us</h4>
+            <div className="flex space-x-4">
+              {siteSettings?.facebook && (
+                <a href={siteSettings.facebook} target="_blank" rel="noopener noreferrer" aria-label="Facebook">
+                  <FaFacebookF className="text-xl text-white hover:text-green-400" />
+                </a>
+              )}
+              {siteSettings?.instagram && (
+                <a href={siteSettings.instagram} target="_blank" rel="noopener noreferrer" aria-label="Instagram">
+                  <FaInstagram className="text-xl text-white hover:text-green-400" />
+                </a>
+              )}
+              {siteSettings?.linkedin && (
+                <a href={siteSettings.linkedin} target="_blank" rel="noopener noreferrer" aria-label="LinkedIn">
+                  <FaLinkedinIn className="text-xl text-white hover:text-green-400" />
+                </a>
+              )}
+              {siteSettings?.youtube && (
+                <a href={siteSettings.youtube} target="_blank" rel="noopener noreferrer" aria-label="YouTube">
+                  <FaYoutube className="text-xl text-white hover:text-green-400" />
+                </a>
+              )}
+              {siteSettings?.twitter && (
+                <a href={siteSettings.twitter} target="_blank" rel="noopener noreferrer" aria-label="Twitter">
+                  <FaTwitter className="text-xl text-white hover:text-green-400" />
+                </a>
+              )}
+            </div>
           </div>
 
           {/* Right Side: Form */}
