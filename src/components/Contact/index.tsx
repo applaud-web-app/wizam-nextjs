@@ -42,7 +42,10 @@ const Contact = () => {
       setLoading(true);
 
       try {
-        const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/contact-us`, values);
+        const response = await axios.post(`https://wizam.awmtab.in/api/contact-us`, values);
+
+        // Log the response to console
+        console.log("Response:", response);
 
         if (response.status === 200) {
           toast.success("Your inquiry has been submitted successfully!");
@@ -51,6 +54,7 @@ const Contact = () => {
           toast.error("Something went wrong. Please try again.");
         }
       } catch (error) {
+        console.error("Error:", error);
         toast.error("An error occurred while submitting the form.");
       } finally {
         setLoading(false);
