@@ -17,6 +17,7 @@ interface SiteSettings {
   linkedin: string | null;
   youtube: string | null;
   twitter: string | null;
+  currency_symbol: string;
 }
 
 interface SiteContextProps {

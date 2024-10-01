@@ -5,10 +5,10 @@ import Image from "next/image";
 import { Pagination } from "flowbite-react";
 import Link from "next/link";
 import { FaArrowRight } from "react-icons/fa";
-
 import axios from "axios";
 import Loader from "../Common/Loader"; // Import Loader component
 import NoData from "../Common/NoData"; // Import NoData component
+import { useSiteSettings } from "@/context/SiteContext"; // Import the SiteContext to use site settings
 
 const Exams = () => {
   const [exams, setExams] = useState([]);
@@ -21,6 +21,8 @@ const Exams = () => {
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 6;
+
+  const { siteSettings } = useSiteSettings(); // Use site settings from SiteContext
 
   // Fetch exams and courses data from the API
   useEffect(() => {
@@ -111,6 +113,11 @@ const Exams = () => {
   const startItem = (currentPage - 1) * itemsPerPage + 1;
   const endItem = Math.min(currentPage * itemsPerPage, filteredExams.length);
 
+  // Function to calculate the strike price (20% increase)
+  const calculateStrikePrice = (price: number): number => {
+    return price * 1.2; // 20% increase
+  };
+
   return (
     <section className="pb-12 pt-20 lg:pb-[70px] lg:pt-[120px]">
       <div className="container mx-auto">
@@ -193,7 +200,7 @@ const Exams = () => {
                       className="mb-4 text-gray-600 flex-grow"
                       dangerouslySetInnerHTML={{
                         __html: truncateText(exam.description, 230),
-                      }} 
+                      }}
                     />
 
                     {/* Exam Details */}
@@ -216,14 +223,28 @@ const Exams = () => {
 
                     {/* Price */}
                     <div className="flex items-center justify-between">
-                      <div className="flex gap-3">
-                        <span className="text-xl font-bold text-dark">
-                          {exam.is_free ? "Free" : exam.price}
-                        </span>
+                      <div className="flex gap-2">
+                        {exam.is_free ? (
+                          <span className="text-xl font-bold text-dark">
+                            Free
+                          </span>
+                        ) : (
+                          <>
+                           
+                            <span className="text-xl font-bold text-dark">
+                              {siteSettings?.currency_symbol}
+                              {Number(exam.price).toFixed(2)}
+                            </span>
+                            <span className="text-base text-gray-500 line-through">
+                              {siteSettings?.currency_symbol}
+                              {calculateStrikePrice(Number(exam.price)).toFixed(2)}
+                            </span>
+                          </>
+                        )}
                       </div>
                       <div className="flex items-center text-primary font-semibold">
-                      <FaArrowRight size={24} />
-                    </div>
+                        <FaArrowRight size={24} />
+                      </div>
                     </div>
                   </div>
                 </div>

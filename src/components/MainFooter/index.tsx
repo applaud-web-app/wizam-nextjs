@@ -57,7 +57,7 @@ const Footer = () => {
           <div className="col-span-2 lg:col-span-1">
             <Link href="/">
               <Image
-                src={siteSettings.site_logo}
+                src={siteSettings.light_site_logo}
                 alt={`${siteSettings.site_name} Logo`}
                 width={140}
                 height={30}
@@ -90,7 +90,11 @@ const Footer = () => {
                   Resources
                 </Link>
               </li>
-             
+              <li className="mb-2">
+                <Link href="/resources" className="hover:text-green-400">
+                  FAQ
+                </Link>
+              </li>
               <li>
                 <Link href="/contact" className="hover:text-green-400">
                   Contact Us
@@ -103,11 +107,7 @@ const Footer = () => {
           <div className="col-span-1 lg:col-span-1">
             <h4 className="mb-4 font-semibold text-xl leading-snug">Company</h4>
             <ul>
-            <li className="mb-2">
-                <Link href="/resources" className="hover:text-green-400">
-                  FAQ
-                </Link>
-              </li>
+           
               {pages.map((page, index) => (
                 <li key={index} className="mb-2">
                   <Link href={`/${page.slug}`} className="hover:text-green-400">
