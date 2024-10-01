@@ -10,6 +10,7 @@ import menuData from "./menuData";
 import Cookies from "js-cookie";
 import { useRouter } from "next/navigation";
 import { useSiteSettings } from "@/context/SiteContext"; // Import the hook to use site settings
+import { toast } from "react-toastify"; // Import toast from react-toastify
 
 const Header = () => {
   const { siteSettings, loading, error } = useSiteSettings(); // Access site settings from the context
@@ -51,11 +52,65 @@ const Header = () => {
     setIsLoggedIn(!!token);
   }, []);
 
-  const handleLogout = () => {
-    Cookies.remove("jwt");
-    setIsLoggedIn(false);
-    router.push("/signin");
+  // const handleLogout = () => {
+  //   Cookies.remove("jwt");
+  //   setIsLoggedIn(false);
+
+  //    // Show success toast notification
+  //    toast.success("Logout successful!", {
+  //     position: "top-right",
+  //     autoClose: 3000,
+  //     hideProgressBar: false,
+  //     closeOnClick: true,
+  //     pauseOnHover: true,
+  //     draggable: true,
+  //   });
+
+  //   setTimeout(() => {
+  //     router.push("/"); 
+  //   }, 1000);
+  // };
+  const handleLogout = async () => {
+    try {
+        const token = Cookies.get("jwt");
+
+        // Check if token exists before making the logout request
+        if (token) {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/logout`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`, // Include the token if needed
+                },
+            });
+
+            // Check if the response is okay
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Logout failed');
+            }
+        }
+
+        // Remove token from client-side storage (localStorage/cookies)
+        Cookies.remove('jwt'); // or localStorage.removeItem('jwt');
+
+        toast.success("Logout successful!", {
+          position: "top-right",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        });
+
+        setTimeout(() => {
+          router.push("/"); 
+        }, 1000);
+    } catch (error) {
+        console.error('Logout failed:', error);
+    }
   };
+
 
   // Toggle the mobile navbar
   const handleNavbarToggle = () => setNavbarOpen(!navbarOpen);
