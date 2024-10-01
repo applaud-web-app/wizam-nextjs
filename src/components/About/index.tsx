@@ -53,7 +53,7 @@ const About: React.FC = () => {
           console.error('No authentication token found');
           return;
         }
-        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/profile`, {
+        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/profile`, {
           headers: {
             'Authorization': `Bearer ${token}`,
           },
