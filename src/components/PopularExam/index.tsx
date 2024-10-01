@@ -7,6 +7,7 @@ import Image from "next/image";
 import { FaArrowRight } from "react-icons/fa";
 import Link from "next/link"; // Import Next.js Link component
 import NoData from "../Common/NoData";
+import { useSiteSettings } from "@/context/SiteContext"; // Import the context
 
 // Define the PopularExam type for the API data
 type PopularExam = {
@@ -27,16 +28,25 @@ const trimDescription = (description: string, maxLength: number): string => {
   return plainText;
 };
 
+// Function to calculate the strike price with 20% increase
+const calculateStrikePrice = (price: number): number => {
+  return price * 1.2; // 20% increase
+};
+
 const PopularExams = () => {
   const [exams, setExams] = useState<PopularExam[]>([]); // State to store exams
   const [loading, setLoading] = useState<boolean>(true); // Loading state
   const [error, setError] = useState<string | null>(null); // Error state
 
+  const { siteSettings } = useSiteSettings(); // Access site settings from SiteContext
+
   // Fetch the popular exams from the API using Axios
   useEffect(() => {
     const fetchExams = async () => {
       try {
-        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/popular-exams`);
+        const response = await axios.get(
+          `${process.env.NEXT_PUBLIC_API_URL}/popular-exams`
+        );
         if (response.data.status && response.data.data) {
           setExams(response.data.data);
         } else {
@@ -61,12 +71,19 @@ const PopularExams = () => {
         {/* Grid Layout for Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {loading ? (
-            <p className="text-center w-full text-lg text-gray-600">Loading...</p>
+            <p className="text-center w-full text-lg text-gray-600">
+              Loading...
+            </p>
           ) : error ? (
             <p className="text-center w-full text-lg text-red-600">{error}</p>
           ) : exams.length > 0 ? (
             exams.map((exam, i) => (
-              <Link href={`/exams/${exam.slug}`} key={i} passHref className="block bg-white shadow-md rounded-lg overflow-hidden transition hover:shadow-lg">
+              <Link
+                href={`/exams/${exam.slug}`}
+                key={i}
+                passHref
+                className="block bg-white shadow-md rounded-lg overflow-hidden transition hover:shadow-lg"
+              >
                 {/* Image */}
                 <Image
                   src={exam.img_url}
@@ -87,13 +104,28 @@ const PopularExams = () => {
                   <hr className="h-px my-6 bg-gray-200 border-0 dark:bg-gray-700" />
                   {/* Price */}
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2">
                       {exam.is_free ? (
-                        <span className="text-2xl font-semibold text-gray-900">Free</span>
-                      ) : (
                         <span className="text-2xl font-semibold text-gray-900">
-                          £{exam.price}
+                          Free
                         </span>
+                      ) : (
+                        <>
+                         
+                          {/* Display the original price */}
+                          <span className="text-2xl font-semibold text-gray-900">
+                            {siteSettings?.currency_symbol || "£"}
+                            {Number(exam.price).toFixed(2)}
+                          </span>
+
+                           {/* Display the strike price with 20% increase */}
+                           <span className="text-base text-gray-500 line-through">
+                            {siteSettings?.currency_symbol || "£"}
+                            {calculateStrikePrice(Number(exam.price)).toFixed(
+                              2
+                            )}
+                          </span>
+                        </>
                       )}
                     </div>
                     <div className="flex items-center text-primary font-semibold">
