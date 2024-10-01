@@ -29,8 +29,8 @@ export default function UpcomingExamsCard() {
   return (
     <div className="p-5 bg-white shadow-sm rounded-lg mb-8">
       {/* Flexbox container for heading and "See All" link */}
-      <div className="flex justify-between items-center mb-6 flex-wrap">
-        <h2 className="text-lg font-bold mb-4 md:mb-0">Upcoming Exams (7 Days)</h2>
+      <div className="flex justify-between items-center mb-3 flex-wrap">
+        <h2 className="text-lg font-bold mb-2 md:mb-0">Upcoming Exams (7 Days)</h2>
         <a
           href="#"
           className="text-primary font-semibold flex items-center space-x-2 hover:underline transition duration-200"

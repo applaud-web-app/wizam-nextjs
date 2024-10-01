@@ -30,7 +30,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <Sidebar isOpen={sidebarOpen} toggleSidebar={toggleSidebar} />
 
             {/* Main content area */}
-            <main className="flex-1 p-6 overflow-auto">
+            <main className="flex-1 lg:p-6 p-3 overflow-auto mt-1">
               {children}
             </main>
           </div>

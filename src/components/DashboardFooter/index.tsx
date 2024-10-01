@@ -1,6 +1,6 @@
 export default function Footer() {
   return (
-    <footer className="bg-gray-900 dark:bg-gray-800 text-white py-6">
+    <footer className="bg-gray-900 dark:bg-gray-800 text-white py-3">
       <div className="container mx-auto flex flex-col md:flex-row justify-between items-center">
         <p className="text-sm text-gray-400">© 2024 Wizam. All rights reserved.</p>
         <div className="flex space-x-4">
