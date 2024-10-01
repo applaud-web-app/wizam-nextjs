@@ -1,5 +1,3 @@
-"use client";
-
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
@@ -10,12 +8,11 @@ import menuData from "./menuData";
 import Cookies from "js-cookie";
 import { useRouter } from "next/navigation";
 import { useSiteSettings } from "@/context/SiteContext"; // Import the hook to use site settings
-import { toast } from "react-toastify"; // Import toast from react-toastify
 
 const Header = () => {
   const { siteSettings, loading, error } = useSiteSettings(); // Access site settings from the context
   const pathUrl = usePathname();
-  const router = useRouter();  
+  const router = useRouter();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   // Navbar state
@@ -24,6 +21,8 @@ const Header = () => {
 
   // Search overlay state
   const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState(""); // State for search query
+  const [suggestions, setSuggestions] = useState<string[]>([]); // State for suggestions
 
   // Handle sticky navbar on scroll
   useEffect(() => {
@@ -52,68 +51,58 @@ const Header = () => {
     setIsLoggedIn(!!token);
   }, []);
 
-  // const handleLogout = () => {
-  //   Cookies.remove("jwt");
-  //   setIsLoggedIn(false);
-
-  //    // Show success toast notification
-  //    toast.success("Logout successful!", {
-  //     position: "top-right",
-  //     autoClose: 3000,
-  //     hideProgressBar: false,
-  //     closeOnClick: true,
-  //     pauseOnHover: true,
-  //     draggable: true,
-  //   });
-
-  //   setTimeout(() => {
-  //     router.push("/"); 
-  //   }, 1000);
-  // };
-  const handleLogout = async () => {
-    try {
-        const token = Cookies.get("jwt");
-
-        // Check if token exists before making the logout request
-        if (token) {
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/logout`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`, // Include the token if needed
-                },
-            });
-
-            // Check if the response is okay
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.message || 'Logout failed');
-            }
-        }
-
-        // Remove token from client-side storage (localStorage/cookies)
-        Cookies.remove('jwt'); // or localStorage.removeItem('jwt');
-
-        toast.success("Logout successful!", {
-          position: "top-right",
-          autoClose: 3000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-        });
-
-        setTimeout(() => {
-          router.push("/"); 
-        }, 1000);
-    } catch (error) {
-        console.error('Logout failed:', error);
-    }
+  const handleLogout = () => {
+    Cookies.remove("jwt");
+    setIsLoggedIn(false);
+    router.push("/signin");
   };
-
 
   // Toggle the mobile navbar
   const handleNavbarToggle = () => setNavbarOpen(!navbarOpen);
+
+  // Fetch suggestions based on search query
+  useEffect(() => {
+    if (searchQuery) {
+      const fetchSuggestions = async () => {
+        // Mock search suggestions - you can replace this with an API call
+        const mockData = [
+          "React",
+          "React Native",
+          "Next.js",
+          "JavaScript",
+          "TypeScript",
+          "GraphQL",
+          "Tailwind CSS",
+        ];
+
+        // Filter suggestions based on the query
+        const filteredSuggestions = mockData.filter(item =>
+          item.toLowerCase().includes(searchQuery.toLowerCase())
+        );
+        setSuggestions(filteredSuggestions);
+      };
+
+      fetchSuggestions();
+    } else {
+      setSuggestions([]);
+    }
+  }, [searchQuery]);
+
+  // Handle form submit
+  const handleSearchSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    console.log(`Searching for: ${searchQuery}`);
+    // Handle the search action (e.g., router.push with searchQuery)
+    // Close search overlay after search submission
+    setSuggestions([]); // Clear suggestions after search
+    setSearchOpen(false); // Close search overlay after search
+  };
+
+  // Handle suggestion click with a single click
+  const handleSuggestionClick = (suggestion: string) => {
+    setSearchQuery(suggestion); // Populate the input with the clicked suggestion
+    setSuggestions([]); // Clear the suggestions but don't close the overlay
+  };
 
   if (loading) {
     return null; // You can return a loader or null while the settings are loading
@@ -291,28 +280,59 @@ const Header = () => {
       {searchOpen && (
         <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center px-4">
           {/* Modal Box */}
-          <div className="relative bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-lg shadow-lg">
-            {/* Close Button */}
-            <button
-              className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 dark:text-gray-300 dark:hover:text-white text-2xl"
-              onClick={handleSearchToggle}
-              aria-label="Close Search"
-            >
-              <AiOutlineClose />
-            </button>
+          <div className="relative bg-white dark:bg-gray-800 rounded-lg p-3 w-full max-w-lg shadow-xl">
+            {/* Header: Title and Close Button */}
+            <div className="flex items-center justify-between mb-3">
+              {/* Title */}
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white">Search</h2>
 
-            {/* Search Input Field */}
-            <div className="flex items-center space-x-3 mb-4">
-              <IoSearchSharp className="text-gray-500 text-2xl dark:text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search for courses, articles, or resources..."
-                className="w-full p-3 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
+              {/* Close Button */}
+              <button
+                className="text-gray-400 hover:text-gray-600 dark:text-gray-300 dark:hover:text-white text-2xl transition duration-200"
+                onClick={handleSearchToggle}
+                aria-label="Close Search"
+              >
+                <AiOutlineClose />
+              </button>
             </div>
 
+            {/* Search Form with Icon Button */}
+            <form onSubmit={handleSearchSubmit} className="relative">
+              <div className="flex items-center border border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden">
+                <input
+                  type="text"
+                  placeholder="Search for courses, articles, or resources..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)} // Update search query
+                  className="w-full h-12 px-4 text-gray-800 dark:text-white bg-white dark:bg-gray-700 border-0 focus:outline-none"
+                />
+                <button
+                  type="submit"
+                  className="bg-primary text-white h-12 px-3 flex items-center justify-center hover:bg-primary-dark transition duration-200 focus:outline-none"
+                  aria-label="Submit Search"
+                >
+                  <IoSearchSharp className="text-xl" />
+                </button>
+              </div>
+
+              {/* Suggestions Dropdown */}
+              {suggestions.length > 0 && (
+                <ul className="absolute left-0 right-0 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg mt-2 max-h-60 overflow-y-auto z-50">
+                  {suggestions.map((suggestion, index) => (
+                    <li
+                      key={index}
+                      className="px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 cursor-pointer text-gray-800 dark:text-white transition duration-200"
+                      onClick={() => handleSuggestionClick(suggestion)} // Single click handler
+                    >
+                      {suggestion}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </form>
+
             {/* Search Prompt Text */}
-            <p className="text-sm text-gray-500 dark:text-gray-400">
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
               Start typing to search across our platform.
             </p>
           </div>
