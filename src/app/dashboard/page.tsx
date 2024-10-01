@@ -6,9 +6,8 @@ import DashboardCard from "@/components/DashboardCards";
 export default function DashboardPage() {
   return (
     <div className="dashboard-page">
-      {/* Responsive grid layout */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        {/* Cards with icons and unique colors */}
+        {/* Using dynamic values or color utilities to simplify */}
         <DashboardCard title="Users" content="1,200 Active Users" icon={<FiUsers />} iconColor="text-blue-500" />
         <DashboardCard title="Reports" content="150 Reports Generated" icon={<FiFileText />} iconColor="text-yellow-500" />
         <DashboardCard title="Analytics" content="5 New Analytics Reports" icon={<FiBarChart2 />} iconColor="text-purple-500" />
@@ -19,7 +18,7 @@ export default function DashboardPage() {
       </div>
 
       <ResumeExamTable />
-      {/* <UpcomingExamsTable /> */}
+      <UpcomingExamsTable />
     </div>
   );
 }

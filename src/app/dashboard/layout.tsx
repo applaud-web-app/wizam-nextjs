@@ -4,13 +4,11 @@ import { useState } from "react";
 import Header from "@/components/DashboardHeader";
 import Sidebar from "@/components/DashboardSidebar";
 import Footer from "@/components/DashboardFooter";
-
-
-import { Jost } from 'next/font/google';
+import { Jost } from "next/font/google";
 
 const jost = Jost({
-  subsets: ['latin'],
-  weight: '400',  // Only load weight 400
+  subsets: ["latin"],
+  weight: ["400", "600", "700"],
 });
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -19,24 +17,25 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
 
   return (
-    <html lang="en" className={jost.className}> 
-      <body className="bg-gray-50 flex flex-col min-h-screen">
-        {/* Full page layout with flexbox */}
-        <div className="flex flex-col flex-1">
-          {/* Dashboard Header */}
+    <html lang="en" className={`${jost.className} light-mode`}>
+      <body className="bg-slate-100 text-gray-900 dark:bg-gray-900 dark:text-gray-100 transition-colors duration-500">
+        {/* Adjust body padding to account for fixed header */}
+        <div className="flex flex-col min-h-screen">
+          {/* Header with fixed position */}
           <Header toggleSidebar={toggleSidebar} />
 
-          <div className="flex flex-1">
-            {/* Sidebar */}
+          {/* Main container with header height consideration */}
+          <div className="flex flex-1 pt-[70px] overflow-hidden">
+            {/* Sidebar navigation */}
             <Sidebar isOpen={sidebarOpen} toggleSidebar={toggleSidebar} />
 
-            {/* Main Content */}
-            <main className="flex-1 p-6 lg:p-8">
+            {/* Main content area */}
+            <main className="flex-1 p-6 overflow-auto">
               {children}
             </main>
           </div>
 
-          {/* Footer outside the flex-1 div */}
+          {/* Footer */}
           <Footer />
         </div>
       </body>

@@ -41,50 +41,52 @@ const Hero = () => {
     fetchBanners();
   }, []);
 
-  if (loading) {
-    return <p>Loading banners...</p>;
-  }
-
-  if (error) {
-    return <p>{error}</p>;
-  }
-
-  // Prepare carousel items from fetched banners
-  const items = banners.map((banner, index) => (
-    <div
-      className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-center px-6 lg:px-12"
-      key={index}
-    >
-      {/* Left Side: Text Content */}
-      <div>
-        <div className="hero-content text-left mb-12">
-          <h1 className="mb-6 text-4xl font-bold leading-tight text-white sm:text-5xl sm:leading-tight lg:text-[70px] lg:leading-snug">
-            {banner.title}
-          </h1>
-          <p className="mb-9 text-base font-medium text-gray-300 sm:text-lg sm:leading-relaxed">
-            {banner.description}
-          </p>
-          <Link
-            href={banner.button_link}
-            className="inline-flex items-center justify-center rounded-full bg-secondary px-8 py-4 text-lg text-white transition duration-300 ease-in-out hover:bg-primary"
-          >
-            {banner.button_text}
-          </Link>
-        </div>
-      </div>
-
-      {/* Right Side: Image */}
-      <div className="w-full max-w-[400px] mx-auto lg:max-w-full">
-        <Image
-          src={banner.image}
-          alt={banner.title}
-          className="w-full h-auto"
-          width={845}
-          height={316}
-        />
-      </div>
+  // Spinner component for loading state
+  const Loader = () => (
+    <div className="flex justify-center items-center w-full h-64 mb-24">
+      <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-white border-solid"></div>
     </div>
-  ));
+  );
+
+  // Prepare carousel items from fetched banners or skeletons
+  const items =
+    banners.length > 0 && !loading
+      ? banners.map((banner, index) => (
+          <div
+            className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-center px-6 lg:px-12"
+            key={index}
+          >
+            {/* Left Side: Text Content */}
+            <div>
+              <div className="hero-content text-left mb-12">
+                <h1 className="mb-6 text-4xl font-bold leading-tight text-white sm:text-5xl sm:leading-tight lg:text-[70px] lg:leading-snug">
+                  {banner.title}
+                </h1>
+                <p className="mb-9 text-base font-medium text-gray-300 sm:text-lg sm:leading-relaxed">
+                  {banner.description}
+                </p>
+                <Link
+                  href={banner.button_link}
+                  className="inline-flex items-center justify-center rounded-full bg-secondary px-8 py-4 text-lg text-white transition duration-300 ease-in-out hover:bg-primary"
+                >
+                  {banner.button_text}
+                </Link>
+              </div>
+            </div>
+
+            {/* Right Side: Image */}
+            <div className="w-full max-w-[400px] mx-auto lg:max-w-full">
+              <Image
+                src={banner.image}
+                alt={banner.title}
+                className="w-full h-auto"
+                width={845}
+                height={316}
+              />
+            </div>
+          </div>
+        ))
+      : [1].map((_, index) => <Loader key={index} />); // Display loader while loading
 
   // Custom Arrow Buttons for Carousel
   const renderPrevButton = () => {
@@ -120,34 +122,30 @@ const Hero = () => {
   };
 
   return (
-    <>
-      <section id="home" className="relative overflow-hidden bg-[#001d21] py-16 lg:pb-24 lg:pt-16">
-        <div className="container mx-auto px-4 relative">
-          {/* Alice Carousel with custom arrows */}
-          <AliceCarousel
-            autoPlay
-            autoPlayInterval={5000}
-            infinite
-            items={items}
-            disableDotsControls={true} // Disable dots
-            renderPrevButton={renderPrevButton}
-            renderNextButton={renderNextButton}
-          />
-        </div>
+    <section id="home" className="relative overflow-hidden bg-[#001d21] py-16 lg:pb-24 lg:pt-16">
+      <div className="container mx-auto px-4 relative">
+        {/* Alice Carousel with custom arrows */}
+        <AliceCarousel
+          autoPlay
+          autoPlayInterval={5000}
+          infinite
+          items={items}
+          disableDotsControls={true} // Disable dots
+          renderPrevButton={renderPrevButton}
+          renderNextButton={renderNextButton}
+        />
+      </div>
 
-        <div className="absolute -bottom-8 w-full z-10">
-          <Image
-            src="/images/hero/vector.png"
-            alt="hero"
-            className="mx-auto w-full max-w-full"
-            width={1920}
-            height={300}
-          />
-        </div>
-      </section>
-
-      
-    </>
+      <div className="absolute -bottom-8 w-full z-10">
+        <Image
+          src="/images/hero/vector.png"
+          alt="hero"
+          className="mx-auto w-full max-w-full"
+          width={1920}
+          height={300}
+        />
+      </div>
+    </section>
   );
 };
 

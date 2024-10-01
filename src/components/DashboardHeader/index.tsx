@@ -1,6 +1,5 @@
-import { FiMenu, FiChevronDown, FiBell } from "react-icons/fi";
-import { useState, useEffect, useRef } from "react";
-import Link from "next/link";
+import { FiMenu, FiBell, FiChevronDown } from "react-icons/fi";
+import { useState } from "react";
 import Image from "next/image";
 
 interface HeaderProps {
@@ -8,63 +7,36 @@ interface HeaderProps {
 }
 
 export default function Header({ toggleSidebar }: HeaderProps) {
-  const [dropdownOpen, setDropdownOpen] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
-
-  const toggleDropdown = () => setDropdownOpen(!dropdownOpen);
-
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setDropdownOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
   return (
-    <header className="bg-white shadow-md p-4 flex items-center justify-between">
-      {/* Left Side: Sidebar Toggle & Logo */}
+    <header className="bg-white dark:bg-gray-800 shadow-md p-4 fixed top-0 left-0 w-full z-50 flex justify-between items-center h-[70px]">
       <div className="flex items-center space-x-4">
-        <button onClick={toggleSidebar} className="text-gray-800 focus:outline-none lg:hidden">
+        {/* Sidebar toggle button for mobile */}
+        <button onClick={toggleSidebar} className="text-gray-800 dark:text-gray-300 lg:hidden">
           <FiMenu size={24} />
         </button>
-        <Link href="/dashboard">
-          <span className="flex items-center">
-            <Image src="/images/logo/wizam-logo.png" width={100} height={40} alt="Wizam Logo" className="object-contain" />
-          </span>
-        </Link>
+
+        {/* Logo with responsive behavior */}
+        <div className="flex items-center">
+          <Image
+            src="/images/logo/wizam-logo.png"
+            width={120}
+            height={40}
+            alt="Logo"
+            className="object-contain"
+          />
+        </div>
       </div>
 
-      {/* Right Side: Notifications and Profile */}
+      {/* Notifications & Profile */}
       <div className="flex items-center space-x-6">
-        <button className="relative focus:outline-none">
-          <FiBell size={24} className="text-primary" />
-          <span className="absolute top-0 right-0 inline-block w-2 h-2 bg-red-500 rounded-full"></span>
+        <button className="relative text-gray-800 dark:text-gray-300">
+          <FiBell size={24} />
+          <span className="absolute top-0 right-0 block h-2 w-2 bg-red-500 rounded-full"></span>
         </button>
-
-        {/* Profile Dropdown */}
-        <div className="relative" ref={dropdownRef}>
-          <button onClick={toggleDropdown} className="flex items-center space-x-2 focus:outline-none">
-            <Image src="/images/user.png" width={32} height={32} alt="User Profile" className="rounded-full" />
-            <span className="text-gray-800 font-semibold hidden md:inline">John Doe</span>
-            <FiChevronDown className="text-primary" />
-          </button>
-
-          {dropdownOpen && (
-            <div className="absolute right-0 mt-2 w-48 bg-white shadow-lg rounded-md py-2 z-50">
-              <Link href="/dashboard/profile">
-                <span className="block px-4 py-2 text-gray-700 hover:bg-gray-100">Profile</span>
-              </Link>
-              <Link href="/dashboard/settings">
-                <span className="block px-4 py-2 text-gray-700 hover:bg-gray-100">Settings</span>
-              </Link>
-              <Link href="/logout">
-                <span className="block px-4 py-2 text-gray-700 hover:bg-gray-100">Logout</span>
-              </Link>
-            </div>
-          )}
+        <div className="flex items-center space-x-2">
+          <Image src="/images/user.png" width={32} height={32} alt="Profile" className="rounded-full" />
+          <span className="text-gray-900 dark:text-gray-200 font-semibold">John Doe</span>
+          <FiChevronDown className="text-gray-800 dark:text-gray-300" />
         </div>
       </div>
     </header>
