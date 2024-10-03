@@ -1,4 +1,4 @@
-import { FiMenu, FiChevronDown, FiLogOut, FiSettings, FiGlobe, FiUser  } from "react-icons/fi";
+import { FiMenu, FiChevronDown, FiLogOut, FiSettings, FiGlobe, FiUser } from "react-icons/fi";
 import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
@@ -17,7 +17,6 @@ interface UserProfile {
   name: string;
   email: string;
   phone_number: string;
-  // Add more fields if necessary
 }
 
 export default function Header({ toggleSidebar }: HeaderProps) {
@@ -25,7 +24,6 @@ export default function Header({ toggleSidebar }: HeaderProps) {
   const dropdownRef = useRef<HTMLDivElement>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const router = useRouter();
-
 
   const toggleDropdown = () => {
     setIsDropdownOpen(!isDropdownOpen);
@@ -46,24 +44,18 @@ export default function Header({ toggleSidebar }: HeaderProps) {
 
   const handleLogout = async () => {
     try {
-      // Make the API request to log out
       const response = await axios.post(
         `${process.env.NEXT_PUBLIC_API_URL}/logout`,
-        {}, // No data is required in the request body
+        {},
         {
           headers: {
-            // Pass the JWT token in the Authorization header
             Authorization: `Bearer ${Cookies.get("jwt")}`,
           },
         }
       );
 
-      // If the logout is successful
       if (response.status === 200) {
-        // Remove the JWT from cookies
         Cookies.remove("jwt");
-
-        // Show success toast notification
         toast.success("Logout successful!", {
           position: "top-right",
           autoClose: 3000,
@@ -72,54 +64,51 @@ export default function Header({ toggleSidebar }: HeaderProps) {
           pauseOnHover: true,
           draggable: true,
         });
-
-        // Redirect to another page after a brief delay to let the toast show
-        setTimeout(() => {
-          router.push("/signin"); // Redirect to the /about page after login
-        }, 1000);
+        // Redirect to signin immediately after logout
+        router.push("/signin");
       }
     } catch (error) {
       console.error("Logout failed:", error);
-      // Handle any errors (optional: show a notification to the user)
     }
   };
 
-
   // Function to fetch profile data
   const fetchProfileData = async () => {
+    const jwt = Cookies.get("jwt");
+    if (!jwt) {
+      // If there is no JWT, redirect to signin immediately
+      router.push("/signin");
+      return;
+    }
+
     try {
       const response = await axios.get(
         `${process.env.NEXT_PUBLIC_API_URL}/profile`,
         {
           headers: {
-            Authorization: `Bearer ${Cookies.get("jwt")}`,
+            Authorization: `Bearer ${jwt}`,
           },
         }
       );
 
       if (response.status === 200 && response.data.status === true) {
-        // Profile data successfully retrieved
         setUserProfile(response.data.user);
-        console.log(userProfile);
       } else if (response.data.status === false && response.data.message === "Unauthorized") {
-        // If the user is unauthorized, remove the token and log out
         handleLogout();
       }
     } catch (error) {
       console.error("Error fetching profile data:", error);
-      // In case of an error (e.g., network issues or unauthorized), log the user out
       handleLogout();
     }
   };
-  useEffect(() => {
-    fetchProfileData(); // Call the function to fetch profile data
-  }, []); // Empty dependency array means it runs once on mount
 
+  useEffect(() => {
+    fetchProfileData();
+  }, []);
 
   return (
     <header className="bg-white dark:bg-gray-800 shadow-md p-4 fixed top-0 left-0 w-full lg-50 lg:z-[64] flex justify-between items-center h-[70px]">
       <div className="flex items-center space-x-4">
-        {/* Sidebar toggle button for mobile */}
         <button
           onClick={toggleSidebar}
           className="text-gray-800 dark:text-gray-300 lg:hidden"
@@ -127,8 +116,6 @@ export default function Header({ toggleSidebar }: HeaderProps) {
         >
           <FiMenu size={24} />
         </button>
-
-        {/* Logo with responsive behavior */}
         <div className="flex items-center">
           <Image
             src="/images/logo/wizam-logo.png"
@@ -140,12 +127,9 @@ export default function Header({ toggleSidebar }: HeaderProps) {
         </div>
       </div>
 
-      {/* Website Icon & Profile */}
       <div className="flex items-center space-x-6">
-        {/* Website Icon (using React Icons) */}
         <Link href="/"><FiGlobe size={24} className="text-primary dark:text-gray-300" aria-label="Website" /></Link>
 
-        {/* Profile with Dropdown */}
         <div className="relative" ref={dropdownRef}>
           <button
             onClick={toggleDropdown}
@@ -160,20 +144,19 @@ export default function Header({ toggleSidebar }: HeaderProps) {
               alt="Profile"
               className="rounded-full"
             />
-            <span className="text-gray-900 dark:text-gray-200 font-semibold"> {userProfile ?.name || 'Guest'}</span>
+            <span className="text-gray-900 dark:text-gray-200 font-semibold">{userProfile?.name || 'Guest'}</span>
             <FiChevronDown className="text-gray-800 dark:text-gray-300" />
           </button>
 
-          {/* Dropdown Menu */}
           {isDropdownOpen && (
             <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-700 rounded-md shadow-lg py-2 z-50 transition-opacity duration-300 ease-in-out">
-              <Link href="/profile" className="block px-4 py-2  text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600">
-                <FiUser  className="inline-block mr-2" /> Profile
+              <Link href="/profile" className="block px-4 py-2 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600">
+                <FiUser className="inline-block mr-2" /> Profile
               </Link>
-              <Link href="/settings" className="block px-4 py-2  text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600">
+              <Link href="/settings" className="block px-4 py-2 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600">
                 <FiSettings className="inline-block mr-2" /> Settings
               </Link>
-              <button onClick={handleLogout} type="button" className="block text-start px-4 py-2 w-full text-red-500 hover:bg-gray-100 dark:hover:bg-gray-600"><FiLogOut className="inline-block mr-2"/>Logout</button>
+              <button onClick={handleLogout} type="button" className="block text-start px-4 py-2 w-full text-red-500 hover:bg-gray-100 dark:hover:bg-gray-600"><FiLogOut className="inline-block mr-2" />Logout</button>
             </div>
           )}
         </div>
