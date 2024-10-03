@@ -59,7 +59,7 @@ const SignIn = () => {
 
         // Redirect to another page after a brief delay to let the toast show
         setTimeout(() => {
-          router.push("/about"); // Redirect to the /about page after login
+          router.push("/"); // Redirect to the /about page after login
         }, 1000);
       } else {
         // Display an error toast when status is false

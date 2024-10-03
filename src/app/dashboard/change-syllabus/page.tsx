@@ -1,29 +1,85 @@
-import Link from 'next/link';
+"use client"; // Add this line to mark the component as a Client Component
 
-export default function ChangeSyllabus() {
-  const syllabuses = [
-    { title: 'Dental', description: 'Explore Dental syllabus and topics.', link: '/dental' },
-    { title: 'Nursing', description: 'Learn about Nursing courses and modules.', link: '/nursing' },
-    { title: 'English', description: 'Study English syllabus and materials.', link: '/english' },
-    { title: 'Math', description: 'Understand Math syllabus for students.', link: '/math' },
-    { title: 'Physics', description: 'Explore Physics topics and syllabus.', link: '/physics' },
-    { title: 'Chemistry', description: 'Learn about Chemistry syllabus details.', link: '/chemistry' },
-    { title: 'Computer Science', description: 'Study CS syllabus and programming topics.', link: '/computer-science' },
-    { title: 'History', description: 'Explore History syllabus and subjects.', link: '/history' }
-  ];
+import { useEffect, useState } from 'react';
+import axios from 'axios'; // Ensure axios is installed
+import { toast } from 'react-toastify'; // Optional: For notifications
+import Cookies from 'js-cookie'; // Access cookies
+import Loader from '@/components/Common/Loader';
+import NoData from '@/components/Common/NoData';
+import { useRouter } from "next/navigation"; // Use router to redirect
+
+interface Syllabus {
+  id: number;
+  name: string;
+  description: string;
+}
+
+interface ChangeSyllabusProps {
+  updateSyllabusStatus: () => void; // Prop to handle syllabus change
+}
+
+export default function ChangeSyllabus({ updateSyllabusStatus }: ChangeSyllabusProps) {
+  const [syllabuses, setSyllabuses] = useState<Syllabus[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const router = useRouter(); // For redirecting to other pages
+  
+  useEffect(() => {
+    const fetchSyllabuses = async () => {
+      try {
+        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/syllabus`, {
+          headers: {
+            // Pass the JWT token in the Authorization header
+            Authorization: `Bearer ${Cookies.get("jwt")}`, // Access the JWT token from cookies
+          },
+        });
+        if (response.data.status) {
+          const fetchedSyllabuses = response.data.data.map((syllabus: any) => ({
+            id: syllabus.id,
+            name: syllabus.name,
+            description: syllabus.description
+          }));
+          setSyllabuses(fetchedSyllabuses);
+        } else {
+          toast.error('Failed to fetch syllabus data');
+        }
+      } catch (error) {
+        console.error('Error fetching syllabus data:', error);
+        toast.error('An error occurred while fetching data');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchSyllabuses();
+  }, []);
+
+  if (loading) {
+    return <Loader />; // Loading state
+  }
+
+  const handleSyllabusClick = (name: string, id: number) => {
+    Cookies.set("category_name", name);
+    Cookies.set("category_id", String(id));
+    updateSyllabusStatus(); // Call the function to update syllabus status
+    router.push("/dashboard");
+  };
 
   return (
-    <div className="dashboard-page ">
+    <div className="dashboard-page">
       {/* Responsive grid layout */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-        {syllabuses.map((syllabus, index) => (
-          <Link key={index} href={syllabus.link}>
-            <div className="block bg-white shadow-sm rounded-lg p-6 hover:shadow-lg border border-gray-50 hover:border-primary transition-shadow duration-300 cursor-pointer">
-              <h3 className="text-xl font-semibold mb-2">{syllabus.title}</h3>
-              <p className="text-gray-600">{syllabus.description}</p>
-            </div>
-          </Link>
-        ))}
+        {syllabuses.length > 0 ? (
+          syllabuses.map((syllabus) => (
+            <button onClick={() => handleSyllabusClick(syllabus.name, syllabus.id)} key={syllabus.id}>
+              <div className="block text-start bg-white shadow-sm rounded-lg p-6 hover:shadow-lg border border-gray-50 hover:border-primary transition-shadow duration-300 cursor-pointer">
+                <h3 className="text-xl font-semibold mb-2">{syllabus.name}</h3>
+                <p className="text-gray-600">{syllabus.description}</p>
+              </div>
+            </button>
+          ))
+        ) : (
+          <NoData message="No syllabuses available." />
+        )}
       </div>
     </div>
   );
