@@ -34,7 +34,6 @@ export default function AllExamPage() {
       </div>
 
       <ExamList />
-
     </div>
   );
 }

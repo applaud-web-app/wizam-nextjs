@@ -29,7 +29,7 @@ export default function Header({ toggleSidebar }: HeaderProps) {
   }, [dropdownRef]);
 
   return (
-    <header className="bg-white dark:bg-gray-800 shadow-md p-4 fixed top-0 left-0 w-full z-[64] flex justify-between items-center h-[70px]">
+    <header className="bg-white dark:bg-gray-800 shadow-md p-4 fixed top-0 left-0 w-full lg-50 lg:z-[64] flex justify-between items-center h-[70px]">
       <div className="flex items-center space-x-4">
         {/* Sidebar toggle button for mobile */}
         <button

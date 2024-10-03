@@ -28,7 +28,7 @@ export default function ExamList() {
     <div className="p-5 bg-white shadow-sm rounded-lg mb-8">
       {/* Flexbox container to align heading and "See All" link */}
       <div className="flex justify-between items-center mb-3 flex-wrap">
-        <h2 className="text-lg font-bold mb-2 md:mb-0">Resume Exam</h2>
+        <h2 className="text-lg font-bold mb-2 md:mb-0">All Exams</h2>
         <a
           href="#"
           className="text-primary font-semibold flex items-center space-x-2 hover:underline transition duration-200"
