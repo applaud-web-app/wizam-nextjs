@@ -8,6 +8,8 @@ import menuData from "./menuData";
 import Cookies from "js-cookie";
 import { useRouter } from "next/navigation";
 import { useSiteSettings } from "@/context/SiteContext"; // Import the hook to use site settings
+import axios from "axios"; // Axios for API calls
+import { toast } from "react-toastify"; // Import toast from react-toastify
 
 const Header = () => {
   const { siteSettings, loading, error } = useSiteSettings(); // Access site settings from the context
@@ -51,10 +53,49 @@ const Header = () => {
     setIsLoggedIn(!!token);
   }, []);
 
-  const handleLogout = () => {
-    Cookies.remove("jwt");
-    setIsLoggedIn(false);
-    router.push("/signin");
+
+  // LOGOUT
+  const handleLogout = async () => {
+    try {
+      // Make the API request to log out
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_API_URL}/logout`,
+        {}, // No data is required in the request body
+        {
+          headers: {
+            // Pass the JWT token in the Authorization header
+            Authorization: `Bearer ${Cookies.get("jwt")}`,
+          },
+        }
+      );
+
+      // If the logout is successful
+      if (response.status === 200) {
+        // Remove the JWT from cookies
+        Cookies.remove("jwt");
+
+        // Update the login state to false
+        setIsLoggedIn(false);
+
+        // Show success toast notification
+        toast.success("Logout successful!", {
+          position: "top-right",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        });
+
+        // Redirect to another page after a brief delay to let the toast show
+        setTimeout(() => {
+          router.push("/signin"); // Redirect to the /about page after login
+        }, 1000);
+      }
+    } catch (error) {
+      console.error("Logout failed:", error);
+      // Handle any errors (optional: show a notification to the user)
+    }
   };
 
   // Toggle the mobile navbar
@@ -177,12 +218,12 @@ const Header = () => {
             </button>
 
             {isLoggedIn ? (
-              <button
-                onClick={handleLogout}
-                className="bg-primary text-white py-2 px-6 rounded-full hover:bg-secondary transition"
-              >
-                Sign Out
-              </button>
+              <>
+                <Link href="/dashboard" className="bg-secondary text-white py-2 px-6 rounded-full hover:bg-secondary-dark transition"
+                >Dashboard</Link>
+                <button onClick={handleLogout} className="bg-primary text-white py-2 px-6 rounded-full hover:bg-primary-dark transition"
+                >Sign Out</button>
+              </>
             ) : (
               <>
                 <Link
@@ -249,12 +290,10 @@ const Header = () => {
 
               {/* Mobile Authentication */}
               {isLoggedIn ? (
-                <button
-                  onClick={handleLogout}
-                  className="bg-primary text-white py-2 px-6 mx-4 rounded-full hover:bg-secondary transition w-full"
-                >
-                  Sign Out
-                </button>
+                <>
+                  <Link href="/dashboard" className="bg-secondary text-white py-2 px-6 rounded-full hover:bg-secondary-dark transition">Dashboard</Link>
+                  <button onClick={handleLogout} className="bg-primary text-white py-2 px-6 mx-4 rounded-full hover:bg-primary-dark transition w-full">Sign Out</button>
+                </>
               ) : (
                 <>
                   <Link
