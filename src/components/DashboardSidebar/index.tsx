@@ -51,7 +51,7 @@ export default function Sidebar({ isSyllabusEnabled, isOpen, toggleSidebar }: Si
                 <FiHome className="mr-3" /> Dashboard
               </Link>
               <Link
-                href={isSyllabusEnabled ? "/dashboard/exams" : "#"}
+                href={isSyllabusEnabled ? "/dashboard/all-exams" : "#"}
                 className={`flex items-center px-4 py-2 rounded-md transition ${
                   isSyllabusEnabled ? "hover:bg-gray-700" : "cursor-not-allowed opacity-50"
                 }`}

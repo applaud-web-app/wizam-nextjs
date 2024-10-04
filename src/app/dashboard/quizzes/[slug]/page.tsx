@@ -1,7 +1,12 @@
 "use client"; // Ensure this component is client-side rendered
 
-import { useEffect, useState } from "react";
+import { useEffect, useState } from 'react';
 import { FaClock, FaQuestionCircle, FaStar } from "react-icons/fa"; // Icons for the card
+import axios from 'axios'; // Ensure axios is installed
+import { toast } from 'react-toastify'; // Optional: For notifications
+import Cookies from 'js-cookie'; // Access cookies
+import Loader from '@/components/Common/Loader';
+import { useRouter } from "next/navigation"; // Use router to redirect
 
 // Define the Quiz type
 interface Quiz {
@@ -43,23 +48,51 @@ export default function QuizTypeDetailPage({
 }) {
   const [slug, setSlug] = useState<string | null>(null);
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const router = useRouter(); // For redirecting to other pages
 
-  // Fetch the quizzes based on the slug from params
-  useEffect(() => {
+   // Fetch the quiz based on the slug from params
+   useEffect(() => {
     const { slug } = params;
     setSlug(slug);
+    const category = Cookies.get("category_id"); // Get category from cookies
 
-    // Fetch the quizzes based on the slug
-    const fetchedQuizzes = quizData[slug];
-    if (fetchedQuizzes) {
-      setQuizzes(fetchedQuizzes);
-    } else {
-      setQuizzes([]); // Set empty if no data is found
-    }
-  }, [params]);
+    // Fetch quiz from API based on slug and category
+    const fetchQuiz = async () => {
+      try {
+        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/all-quiz`, {
+          params: { slug, category }, // Send slug and category as query params
+          headers: {
+            Authorization: `Bearer ${Cookies.get("jwt")}`, // JWT token from cookies
+          },
+        });
+
+        if (response.data.status) {
+          const fetchedQuiz = response.data.data[slug] || [];
+          setQuizzes(fetchedQuiz);
+        } else {
+          toast.error('No quiz found for this category');
+          // router.push('/dashboard/quizzes');
+        }
+      } catch (error) {
+        console.error('Error fetching quiz:', error);
+        toast.error('An error occurred while fetching quiz');
+        // router.push('/dashboard/quizzes');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchQuiz();
+  }, [params, router]);
 
   // Handle case where slug is not a string
   const formattedSlug = slug ? slug.replace(/-/g, " ") : "";
+
+  // If loading, show loader
+  if (loading) {
+    return <Loader />; // Show loading state
+  }
 
   // If no quizzes are found for the current slug
   if (!slug || quizzes.length === 0) {
@@ -106,7 +139,7 @@ export default function QuizTypeDetailPage({
                   <strong>Marks:</strong> {quiz.marks}
                 </span>
               </div>
-              <div className="text-sm md:text-base text-gray-700">
+              <div className="text-sm md:text-base text-gray-700 capitalize">
                 <strong>Quiz Type:</strong> {formattedSlug}
               </div>
             </div>
