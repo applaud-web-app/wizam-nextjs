@@ -10,35 +10,38 @@ import {
   FaRegSmile,
   FaRegFrown,
 } from "react-icons/fa";
-import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 
+// Option interface
 interface Option {
   text: string;
   image?: string; // Optional image for options
 }
 
+// Question interface
 interface Question {
   id: number;
   type: string; // "single", "multiple", "truefalse", "short", "match", "sequence", "fill", "extended"
   question: string;
   image?: string; // Optional image for the question
   options?: Option[];
-  correctAnswers?: string[];
   blanks?: { position: number; value?: string }[]; // for fill in the blanks
 }
 
+// ExamData interface
 interface ExamData {
   title: string;
   questions: Question[];
   duration: string; // e.g., "30 mins"
 }
 
+// Main PlayExam Component
 export default function PlayExam() {
   const [examData, setExamData] = useState<ExamData | null>(null);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState<number>(0);
   const [answers, setAnswers] = useState<{ [key: number]: string[] }>({});
   const [timeLeft, setTimeLeft] = useState<number>(1800); // Timer (in seconds, 30 minutes)
   const [submitted, setSubmitted] = useState<boolean>(false);
+  const [draggedItemIndex, setDraggedItemIndex] = useState<number | null>(null); // To track which item is dragged
 
   useEffect(() => {
     // Mock data for the exam with different question types
@@ -64,11 +67,7 @@ export default function PlayExam() {
           type: "multiple",
           question: "Which of the following are programming languages?",
           options: [
-            {
-              text: "JavaScript",
-              image:
-                "https://media.licdn.com/dms/image/D4E12AQG0hyhZmq0AyQ/article-cover_image-shrink_600_2000/0/1700488940348?e=2147483647&v=beta&t=eZtDe_xSbm65L-mR1tnM8vnfMpM3aWcSe8rw8o7sjSs",
-            }, // Example image for an option
+            { text: "JavaScript" },
             { text: "HTML" },
             { text: "Python" },
             { text: "CSS" },
@@ -89,11 +88,7 @@ export default function PlayExam() {
           type: "match",
           question: "Match the following animals to their sounds:",
           options: [
-            {
-              text: "Dog",
-              image:
-                "https://media.licdn.com/dms/image/D4E12AQG0hyhZmq0AyQ/article-cover_image-shrink_600_2000/0/1700488940348?e=2147483647&v=beta&t=eZtDe_xSbm65L-mR1tnM8vnfMpM3aWcSe8rw8o7sjSs",
-            },
+            { text: "Dog" },
             { text: "Cat" },
             { text: "Cow" },
             { text: "Bark" },
@@ -104,8 +99,7 @@ export default function PlayExam() {
         {
           id: 6,
           type: "sequence",
-          question:
-            "Arrange the following planets by size (smallest to largest):",
+          question: "Arrange the following planets by size (smallest to largest):",
           options: [
             { text: "Mercury" },
             { text: "Earth" },
@@ -173,18 +167,28 @@ export default function PlayExam() {
       : 0;
   };
 
-  const onDragEnd = (result: any, questionId: number) => {
-    if (!result.destination) return;
-    const currentAnswers = [...(answers[questionId] || [])];
-    const [reorderedItem] = currentAnswers.splice(result.source.index, 1);
-    currentAnswers.splice(result.destination.index, 0, reorderedItem);
-    handleAnswerChange(questionId, currentAnswers);
+  // Handle drag start event for sequence question type
+  const handleDragStart = (index: number) => {
+    setDraggedItemIndex(index);
+  };
+
+  // Handle drop event and update the order in sequence question
+  const handleDrop = (questionId: number, index: number) => {
+    if (draggedItemIndex !== null) {
+      const currentAnswers = answers[questionId] || [];
+      const reorderedAnswers = [...currentAnswers];
+
+      const [movedItem] = reorderedAnswers.splice(draggedItemIndex, 1);
+      reorderedAnswers.splice(index, 0, movedItem);
+
+      handleAnswerChange(questionId, reorderedAnswers);
+      setDraggedItemIndex(null); // Reset dragged item
+    }
   };
 
   const renderQuestion = (question: Question) => {
     return (
       <div>
-        {/* Render question image if available */}
         {question.image && (
           <img
             src={question.image}
@@ -194,7 +198,6 @@ export default function PlayExam() {
         )}
         <p className="text-lg mb-4">{question.question}</p>
 
-        {/* Render based on question type */}
         {(() => {
           switch (question.type) {
             case "single":
@@ -212,19 +215,9 @@ export default function PlayExam() {
                     name={`question-${question.id}`}
                     value={option.text}
                     checked={answers[question.id]?.includes(option.text)}
-                    onChange={() =>
-                      handleAnswerChange(question.id, [option.text])
-                    }
+                    onChange={() => handleAnswerChange(question.id, [option.text])}
                     className="cursor-pointer"
                   />
-                  {/* Render option image if available */}
-                  {option.image && (
-                    <img
-                      src={option.image}
-                      alt={option.text}
-                      className="w-8 h-8 object-cover rounded-full"
-                    />
-                  )}
                   <span>{option.text}</span>
                 </label>
               ));
@@ -253,13 +246,6 @@ export default function PlayExam() {
                     }}
                     className="cursor-pointer"
                   />
-                  {option.image && (
-                    <img
-                      src={option.image}
-                      alt={option.text}
-                      className="w-8 h-8 object-cover rounded-full"
-                    />
-                  )}
                   <span>{option.text}</span>
                 </label>
               ));
@@ -273,9 +259,7 @@ export default function PlayExam() {
                       name={`question-${question.id}`}
                       value="true"
                       checked={answers[question.id]?.includes("true")}
-                      onChange={() =>
-                        handleAnswerChange(question.id, ["true"])
-                      }
+                      onChange={() => handleAnswerChange(question.id, ["true"])}
                       className="cursor-pointer"
                     />
                     <span>True</span>
@@ -286,9 +270,7 @@ export default function PlayExam() {
                       name={`question-${question.id}`}
                       value="false"
                       checked={answers[question.id]?.includes("false")}
-                      onChange={() =>
-                        handleAnswerChange(question.id, ["false"])
-                      }
+                      onChange={() => handleAnswerChange(question.id, ["false"])}
                       className="cursor-pointer"
                     />
                     <span>False</span>
@@ -303,9 +285,7 @@ export default function PlayExam() {
                   className="w-full p-4 rounded-lg border border-gray-300"
                   placeholder="Type your answer here..."
                   value={answers[question.id]?.[0] || ""}
-                  onChange={(e) =>
-                    handleAnswerChange(question.id, [e.target.value])
-                  }
+                  onChange={(e) => handleAnswerChange(question.id, [e.target.value])}
                 />
               );
 
@@ -315,9 +295,7 @@ export default function PlayExam() {
                   <p className="mb-4">Match the following:</p>
                   {question.options?.slice(0, 3).map((opt, i) => (
                     <div key={i} className="flex space-x-4 mb-4">
-                      <p className="flex-1 p-2 rounded bg-gray-100">
-                        {opt.text}
-                      </p>
+                      <p className="flex-1 p-2 rounded bg-gray-100">{opt.text}</p>
                       <select
                         className="flex-1 p-2 rounded border border-gray-300"
                         onChange={(e) =>
@@ -339,39 +317,23 @@ export default function PlayExam() {
               return (
                 <div>
                   <p className="mb-4">Arrange in sequence (Drag and Drop):</p>
-                  <DragDropContext
-                    onDragEnd={(result:any) => onDragEnd(result, question.id)}
-                  >
-                    <Droppable droppableId="sequence">
-                      {(provided:any) => (
-                        <div
-                          {...provided.droppableProps}
-                          ref={provided.innerRef}
-                          className="space-y-2"
+                  <ul>
+                    {(answers[question.id] ||
+                      question.options?.map((opt) => opt.text) || []).map(
+                      (option, index) => (
+                        <li
+                          key={index}
+                          className="p-4 bg-gray-100 rounded-lg mb-2 cursor-move"
+                          draggable
+                          onDragStart={() => handleDragStart(index)}
+                          onDragOver={(e) => e.preventDefault()}
+                          onDrop={() => handleDrop(question.id, index)}
                         >
-                          {answers[question.id]?.map((option, index) => (
-                            <Draggable
-                              key={option}
-                              draggableId={option}
-                              index={index}
-                            >
-                              {(provided:any) => (
-                                <div
-                                  ref={provided.innerRef}
-                                  {...provided.draggableProps}
-                                  {...provided.dragHandleProps}
-                                  className="p-4 bg-gray-100 rounded-lg flex justify-between items-center"
-                                >
-                                  <span>{option}</span>
-                                </div>
-                              )}
-                            </Draggable>
-                          ))}
-                          {provided.placeholder}
-                        </div>
-                      )}
-                    </Droppable>
-                  </DragDropContext>
+                          {option}
+                        </li>
+                      )
+                    )}
+                  </ul>
                 </div>
               );
 
@@ -465,12 +427,13 @@ export default function PlayExam() {
           </>
         ) : (
           <div className="text-center">
+               <FaCheckCircle className="inline text-green-600 mr-2" size={42}/> 
             <h1 className="text-3xl font-bold mb-4 text-green-600">
-              <FaCheckCircle className="inline mr-2" /> Exam Submitted
+           Exam Submitted
             </h1>
             <p className="text-lg text-gray-600">
-              Thank you for completing the exam. Your answers have been
-              submitted successfully!
+              Thank you for completing the exam. Your answers have been submitted
+              successfully!
             </p>
             <button
               className="mt-6 bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary-dark transition-colors"
@@ -512,10 +475,7 @@ export default function PlayExam() {
             <div
               className="h-full bg-primary"
               style={{
-                width: `${
-                  (Object.keys(answers).length / examData.questions.length) *
-                  100
-                }%`,
+                width: `${(Object.keys(answers).length / examData.questions.length) * 100}%`,
               }}
             ></div>
           </div>
