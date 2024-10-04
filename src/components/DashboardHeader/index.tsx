@@ -66,6 +66,8 @@ export default function Header({ toggleSidebar }: HeaderProps) {
         });
         // Redirect to signin immediately after logout
         router.push("/signin");
+      } else if (response.data.status === false && response.data.message === "Unauthorized") {
+        Cookies.remove("jwt");
       }
     } catch (error) {
       console.error("Logout failed:", error);

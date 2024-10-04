@@ -10,7 +10,6 @@ export const metadata: Metadata = {
 const SigninPage = () => {
   return (
     <>
-
       <Signin />
     </>
   );
