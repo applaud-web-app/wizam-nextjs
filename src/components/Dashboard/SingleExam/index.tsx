@@ -1,10 +1,11 @@
-"use client"; // Ensure this component is client-side rendered
-
-import { FaClock, FaQuestionCircle, FaStar, FaCheckCircle, FaInfoCircle } from "react-icons/fa"; // Icons for the details
 import { useState, useEffect } from "react";
 import Loader from "@/components/Common/Loader";
+import { FaClock, FaQuestionCircle, FaStar, FaCheckCircle, FaInfoCircle } from "react-icons/fa";
+import Cookies from "js-cookie"; // Ensure js-cookie is installed
+import axios from "axios"; // Make sure axios is installed
+import NoData from '@/components/Common/NoData'; // Import NoData component
 
-// Define the type for exam details
+
 interface ExamDetails {
   title: string;
   examType: string;
@@ -13,96 +14,68 @@ interface ExamDetails {
   duration: string;
   marks: number;
   description: string;
-  instructions: string;
 }
 
 interface SingleExamProps {
   slug: string;
 }
 
-const examData: Record<string, ExamDetails> = {
-  "algebra-basics": {
-    title: "Algebra Basics",
-    examType: "Math Exam",
-    syllabus: "Algebra I",
-    totalQuestions: 20,
-    duration: "1 hr",
-    marks: 100,
-    description: `
-      <h3 class="text-lg font-semibold mb-2">Exam Overview</h3>
-      <p>This exam covers the <strong>fundamentals of Algebra</strong>, including equations, inequalities, and functions. You are expected to:</p>
-      <ul class="list-disc list-inside">
-        <li>Understand and solve linear equations</li>
-        <li>Work with functions and graph them</li>
-        <li>Solve inequalities with algebraic methods</li>
-      </ul>
-    `,
-    instructions: `
-      <h3 class="text-lg font-semibold mb-2">Instructions</h3>
-      <p>Please follow these instructions carefully during the exam:</p>
-      <ol class="list-decimal list-inside">
-        <li>Ensure you have a stable internet connection before starting the exam.</li>
-        <li>You <strong>cannot</strong> leave the exam window once it begins.</li>
-        <li>All questions are mandatory, and skipping is not allowed.</li>
-        <li>Keep a calculator ready if necessary.</li>
-      </ol>
-    `,
-  },
-  "geometry-fundamentals": {
-    title: "Geometry Fundamentals",
-    examType: "Math Exam",
-    syllabus: "Geometry I",
-    totalQuestions: 15,
-    duration: "45 min",
-    marks: 75,
-    description: `
-      <h3 class="text-lg font-semibold mb-2">Exam Overview</h3>
-      <p>This exam covers the <strong>basics of Geometry</strong>, including shapes, angles, and theorems. You are expected to:</p>
-      <ul class="list-disc list-inside">
-        <li>Identify and calculate properties of different shapes</li>
-        <li>Understand and apply theorems related to angles</li>
-        <li>Work with area and perimeter calculations</li>
-      </ul>
-    `,
-    instructions: `
-      <h3 class="text-lg font-semibold mb-2">Instructions</h3>
-      <p>Please ensure you are ready before starting the exam:</p>
-      <ol class="list-decimal list-inside">
-        <li>Check your surroundings for any distractions.</li>
-        <li>Review the material thoroughly before starting.</li>
-        <li>All questions are mandatory.</li>
-      </ol>
-    `,
-  },
-  // Add more exams as needed
-};
-
 export default function SingleExam({ slug }: SingleExamProps) {
   const [examDetails, setExamDetails] = useState<ExamDetails | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
 
-  // Simulating fetching data for the specific exam with HTML content for description and instructions
   useEffect(() => {
-    setTimeout(() => {
-      // Fetching exam details based on slug
-      const details = examData[slug] || null; // Get the exam details or null if not found
-      setExamDetails(details);
-      setLoading(false); // Set loading to false after fetching data
-    }, 2000); // Simulate a 2-second fetch delay
-  }, [slug]);
+    const fetchExamDetails = async () => {
+      const category = Cookies.get("category_id"); // Fetch category ID from cookies
 
-  // Show loader while loading
+      if (!category) {
+        console.error("Category ID is missing");
+        setLoading(false); // Stop loading if no category is found
+        return;
+      }
+
+      setLoading(true); // Start loading state
+
+      try {
+        // Use axios to fetch exam details from the backend API
+        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/exam-detail/${slug}`, {
+          params: { category }, // Send slug and category as query params
+          headers: {
+            Authorization: `Bearer ${Cookies.get("jwt")}`, // JWT token from cookies
+          },
+        });
+
+        const data = response.data;
+
+        if (data.status) {
+          setExamDetails(data.data); // Set exam details if found
+        } else {
+          setExamDetails(null); // Clear exam details if not found
+        }
+      } catch (error) {
+        console.error("Error fetching exam details:", error);
+        setExamDetails(null); // Clear exam details on error
+      } finally {
+        setLoading(false); // Stop loading state
+      }
+    };
+
+    fetchExamDetails();
+  }, [slug]); // Fetch new exam details when slug changes
+
+  // Loading state
   if (loading) {
     return <Loader />;
   }
 
+  // No exam details found
   if (!examDetails) {
-    return <div className="text-center text-red-500">Exam not found.</div>; // Handle case where no exam details are found
+    return <NoData />;
   }
 
   return (
     <div className="mx-auto p-5 shadow-sm bg-white rounded-lg">
-      {/* Exam Title and Type */}
+      {/* Display exam details */}
       <div className="mb-8">
         <p className="bg-cyan-100 text-cyan-700 px-4 py-2 text-sm rounded-full inline-block mb-4">
           {examDetails.syllabus}
@@ -111,38 +84,34 @@ export default function SingleExam({ slug }: SingleExamProps) {
         <h2 className="text-lg font-medium text-primary-600">{examDetails.examType}</h2>
       </div>
 
-      {/* Syllabus and Details in a Responsive Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 py-3 border-y border-gray-300 mb-8">
-        {/* Exam Details with Icons */}
         <div className="flex items-center space-x-2 text-gray-700">
           <FaQuestionCircle className="text-primary" />
-          <span className="text-base font-semibold">
-            Questions: {examDetails.totalQuestions}
-          </span>
+          <span className="text-base font-semibold">Questions: {examDetails.totalQuestions}</span>
         </div>
         <div className="flex items-center space-x-2 text-gray-700">
           <FaClock className="text-primary" />
-          <span className="text-base font-semibold">
-            Duration: {examDetails.duration}
-          </span>
+          <span className="text-base font-semibold">Duration: {examDetails.duration}</span>
         </div>
         <div className="flex items-center space-x-2 text-gray-700">
           <FaStar className="text-primary" />
-          <span className="text-base font-semibold">
-            Marks: {examDetails.marks}
-          </span>
+          <span className="text-base font-semibold">Marks: {examDetails.marks}</span>
         </div>
       </div>
 
-      {/* Exam Instructions */}
+      {/* Instructions */}
       <div className="mb-8">
         <h3 className="text-xl font-semibold text-primary mb-4 flex items-center">
           <FaCheckCircle className="text-primary mr-2" /> Instructions
         </h3>
-        <div
-          dangerouslySetInnerHTML={{ __html: examDetails.instructions || "" }}
-          className="text-gray-600 bg-gray-50 p-5 rounded-lg border border-gray-300"
-        />
+        <div className="text-gray-600 bg-gray-50 p-5 rounded-lg border border-gray-300">
+          <ol className="list-decimal list-inside">
+            <li>The clock will be set at the server. The countdown timer in the top right corner of screen will display the remaining time available for you to complete the test. When the timer reaches zero, the test will end by itself.</li>
+            <li>Click on the question number in the Question Palette at the right of your screen to go to that numbered question directly. Note that using this option does NOT save your answer to the current question.</li>
+            <li>Click on Save & Next to save your answer for the current question and then go to the next question.</li>
+            <li>The Question Palette displayed on the right side of screen will show the status of each question.</li>
+          </ol>
+        </div>
       </div>
 
       {/* Exam Description */}
@@ -158,7 +127,7 @@ export default function SingleExam({ slug }: SingleExamProps) {
 
       {/* Start Exam Button */}
       <button
-        onClick={() => alert(`Starting exam: ${examDetails.title}`)}
+        onClick={() => alert(`Starting exam: ${examDetails.title}`)} 
         className="w-full bg-primary text-white font-semibold py-2 rounded-lg hover:bg-primary-dark transition-all duration-200"
       >
         Start Exam
