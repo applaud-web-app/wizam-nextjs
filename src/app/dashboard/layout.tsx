@@ -30,8 +30,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }, []);
 
   return (
-    <html lang="en" className={`${jost.className} light-mode`}>
-      <body className="bg-slate-100 text-gray-900 dark:bg-gray-900 dark:text-gray-100 transition-colors duration-500">
+    <div className={`${jost.className} light-mode`}>
+      <div className="bg-slate-100 text-gray-900 dark:bg-gray-900 dark:text-gray-100 transition-colors duration-500">
         {/* Adjust body padding to account for fixed header */}
         <div className="flex flex-col min-h-screen">
           {/* Header with fixed position */}
@@ -50,7 +50,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           {/* Footer */}
           <Footer />
         </div>
-      </body>
-    </html>
+      </div>
+    </div>
   );
 }
