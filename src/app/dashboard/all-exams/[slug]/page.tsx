@@ -1,7 +1,13 @@
 "use client"; // Ensure this component is client-side rendered
 
-import { useEffect, useState } from "react";
+import { useEffect, useState } from 'react';
 import { FaClock, FaQuestionCircle, FaStar } from "react-icons/fa"; // Icons for the card
+import axios from 'axios'; // Ensure axios is installed
+import { toast } from 'react-toastify'; // Optional: For notifications
+import Cookies from 'js-cookie'; // Access cookies
+import NoData from '@/components/Common/NoData';
+import Loader from '@/components/Common/Loader';
+import { useRouter } from "next/navigation"; // Use router to redirect
 
 // Define the Exam type
 interface Exam {
@@ -21,12 +27,7 @@ const examData: ExamData = {
   "math-exams": [
     { title: "Algebra Basics", questions: 20, time: "1 hr", marks: 100 },
     { title: "Advanced Geometry", questions: 25, time: "1.5 hrs", marks: 150 },
-    {
-      title: "Calculus Introduction",
-      questions: 30,
-      time: "2 hrs",
-      marks: 200,
-    },
+    { title: "Calculus Introduction", questions: 30, time: "2 hrs", marks: 200,  },
     {
       title: "Probability & Statistics",
       questions: 35,
@@ -69,12 +70,14 @@ export default function ExamTypeDetailPage({
 }) {
   const [slug, setSlug] = useState<string | null>(null);
   const [exams, setExams] = useState<Exam[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const router = useRouter(); // For redirecting to other pages
 
   // Fetch the exams based on the slug from params
   useEffect(() => {
     const { slug } = params;
     setSlug(slug);
-
+    const category = Cookies.get("category_id");
     // Fetch the exams based on the slug
     const fetchedExams = examData[slug];
     if (fetchedExams) {

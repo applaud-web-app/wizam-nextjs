@@ -1,13 +1,15 @@
 "use client";
-import { useState } from "react";
+import { useEffect,useState } from "react";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
+import axios from "axios"; // Axios for API calls
 import { FiEye, FiEyeOff, FiCamera, FiUpload } from "react-icons/fi";
+import { useRouter } from "next/navigation";
+import Cookies from "js-cookie";
 
 // TypeScript interfaces for form values
 interface ProfileFormValues {
-  firstName: string;
-  lastName: string;
+  fullname: string;
   mobile: string;
   email: string;
 }
@@ -18,10 +20,17 @@ interface PasswordFormValues {
   confirmPassword: string;
 }
 
+interface UserProfile {
+  id: number;
+  title: string | null;
+  name: string;
+  email: string;
+  phone_number: string;
+}
+
 // Validation schemas using Yup
 const profileValidationSchema = Yup.object({
-  firstName: Yup.string().required("First name is required"),
-  lastName: Yup.string().required("Last name is required"),
+  fullname: Yup.string().required("Full name is required"),
   mobile: Yup.string().required("Mobile number is required"),
   email: Yup.string().email("Invalid email address").required("Email is required"),
 });
@@ -44,6 +53,8 @@ export default function UserProfile() {
   // State for toggling password visibility
   const [showPassword, setShowPassword] = useState(false);
   const togglePasswordVisibility = () => setShowPassword(!showPassword);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const router = useRouter();
 
   // State for the profile image preview
   const [profileImage, setProfileImage] = useState<string | null>(null);
@@ -62,8 +73,7 @@ export default function UserProfile() {
 
   // Initial values for both forms
   const profileInitialValues: ProfileFormValues = {
-    firstName: "",
-    lastName: "",
+    fullname: "",
     mobile: "",
     email: "",
   };
@@ -73,6 +83,41 @@ export default function UserProfile() {
     newPassword: "",
     confirmPassword: "",
   };
+
+
+   // Function to fetch profile data
+   const fetchProfileData = async () => {
+    const jwt = Cookies.get("jwt");
+    if (!jwt) {
+      // If there is no JWT, redirect to signin immediately
+      router.push("/signin");
+      return;
+    }
+
+    try {
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_API_URL}/profile`,
+        {
+          headers: {
+            Authorization: `Bearer ${jwt}`,
+          },
+        }
+      );
+
+      if (response.status === 200 && response.data.status === true) {
+        setUserProfile(response.data.user);
+      } else if (response.data.status === false && response.data.message === "Unauthorized") {
+         router.push("/signin");
+      }
+    } catch (error) {
+      console.error("Error fetching profile data:", error);
+       router.push("/signin");
+    }
+  };
+
+  useEffect(() => {
+    fetchProfileData();
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -137,31 +182,18 @@ export default function UserProfile() {
               </div>
 
               {/* Form Grid Layout */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-1 gap-6">
                 {/* First Name */}
                 <div className="col-span-1">
-                  <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-2">
-                    First Name <span className="text-red-500">*</span>
+                  <label htmlFor="fullname" className="block text-sm font-medium text-gray-700 mb-2">
+                    Full Name <span className="text-red-500">*</span>
                   </label>
                   <Field
-                    id="firstName"
-                    name="firstName"
+                    id="fullname"
+                    name="fullname" value={userProfile?.name}
                     className="w-full bg-white border border-gray-300 rounded-md py-2 px-4 text-gray-700 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition"
                   />
-                  <ErrorMessage name="firstName" component="div" className="text-red-500 text-sm" />
-                </div>
-
-                {/* Last Name */}
-                <div className="col-span-1">
-                  <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 mb-2">
-                    Last Name <span className="text-red-500">*</span>
-                  </label>
-                  <Field
-                    id="lastName"
-                    name="lastName"
-                    className="w-full bg-white border border-gray-300 rounded-md py-2 px-4 text-gray-700 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition"
-                  />
-                  <ErrorMessage name="lastName" component="div" className="text-red-500 text-sm" />
+                  <ErrorMessage name="fullname" component="div" className="text-red-500 text-sm" />
                 </div>
 
                 {/* Mobile Number */}
@@ -171,7 +203,7 @@ export default function UserProfile() {
                   </label>
                   <Field
                     id="mobile"
-                    name="mobile"
+                    name="mobile" value={userProfile?.phone_number}
                     className="w-full bg-white border border-gray-300 rounded-md py-2 px-4 text-gray-700 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition"
                   />
                   <ErrorMessage name="mobile" component="div" className="text-red-500 text-sm" />
@@ -185,7 +217,7 @@ export default function UserProfile() {
                   <Field
                     id="email"
                     name="email"
-                    type="email"
+                    type="email" value={userProfile?.email}
                     className="w-full bg-white border border-gray-300 rounded-md py-2 px-4 text-gray-700 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition"
                   />
                   <ErrorMessage name="email" component="div" className="text-red-500 text-sm" />
