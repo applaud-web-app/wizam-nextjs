@@ -1,5 +1,6 @@
 "use client";
 
+import Loader from "@/components/Common/Loader";
 import { useState, useEffect } from "react";
 import {
   FaCheckCircle,
@@ -9,13 +10,19 @@ import {
   FaRegSmile,
   FaRegFrown,
 } from "react-icons/fa";
+import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 
-// Question interface
+interface Option {
+  text: string;
+  image?: string; // Optional image for options
+}
+
 interface Question {
   id: number;
   type: string; // "single", "multiple", "truefalse", "short", "match", "sequence", "fill", "extended"
   question: string;
-  options?: { text: string }[];
+  image?: string; // Optional image for the question
+  options?: Option[];
   correctAnswers?: string[];
   blanks?: { position: number; value?: string }[]; // for fill in the blanks
 }
@@ -41,7 +48,10 @@ export default function PlayExam() {
         {
           id: 1,
           type: "single",
-          question: "Who was the first female Prime Minister of the United Kingdom?",
+          question:
+            "Who was the first female Prime Minister of the United Kingdom?",
+          image:
+            "https://media.licdn.com/dms/image/D4E12AQG0hyhZmq0AyQ/article-cover_image-shrink_600_2000/0/1700488940348?e=2147483647&v=beta&t=eZtDe_xSbm65L-mR1tnM8vnfMpM3aWcSe8rw8o7sjSs", // Example image URL
           options: [
             { text: "Margaret Thatcher" },
             { text: "Angela Merkel" },
@@ -54,7 +64,11 @@ export default function PlayExam() {
           type: "multiple",
           question: "Which of the following are programming languages?",
           options: [
-            { text: "JavaScript" },
+            {
+              text: "JavaScript",
+              image:
+                "https://media.licdn.com/dms/image/D4E12AQG0hyhZmq0AyQ/article-cover_image-shrink_600_2000/0/1700488940348?e=2147483647&v=beta&t=eZtDe_xSbm65L-mR1tnM8vnfMpM3aWcSe8rw8o7sjSs",
+            }, // Example image for an option
             { text: "HTML" },
             { text: "Python" },
             { text: "CSS" },
@@ -73,21 +87,31 @@ export default function PlayExam() {
         {
           id: 5,
           type: "match",
-          question: "Match the following:",
+          question: "Match the following animals to their sounds:",
           options: [
-            { text: "Dog" },
+            {
+              text: "Dog",
+              image:
+                "https://media.licdn.com/dms/image/D4E12AQG0hyhZmq0AyQ/article-cover_image-shrink_600_2000/0/1700488940348?e=2147483647&v=beta&t=eZtDe_xSbm65L-mR1tnM8vnfMpM3aWcSe8rw8o7sjSs",
+            },
             { text: "Cat" },
             { text: "Cow" },
+            { text: "Bark" },
             { text: "Meow" },
             { text: "Moo" },
-            { text: "Bark" },
           ],
         },
         {
           id: 6,
           type: "sequence",
-          question: "Arrange the following numbers in ascending order:",
-          options: [{ text: "3" }, { text: "1" }, { text: "4" }, { text: "2" }],
+          question:
+            "Arrange the following planets by size (smallest to largest):",
+          options: [
+            { text: "Mercury" },
+            { text: "Earth" },
+            { text: "Mars" },
+            { text: "Jupiter" },
+          ],
         },
         {
           id: 7,
@@ -149,195 +173,255 @@ export default function PlayExam() {
       : 0;
   };
 
+  const onDragEnd = (result: any, questionId: number) => {
+    if (!result.destination) return;
+    const currentAnswers = [...(answers[questionId] || [])];
+    const [reorderedItem] = currentAnswers.splice(result.source.index, 1);
+    currentAnswers.splice(result.destination.index, 0, reorderedItem);
+    handleAnswerChange(questionId, currentAnswers);
+  };
+
   const renderQuestion = (question: Question) => {
-    switch (question.type) {
-      case "single":
-        return (
-          <>
-            {question.options?.map((option, index) => (
-              <label
-                key={index}
-                className={`flex items-center space-x-3 p-4 rounded-lg cursor-pointer transition-all ${
-                  answers[question.id]?.includes(option.text)
-                    ? "bg-yellow-200"
-                    : "bg-gray-100"
-                } hover:bg-yellow-100`}
-              >
-                <input
-                  type="radio"
-                  name={`question-${question.id}`}
-                  value={option.text}
-                  checked={answers[question.id]?.includes(option.text)}
-                  onChange={() => handleAnswerChange(question.id, [option.text])}
-                  className="cursor-pointer"
-                />
-                <span>{option.text}</span>
-              </label>
-            ))}
-          </>
-        );
-
-      case "multiple":
-        return (
-          <>
-            {question.options?.map((option, index) => (
-              <label
-                key={index}
-                className={`flex items-center space-x-3 p-4 rounded-lg cursor-pointer transition-all ${
-                  answers[question.id]?.includes(option.text)
-                    ? "bg-yellow-200"
-                    : "bg-gray-100"
-                } hover:bg-yellow-100`}
-              >
-                <input
-                  type="checkbox"
-                  name={`question-${question.id}`}
-                  value={option.text}
-                  checked={answers[question.id]?.includes(option.text)}
-                  onChange={() => {
-                    const currentAnswers = answers[question.id] || [];
-                    const newAnswers = currentAnswers.includes(option.text)
-                      ? currentAnswers.filter((a) => a !== option.text)
-                      : [...currentAnswers, option.text];
-                    handleAnswerChange(question.id, newAnswers);
-                  }}
-                  className="cursor-pointer"
-                />
-                <span>{option.text}</span>
-              </label>
-            ))}
-          </>
-        );
-
-      case "truefalse":
-        return (
-          <div className="space-y-4">
-            <label className="flex items-center space-x-3 p-4 rounded-lg cursor-pointer transition-all bg-gray-100 hover:bg-yellow-100">
-              <input
-                type="radio"
-                name={`question-${question.id}`}
-                value="true"
-                checked={answers[question.id]?.includes("true")}
-                onChange={() => handleAnswerChange(question.id, ["true"])}
-                className="cursor-pointer"
-              />
-              <span>True</span>
-            </label>
-            <label className="flex items-center space-x-3 p-4 rounded-lg cursor-pointer transition-all bg-gray-100 hover:bg-yellow-100">
-              <input
-                type="radio"
-                name={`question-${question.id}`}
-                value="false"
-                checked={answers[question.id]?.includes("false")}
-                onChange={() => handleAnswerChange(question.id, ["false"])}
-                className="cursor-pointer"
-              />
-              <span>False</span>
-            </label>
-          </div>
-        );
-
-      case "short":
-        return (
-          <input
-            type="text"
-            className="w-full p-4 rounded-lg border border-gray-300"
-            placeholder="Type your answer..."
-            value={answers[question.id]?.[0] || ""}
-            onChange={(e) => handleAnswerChange(question.id, [e.target.value])}
+    return (
+      <div>
+        {/* Render question image if available */}
+        {question.image && (
+          <img
+            src={question.image}
+            alt="Question related"
+            className="w-full h-48 object-cover rounded-md mb-4"
           />
-        );
+        )}
+        <p className="text-lg mb-4">{question.question}</p>
 
-      case "fill":
-        return (
-          <>
-            {question.blanks?.map((blank, index) => (
-              <input
-                key={index}
-                type="text"
-                className="w-full p-4 rounded-lg border border-gray-300 mb-4"
-                placeholder="Fill in the blank"
-                value={answers[question.id]?.[index] || ""}
-                onChange={(e) =>
-                  handleAnswerChange(question.id, [
-                    ...(answers[question.id] || []),
-                    e.target.value,
-                  ])
-                }
-              />
-            ))}
-          </>
-        );
+        {/* Render based on question type */}
+        {(() => {
+          switch (question.type) {
+            case "single":
+              return question.options?.map((option, index) => (
+                <label
+                  key={index}
+                  className={`flex items-center space-x-3 p-4 rounded-lg cursor-pointer transition-all mb-3 ${
+                    answers[question.id]?.includes(option.text)
+                      ? "bg-yellow-200"
+                      : "bg-gray-100"
+                  } hover:bg-yellow-100`}
+                >
+                  <input
+                    type="radio"
+                    name={`question-${question.id}`}
+                    value={option.text}
+                    checked={answers[question.id]?.includes(option.text)}
+                    onChange={() =>
+                      handleAnswerChange(question.id, [option.text])
+                    }
+                    className="cursor-pointer"
+                  />
+                  {/* Render option image if available */}
+                  {option.image && (
+                    <img
+                      src={option.image}
+                      alt={option.text}
+                      className="w-8 h-8 object-cover rounded-full"
+                    />
+                  )}
+                  <span>{option.text}</span>
+                </label>
+              ));
 
-      case "match":
-        return (
-          <div>
-            <p className="mb-4">Match the following:</p>
-            {question.options?.slice(0, 3).map((option, index) => (
-              <div key={index} className="flex justify-between mb-2">
-                <span>{option.text}</span>
-                <select
-                  className="p-2 rounded border border-gray-300"
+            case "multiple":
+              return question.options?.map((option, index) => (
+                <label
+                  key={index}
+                  className={`flex items-center space-x-3 p-4 rounded-lg cursor-pointer transition-all mb-3 ${
+                    answers[question.id]?.includes(option.text)
+                      ? "bg-yellow-200"
+                      : "bg-gray-100"
+                  } hover:bg-yellow-100`}
+                >
+                  <input
+                    type="checkbox"
+                    name={`question-${question.id}`}
+                    value={option.text}
+                    checked={answers[question.id]?.includes(option.text)}
+                    onChange={() => {
+                      const currentAnswers = answers[question.id] || [];
+                      const newAnswers = currentAnswers.includes(option.text)
+                        ? currentAnswers.filter((a) => a !== option.text)
+                        : [...currentAnswers, option.text];
+                      handleAnswerChange(question.id, newAnswers);
+                    }}
+                    className="cursor-pointer"
+                  />
+                  {option.image && (
+                    <img
+                      src={option.image}
+                      alt={option.text}
+                      className="w-8 h-8 object-cover rounded-full"
+                    />
+                  )}
+                  <span>{option.text}</span>
+                </label>
+              ));
+
+            case "truefalse":
+              return (
+                <div className="space-y-4">
+                  <label className="flex items-center space-x-3 p-4 rounded-lg cursor-pointer transition-all bg-gray-100 hover:bg-yellow-100">
+                    <input
+                      type="radio"
+                      name={`question-${question.id}`}
+                      value="true"
+                      checked={answers[question.id]?.includes("true")}
+                      onChange={() =>
+                        handleAnswerChange(question.id, ["true"])
+                      }
+                      className="cursor-pointer"
+                    />
+                    <span>True</span>
+                  </label>
+                  <label className="flex items-center space-x-3 p-4 rounded-lg cursor-pointer transition-all bg-gray-100 hover:bg-yellow-100">
+                    <input
+                      type="radio"
+                      name={`question-${question.id}`}
+                      value="false"
+                      checked={answers[question.id]?.includes("false")}
+                      onChange={() =>
+                        handleAnswerChange(question.id, ["false"])
+                      }
+                      className="cursor-pointer"
+                    />
+                    <span>False</span>
+                  </label>
+                </div>
+              );
+
+            case "short":
+              return (
+                <input
+                  type="text"
+                  className="w-full p-4 rounded-lg border border-gray-300"
+                  placeholder="Type your answer here..."
+                  value={answers[question.id]?.[0] || ""}
                   onChange={(e) =>
                     handleAnswerChange(question.id, [e.target.value])
                   }
-                >
-                  {question.options?.slice(3).map((match, i) => (
-                    <option key={i} value={match.text}>
-                      {match.text}
-                    </option>
+                />
+              );
+
+            case "match":
+              return (
+                <div>
+                  <p className="mb-4">Match the following:</p>
+                  {question.options?.slice(0, 3).map((opt, i) => (
+                    <div key={i} className="flex space-x-4 mb-4">
+                      <p className="flex-1 p-2 rounded bg-gray-100">
+                        {opt.text}
+                      </p>
+                      <select
+                        className="flex-1 p-2 rounded border border-gray-300"
+                        onChange={(e) =>
+                          handleAnswerChange(question.id, [e.target.value])
+                        }
+                      >
+                        {question.options?.slice(3).map((match, i) => (
+                          <option key={i} value={match.text}>
+                            {match.text}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
                   ))}
-                </select>
-              </div>
-            ))}
-          </div>
-        );
+                </div>
+              );
 
-      case "sequence":
-        return (
-          <div>
-            <p className="mb-4">Arrange in sequence:</p>
-            <select
-              multiple
-              className="w-full p-4 rounded-lg border border-gray-300"
-              onChange={(e) =>
-                handleAnswerChange(
-                  question.id,
-                  Array.from(e.target.selectedOptions, (opt) => opt.value)
-                )
-              }
-            >
-              {question.options?.map((opt, index) => (
-                <option key={index} value={opt.text}>
-                  {opt.text}
-                </option>
-              ))}
-            </select>
-          </div>
-        );
+            case "sequence":
+              return (
+                <div>
+                  <p className="mb-4">Arrange in sequence (Drag and Drop):</p>
+                  <DragDropContext
+                    onDragEnd={(result:any) => onDragEnd(result, question.id)}
+                  >
+                    <Droppable droppableId="sequence">
+                      {(provided:any) => (
+                        <div
+                          {...provided.droppableProps}
+                          ref={provided.innerRef}
+                          className="space-y-2"
+                        >
+                          {answers[question.id]?.map((option, index) => (
+                            <Draggable
+                              key={option}
+                              draggableId={option}
+                              index={index}
+                            >
+                              {(provided:any) => (
+                                <div
+                                  ref={provided.innerRef}
+                                  {...provided.draggableProps}
+                                  {...provided.dragHandleProps}
+                                  className="p-4 bg-gray-100 rounded-lg flex justify-between items-center"
+                                >
+                                  <span>{option}</span>
+                                </div>
+                              )}
+                            </Draggable>
+                          ))}
+                          {provided.placeholder}
+                        </div>
+                      )}
+                    </Droppable>
+                  </DragDropContext>
+                </div>
+              );
 
-      case "extended":
-        return (
-          <textarea
-            className="w-full p-4 rounded-lg border border-gray-300"
-            rows={6}
-            placeholder="Write your answer..."
-            value={answers[question.id]?.[0] || ""}
-            onChange={(e) => handleAnswerChange(question.id, [e.target.value])}
-          />
-        );
+            case "fill":
+              return (
+                <div>
+                  {question.blanks?.map((blank, index) => (
+                    <input
+                      key={index}
+                      type="text"
+                      className="p-4 rounded-lg border border-gray-300 w-full mb-2"
+                      placeholder="Type your answer here..."
+                      value={answers[question.id]?.[index] || ""}
+                      onChange={(e) => {
+                        const newAnswers = answers[question.id] || [];
+                        newAnswers[index] = e.target.value;
+                        handleAnswerChange(question.id, newAnswers);
+                      }}
+                    />
+                  ))}
+                </div>
+              );
 
-      default:
-        return <div>Unknown question type</div>;
-    }
+            case "extended":
+              return (
+                <textarea
+                  className="w-full p-4 rounded-lg border border-gray-300"
+                  rows={6}
+                  placeholder="Write your answer..."
+                  value={answers[question.id]?.[0] || ""}
+                  onChange={(e) =>
+                    handleAnswerChange(question.id, [e.target.value])
+                  }
+                />
+              );
+
+            default:
+              return <div>Unknown question type</div>;
+          }
+        })()}
+      </div>
+    );
   };
 
-  if (!examData) return <div>Loading...</div>;
+  if (!examData) return <Loader />;
 
   return (
-    <div className="dashboard-page flex flex-col md:flex-row p-4 gap-6">
+    <div className="dashboard-page flex flex-col md:flex-row gap-6">
       {/* Main Exam Content */}
-      <div className="flex-1 p-6 bg-white rounded-lg shadow-md border border-gray-200">
+      <div className="flex-1 lg:p-6 bg-white rounded-lg shadow-sm p-4 ">
         {!submitted ? (
           <>
             <div className="flex justify-between mb-4">
@@ -346,9 +430,6 @@ export default function PlayExam() {
               </h3>
               <FaClock className="text-primary" size={24} />
             </div>
-            <p className="text-lg mb-4">
-              {examData.questions[currentQuestionIndex].question}
-            </p>
 
             {/* Render question based on type */}
             <div className="space-y-4">
@@ -388,8 +469,8 @@ export default function PlayExam() {
               <FaCheckCircle className="inline mr-2" /> Exam Submitted
             </h1>
             <p className="text-lg text-gray-600">
-              Thank you for completing the exam. Your answers have been submitted
-              successfully!
+              Thank you for completing the exam. Your answers have been
+              submitted successfully!
             </p>
             <button
               className="mt-6 bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary-dark transition-colors"
@@ -402,7 +483,7 @@ export default function PlayExam() {
       </div>
 
       {/* Sidebar for Timer and Progress */}
-      <div className="w-full md:w-1/3 bg-white shadow-md p-6 rounded-lg border border-gray-200">
+      <div className="w-full md:w-1/3 bg-white shadow-sm p-4 lg:p-6 rounded-lg ">
         <div className="mb-6 text-center">
           <h3 className="text-gray-600">Time Remaining</h3>
           <p className="text-3xl text-orange-600 font-semibold">
@@ -432,7 +513,8 @@ export default function PlayExam() {
               className="h-full bg-primary"
               style={{
                 width: `${
-                  (Object.keys(answers).length / examData.questions.length) * 100
+                  (Object.keys(answers).length / examData.questions.length) *
+                  100
                 }%`,
               }}
             ></div>
