@@ -17,6 +17,7 @@ import "react-toastify/dist/ReactToastify.css"; // Import Toastify styles
 // Import the Nunito font from next/font/google
 import { Nunito } from "next/font/google";
 import { SiteProvider } from "@/context/SiteContext"; // Import SiteProvider
+import { SyllabusProvider } from "@/context/SyllabusContext";
 
 // Load the Nunito font
 const nunito = Nunito({
@@ -88,6 +89,7 @@ export default function RootLayout({
         ) : (
           <SessionProvider>
             <SiteProvider> {/* Wrap the entire app with SiteProvider */}
+            <SyllabusProvider>
               <ThemeProvider
                 attribute="class"
                 enableSystem={false}
@@ -116,6 +118,7 @@ export default function RootLayout({
                 {!noHeaderFooter && <Footer />}
                 <ScrollToTop />
               </ThemeProvider>
+              </SyllabusProvider>
             </SiteProvider>
           </SessionProvider>
         )}
