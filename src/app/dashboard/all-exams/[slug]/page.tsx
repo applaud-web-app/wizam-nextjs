@@ -5,7 +5,6 @@ import { FaClock, FaQuestionCircle, FaStar } from "react-icons/fa"; // Icons for
 import axios from 'axios'; // Ensure axios is installed
 import { toast } from 'react-toastify'; // Optional: For notifications
 import Cookies from 'js-cookie'; // Access cookies
-import NoData from '@/components/Common/NoData';
 import Loader from '@/components/Common/Loader';
 import { useRouter } from "next/navigation"; // Use router to redirect
 
@@ -16,52 +15,6 @@ interface Exam {
   time: string;
   marks: number;
 }
-
-// Define the ExamData type, where each slug corresponds to an array of exams
-type ExamData = {
-  [slug: string]: Exam[];
-};
-
-// Dummy data for exams based on slug
-const examData: ExamData = {
-  "math-exams": [
-    { title: "Algebra Basics", questions: 20, time: "1 hr", marks: 100 },
-    { title: "Advanced Geometry", questions: 25, time: "1.5 hrs", marks: 150 },
-    { title: "Calculus Introduction", questions: 30, time: "2 hrs", marks: 200,  },
-    {
-      title: "Probability & Statistics",
-      questions: 35,
-      time: "1.5 hrs",
-      marks: 180,
-    },
-  ],
-  "science-exams": [
-    { title: "Physics Basics", questions: 30, time: "1 hr", marks: 120 },
-    { title: "Chemistry Essentials", questions: 20, time: "1 hr", marks: 100 },
-    { title: "Biology Fundamentals", questions: 40, time: "2 hrs", marks: 220 },
-    { title: "Environmental Science", questions: 25, time: "1 hr", marks: 130 },
-  ],
-  "literature-exams": [
-    { title: "Shakespeare Studies", questions: 40, time: "2 hrs", marks: 200 },
-    { title: "Modern Literature", questions: 30, time: "1.5 hrs", marks: 150 },
-    { title: "Romantic Poetry", questions: 25, time: "1 hr", marks: 120 },
-    {
-      title: "American Literature",
-      questions: 35,
-      time: "1.5 hrs",
-      marks: 180,
-    },
-  ],
-  "history-exams": [
-    { title: "World History", questions: 50, time: "3 hrs", marks: 300 },
-    {
-      title: "Ancient Civilizations",
-      questions: 30,
-      time: "1.5 hrs",
-      marks: 150,
-    },
-  ],
-};
 
 export default function ExamTypeDetailPage({
   params,
@@ -77,26 +30,54 @@ export default function ExamTypeDetailPage({
   useEffect(() => {
     const { slug } = params;
     setSlug(slug);
-    const category = Cookies.get("category_id");
-    // Fetch the exams based on the slug
-    const fetchedExams = examData[slug];
-    if (fetchedExams) {
-      setExams(fetchedExams);
-    } else {
-      setExams([]); // Set empty if no data is found
-    }
-  }, [params]);
+    const category = Cookies.get("category_id"); // Get category from cookies
+
+    // Fetch exams from API based on slug and category
+    const fetchExams = async () => {
+      try {
+        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/all-exams`, {
+          params: { slug, category }, // Send slug and category as query params
+          headers: {
+            Authorization: `Bearer ${Cookies.get("jwt")}`, // JWT token from cookies
+          },
+        });
+
+        if (response.data.status) {
+          const fetchedExams = response.data.data[slug] || [];
+            setExams(fetchedExams);
+        } else {
+          toast.error('No exams found for this category');
+          router.push('/dashboard/all-exams');
+        }
+      } catch (error) {
+        console.error('Error fetching exams:', error);
+        toast.error('An error occurred while fetching exams');
+        router.push('/dashboard/all-exams');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchExams();
+  }, [params, router]);
 
   // Handle case where slug is not a string
   const formattedSlug = slug ? slug.replace(/-/g, " ") : "";
 
+  // If loading, show loader
+  if (loading) {
+    return <Loader />; // Show loading state
+  }
+
   // If no exams are found for the current slug
   if (!slug || exams.length === 0) {
     return (
-      <div className="p-5 bg-white shadow-sm rounded-lg text-center"><h2 className="text-xl font-semibold text-red-500 mb-2">No Exams found</h2>
-      <p className="text-gray-700">
-        Sorry, we couldn't find any exam for this category. Try exploring other quiz topics or check back later.
-      </p></div>
+      <div className="p-5 bg-white shadow-sm rounded-lg text-center">
+        <h2 className="text-xl font-semibold text-red-500 mb-2">No Exams found</h2>
+        <p className="text-gray-700">
+          Sorry, we couldn't find any exam for this syllabus. Try exploring other exams or check back later.
+        </p>
+      </div>
     );
   }
 
@@ -135,7 +116,7 @@ export default function ExamTypeDetailPage({
                   <strong>Marks:</strong> {exam.marks}
                 </span>
               </div>
-              <div className="text-sm md:text-base text-gray-700">
+              <div className="text-sm md:text-base text-gray-700 capitalize">
                 <strong>Exam Type:</strong> {formattedSlug}
               </div>
             </div>

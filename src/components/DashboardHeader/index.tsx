@@ -94,10 +94,12 @@ export default function Header({ toggleSidebar }: HeaderProps) {
       if (response.status === 200 && response.data.status === true) {
         setUserProfile(response.data.user);
       } else if (response.data.status === false && response.data.message === "Unauthorized") {
+        Cookies.remove("jwt");
         handleLogout();
       }
     } catch (error) {
       console.error("Error fetching profile data:", error);
+      Cookies.remove("jwt");
       handleLogout();
     }
   };

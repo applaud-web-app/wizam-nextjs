@@ -46,31 +46,31 @@ const About: React.FC = () => {
       }
     };
 
-    const fetchUserProfile = async () => {
-      try {
-        const token = Cookies.get('jwt'); // Use the correct key for your token
-        if (!token) {
-          console.error('No authentication token found');
-          return;
-        }
-        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/profile`, {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          },
-          withCredentials: true, // Important for CORS
-        });
-        if (response.data.status) {
-          console.log('User Details:', response.data.user);
-        } else {
-          console.error('Failed to fetch user details');
-        }
-      } catch (error) {
-        console.error('Error fetching user details:', error);
-      }
-    };
+    // const fetchUserProfile = async () => {
+    //   try {
+    //     const token = Cookies.get('jwt'); // Use the correct key for your token
+    //     if (!token) {
+    //       console.error('No authentication token found');
+    //       return;
+    //     }
+    //     const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/profile`, {
+    //       headers: {
+    //         'Authorization': `Bearer ${token}`,
+    //       },
+    //       withCredentials: true, // Important for CORS
+    //     });
+    //     if (response.data.status) {
+    //       console.log('User Details:', response.data.user);
+    //     } else {
+    //       console.error('Failed to fetch user details');
+    //     }
+    //   } catch (error) {
+    //     console.error('Error fetching user details:', error);
+    //   }
+    // };
 
     fetchAboutData();
-    fetchUserProfile(); // Fetch the user profile data
+    // fetchUserProfile();
 
   }, []);
 
