@@ -6,94 +6,63 @@ import { useRouter } from 'next/navigation'; // To handle redirection after coun
 import { FaClock, FaBook, FaTag, FaDollarSign, FaCheckCircle } from 'react-icons/fa'; // Icons for lessons
 import Loader from '@/components/Common/Loader';
 import NoData from '@/components/Common/NoData';
+import Cookies from 'js-cookie'; // To handle cookies
 
-// Static data (example purposes)
-const skillsData = [
-  {
-    name: 'Programming in C++', // Skill Name
-    lessons: [
-      { 
-        title: 'Introduction to C++', 
-        slug: 'intro-to-cpp',
-        category: 'Programming', 
-        difficulty: 'Beginner', 
-        readTime: '10 min', 
-        description: `
-          <p>C++ is a versatile programming language, and in this introductory lesson, we will cover its fundamental concepts.</p>
-          <h2>What You Will Learn</h2>
-          <ul>
-            <li><strong>Syntax</strong>: Learn the basic structure of C++ programs.</li>
-            <li><strong>Data Types</strong>: Explore the various data types available in C++.</li>
-            <li><strong>Control Structures</strong>: Understand how to manage the flow of your programs using loops and conditions.</li>
-          </ul>
-        `, 
-        tags: ['C++', 'Programming', 'Syntax'], 
-        paid: false, // Free lesson
-      },
-      { 
-        title: 'Object-Oriented Programming in C++', 
-        slug: 'oop-in-cpp',
-        category: 'Programming', 
-        difficulty: 'Intermediate', 
-        readTime: '15 min', 
-        description: '<p>Learn about the principles of object-oriented programming (OOP) in C++ and how to implement classes, inheritance, and polymorphism.</p>',
-        tags: ['C++', 'OOP', 'Classes'], 
-        paid: true, // Paid lesson
-      },
-    ],
-  },
-];
-
-// Helper function to find the lesson based on slug and return the associated skill name
-const findLessonBySlug = (slug: string) => {
-  for (const skill of skillsData) {
-    const lesson = skill.lessons.find((lesson) => lesson.slug === slug);
-    if (lesson) {
-      return { lesson, skillName: skill.name }; // Return both the lesson and the associated skill name
-    }
-  }
-  return null;
-};
-
-// Helper function to convert read time string (e.g., "10 min") to seconds
-const parseReadTime = (readTime: string): number => {
-  const [value, unit] = readTime.split(' ');
-  const minutes = unit === 'min' ? parseInt(value) : 0;
-  return minutes * 60; // Convert minutes to seconds
-};
-
-// Dynamic page component
 export default function LessonDetailPage({ params }: { params: { slug: string } }) {
-  const [lessonData, setLessonData] = useState<any>(null); // Update state to handle both lesson and skillName
-  const [loading, setLoading] = useState(true);
-  const [currentDate, setCurrentDate] = useState<string | null>(null); // State to store current date
-  const [countdown, setCountdown] = useState<number>(0); // To store countdown time in seconds
+  const [lessonData, setLessonData] = useState<any>(null); // State for storing lesson data
+  const [loading, setLoading] = useState(true); // State for loading
+  const [error, setError] = useState<string | null>(null); // State for error handling
+  const [countdown, setCountdown] = useState<number>(0); // State for countdown
+  const [currentDate, setCurrentDate] = useState<string | null>(null); // State for the current date
   const router = useRouter(); // To handle redirection
 
-  // Fetch lesson data and set current date
+  // Fetch lesson data from API using slug and category_id from cookies
   useEffect(() => {
-    const fetchData = async () => {
-      // Simulate lesson fetching
-      const foundLessonData = findLessonBySlug(params.slug);
-      if (foundLessonData) {
-        const { lesson } = foundLessonData;
-        const readTimeInSeconds = parseReadTime(lesson.readTime);
-        setLessonData(foundLessonData);
-        setCountdown(readTimeInSeconds); // Initialize countdown with read time
+    const fetchLessonDetail = async () => {
+      const token = Cookies.get('jwt'); // Get JWT token from cookies
+      const categoryId = Cookies.get('category_id'); // Get category_id from cookies
 
-        // Get the current date
-        const today = new Date();
-        const formattedDate = today.toLocaleDateString('en-US', {
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric',
-        });
-        setCurrentDate(formattedDate); // Set current date
+      if (!token || !categoryId) {
+        setError('Missing token or category ID');
+        setLoading(false);
+        return;
       }
-      setLoading(false);
+
+      try {
+        const response = await axios.get(`https://wizam.awmtab.in/api/lesson-detail/${params.slug}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          params: {
+            category: categoryId, // Pass category_id as a query parameter
+          },
+        });
+
+        if (response.data && response.data.status) {
+          const lesson = response.data.data;
+          setLessonData(lesson);
+          setCountdown(lesson.read_time * 60); // Convert read time (minutes) to seconds
+
+          // Set the current date
+          const today = new Date();
+          const formattedDate = today.toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+          });
+          setCurrentDate(formattedDate);
+        } else {
+          setError('Failed to fetch lesson details');
+        }
+      } catch (err) {
+        console.error('Error fetching lesson details:', err);
+        setError('An error occurred while fetching lesson details');
+      } finally {
+        setLoading(false);
+      }
     };
 
-    fetchData();
+    fetchLessonDetail();
   }, [params.slug]);
 
   // Countdown effect
@@ -102,10 +71,10 @@ export default function LessonDetailPage({ params }: { params: { slug: string } 
       const interval = setInterval(() => {
         setCountdown((prev) => {
           if (prev <= 1) {
-            clearInterval(interval); // Clear interval at 0
-            router.push('/dashboard/lessons'); // Redirect to lessons page
+            clearInterval(interval); // Clear interval when countdown reaches 0
+            router.push('/dashboard/lessons'); // Redirect to lessons page after countdown
           }
-          return prev - 1; // Decrease countdown
+          return prev - 1;
         });
       }, 1000);
 
@@ -117,11 +86,13 @@ export default function LessonDetailPage({ params }: { params: { slug: string } 
     return <Loader />; // Display Loader while fetching data
   }
 
-  if (!lessonData) {
-    return <NoData message="No lesson data found." />; // Display NoData component if lesson not found
+  if (error) {
+    return <NoData message={error} />; // Display NoData component if there is an error
   }
 
-  const { lesson, skillName } = lessonData; // Destructure the lesson and skill name
+  if (!lessonData) {
+    return <NoData message="No lesson data found." />; // Handle case where lesson data is missing
+  }
 
   return (
     <div className="dashboard-page">
@@ -137,11 +108,11 @@ export default function LessonDetailPage({ params }: { params: { slug: string } 
 
         {/* Skill Name at the top */}
         <div className="mb-3">
-          <h2 className="text-lg text-primary underline">{skillName}</h2> {/* Skill name with primary color */}
+          <h2 className="text-lg text-primary underline">{lessonData.skill}</h2> {/* Skill name */}
         </div>
 
         {/* Title Section */}
-        <h1 className="text-3xl font-semibold text-gray-900 mb-6">{lesson.title}</h1>
+        <h1 className="text-3xl font-semibold text-gray-900 mb-6">{lessonData.title}</h1>
 
         {/* Current Date Display */}
         {currentDate && (
@@ -154,44 +125,42 @@ export default function LessonDetailPage({ params }: { params: { slug: string } 
         {/* Badge Section */}
         <div className="flex justify-start space-x-4 mb-6">
           {/* Paid or Free Badge */}
-          <span className={`inline-flex items-center text-sm px-3 py-1 rounded-full ${
-            lesson.paid ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'
-          }`}>
-            {lesson.paid ? <FaDollarSign className="mr-2" /> : <FaCheckCircle className="mr-2" />}
-            {lesson.paid ? 'Paid' : 'Free'}
+          <span className={`inline-flex items-center text-sm px-3 py-1 rounded-full ${lessonData.is_free === 'Paid' ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
+            {lessonData.is_free === 'Paid' ? <FaDollarSign className="mr-2" /> : <FaCheckCircle className="mr-2" />}
+            {lessonData.is_free}
           </span>
 
           {/* Difficulty Badge */}
           <span className="inline-flex items-center text-sm bg-yellow-100 text-yellow-700 px-3 py-1 rounded-full">
             <FaTag className="mr-2" />
-            {lesson.difficulty}
+            {lessonData.level}
           </span>
 
           {/* Category Badge */}
           <span className="inline-flex items-center text-sm bg-blue-100 text-blue-700 px-3 py-1 rounded-full">
             <FaBook className="mr-2" />
-            {lesson.category}
+            {lessonData.skill}
           </span>
 
           {/* Read Time */}
           <span className="inline-flex items-center text-sm bg-gray-100 text-gray-700 px-3 py-1 rounded-full">
             <FaClock className="mr-2" />
-            {lesson.readTime}
+            {lessonData.read_time} min
           </span>
         </div>
 
-        {/* Render lengthy HTML description */}
-        <div 
+        {/* Render lesson description safely */}
+        <div
           className="text-gray-800 mt-4 space-y-6 leading-relaxed"
-          dangerouslySetInnerHTML={{ __html: lesson.description }} // Inject lengthy HTML safely
+          dangerouslySetInnerHTML={{ __html: lessonData.description }} // Inject HTML safely
         />
 
         {/* Tags Section */}
         <div className="mt-8">
           <h3 className="text-lg font-medium text-gray-800 mb-2">Tags:</h3>
           <div className="flex flex-wrap">
-            {lesson.tags.map((tag: string, index: number) => (
-              <span 
+            {lessonData.tags && JSON.parse(lessonData.tags).map((tag: string, index: number) => (
+              <span
                 key={index}
                 className="bg-blue-100 text-blue-600 text-sm px-3 py-1 rounded-full mr-2 mb-2"
               >
