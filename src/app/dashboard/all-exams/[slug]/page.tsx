@@ -7,6 +7,7 @@ import { toast } from 'react-toastify'; // Optional: For notifications
 import Cookies from 'js-cookie'; // Access cookies
 import Loader from '@/components/Common/Loader';
 import { useRouter } from "next/navigation"; // Use router to redirect
+import Link from 'next/link';
 
 // Define the Exam type
 interface Exam {
@@ -14,6 +15,7 @@ interface Exam {
   questions: number;
   time: string;
   marks: number;
+  slug:string;
 }
 
 export default function ExamTypeDetailPage({
@@ -120,12 +122,12 @@ export default function ExamTypeDetailPage({
                 <strong>Exam Type:</strong> {formattedSlug}
               </div>
             </div>
-            <button
-              onClick={() => alert(`Start Exam for: ${exam.title}`)}
-              className="mt-4 w-full bg-primary text-white font-semibold py-2 px-4 rounded hover:bg-primary-dark transition-colors"
-            >
-              Start Exam
-            </button>
+            <div>
+              <Link href={`/dashboard/exam-detail/${exam.slug}`} className="mt-4 block text-center w-full bg-primary text-white font-semibold py-2 px-4 rounded hover:bg-primary-dark transition-colors">
+                  Start Exam
+              </Link>
+            </div>
+            
           </div>
         ))}
       </div>
