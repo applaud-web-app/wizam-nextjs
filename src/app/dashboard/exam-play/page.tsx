@@ -41,7 +41,6 @@ export default function PlayExam() {
   const [answers, setAnswers] = useState<{ [key: number]: string[] }>({});
   const [timeLeft, setTimeLeft] = useState<number>(1800); // Timer (in seconds, 30 minutes)
   const [submitted, setSubmitted] = useState<boolean>(false);
-  const [draggedItemIndex, setDraggedItemIndex] = useState<number | null>(null); // To track which item is dragged
 
   useEffect(() => {
     // Mock data for the exam with different question types
@@ -167,26 +166,31 @@ export default function PlayExam() {
       : 0;
   };
 
-  // Handle drag start event for sequence question type
-  const handleDragStart = (index: number) => {
-    setDraggedItemIndex(index);
-  };
+  const moveItem = (questionId: number, fromIndex: number, toIndex: number) => {
+    const currentAnswers = answers[questionId] || examData?.questions[questionId]?.options?.map((opt) => opt.text) || [];
 
-  // Handle drop event and update the order in sequence question
-  const handleDrop = (questionId: number, index: number) => {
-    if (draggedItemIndex !== null) {
-      const currentAnswers = answers[questionId] || [];
-      const reorderedAnswers = [...currentAnswers];
-
-      const [movedItem] = reorderedAnswers.splice(draggedItemIndex, 1);
-      reorderedAnswers.splice(index, 0, movedItem);
-
-      handleAnswerChange(questionId, reorderedAnswers);
-      setDraggedItemIndex(null); // Reset dragged item
+    if (toIndex < 0 || toIndex >= currentAnswers.length) {
+      return; // Prevent moving out of bounds
     }
+
+    const reorderedAnswers = [...currentAnswers];
+    
+    // Move the item
+    const [movedItem] = reorderedAnswers.splice(fromIndex, 1);
+    reorderedAnswers.splice(toIndex, 0, movedItem);
+
+    handleAnswerChange(questionId, reorderedAnswers);
   };
 
   const renderQuestion = (question: Question) => {
+    // Initialize answers for sequence questions if not yet answered
+    if (question.type === "sequence" && !answers[question.id]) {
+      setAnswers((prev) => ({
+        ...prev,
+        [question.id]: question.options?.map((opt) => opt.text) || [],
+      }));
+    }
+
     return (
       <div>
         {question.image && (
@@ -196,7 +200,7 @@ export default function PlayExam() {
             className="w-full h-48 object-cover rounded-md mb-4"
           />
         )}
-        <p className="text-lg mb-4">{question.question}</p>
+        <p className="text-lg mb-4 font-medium">{question.question}</p>
 
         {(() => {
           switch (question.type) {
@@ -206,7 +210,7 @@ export default function PlayExam() {
                   key={index}
                   className={`flex items-center space-x-3 p-4 rounded-lg cursor-pointer transition-all mb-3 ${
                     answers[question.id]?.includes(option.text)
-                      ? "bg-yellow-200"
+                      ? "bg-green-200"
                       : "bg-gray-100"
                   } hover:bg-yellow-100`}
                 >
@@ -228,7 +232,7 @@ export default function PlayExam() {
                   key={index}
                   className={`flex items-center space-x-3 p-4 rounded-lg cursor-pointer transition-all mb-3 ${
                     answers[question.id]?.includes(option.text)
-                      ? "bg-yellow-200"
+                      ? "bg-green-200"
                       : "bg-gray-100"
                   } hover:bg-yellow-100`}
                 >
@@ -292,7 +296,7 @@ export default function PlayExam() {
             case "match":
               return (
                 <div>
-                  <p className="mb-4">Match the following:</p>
+                  <p className="mb-4 font-medium">Match the following:</p>
                   {question.options?.slice(0, 3).map((opt, i) => (
                     <div key={i} className="flex space-x-4 mb-4">
                       <p className="flex-1 p-2 rounded bg-gray-100">{opt.text}</p>
@@ -316,23 +320,29 @@ export default function PlayExam() {
             case "sequence":
               return (
                 <div>
-                  <p className="mb-4">Arrange in sequence (Drag and Drop):</p>
+                  <p className="mb-4 font-medium">Arrange in sequence (Use the arrows to reorder):</p>
                   <ul>
-                    {(answers[question.id] ||
-                      question.options?.map((opt) => opt.text) || []).map(
-                      (option, index) => (
-                        <li
-                          key={index}
-                          className="p-4 bg-gray-100 rounded-lg mb-2 cursor-move"
-                          draggable
-                          onDragStart={() => handleDragStart(index)}
-                          onDragOver={(e) => e.preventDefault()}
-                          onDrop={() => handleDrop(question.id, index)}
-                        >
-                          {option}
-                        </li>
-                      )
-                    )}
+                    {answers[question.id]?.map((option, index) => (
+                      <li key={index} className="p-4 bg-gray-100 rounded-lg mb-2 flex items-center justify-between">
+                        <span>{option}</span>
+                        <div className="flex items-center space-x-2">
+                          <button
+                            className="p-2 bg-gray-300 rounded hover:bg-gray-400"
+                            onClick={() => moveItem(question.id, index, index - 1)}
+                            disabled={index === 0}
+                          >
+                            ↑
+                          </button>
+                          <button
+                            className="p-2 bg-gray-300 rounded hover:bg-gray-400"
+                            onClick={() => moveItem(question.id, index, index + 1)}
+                            disabled={index === answers[question.id]?.length - 1}
+                          >
+                            ↓
+                          </button>
+                        </div>
+                      </li>
+                    ))}
                   </ul>
                 </div>
               );
@@ -427,7 +437,7 @@ export default function PlayExam() {
           </>
         ) : (
           <div className="text-center">
-               <FaCheckCircle className="inline text-green-600 mr-2" size={42}/> 
+               <FaCheckCircle className="inline text-green-600 mr-2 mb-3" size={42}/> 
             <h1 className="text-3xl font-bold mb-4 text-green-600">
            Exam Submitted
             </h1>
@@ -447,8 +457,16 @@ export default function PlayExam() {
 
       {/* Sidebar for Timer and Progress */}
       <div className="w-full md:w-1/3 bg-white shadow-sm p-4 lg:p-6 rounded-lg ">
+        {/* Heading */}
+        <div className="mb-4">
+          <h2 className="text-2xl font-semibold text-primary text-center">
+            Exam Progress
+          </h2>
+        </div>
+
+        {/* Time Remaining */}
         <div className="mb-6 text-center">
-          <h3 className="text-gray-600">Time Remaining</h3>
+          <h3 className="text-gray-600 font-semibold">Time Remaining</h3>
           <p className="text-3xl text-orange-600 font-semibold">
             {formatTimeLeft(timeLeft)}
           </p>
@@ -462,11 +480,15 @@ export default function PlayExam() {
               <span className="text-gray-700">Attempted: {getAnsweredCount()}</span>
             </div>
             <div className="flex items-center space-x-2">
-              <FaRegFrown className="text-red-500" size={20} />
+              <FaRegFrown className="text-yellow-500" size={20} />
               <span className="text-gray-700">Skipped: {getSkippedCount()}</span>
             </div>
           </div>
         </div>
+
+       
+
+       
 
         {/* Progress Bar */}
         <div className="mb-6">
@@ -481,6 +503,8 @@ export default function PlayExam() {
           </div>
         </div>
 
+      
+
         {/* Question Navigation Grid */}
         <div className="grid grid-cols-5 gap-2 text-center">
           {examData.questions.map((question, index) => (
@@ -490,14 +514,23 @@ export default function PlayExam() {
                 currentQuestionIndex === index
                   ? "bg-primary text-white"
                   : answers[question.id]
-                  ? "bg-yellow-200 text-black"
-                  : "bg-gray-200 text-gray-700"
+                  ? "bg-green-200 text-black"
+                  : "bg-yellow-200 text-black"
               }`}
               onClick={() => setCurrentQuestionIndex(index)}
             >
               {index + 1}
             </div>
           ))}
+        </div>
+          {/* Exam Instructions */}
+          <div className="mt-3 ">
+          <h3 className="text-lg text-gray-700 font-semibold">Exam Guide</h3>
+          <p className="text-sm text-gray-500">
+            - Answer all questions to the best of your ability.<br />
+            - You can navigate between questions.<br />
+            - Make sure to submit your exam before time runs out.
+          </p>
         </div>
       </div>
     </div>
