@@ -8,7 +8,10 @@ interface Lesson {
   title: string;
   slug: string;
   category: string;
+  difficulty: string;  
+  readTime: string;   
 }
+
 
 interface Skill {
   name: string;
@@ -16,32 +19,67 @@ interface Skill {
 }
 
 // Dynamic data for skills and lessons
-const skillsData: Skill[] = [
+const skillsData = [
   {
     name: 'Programming in C++',
     lessons: [
-      { title: 'Introduction to C++', slug: 'dashboard/cpp/intro-to-cpp', category: 'Programming' },
-      { title: 'Object-Oriented Programming in C++', slug: 'dashboard/cpp/oop-in-cpp', category: 'Programming' },
-      { title: 'C++ Standard Library', slug: 'dashboard/cpp/std-library', category: 'Programming' },
+      { 
+        title: 'Introduction to C++', 
+        slug: 'intro-to-cpp', // Slug updated
+        category: 'Programming', 
+        difficulty: 'Beginner', 
+        readTime: '10 min', 
+        description: '<p>This lesson introduces the basics of C++ programming, including <strong>syntax</strong>, data types, and simple programs.</p>',
+      },
+      { 
+        title: 'Object-Oriented Programming in C++', 
+        slug: 'oop-in-cpp', // Slug updated
+        category: 'Programming', 
+        difficulty: 'Intermediate', 
+        readTime: '15 min', 
+        description: '<p>Learn about the principles of object-oriented programming (OOP) in C++ and how to implement classes, inheritance, and polymorphism.</p>',
+      },
+      { 
+        title: 'C++ Standard Library', 
+        slug: 'std-library', // Slug updated
+        category: 'Programming', 
+        difficulty: 'Advanced', 
+        readTime: '20 min', 
+        description: '<p>Dive into the powerful features of the C++ Standard Library, including containers, algorithms, and iterators.</p>',
+      },
     ],
   },
   {
     name: 'Web Development',
     lessons: [
-      { title: 'HTML Basics', slug: 'dashboard/web/html-basics', category: 'Web Development' },
-      { title: 'CSS for Beginners', slug: 'dashboard/web/css-basics', category: 'Web Development' },
-      { title: 'JavaScript Essentials', slug: 'dashboard/web/javascript-essentials', category: 'Web Development' },
-    ],
-  },
-  {
-    name: 'Data Science',
-    lessons: [
-      { title: 'Introduction to Data Science', slug: 'dashboard/data-science/intro', category: 'Data Science' },
-      { title: 'Data Analysis with Python', slug: 'dashboard/data-science/data-analysis', category: 'Data Science' },
-      { title: 'Machine Learning Basics', slug: 'dashboard/data-science/machine-learning', category: 'Data Science' },
+      { 
+        title: 'HTML Basics', 
+        slug: 'html-basics',
+        category: 'Web Development', 
+        difficulty: 'Beginner', 
+        readTime: '8 min',
+        description: '<p>Learn the fundamentals of HTML, the backbone of the web. This lesson covers elements, attributes, and creating basic web pages.</p>',
+      },
+      { 
+        title: 'CSS for Beginners', 
+        slug: 'css-basics',
+        category: 'Web Development', 
+        difficulty: 'Beginner', 
+        readTime: '10 min',
+        description: '<p>A beginner-friendly guide to CSS, including selectors, properties, and how to style your HTML content.</p>',
+      },
+      { 
+        title: 'JavaScript Essentials', 
+        slug: 'javascript-essentials',
+        category: 'Web Development', 
+        difficulty: 'Intermediate', 
+        readTime: '12 min',
+        description: '<p>Understand the basics of JavaScript, including variables, functions, loops, and DOM manipulation.</p>',
+      },
     ],
   },
 ];
+
 
 export default function LessonsPage() {
   return (
@@ -49,15 +87,16 @@ export default function LessonsPage() {
 
       <div className="mb-3">
         {skillsData.map((skill) => (
-          <div key={skill.name} className="mb-8">
+          <div key={skill.name} className="mb-5">
             <h2 className="text-xl font-semibold text-gray-800 mb-4">{skill.name}</h2>
-            <div className="  grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className="  grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
               {skill.lessons.map((lesson) => (
-                <Link key={lesson.slug} href={`/lessons/${lesson.slug}`}>
-                  <div className="card bg-white rounded-lg shadow-sm p-4 cursor-pointer transition-shadow ">
+                <Link key={lesson.slug} href={`/dashboard/lessons/${lesson.slug}`}>
+                  <div className="card bg-white rounded-lg shadow-sm p-4 cursor-pointer transition-shadow border border-white hover:border-primary">
                     <h3 className="text-lg font-semibold">{lesson.title}</h3>
                     <p className="text-gray-600">Category: {lesson.category}</p>
-                  
+                    <p className="text-gray-600">Difficulty: {lesson.difficulty}</p> {/* Display difficulty */}
+                    <p className="text-gray-600">Read time: {lesson.readTime}</p>     {/* Display read time */}
                   </div>
                 </Link>
               ))}
@@ -68,3 +107,4 @@ export default function LessonsPage() {
     </div>
   );
 }
+

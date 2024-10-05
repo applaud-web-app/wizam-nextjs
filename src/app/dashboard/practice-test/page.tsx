@@ -1,0 +1,130 @@
+"use client"; // Indicate this is a client component
+
+import { FaBook, FaClock, FaQuestionCircle, FaCheck } from 'react-icons/fa'; // React icons
+import Link from 'next/link';
+
+// Define interfaces for skills and practice sets
+interface PracticeSet {
+  title: string;
+  slug: string;
+  syllabus: string; // Syllabus replaces category
+  questions: number; // Number of questions
+  time: string; // Time limit for the practice set
+  marks: number; // Total marks for the practice set
+}
+
+interface Skill {
+  name: string;
+  practiceSets: PracticeSet[]; // Practice sets for each skill
+}
+
+// Dynamic data for skills and practice sets (updated to match practice set structure)
+const skillsData: Skill[] = [
+  {
+    name: 'Programming in C++',
+    practiceSets: [
+      { 
+        title: 'C++ Basics Practice Set', 
+        slug: 'cpp-basics-practice', 
+        syllabus: 'Programming', 
+        questions: 20, 
+        time: '30 min', 
+        marks: 50 
+      },
+      { 
+        title: 'Object-Oriented Programming in C++', 
+        slug: 'oop-in-cpp-practice', 
+        syllabus: 'Programming', 
+        questions: 25, 
+        time: '40 min', 
+        marks: 60 
+      },
+      { 
+        title: 'C++ Standard Library Practice Set', 
+        slug: 'std-library-practice', 
+        syllabus: 'Programming', 
+        questions: 30, 
+        time: '45 min', 
+        marks: 75 
+      },
+    ],
+  },
+  {
+    name: 'Web Development',
+    practiceSets: [
+      { 
+        title: 'HTML Basics Practice Set', 
+        slug: 'html-basics-practice',
+        syllabus: 'Web Development', 
+        questions: 15, 
+        time: '25 min', 
+        marks: 40 
+      },
+      { 
+        title: 'CSS for Beginners Practice Set', 
+        slug: 'css-basics-practice',
+        syllabus: 'Web Development', 
+        questions: 20, 
+        time: '30 min', 
+        marks: 50 
+      },
+      { 
+        title: 'JavaScript Essentials Practice Set', 
+        slug: 'javascript-essentials-practice',
+        syllabus: 'Web Development', 
+        questions: 25, 
+        time: '35 min', 
+        marks: 60 
+      },
+    ],
+  },
+];
+
+export default function PracticeSetPage() {
+  return (
+    <div className="dashboard-page">
+      <div className="mb-3">
+        {skillsData.map((skill) => (
+          <div key={skill.name} className="mb-5">
+            <h2 className="text-xl font-semibold text-gray-800 mb-4">{skill.name}</h2> {/* Skill Name */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+              {skill.practiceSets.map((practiceSet) => (
+                <div key={practiceSet.slug} className="card bg-white rounded-lg shadow-sm p-6 border border-gray-200">
+                  {/* Title */}
+                  <h3 className="text-lg font-semibold mb-2">{practiceSet.title}</h3>
+
+                  {/* Syllabus */}
+                  <p className="text-gray-600 mb-1">
+                    <FaBook className="inline mr-2 text-primary" /> <strong>Syllabus: </strong>{practiceSet.syllabus}
+                  </p>
+
+                  {/* Questions */}
+                  <p className="text-gray-600 mb-1">
+                    <FaQuestionCircle className="inline mr-2 text-primary" /> <strong>Questions: </strong>{practiceSet.questions}
+                  </p>
+
+                  {/* Time */}
+                  <p className="text-gray-600 mb-1">
+                    <FaClock className="inline mr-2 text-primary" /> <strong>Time: </strong>{practiceSet.time}
+                  </p>
+
+                  {/* Marks */}
+                  <p className="text-gray-600 mb-4">
+                    <FaCheck className="inline mr-2 text-primary" /> <strong>Marks: </strong>{practiceSet.marks}
+                  </p>
+
+                  {/* Start Test Button */}
+                  <Link href={`/dashboard/practice-sets/${practiceSet.slug}`}>
+                    <span className="bg-primary block text-white px-4 py-2 rounded hover:bg-primary-dark transition duration-200 w-full">
+                      Start Test
+                    </span>
+                  </Link>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
