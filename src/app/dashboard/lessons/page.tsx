@@ -108,7 +108,7 @@ export default function LessonsPage() {
                   <div className="card bg-white rounded-lg shadow-sm p-4 cursor-pointer transition-shadow border border-white hover:border-primary">
                     <h3 className="text-lg font-semibold">{lesson.title}</h3>
                     <p className="text-gray-600">Category: {lesson.category}</p>
-                    <p className="text-gray-600">Difficulty: {lesson.difficulty}</p>
+                    <p className="text-gray-600">Difficulty: {lesson.difficulty.replace(/_/g, ' ').replace(/\b\w/g, char => char.toUpperCase())}</p>
                     <p className="text-gray-600">Read time: {lesson.readTime}</p>
                     
                   </div>

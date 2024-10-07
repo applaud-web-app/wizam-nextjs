@@ -101,7 +101,7 @@ export default function VideosPage() {
                       <h3 className="text-lg font-semibold">{video.title}</h3>
                     </div>
                     <p className="text-gray-600">Syllabus: {video.syllabus}</p>
-                    <p className="text-gray-600">Difficulty: {video.difficulty}</p>
+                    <p className="text-gray-600">Difficulty: {video.difficulty.replace(/_/g, ' ').replace(/\b\w/g, char => char.toUpperCase())}</p>
                     <p className="text-gray-600">Watch Time: {video.watchTime}</p>
                   </div>
                 </Link>

@@ -23,68 +23,6 @@ interface skillsData {
   practiceSets: PracticeSet[]; // Practice sets for each skill
 }
 
-// Dynamic data for skills and practice sets (updated to match practice set structure)
-// const skillsData: Skill[] = [
-//   {
-//     name: 'Programming in C++',
-//     practiceSets: [
-//       { 
-//         title: 'C++ Basics Practice Set', 
-//         slug: 'cpp-basics-practice', 
-//         syllabus: 'Programming', 
-//         questions: 20, 
-//         time: '30 min', 
-//         marks: 50 
-//       },
-//       { 
-//         title: 'Object-Oriented Programming in C++', 
-//         slug: 'oop-in-cpp-practice', 
-//         syllabus: 'Programming', 
-//         questions: 25, 
-//         time: '40 min', 
-//         marks: 60 
-//       },
-//       { 
-//         title: 'C++ Standard Library Practice Set', 
-//         slug: 'std-library-practice', 
-//         syllabus: 'Programming', 
-//         questions: 30, 
-//         time: '45 min', 
-//         marks: 75 
-//       },
-//     ],
-//   },
-//   {
-//     name: 'Web Development',
-//     practiceSets: [
-//       { 
-//         title: 'HTML Basics Practice Set', 
-//         slug: 'html-basics-practice',
-//         syllabus: 'Web Development', 
-//         questions: 15, 
-//         time: '25 min', 
-//         marks: 40 
-//       },
-//       { 
-//         title: 'CSS for Beginners Practice Set', 
-//         slug: 'css-basics-practice',
-//         syllabus: 'Web Development', 
-//         questions: 20, 
-//         time: '30 min', 
-//         marks: 50 
-//       },
-//       { 
-//         title: 'JavaScript Essentials Practice Set', 
-//         slug: 'javascript-essentials-practice',
-//         syllabus: 'Web Development', 
-//         questions: 25, 
-//         time: '35 min', 
-//         marks: 60 
-//       },
-//     ],
-//   },
-// ];
-
 export default function PracticeSetPage() {
   const [pracitceData, setPracticeSet] = useState<skillsData[]>([]);
   const [loading, setLoading] = useState(true);
@@ -95,6 +33,7 @@ export default function PracticeSetPage() {
     const fetchVideos = async () => {
       const token = Cookies.get('jwt'); // Get JWT token from cookies
       const categoryId = Cookies.get('category_id'); // Get category_id from cookies
+      const categoryName = Cookies.get('category_name'); // Get category_id from cookies
 
       if (!token || !categoryId) {
         setError('Missing token or category ID');
@@ -120,6 +59,7 @@ export default function PracticeSetPage() {
             name: key, // This will dynamically set the name to 'Learning', 'Music', etc.
             practiceSets: response.data.data[key].map((practice: any) => ({
               title: practice.practice_title,
+              syllabus:categoryName,
               slug: practice.practice_slug,
               questions: practice.practice_question,
               time: `${practice.practice_time} min`,
@@ -183,7 +123,7 @@ export default function PracticeSetPage() {
                   </p>
 
                   {/* Start Test Button */}
-                  <Link href={`/dashboard/practice-sets/${practiceSet.slug}`}>
+                  <Link href={`/dashboard/practice-test/${practiceSet.slug}`}>
                     <span className="bg-primary block text-center text-white px-4 py-2 rounded hover:bg-primary-dark transition duration-200 w-full">
                       Start Test
                     </span>
