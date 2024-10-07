@@ -110,6 +110,11 @@ export default function Header({ toggleSidebar }: HeaderProps) {
     fetchProfileData();
   }, []);
 
+  // Function to get the first name from the full name
+  const getFirstName = (name: string) => {
+    return name.split(" ")[0]; // Split by space and return the first part (first name)
+  };
+
   return (
     <header className="bg-white dark:bg-gray-800 shadow-md p-4 fixed top-0 left-0 w-full lg-50 lg:z-[64] flex justify-between items-center h-[70px]">
       <div className="flex items-center space-x-4">
@@ -148,7 +153,9 @@ export default function Header({ toggleSidebar }: HeaderProps) {
               alt="Profile"
               className="rounded-full"
             />
-            <span className="text-gray-900 dark:text-gray-200 font-semibold">{userProfile?.name || 'Guest'}</span>
+            <span className="text-gray-900 dark:text-gray-200 font-semibold">
+              {userProfile ? getFirstName(userProfile.name) : 'Guest'}
+            </span>
             <FiChevronDown className="text-gray-800 dark:text-gray-300" />
           </button>
 
