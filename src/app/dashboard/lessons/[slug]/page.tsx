@@ -29,7 +29,7 @@ export default function LessonDetailPage({ params }: { params: { slug: string } 
       }
 
       try {
-        const response = await axios.get(`https://wizam.awmtab.in/api/lesson-detail/${params.slug}`, {
+        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/lesson-detail/${params.slug}`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },

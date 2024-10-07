@@ -10,10 +10,10 @@ import {
   FaRegSmile,
   FaRegFrown,
 } from "react-icons/fa";
-import Cookies from 'js-cookie'; // Access cookies
-import { useRouter } from "next/navigation"; // Use router to redirect
-import axios from 'axios'; // Ensure axios is installed
-import { toast } from 'react-toastify'; // Optional: For notifications
+import Cookies from "js-cookie";
+import { useRouter } from "next/navigation";
+import axios from "axios";
+import { toast } from "react-toastify";
 
 // Option interface
 interface Option {
@@ -24,83 +24,72 @@ interface Option {
 // Question interface
 interface Question {
   id: number;
-  type: string; // "single", "multiple", "truefalse", "short", "match", "sequence", "fill", "extended"
-  question: string;
+  type: string;
+  question: string | string[]; // Accept array of strings for EMQ questions
   image?: string; // Optional image for the question
-  options?: Option[];
-  blanks?: { position: number; value?: string }[]; // for fill in the blanks
+  options?: string[]; // options are an array of HTML strings
 }
 
-// ExamData interface
-// interface ExamData {
-//   title: string;
-//   questions: Question[];
-//   duration: string; // e.g., "30 mins"
-// }
-
+// QuizData interface
 interface QuizData {
   title: string;
   questions: Question[];
-  duration: string; // e.g., "30 mins"
-  points: string; 
-  question_view: string; 
-  finish_button: string; 
+  duration: string;
+  points: string;
+  question_view: string;
+  finish_button: string;
 }
 
-// Main PlayExam Component
-export default function PlayExam({
-  params,
-}: {
-  params: { slug: string };
-}) {
-
-  // const [examData, setExamData] = useState<ExamData | null>(null);
+export default function PlayExam({ params }: { params: { slug: string } }) {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState<number>(0);
   const [answers, setAnswers] = useState<{ [key: number]: string[] }>({});
   const [timeLeft, setTimeLeft] = useState<number>(1800); // Timer (in seconds, 30 minutes)
   const [submitted, setSubmitted] = useState<boolean>(false);
   const [slug, setSlug] = useState<string | null>(null);
   const [quizData, setQuiz] = useState<QuizData | null>(null);
-  const router = useRouter(); // For redirecting to other pages
+  const router = useRouter();
   const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
     const { slug } = params;
     setSlug(slug);
-    const category = Cookies.get("category_id"); // Get category from cookies
+    const category = Cookies.get("category_id");
 
-    // Fetch exams from API based on slug and category
     const fetchExams = async () => {
       try {
-        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/play-quiz/${slug}`, {
-          params: { category }, // Send slug and category as query params
-          headers: {
-            Authorization: `Bearer ${Cookies.get("jwt")}`, // JWT token from cookies
-          },
-        });
+        const response = await axios.get(
+          `${process.env.NEXT_PUBLIC_API_URL}/play-quiz/${slug}`,
+          {
+            params: { category },
+            headers: {
+              Authorization: `Bearer ${Cookies.get("jwt")}`,
+            },
+          }
+        );
         if (response.data.status) {
+          if(response.data.status && response.data.message == "Quiz Timed Out"){
+            toast.success(response.data.message);
+            const examId = response.data.data;
+            console.log(examId.uuid); // EXAM PREVIEW URL
+            setSubmitted(true);
+          }else{
             const fetchQuizData = response.data.data;
-        
-            // Corrected object syntax
-            const Item = {
-                title: fetchQuizData.title,
-                questions: fetchQuizData.questions,
-                duration: fetchQuizData.duration, // Assuming this should map to the actual "duration" field
-                points: fetchQuizData.points, // Assuming this should map to the actual "points" field
-                question_view: fetchQuizData.question_view, // Assuming this should map to the actual "question_view" field
-                finish_button: fetchQuizData.finish_button, // Assuming this should map to the actual "finish_button" field
+            const Item: QuizData = {
+              title: fetchQuizData.title,
+              questions: fetchQuizData.questions,
+              duration: fetchQuizData.duration,
+              points: fetchQuizData.points,
+              question_view: fetchQuizData.question_view,
+              finish_button: fetchQuizData.finish_button,
             };
             setQuiz(Item);
-            console.log(quizData);
+          }
         } else {
-            toast.error('No exams found for this category');
-            // Optionally redirect
-            // router.push('/dashboard/all-exams');
+          toast.error("No exams found for this category");
         }
       } catch (error) {
-        console.error('Error fetching exams:', error);
-        toast.error('An error occurred while fetching exams');
-        // router.push('/dashboard/all-exams');
+        console.error("Error fetching exams:", error);
+        toast.error("An error occurred while fetching exams");
       } finally {
         setLoading(false);
       }
@@ -108,6 +97,17 @@ export default function PlayExam({
 
     fetchExams();
   }, [params, router]);
+
+  useEffect(() => {
+    if (quizData && !answers[quizData.questions[currentQuestionIndex]?.id]) {
+      setAnswers((prev) => ({
+        ...prev,
+        [quizData.questions[currentQuestionIndex]?.id]: quizData.questions[
+          currentQuestionIndex
+        ].options || [],
+      }));
+    }
+  }, [quizData, currentQuestionIndex]);
 
   const handleAnswerChange = (questionId: number, answer: string[]) => {
     setAnswers((prev) => ({ ...prev, [questionId]: answer }));
@@ -145,16 +145,21 @@ export default function PlayExam({
       : 0;
   };
 
-  const moveItem = (questionId: number, fromIndex: number, toIndex: number) => {
-    const currentAnswers = answers[questionId] || quizData?.questions[questionId]?.options?.map((opt) => opt.text) || [];
+  const moveItem = (
+    questionId: number,
+    fromIndex: number,
+    toIndex: number
+  ) => {
+    const currentAnswers =
+      answers[questionId] ||
+      quizData?.questions[questionId]?.options?.map((opt) => opt) ||
+      [];
 
     if (toIndex < 0 || toIndex >= currentAnswers.length) {
       return; // Prevent moving out of bounds
     }
 
     const reorderedAnswers = [...currentAnswers];
-    
-    // Move the item
     const [movedItem] = reorderedAnswers.splice(fromIndex, 1);
     reorderedAnswers.splice(toIndex, 0, movedItem);
 
@@ -162,14 +167,6 @@ export default function PlayExam({
   };
 
   const renderQuestion = (question: Question) => {
-    // Initialize answers for sequence questions if not yet answered
-    if (question.type === "sequence" && !answers[question.id]) {
-      setAnswers((prev) => ({
-        ...prev,
-        [question.id]: question.options?.map((opt) => opt.text) || [],
-      }));
-    }
-
     return (
       <div>
         {question.image && (
@@ -179,7 +176,15 @@ export default function PlayExam({
             className="w-full h-48 object-cover rounded-md mb-4"
           />
         )}
-        <p className="text-lg mb-4 font-medium">{question.question}</p>
+
+        <p
+          className="mb-4"
+          dangerouslySetInnerHTML={{
+            __html: Array.isArray(question.question)
+              ? question.question[0]
+              : question.question,
+          }}
+        ></p>
 
         {(() => {
           switch (question.type) {
@@ -188,7 +193,7 @@ export default function PlayExam({
                 <label
                   key={index}
                   className={`flex items-center space-x-3 p-4 rounded-lg cursor-pointer transition-all mb-3 ${
-                    answers[question.id]?.includes(option.text)
+                    answers[question.id]?.includes(option)
                       ? "bg-green-200"
                       : "bg-gray-100"
                   } hover:bg-yellow-100`}
@@ -196,12 +201,12 @@ export default function PlayExam({
                   <input
                     type="radio"
                     name={`question-${question.id}`}
-                    value={option.text}
-                    checked={answers[question.id]?.includes(option.text)}
-                    onChange={() => handleAnswerChange(question.id, [option.text])}
+                    value={option}
+                   
+                    onChange={() => handleAnswerChange(question.id, [option])}
                     className="cursor-pointer"
                   />
-                  <span>{option.text}</span>
+                  <div dangerouslySetInnerHTML={{ __html: option }}></div>
                 </label>
               ));
 
@@ -210,7 +215,7 @@ export default function PlayExam({
                 <label
                   key={index}
                   className={`flex items-center space-x-3 p-4 rounded-lg cursor-pointer transition-all mb-3 ${
-                    answers[question.id]?.includes(option.text)
+                    answers[question.id]?.includes(option)
                       ? "bg-green-200"
                       : "bg-gray-100"
                   } hover:bg-yellow-100`}
@@ -218,20 +223,20 @@ export default function PlayExam({
                   <input
                     type="checkbox"
                     name={`question-${question.id}`}
-                    value={option.text}
-                    checked={answers[question.id]?.includes(option.text)}
+                    value={option}
                     onChange={() => {
                       const currentAnswers = answers[question.id] || [];
-                      const newAnswers = currentAnswers.includes(option.text)
-                        ? currentAnswers.filter((a) => a !== option.text)
-                        : [...currentAnswers, option.text];
+                      const newAnswers = currentAnswers.includes(option)
+                        ? currentAnswers.filter((a) => a !== option)
+                        : [...currentAnswers, option];
                       handleAnswerChange(question.id, newAnswers);
                     }}
                     className="cursor-pointer"
                   />
-                  <span>{option.text}</span>
+                  <div dangerouslySetInnerHTML={{ __html: option }}></div>
                 </label>
               ));
+
             case "TOF":
               return (
                 <div className="space-y-4">
@@ -240,7 +245,6 @@ export default function PlayExam({
                       type="radio"
                       name={`question-${question.id}`}
                       value="true"
-                      checked={answers[question.id]?.includes("true")}
                       onChange={() => handleAnswerChange(question.id, ["true"])}
                       className="cursor-pointer"
                     />
@@ -251,14 +255,16 @@ export default function PlayExam({
                       type="radio"
                       name={`question-${question.id}`}
                       value="false"
-                      checked={answers[question.id]?.includes("false")}
-                      onChange={() => handleAnswerChange(question.id, ["false"])}
+                      onChange={() =>
+                        handleAnswerChange(question.id, ["false"])
+                      }
                       className="cursor-pointer"
                     />
                     <span>False</span>
                   </label>
                 </div>
               );
+
             case "SAQ":
               return (
                 <input
@@ -266,40 +272,58 @@ export default function PlayExam({
                   className="w-full p-4 rounded-lg border border-gray-300"
                   placeholder="Type your answer here..."
                   value={answers[question.id]?.[0] || ""}
-                  onChange={(e) => handleAnswerChange(question.id, [e.target.value])}
+                  onChange={(e) =>
+                    handleAnswerChange(question.id, [e.target.value])
+                  }
                 />
               );
+
             case "MTF":
               return (
                 <div>
                   <p className="mb-4 font-medium">Match the following:</p>
-                  {question.options?.slice(0, 3).map((opt, i) => (
-                    <div key={i} className="flex space-x-4 mb-4">
-                      <p className="flex-1 p-2 rounded bg-gray-100">{opt.text}</p>
-                      <select
-                        className="flex-1 p-2 rounded border border-gray-300"
-                        onChange={(e) =>
-                          handleAnswerChange(question.id, [e.target.value])
-                        }
-                      >
-                        {question.options?.slice(3).map((match, i) => (
-                          <option key={i} value={match.text}>
-                            {match.text}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  ))}
+                  {question.options
+                    ?.slice(0, question.options.length / 2)
+                    .map((opt, i) => (
+                      <div key={i} className="flex space-x-4 mb-4">
+                        <p
+                          className="flex-1 p-2 rounded bg-gray-100"
+                          dangerouslySetInnerHTML={{ __html: opt }}
+                        ></p>
+                        <select
+                          className="flex-1 p-2 rounded border border-gray-300"
+                          onChange={(e) =>
+                            handleAnswerChange(question.id, [e.target.value])
+                          }
+                        >
+                          {question.options
+                            ?.slice(question.options.length / 2)
+                            .map((match, i) => (
+                              <option key={i} value={match}>
+                                <div
+                                  dangerouslySetInnerHTML={{ __html: match }}
+                                ></div>
+                              </option>
+                            ))}
+                        </select>
+                      </div>
+                    ))}
                 </div>
               );
+
             case "ORD":
               return (
                 <div>
-                  <p className="mb-4 font-medium">Arrange in sequence (Use the arrows to reorder):</p>
+                  <p className="mb-4 font-medium">
+                    Arrange in sequence (Use the arrows to reorder):
+                  </p>
                   <ul>
                     {answers[question.id]?.map((option, index) => (
-                      <li key={index} className="p-4 bg-gray-100 rounded-lg mb-2 flex items-center justify-between">
-                        <span>{option}</span>
+                      <li
+                        key={index}
+                        className="p-4 bg-gray-100 rounded-lg mb-2 flex items-center justify-between"
+                      >
+                        <div dangerouslySetInnerHTML={{ __html: option }}></div>
                         <div className="flex items-center space-x-2">
                           <button
                             className="p-2 bg-gray-300 rounded hover:bg-gray-400"
@@ -321,18 +345,19 @@ export default function PlayExam({
                   </ul>
                 </div>
               );
-            case "FIB":
+
+            case "FIB": {
+              const numberOfBlanks = Number(question.options?.[0]) || 0;
               return (
                 <div>
-                  {question.blanks?.map((blank, index) => (
+                  {Array.from({ length: numberOfBlanks }).map((_, index) => (
                     <input
                       key={index}
                       type="text"
                       className="p-4 rounded-lg border border-gray-300 w-full mb-2"
-                      placeholder="Type your answer here..."
-                      value={answers[question.id]?.[index] || ""}
-                      onChange={(e) => {
-                        const newAnswers = answers[question.id] || [];
+                      placeholder={`Answer ${index + 1}`}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                        const newAnswers = [...(answers[question.id] || [])];
                         newAnswers[index] = e.target.value;
                         handleAnswerChange(question.id, newAnswers);
                       }}
@@ -340,18 +365,50 @@ export default function PlayExam({
                   ))}
                 </div>
               );
+            }
+
             case "EMQ":
               return (
-                <textarea
-                  className="w-full p-4 rounded-lg border border-gray-300"
-                  rows={6}
-                  placeholder="Write your answer..."
-                  value={answers[question.id]?.[0] || ""}
-                  onChange={(e) =>
-                    handleAnswerChange(question.id, [e.target.value])
-                  }
-                />
+                <div>
+                  {Array.isArray(question.question) &&
+                    question.question.map((subQuestion, questionIndex) => (
+                      <div key={questionIndex} className="mb-4">
+                        {questionIndex > 0 && (
+                          <div>
+                            <b>{"Question "+questionIndex}</b><p
+                              className="mb-4 font-medium"
+                              dangerouslySetInnerHTML={{ __html: subQuestion }}
+                            ></p>
+                            {question.options?.map((option, index) => (
+                              <label
+                                key={index}
+                                className={`flex items-center space-x-3 p-4 rounded-lg cursor-pointer transition-all mb-3 ${
+                                  answers[question.id]?.includes(option)
+                                    ? "bg-green-200"
+                                    : "bg-gray-100"
+                                } hover:bg-yellow-100`}
+                              >
+                                <input
+                                  type="radio"
+                                  name={`question-${question.id}-${questionIndex}`}
+                                  value={option}
+                                  onChange={() =>
+                                    handleAnswerChange(question.id, [option])
+                                  }
+                                  className="cursor-pointer"
+                                />
+                                <div
+                                  dangerouslySetInnerHTML={{ __html: option }}
+                                ></div>
+                              </label>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                </div>
               );
+
             default:
               return <div>Unknown question type</div>;
           }
@@ -360,7 +417,9 @@ export default function PlayExam({
     );
   };
 
-  if (!quizData) return <Loader />;
+  if (loading) return <Loader />;
+
+  if (!quizData) return <div>No quiz data available</div>;
 
   return (
     <div className="dashboard-page flex flex-col md:flex-row gap-6">
@@ -375,16 +434,10 @@ export default function PlayExam({
               <FaClock className="text-primary" size={24} />
             </div>
 
-            {/* Render question based on type */}
             <div className="space-y-4">
-            {/* Render HTML content of the question */}
-            <div  dangerouslySetInnerHTML={{ __html: quizData.questions[currentQuestionIndex] }}/>
-
-            {/* Render the question using your renderQuestion function */}
-            {renderQuestion(quizData.questions[currentQuestionIndex])}
+              {renderQuestion(quizData.questions[currentQuestionIndex])}
             </div>
 
-            {/* Navigation Buttons */}
             <div className="flex justify-between mt-6">
               <button
                 className="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg disabled:opacity-50"
@@ -413,19 +466,22 @@ export default function PlayExam({
           </>
         ) : (
           <div className="text-center">
-               <FaCheckCircle className="inline text-green-600 mr-2 mb-3" size={42}/> 
+            <FaCheckCircle
+              className="inline text-green-600 mr-2 mb-3"
+              size={42}
+            />
             <h1 className="text-3xl font-bold mb-4 text-green-600">
-           Exam Submitted
+              Exam Submitted
             </h1>
             <p className="text-lg text-gray-600">
-              Thank you for completing the exam. Your answers have been submitted
-              successfully!
+              Thank you for completing the exam. Your answers have been
+              submitted successfully!
             </p>
             <button
               className="mt-6 bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary-dark transition-colors"
               onClick={() => window.location.reload()}
             >
-              Go Back to Exam List
+             Go to Quiz Result
             </button>
           </div>
         )}
@@ -453,7 +509,9 @@ export default function PlayExam({
           <div className="flex justify-around">
             <div className="flex items-center space-x-2">
               <FaRegSmile className="text-green-500" size={20} />
-              <span className="text-gray-700">Attempted: {getAnsweredCount()}</span>
+              <span className="text-gray-700">
+                Attempted: {getAnsweredCount()}
+              </span>
             </div>
             <div className="flex items-center space-x-2">
               <FaRegFrown className="text-yellow-500" size={20} />
@@ -462,10 +520,6 @@ export default function PlayExam({
           </div>
         </div>
 
-       
-
-       
-
         {/* Progress Bar */}
         <div className="mb-6">
           <p className="font-semibold text-gray-700 mb-2">Progress</p>
@@ -473,13 +527,14 @@ export default function PlayExam({
             <div
               className="h-full bg-primary"
               style={{
-                width: `${(Object.keys(answers).length / quizData.questions.length) * 100}%`,
+                width: `${
+                  (Object.keys(answers).length / quizData.questions.length) *
+                  100
+                }%`,
               }}
             ></div>
           </div>
         </div>
-
-      
 
         {/* Question Navigation Grid */}
         <div className="grid grid-cols-5 gap-2 text-center">
@@ -499,12 +554,15 @@ export default function PlayExam({
             </div>
           ))}
         </div>
-          {/* Exam Instructions */}
-          <div className="mt-3 ">
+
+        {/* Exam Instructions */}
+        <div className="mt-3 ">
           <h3 className="text-lg text-gray-700 font-semibold">Exam Guide</h3>
           <p className="text-sm text-gray-500">
-            - Answer all questions to the best of your ability.<br />
-            - You can navigate between questions.<br />
+            - Answer all questions to the best of your ability.
+            <br />
+            - You can navigate between questions.
+            <br />
             - Make sure to submit your exam before time runs out.
           </p>
         </div>

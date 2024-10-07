@@ -40,12 +40,13 @@ export default function VideosPage() {
       }
 
       try {
-        const response = await axios.get('https://wizam.awmtab.in/api/all-video/', {
-          headers: {
-            Authorization: `Bearer ${token}`, // Pass JWT token in Authorization header
-          },
+        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/all-video`, {
+        
           params: {
             category: categoryId, // Pass category_id as a query parameter
+          },
+          headers: {
+            Authorization: `Bearer ${token}`, // Pass JWT token in Authorization header
           },
         });
 

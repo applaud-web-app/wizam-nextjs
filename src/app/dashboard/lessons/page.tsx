@@ -1,7 +1,6 @@
 "use client"; // Indicate this is a client component
 
 import { useState, useEffect } from 'react';
-import { FaBook } from 'react-icons/fa'; // React icons
 import Link from 'next/link';
 import axios from 'axios';
 import Cookies from 'js-cookie'; // For handling cookies
@@ -42,7 +41,7 @@ export default function LessonsPage() {
       }
 
       try {
-        const response = await axios.get(`https://wizam.awmtab.in/api/all-lesson/`, {
+        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/all-lesson`, {
           headers: {
             Authorization: `Bearer ${token}`, // Pass JWT token in Authorization header
           },
@@ -94,7 +93,7 @@ export default function LessonsPage() {
   }
 
   if (error) {
-    return <NoData message={error} />;
+    return <NoData message="No Lessons Found" />;
   }
 
   return (
@@ -107,12 +106,13 @@ export default function LessonsPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
               {/* Loop through the lessons */}
               {skill.lessons.map((lesson) => (
-                <Link key={lesson.slug} href={`/dashboard/lessons/${lesson.slug}`}>
+                <Link key={lesson.slug} href={`/dashboard/lessons/${lesson.slug}`} passHref>
                   <div className="card bg-white rounded-lg shadow-sm p-4 cursor-pointer transition-shadow border border-white hover:border-primary">
                     <h3 className="text-lg font-semibold">{lesson.title}</h3>
                     <p className="text-gray-600">Category: {lesson.category}</p>
                     <p className="text-gray-600">Difficulty: {lesson.difficulty}</p>
                     <p className="text-gray-600">Read time: {lesson.readTime}</p>
+                    
                   </div>
                 </Link>
               ))}
@@ -123,4 +123,3 @@ export default function LessonsPage() {
     </div>
   );
 }
-  

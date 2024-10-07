@@ -30,7 +30,7 @@ export default function VideoDetailPage({ params }: { params: { slug: string } }
       }
 
       try {
-        const response = await axios.get(`https://wizam.awmtab.in/api/video-detail/${params.slug}`, {
+        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/video-detail/${params.slug}`, {
           headers: {
             Authorization: `Bearer ${token}`, // Pass JWT token in Authorization header
           },
@@ -83,6 +83,56 @@ export default function VideoDetailPage({ params }: { params: { slug: string } }
     return () => clearInterval(intervalId);
   };
 
+  // Function to render video based on its type
+  const renderVideo = () => {
+    if (!videoData) return null;
+
+    const { video, video_type } = videoData;
+
+    if (video_type === "YouTube") {
+      // Embed YouTube video with the video ID
+      return (
+        <iframe
+          width="100%"
+          height="100%"
+          src={`https://www.youtube.com/embed/${video}`}
+          title={videoData.title}
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowFullScreen
+          className="rounded-lg"
+        ></iframe>
+      );
+    } else if (video_type === "Vimeo") {
+      // Embed Vimeo video with the video ID
+      return (
+        <iframe
+          width="100%"
+          height="100%"
+          src={`https://player.vimeo.com/video/${video}`}
+          title={videoData.title}
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowFullScreen
+          className="rounded-lg "
+        ></iframe>
+      );
+    } else if (video_type === "MP4") {
+    
+      return (
+        <video
+          width="100%"
+          height="100%"
+          controls
+          className="rounded-lg  h-full"
+        >
+          <source src={video} type="video/mp4" />
+          Your browser does not support the video tag.
+        </video>
+      );
+    } else {
+      return <NoData message="Unsupported video type." />;
+    }
+  };
+
   if (loading) {
     return <Loader />; // Display Loader while fetching data
   }
@@ -116,7 +166,7 @@ export default function VideoDetailPage({ params }: { params: { slug: string } }
             <FaClock className="inline mr-2" /> <strong>Date: </strong>{currentDate}
           </div>
           <div className="inline-flex items-center text-sm px-4 py-2 bg-green-100 text-green-800 rounded-full">
-            <FaBook className="inline mr-2" /> <strong>Syllabus: </strong>{videoData.syllabus}
+            <FaBook className="inline mr-2" /> <strong>Syllabus: </strong>{videoData.skill}
           </div>
           <div className="inline-flex items-center text-sm px-4 py-2 bg-purple-100 text-purple-800 rounded-full">
             <FaClock className="inline mr-2" /> <strong>Watch Time: </strong>{videoData.watch_time} min
@@ -125,31 +175,26 @@ export default function VideoDetailPage({ params }: { params: { slug: string } }
 
         {/* Video or Thumbnail */}
         <div className="mb-6 relative" style={{ height: '500px' }}>
-          {!playing ? (
+          {/* If thumbnail is present and playing hasn't started, show the thumbnail. If no thumbnail, show video directly */}
+          {videoData.thumbnail && !playing ? (
             <div className="relative cursor-pointer" onClick={handlePlayClick} style={{ height: '100%' }}>
-              <img src={videoData.thumbnail_url} alt="Video Thumbnail" className="w-full h-full object-cover rounded-lg shadow-sm" />
+              <img src={videoData.thumbnail} alt="Video Thumbnail" className="w-full h-full object-cover rounded-lg " />
               <div className="absolute inset-0 flex justify-center items-center">
-                <FaPlayCircle className="text-white text-6xl opacity-80 animate-pulse hover:scale-110 transition-transform duration-300 ease-in-out" />
+                <FaPlayCircle className="text-white bg-black p-1 rounded-full text-6xl opacity-80 animate-pulse hover:scale-110 transition-transform duration-300 ease-in-out" />
               </div>
             </div>
           ) : (
-            <iframe
-              width="100%"
-              height="100%"
-              src={videoData.video_url}
-              title={videoData.title}
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-              className="rounded-lg shadow-sm"
-            ></iframe>
+            renderVideo() // Render video if thumbnail is not available or when playing
           )}
         </div>
 
         {/* Render description */}
-        <div
-          className="text-gray-800 mt-4 space-y-6 leading-relaxed"
-          dangerouslySetInnerHTML={{ __html: videoData.description }}
-        />
+        {videoData.description && (
+          <div
+            className="text-gray-800 mt-4 space-y-6 leading-relaxed"
+            dangerouslySetInnerHTML={{ __html: videoData.description }}
+          />
+        )}
 
         {/* Tags Section */}
         <div className="mt-8">
