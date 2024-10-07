@@ -4,7 +4,7 @@ import { FaClock, FaQuestionCircle, FaStar, FaCheckCircle, FaInfoCircle } from "
 import Cookies from "js-cookie"; // Ensure js-cookie is installed
 import axios from "axios"; // Make sure axios is installed
 import NoData from '@/components/Common/NoData'; // Import NoData component
-
+import Link from "next/link";
 
 interface ExamDetails {
   title: string;
@@ -126,12 +126,8 @@ export default function SingleExam({ slug }: SingleExamProps) {
       </div>
 
       {/* Start Exam Button */}
-      <button
-        onClick={() => alert(`Starting exam: ${examDetails.title}`)} 
-        className="w-full bg-primary text-white font-semibold py-2 rounded-lg hover:bg-primary-dark transition-all duration-200"
-      >
-        Start Exam
-      </button>
+      <Link href={`/dashboard/exam-play/${slug}`} className="w-full bg-primary block text-center text-white font-semibold py-2 rounded-lg hover:bg-primary-dark transition-all duration-200"
+      >Start Exam</Link>
     </div>
   );
 }

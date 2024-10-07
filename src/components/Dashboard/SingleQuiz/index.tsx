@@ -6,6 +6,7 @@ import Loader from "@/components/Common/Loader";
 import Cookies from "js-cookie"; // Ensure js-cookie is installed
 import axios from "axios"; // Make sure axios is installed
 import NoData from '@/components/Common/NoData'; // Import NoData component
+import Link from "next/link";
 
 // Define the type for quiz details
 interface QuizDetails {
@@ -138,12 +139,11 @@ export default function SingleQuiz({ slug }: SingleQuizProps) {
       </div>
 
       {/* Start Quiz Button */}
-      <button
-        onClick={() => alert(`Starting quiz: ${quizDetails?.title}`)}
-        className="w-full bg-secondary text-white font-semibold py-2 rounded-lg hover:bg-secondary-dark transition-all duration-200"
+      <Link href={`/dashboard/quiz-play/${slug}`}
+        className="w-full block text-center bg-secondary text-white font-semibold py-2 rounded-lg hover:bg-secondary-dark transition-all duration-200"
       >
         Start Quiz
-      </button>
+      </Link>
     </div>
   );
 }
