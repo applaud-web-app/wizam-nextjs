@@ -43,7 +43,7 @@ interface QuizData {
 export default function PlayExam({ params }: { params: { slug: string } }) {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState<number>(0);
   const [answers, setAnswers] = useState<{ [key: number]: string[] }>({});
-  const [timeLeft, setTimeLeft] = useState<number>(1800); // Timer (in seconds, 30 minutes)
+  const [timeLeft, setTimeLeft] = useState<number>(1800); // Timer (in seconds)
   const [submitted, setSubmitted] = useState<boolean>(false);
   const [slug, setSlug] = useState<string | null>(null);
   const [quizData, setQuiz] = useState<QuizData | null>(null);
@@ -67,12 +67,12 @@ export default function PlayExam({ params }: { params: { slug: string } }) {
           }
         );
         if (response.data.status) {
-          if(response.data.status && response.data.message == "Quiz Timed Out"){
+          if (response.data.status && response.data.message === "Quiz Timed Out") {
             toast.success(response.data.message);
             const examId = response.data.data;
             console.log(examId.uuid); // EXAM PREVIEW URL
             setSubmitted(true);
-          }else{
+          } else {
             const fetchQuizData = response.data.data;
             const Item: QuizData = {
               title: fetchQuizData.title,
@@ -83,6 +83,8 @@ export default function PlayExam({ params }: { params: { slug: string } }) {
               finish_button: fetchQuizData.finish_button,
             };
             setQuiz(Item);
+            // Convert duration to seconds
+            setTimeLeft(Math.round(parseFloat(fetchQuizData.duration) * 60));
           }
         } else {
           toast.error("No exams found for this category");
@@ -109,6 +111,24 @@ export default function PlayExam({ params }: { params: { slug: string } }) {
     }
   }, [quizData, currentQuestionIndex]);
 
+  // Countdown timer logic
+  useEffect(() => {
+    if (!quizData) return;
+
+    const intervalId = setInterval(() => {
+      setTimeLeft((prev) => {
+        if (prev <= 0) {
+          clearInterval(intervalId);
+          handleSubmit(); // Auto-submit when time is up
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(intervalId);
+  }, [quizData]);
+
   const handleAnswerChange = (questionId: number, answer: string[]) => {
     setAnswers((prev) => ({ ...prev, [questionId]: answer }));
   };
@@ -127,6 +147,18 @@ export default function PlayExam({ params }: { params: { slug: string } }) {
 
   const handleSubmit = () => {
     setSubmitted(true);
+
+    // Structure answers in the required format
+    const formattedAnswers = quizData?.questions.map((question) => {
+      return {
+        [question.id]: answers[question.id] || [], // Default to empty array if no answer
+      };
+    });
+
+    // Preview the answers in the console
+    console.log("Submitting answers:", formattedAnswers);
+
+    // You can send this formattedAnswers object to the backend here.
   };
 
   const formatTimeLeft = (time: number) => {
@@ -202,7 +234,6 @@ export default function PlayExam({ params }: { params: { slug: string } }) {
                     type="radio"
                     name={`question-${question.id}`}
                     value={option}
-                   
                     onChange={() => handleAnswerChange(question.id, [option])}
                     className="cursor-pointer"
                   />
@@ -375,7 +406,8 @@ export default function PlayExam({ params }: { params: { slug: string } }) {
                       <div key={questionIndex} className="mb-4">
                         {questionIndex > 0 && (
                           <div>
-                            <b>{"Question "+questionIndex}</b><p
+                            <b>{"Question " + questionIndex}</b>
+                            <p
                               className="mb-4 font-medium"
                               dangerouslySetInnerHTML={{ __html: subQuestion }}
                             ></p>
@@ -424,7 +456,7 @@ export default function PlayExam({ params }: { params: { slug: string } }) {
   return (
     <div className="dashboard-page flex flex-col md:flex-row gap-6">
       {/* Main Exam Content */}
-      <div className="flex-1 lg:p-6 bg-white rounded-lg shadow-sm p-4 ">
+      <div className="flex-1 lg:p-6 bg-white rounded-lg shadow-sm p-4">
         {!submitted ? (
           <>
             <div className="flex justify-between mb-4">
@@ -477,25 +509,12 @@ export default function PlayExam({ params }: { params: { slug: string } }) {
               Thank you for completing the exam. Your answers have been
               submitted successfully!
             </p>
-            <button
-              className="mt-6 bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary-dark transition-colors"
-              onClick={() => window.location.reload()}
-            >
-             Go to Quiz Result
-            </button>
           </div>
         )}
       </div>
 
       {/* Sidebar for Timer and Progress */}
-      <div className="w-full md:w-1/3 bg-white shadow-sm p-4 lg:p-6 rounded-lg ">
-        {/* Heading */}
-        <div className="mb-4">
-          <h2 className="text-2xl font-semibold text-primary text-center">
-            Exam Progress
-          </h2>
-        </div>
-
+      <div className="w-full md:w-1/3 bg-white shadow-sm p-4 lg:p-6 rounded-lg">
         {/* Time Remaining */}
         <div className="mb-6 text-center">
           <h3 className="text-gray-600 font-semibold">Time Remaining</h3>
