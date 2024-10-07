@@ -52,18 +52,16 @@ export default function VideosPage() {
 
         if (response.data && response.data.status) {
           // Transform API data to match the required structure
-          const transformedData = [
-            {
-              name: 'Learning', // Assuming a default skill name
-              videos: response.data.data.Learning.map((video: any) => ({
-                title: video.video_title,
-                slug: video.video_slug,
-                syllabus: video.video_syllabus,
-                difficulty: video.video_level,
-                watchTime: `${video.video_watch_time} min`,
-              })),
-            },
-          ];
+          const transformedData = Object.keys(response.data.data).map((key: string) => ({
+            name: key, // This will dynamically set the name to 'Learning', 'Music', etc.
+            videos: response.data.data[key].map((video: any) => ({
+              title: video.video_title,
+              slug: video.video_slug,
+              syllabus: video.video_syllabus,
+              difficulty: video.video_level,
+              watchTime: `${video.video_watch_time} min`,
+            })),
+          }));
 
           setSkillsData(transformedData);
         } else {

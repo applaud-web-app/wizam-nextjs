@@ -7,7 +7,7 @@ export default function LearnAndPractice() {
        <h1 className="text-2xl font-bold mb-5">Learn and Practice</h1>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8 ">
         {/* Practice Set Card */}
-        <Link href="/dashboard/practice-set">
+        <Link href="/dashboard/practice-test">
           <div className="card flex flex-col items-center justify-center bg-white rounded-lg shadow-sm p-6 cursor-pointer transition-transform  border border-white hover:shadow-none hover:border-blue-500 ">
             <FaPen className="text-4xl text-blue-500 mb-4" />
             <h3 className="text-xl font-semibold text-gray-800">Practice Set</h3>

@@ -1,7 +1,12 @@
 "use client"; // Indicate this is a client component
 
+import { useState, useEffect } from 'react';
 import { FaBook, FaClock, FaQuestionCircle, FaCheck } from 'react-icons/fa'; // React icons
 import Link from 'next/link';
+import axios from 'axios';
+import Cookies from 'js-cookie'; // To handle cookies
+import Loader from '@/components/Common/Loader';
+import NoData from '@/components/Common/NoData';
 
 // Define interfaces for skills and practice sets
 interface PracticeSet {
@@ -13,78 +18,142 @@ interface PracticeSet {
   marks: number; // Total marks for the practice set
 }
 
-interface Skill {
+interface skillsData {
   name: string;
   practiceSets: PracticeSet[]; // Practice sets for each skill
 }
 
 // Dynamic data for skills and practice sets (updated to match practice set structure)
-const skillsData: Skill[] = [
-  {
-    name: 'Programming in C++',
-    practiceSets: [
-      { 
-        title: 'C++ Basics Practice Set', 
-        slug: 'cpp-basics-practice', 
-        syllabus: 'Programming', 
-        questions: 20, 
-        time: '30 min', 
-        marks: 50 
-      },
-      { 
-        title: 'Object-Oriented Programming in C++', 
-        slug: 'oop-in-cpp-practice', 
-        syllabus: 'Programming', 
-        questions: 25, 
-        time: '40 min', 
-        marks: 60 
-      },
-      { 
-        title: 'C++ Standard Library Practice Set', 
-        slug: 'std-library-practice', 
-        syllabus: 'Programming', 
-        questions: 30, 
-        time: '45 min', 
-        marks: 75 
-      },
-    ],
-  },
-  {
-    name: 'Web Development',
-    practiceSets: [
-      { 
-        title: 'HTML Basics Practice Set', 
-        slug: 'html-basics-practice',
-        syllabus: 'Web Development', 
-        questions: 15, 
-        time: '25 min', 
-        marks: 40 
-      },
-      { 
-        title: 'CSS for Beginners Practice Set', 
-        slug: 'css-basics-practice',
-        syllabus: 'Web Development', 
-        questions: 20, 
-        time: '30 min', 
-        marks: 50 
-      },
-      { 
-        title: 'JavaScript Essentials Practice Set', 
-        slug: 'javascript-essentials-practice',
-        syllabus: 'Web Development', 
-        questions: 25, 
-        time: '35 min', 
-        marks: 60 
-      },
-    ],
-  },
-];
+// const skillsData: Skill[] = [
+//   {
+//     name: 'Programming in C++',
+//     practiceSets: [
+//       { 
+//         title: 'C++ Basics Practice Set', 
+//         slug: 'cpp-basics-practice', 
+//         syllabus: 'Programming', 
+//         questions: 20, 
+//         time: '30 min', 
+//         marks: 50 
+//       },
+//       { 
+//         title: 'Object-Oriented Programming in C++', 
+//         slug: 'oop-in-cpp-practice', 
+//         syllabus: 'Programming', 
+//         questions: 25, 
+//         time: '40 min', 
+//         marks: 60 
+//       },
+//       { 
+//         title: 'C++ Standard Library Practice Set', 
+//         slug: 'std-library-practice', 
+//         syllabus: 'Programming', 
+//         questions: 30, 
+//         time: '45 min', 
+//         marks: 75 
+//       },
+//     ],
+//   },
+//   {
+//     name: 'Web Development',
+//     practiceSets: [
+//       { 
+//         title: 'HTML Basics Practice Set', 
+//         slug: 'html-basics-practice',
+//         syllabus: 'Web Development', 
+//         questions: 15, 
+//         time: '25 min', 
+//         marks: 40 
+//       },
+//       { 
+//         title: 'CSS for Beginners Practice Set', 
+//         slug: 'css-basics-practice',
+//         syllabus: 'Web Development', 
+//         questions: 20, 
+//         time: '30 min', 
+//         marks: 50 
+//       },
+//       { 
+//         title: 'JavaScript Essentials Practice Set', 
+//         slug: 'javascript-essentials-practice',
+//         syllabus: 'Web Development', 
+//         questions: 25, 
+//         time: '35 min', 
+//         marks: 60 
+//       },
+//     ],
+//   },
+// ];
 
 export default function PracticeSetPage() {
+  const [pracitceData, setPracticeSet] = useState<skillsData[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Fetch all videos from the API
+  useEffect(() => {
+    const fetchVideos = async () => {
+      const token = Cookies.get('jwt'); // Get JWT token from cookies
+      const categoryId = Cookies.get('category_id'); // Get category_id from cookies
+
+      if (!token || !categoryId) {
+        setError('Missing token or category ID');
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/practice-set`, {
+        
+          params: {
+            category: categoryId, // Pass category_id as a query parameter
+          },
+          headers: {
+            Authorization: `Bearer ${token}`, // Pass JWT token in Authorization header
+          },
+        });
+
+        if (response.data && response.data.status) {
+          console.log(response.data);
+          // Transform API data to match the required structure
+          const transformedData = Object.keys(response.data.data).map((key: string) => ({
+            name: key, // This will dynamically set the name to 'Learning', 'Music', etc.
+            practiceSets: response.data.data[key].map((practice: any) => ({
+              title: practice.practice_title,
+              slug: practice.practice_slug,
+              questions: practice.practice_question,
+              time: `${practice.practice_time} min`,
+              marks: practice.practice_marks,
+            })),
+          }));
+
+          setPracticeSet(transformedData);
+        } else {
+          setError('Failed to fetch data');
+        }
+      } catch (err) {
+        console.error('Error fetching videos:', err);
+        setError('An error occurred while fetching videos');
+      }
+
+      setLoading(false);
+    };
+
+    fetchVideos();
+  }, []);
+
+  if (loading) {
+    return <Loader />;
+  }
+
+  if (error) {
+    return <NoData message={error} />;
+  }
+
   return (
     <div className="dashboard-page">
       <div className="mb-3">
-        {skillsData.map((skill) => (
+        {pracitceData.map((skill) => (
           <div key={skill.name} className="mb-5">
             <h2 className="text-xl font-semibold text-gray-800 mb-4">{skill.name}</h2> {/* Skill Name */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -115,7 +184,7 @@ export default function PracticeSetPage() {
 
                   {/* Start Test Button */}
                   <Link href={`/dashboard/practice-sets/${practiceSet.slug}`}>
-                    <span className="bg-primary block text-white px-4 py-2 rounded hover:bg-primary-dark transition duration-200 w-full">
+                    <span className="bg-primary block text-center text-white px-4 py-2 rounded hover:bg-primary-dark transition duration-200 w-full">
                       Start Test
                     </span>
                   </Link>

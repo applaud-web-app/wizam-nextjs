@@ -52,18 +52,16 @@ export default function LessonsPage() {
         });
 
         if (response.data && response.data.status) {
-          const transformedData = [
-            {
-              name: 'Learning', // Assuming "Learning" is the skill category
-              lessons: response.data.data.Learning.map((lesson: any) => ({
-                title: lesson.lesson_title,
-                slug: lesson.lesson_slug,
-                category: lesson.lesson_syllabus,
-                difficulty: lesson.lesson_level,
-                readTime: `${lesson.lesson_read_time} min`,
-              })),
-            },
-          ];
+          const transformedData = Object.keys(response.data.data).map((key: string) => ({
+            name: key, // This will dynamically set the name to 'Learning', 'Music', etc.
+            lessons: response.data.data[key].map((lesson: any) => ({
+              title: lesson.lesson_title,
+              slug: lesson.lesson_slug,
+              category: lesson.lesson_syllabus,
+              difficulty: lesson.lesson_level,
+              readTime: `${lesson.lesson_read_time} min`,
+            })),
+          }));
 
           setSkillsData(transformedData);
         } else {
