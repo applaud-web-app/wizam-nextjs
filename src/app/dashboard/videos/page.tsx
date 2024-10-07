@@ -1,16 +1,20 @@
 "use client"; // Indicate this is a client component
 
+import { useState, useEffect } from 'react';
 import { FaVideo, FaClock, FaPlayCircle } from 'react-icons/fa'; // React icons for videos
 import Link from 'next/link';
+import axios from 'axios';
+import Cookies from 'js-cookie'; // To handle cookies
+import Loader from '@/components/Common/Loader';
+import NoData from '@/components/Common/NoData';
 
-// Define interfaces for skills and videos
+// Define interfaces for videos and skills
 interface Video {
   title: string;
   slug: string;
-  syllabus: string; // Updated from category to syllabus
-  difficulty: string;  
-  watchTime: string;   // Updated from videoLength to watchTime
-  description: string;
+  syllabus: string;
+  difficulty: string;
+  watchTime: string;
 }
 
 interface Skill {
@@ -18,69 +22,71 @@ interface Skill {
   videos: Video[];
 }
 
-// Dynamic data for skills and videos
-const skillsData: Skill[] = [
-  {
-    name: 'Programming in C++',
-    videos: [
-      { 
-        title: 'Introduction to C++', 
-        slug: 'intro-to-cpp',
-        syllabus: 'Programming Basics', // Updated label
-        difficulty: 'Beginner', 
-        watchTime: '10 min', // Updated label
-        description: '<p>This video introduces the basics of C++ programming, including <strong>syntax</strong>, data types, and simple programs.</p>',
-      },
-      { 
-        title: 'Object-Oriented Programming in C++', 
-        slug: 'oop-in-cpp',
-        syllabus: 'OOP Concepts', 
-        difficulty: 'Intermediate', 
-        watchTime: '15 min',
-        description: '<p>Learn about the principles of object-oriented programming (OOP) in C++ and how to implement classes, inheritance, and polymorphism.</p>',
-      },
-      { 
-        title: 'C++ Standard Library', 
-        slug: 'std-library',
-        syllabus: 'Standard Library Features', 
-        difficulty: 'Advanced', 
-        watchTime: '20 min',
-        description: '<p>Dive into the powerful features of the C++ Standard Library, including containers, algorithms, and iterators.</p>',
-      },
-    ],
-  },
-  {
-    name: 'Web Development',
-    videos: [
-      { 
-        title: 'HTML Basics', 
-        slug: 'html-basics',
-        syllabus: 'HTML Structure', 
-        difficulty: 'Beginner', 
-        watchTime: '8 min',
-        description: '<p>Learn the fundamentals of HTML, the backbone of the web. This video covers elements, attributes, and creating basic web pages.</p>',
-      },
-      { 
-        title: 'CSS for Beginners', 
-        slug: 'css-basics',
-        syllabus: 'CSS Styling', 
-        difficulty: 'Beginner', 
-        watchTime: '10 min',
-        description: '<p>A beginner-friendly guide to CSS, including selectors, properties, and how to style your HTML content.</p>',
-      },
-      { 
-        title: 'JavaScript Essentials', 
-        slug: 'javascript-essentials',
-        syllabus: 'JavaScript Fundamentals', 
-        difficulty: 'Intermediate', 
-        watchTime: '12 min',
-        description: '<p>Understand the basics of JavaScript, including variables, functions, loops, and DOM manipulation.</p>',
-      },
-    ],
-  },
-];
-
 export default function VideosPage() {
+  const [skillsData, setSkillsData] = useState<Skill[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Fetch all videos from the API
+  useEffect(() => {
+    const fetchVideos = async () => {
+      const token = Cookies.get('jwt'); // Get JWT token from cookies
+      const categoryId = Cookies.get('category_id'); // Get category_id from cookies
+
+      if (!token || !categoryId) {
+        setError('Missing token or category ID');
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const response = await axios.get('https://wizam.awmtab.in/api/all-video/', {
+          headers: {
+            Authorization: `Bearer ${token}`, // Pass JWT token in Authorization header
+          },
+          params: {
+            category: categoryId, // Pass category_id as a query parameter
+          },
+        });
+
+        if (response.data && response.data.status) {
+          // Transform API data to match the required structure
+          const transformedData = [
+            {
+              name: 'Learning', // Assuming a default skill name
+              videos: response.data.data.Learning.map((video: any) => ({
+                title: video.video_title,
+                slug: video.video_slug,
+                syllabus: video.video_syllabus,
+                difficulty: video.video_level,
+                watchTime: `${video.video_watch_time} min`,
+              })),
+            },
+          ];
+
+          setSkillsData(transformedData);
+        } else {
+          setError('Failed to fetch data');
+        }
+      } catch (err) {
+        console.error('Error fetching videos:', err);
+        setError('An error occurred while fetching videos');
+      }
+
+      setLoading(false);
+    };
+
+    fetchVideos();
+  }, []);
+
+  if (loading) {
+    return <Loader />;
+  }
+
+  if (error) {
+    return <NoData message={error} />;
+  }
+
   return (
     <div className="dashboard-page">
       <div className="mb-3">
@@ -95,9 +101,9 @@ export default function VideosPage() {
                       <FaPlayCircle className="text-primary mr-2" /> {/* Video play icon */}
                       <h3 className="text-lg font-semibold">{video.title}</h3>
                     </div>
-                    <p className="text-gray-600">Syllabus: {video.syllabus}</p> {/* Updated to Syllabus */}
+                    <p className="text-gray-600">Syllabus: {video.syllabus}</p>
                     <p className="text-gray-600">Difficulty: {video.difficulty}</p>
-                    <p className="text-gray-600">Watch Time: {video.watchTime}</p> {/* Updated to Watch Time */}
+                    <p className="text-gray-600">Watch Time: {video.watchTime}</p>
                   </div>
                 </Link>
               ))}

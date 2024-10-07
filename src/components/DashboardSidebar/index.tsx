@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { FiHome, FiEdit, FiBookOpen, FiList, FiCheckSquare, FiBook, FiBarChart } from "react-icons/fi";
 import { TfiIdBadge } from "react-icons/tfi";
-import { MdOutlinePayment } from "react-icons/md";
+import { MdOutlinePayment,MdLogout } from "react-icons/md";
 import Cookies from "js-cookie";
 
 interface SidebarProps {
@@ -67,14 +67,16 @@ export default function Sidebar({ isSyllabusEnabled, isOpen, toggleSidebar }: Si
                 <FiCheckSquare className="mr-3" /> Quizzes
               </Link>
               <Link
-                href={isSyllabusEnabled ? "/dashboard/learn-practice" : "#"}
+                href={isSyllabusEnabled ? "/dashboard/learn-and-practice" : "#"}
                 className={`flex items-center px-4 py-2 rounded-md transition ${
                   isSyllabusEnabled ? "hover:bg-gray-700" : "cursor-not-allowed opacity-50"
                 }`}
               >
                 <FiBook className="mr-3" /> Learn & Practice
               </Link>
-              <Link href="/dashboard/my-progress" className="flex items-center px-4 py-2 hover:bg-gray-700 rounded-md transition">
+              <Link href={isSyllabusEnabled ? "/dashboard/my-progress" : "#"} className={`flex items-center px-4 py-2 rounded-md transition ${
+                  isSyllabusEnabled ? "hover:bg-gray-700" : "cursor-not-allowed opacity-50"
+                }`}>
                 <FiBarChart className="mr-3" /> My Progress
               </Link>
             </nav>
@@ -91,7 +93,7 @@ export default function Sidebar({ isSyllabusEnabled, isOpen, toggleSidebar }: Si
                 <MdOutlinePayment className="mr-3" /> My Payments
               </Link>
               <Link href="/logout" className="flex items-center px-4 py-2 hover:bg-red-600 rounded-md transition">
-                Logout
+               <MdLogout /> Logout
               </Link>
             </nav>
           </div>

@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { FaCheckCircle, FaTimesCircle, FaRegCircle, FaCheck, FaTimes } from "react-icons/fa";
+import { FaCheckCircle, FaTimesCircle, FaRegCircle, FaCheck, FaTimes } from "react-icons/fa"; // Using React Icons
 
 // Option interface
 interface Option {
@@ -11,12 +11,12 @@ interface Option {
 // Question interface
 interface Question {
   id: number;
-  type: string; // "single", "multiple", "truefalse", "short", "match", "sequence", "fill", "extended"
+  type: string; // "single", "multiple", "truefalse", etc.
   question: string;
-  image?: string; // Optional image for the question
+  image?: string;
   options?: Option[];
-  correctAnswer?: string[]; // Correct answers for the question
-  explanation?: string; // Explanation for the correct answer
+  correctAnswer?: string[];
+  explanation?: string;
 }
 
 // ExamData interface
@@ -138,7 +138,7 @@ const ExamResult = () => {
     const isCorrect = JSON.stringify(userAnswer) === JSON.stringify(question.correctAnswer);
 
     return (
-      <div key={question.id} className=" p-4 border rounded-lg  bg-white">
+      <div key={question.id} className="p-4 border rounded-lg bg-white shadow-sm">
         <h3 className="text-lg font-semibold mb-2">{question.question}</h3>
 
         {/* Show options with icons */}
@@ -191,24 +191,33 @@ const ExamResult = () => {
       <div className="mt-10">
         <h2 className="text-3xl font-semibold mb-4">Leaderboard</h2>
         <div className="overflow-x-auto">
-          <table className="min-w-full bg-white border rounded-lg">
-            <thead className="bg-gray-200">
+          <table className="min-w-full bg-white border rounded-lg shadow-sm">
+            <thead className="bg-primary text-white">
               <tr>
-                <th className="py-2 px-4 border">Rank</th>
-                <th className="py-2 px-4 border">Username</th>
-                <th className="py-2 px-4 border">Score</th>
-                <th className="py-2 px-4 border">Time Taken</th>
+                <th className="py-3 px-6 border-b">Rank</th>
+                <th className="py-3 px-6 border-b">Username</th>
+                <th className="py-3 px-6 border-b">Score</th>
+                <th className="py-3 px-6 border-b">Time Taken</th>
               </tr>
             </thead>
             <tbody>
               {leaderboard
                 .sort((a, b) => b.score - a.score || a.timeTaken - b.timeTaken)
                 .map((entry, index) => (
-                  <tr key={index} className="text-center">
-                    <td className="py-2 px-4 border">{index + 1}</td>
-                    <td className="py-2 px-4 border">{entry.username}</td>
-                    <td className="py-2 px-4 border">{entry.score}%</td>
-                    <td className="py-2 px-4 border">{formatTimeTaken(entry.timeTaken)}</td>
+                  <tr
+                    key={index}
+                    className={`${
+                      entry.username === "You"
+                        ? "bg-blue-100 text-primary font-bold"
+                        : index % 2 === 0
+                        ? "bg-gray-100"
+                        : "bg-white"
+                    } text-center`}
+                  >
+                    <td className="py-3 px-6 border-b">{index + 1}</td>
+                    <td className="py-3 px-6 border-b">{entry.username}</td>
+                    <td className="py-3 px-6 border-b">{entry.score}%</td>
+                    <td className="py-3 px-6 border-b">{formatTimeTaken(entry.timeTaken)}</td>
                   </tr>
                 ))}
             </tbody>
@@ -224,13 +233,13 @@ const ExamResult = () => {
         {/* Section 1: Pass/Fail Message */}
         <div className="text-center mb-8">
           {passed ? (
-            <div className="bg-white p-6 rounded-lg ">
+            <div className="bg-white p-6 rounded-lg shadow-sm">
               <FaCheckCircle className="text-green-500 mx-auto mb-3" size={60} />
               <h1 className="text-4xl font-bold text-green-500">Congratulations! You Passed!</h1>
               <p className="text-gray-600 mt-2">You have successfully passed the exam.</p>
             </div>
           ) : (
-            <div className="bg-white p-6 rounded-lg ">
+            <div className="bg-white p-6 rounded-lg shadow-sm">
               <FaTimesCircle className="text-red-500 mx-auto mb-3" size={60} />
               <h1 className="text-4xl font-bold text-red-500">Sorry, You Failed</h1>
               <p className="text-gray-600 mt-2">You did not reach the required score to pass.</p>
@@ -240,27 +249,27 @@ const ExamResult = () => {
 
         {/* Section 2: Analytics Card */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 mb-5">
-          <div className="p-6 border rounded-lg  bg-white text-center">
+          <div className="p-6 border rounded-lg bg-white text-center shadow-sm">
             <h3 className="text-xl font-semibold mb-2">Total Questions</h3>
             <p className="text-2xl">{totalQuestions}</p>
           </div>
-          <div className="p-6 border rounded-lg  bg-white text-center">
+          <div className="p-6 border rounded-lg bg-white text-center shadow-sm">
             <h3 className="text-xl font-semibold mb-2">Correct Answers</h3>
             <p className="text-2xl text-green-500">{userResult.correctCount}</p>
           </div>
-          <div className="p-6 border rounded-lg  bg-white text-center">
+          <div className="p-6 border rounded-lg bg-white text-center shadow-sm">
             <h3 className="text-xl font-semibold mb-2">Wrong Answers</h3>
             <p className="text-2xl text-red-500">{userResult.wrongCount}</p>
           </div>
-          <div className="p-6 border rounded-lg  bg-white text-center">
+          <div className="p-6 border rounded-lg bg-white text-center shadow-sm">
             <h3 className="text-xl font-semibold mb-2">Skipped Questions</h3>
             <p className="text-2xl text-yellow-500">{userResult.skippedCount}</p>
           </div>
-          <div className="p-6 border rounded-lg  bg-white text-center">
+          <div className="p-6 border rounded-lg bg-white text-center shadow-sm">
             <h3 className="text-xl font-semibold mb-2">Time Taken</h3>
             <p className="text-2xl">{formatTimeTaken(userResult.timeTaken)}</p>
           </div>
-          <div className="p-6 border rounded-lg  bg-white text-center">
+          <div className="p-6 border rounded-lg bg-white text-center shadow-sm">
             <h3 className="text-xl font-semibold mb-2">Score</h3>
             <p className={`text-2xl ${passed ? "text-green-500" : "text-red-500"}`}>
               {(percentageCorrect * 100).toFixed(2)}%
