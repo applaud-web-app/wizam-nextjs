@@ -69,27 +69,19 @@ export default function PlayQuiz({ params }: { params: { slug: string } }) {
           }
         );
         if (response.data.status) {
-          if (response.data.message === "Quiz Timed Out") {
-            toast.success(response.data.message);
-            const quizId = response.data.data;
-            console.log(quizId.uuid); // Console log the UUID
-            setUuid(quizId.uuid);
-            setSubmitted(true);
-          } else {
-            const fetchQuizData = response.data.data;
-            const Item: QuizData = {
-              title: fetchQuizData.title,
-              questions: fetchQuizData.questions,
-              duration: fetchQuizData.duration,
-              points: fetchQuizData.points,
-              question_view: fetchQuizData.question_view,
-              finish_button: fetchQuizData.finish_button,
-            };
-            setQuiz(Item);
-            setUuid(fetchQuizData.uuid);
-            // Convert duration to seconds
-            setTimeLeft(Math.round(parseFloat(fetchQuizData.duration) * 60));
-          }
+          const fetchQuizData = response.data.data;
+          const Item: QuizData = {
+            title: fetchQuizData.title,
+            questions: fetchQuizData.questions,
+            duration: fetchQuizData.duration,
+            points: fetchQuizData.points,
+            question_view: fetchQuizData.question_view,
+            finish_button: fetchQuizData.finish_button,
+          };
+          setQuiz(Item);
+          setUuid(fetchQuizData.uuid);
+          // Convert duration to seconds
+          setTimeLeft(Math.round(parseFloat(fetchQuizData.duration) * 60));
         } else {
           toast.error("No quizzes found for this category");
         }
@@ -105,11 +97,11 @@ export default function PlayQuiz({ params }: { params: { slug: string } }) {
   }, [params, router]);
 
   useEffect(() => {
-    if (quizData && !answers[quizData.questions[currentQuestionIndex]?.id]) {
+    if (quizData && quizData.questions && !answers[quizData.questions[currentQuestionIndex]?.id]) {
       setAnswers((prev) => ({
         ...prev,
         [quizData.questions[currentQuestionIndex]?.id]:
-          quizData.questions[currentQuestionIndex].options || [],
+          quizData.questions[currentQuestionIndex]?.options || [],
       }));
     }
   }, [quizData, currentQuestionIndex]);
@@ -170,7 +162,7 @@ export default function PlayQuiz({ params }: { params: { slug: string } }) {
   };
 
   const handleNextQuestion = () => {
-    if (currentQuestionIndex < (quizData?.questions.length || 0) - 1) {
+    if (quizData?.questions && currentQuestionIndex < quizData.questions.length - 1) {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
     }
   };
@@ -224,9 +216,7 @@ export default function PlayQuiz({ params }: { params: { slug: string } }) {
   };
 
   const getSkippedCount = () => {
-    return quizData?.questions.length
-      ? quizData.questions.length - getAnsweredCount()
-      : 0;
+    return quizData?.questions ? quizData.questions.length - getAnsweredCount() : 0;
   };
 
   const moveItem = (
@@ -249,6 +239,7 @@ export default function PlayQuiz({ params }: { params: { slug: string } }) {
 
     handleAnswerChange(questionId, reorderedAnswers);
   };
+
   const renderQuestion = (question: Question) => {
     return (
       <div>
@@ -513,7 +504,7 @@ export default function PlayQuiz({ params }: { params: { slug: string } }) {
 
   if (loading) return <Loader />;
 
-  if (!quizData) return <div>No quiz data available</div>;
+  if (!quizData || !quizData.questions) return <div>No quiz data available</div>;
 
   return (
     <div className="dashboard-page flex flex-col md:flex-row gap-6">
@@ -549,12 +540,14 @@ export default function PlayQuiz({ params }: { params: { slug: string } }) {
                   Next <FaArrowRight className="inline ml-2" />
                 </button>
               ) : (
-                <button
-                  className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors"
-                  onClick={handleSubmit}
-                >
-                  Submit Quiz
-                </button>
+                quizData.finish_button === "enable" && ( // Conditionally show submit button
+                  <button
+                    className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors"
+                    onClick={handleSubmit}
+                  >
+                    Submit Quiz
+                  </button>
+                )
               )}
             </div>
           </>
@@ -622,14 +615,16 @@ export default function PlayQuiz({ params }: { params: { slug: string } }) {
             {quizData.questions.map((question, index) => (
               <div
                 key={index}
-                className={`p-2 rounded-lg border cursor-pointer ${
+                className={`p-2 rounded-lg border ${
                   currentQuestionIndex === index
                     ? "bg-primary text-white"
                     : answers[question.id]
                     ? "bg-green-200 text-black"
                     : "bg-yellow-200 text-black"
-                }`}
-                onClick={() => setCurrentQuestionIndex(index)}
+                } ${quizData.question_view === "enable" ? "cursor-pointer" : "cursor-not-allowed"}`}
+                onClick={() =>
+                  quizData.question_view === "enable" && setCurrentQuestionIndex(index)
+                }
               >
                 {index + 1}
               </div>
@@ -649,7 +644,6 @@ export default function PlayQuiz({ params }: { params: { slug: string } }) {
           </div>
         </div>
       )}
-
     </div>
   );
 }
