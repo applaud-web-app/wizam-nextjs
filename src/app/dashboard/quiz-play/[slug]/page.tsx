@@ -14,6 +14,7 @@ import Cookies from "js-cookie";
 import { useRouter } from "next/navigation";
 import axios from "axios";
 import { toast } from "react-toastify";
+import Link from 'next/link';
 
 // Option interface
 interface Option {
@@ -671,6 +672,11 @@ export default function PlayQuizPage({
               Thank you for completing the practice test. Your answers have been
               submitted successfully!
             </p>
+            <div>
+              <Link href={`/dashboard/quiz-result/${uuid}`} className="mt-4 block text-center w-full bg-primary text-white font-semibold py-2 px-4 rounded hover:bg-primary-dark transition-colors">
+                  Start Exam
+              </Link>
+            </div>
           </div>
         )}
       </div>
