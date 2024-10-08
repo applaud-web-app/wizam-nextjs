@@ -6,9 +6,9 @@ import axios from "axios"; // Make sure axios is installed
 import NoData from '@/components/Common/NoData'; // Import NoData component
 import Link from "next/link";
 
-interface ExamDetails {
+interface TestDetails {
   title: string;
-  examType: string;
+  testType: string;
   syllabus: string;
   totalQuestions: number;
   duration: string;
@@ -16,16 +16,16 @@ interface ExamDetails {
   description: string;
 }
 
-interface SingleExamProps {
+interface SinglePracticeSetProps {
   slug: string;
 }
 
-export default function SingleExam({ slug }: SingleExamProps) {
-  const [examDetails, setExamDetails] = useState<ExamDetails | null>(null);
+export default function SinglePracticeSet({ slug }: SinglePracticeSetProps) {
+  const [testDetails, setTestDetails] = useState<TestDetails | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
-    const fetchExamDetails = async () => {
+    const fetchTestDetails = async () => {
       const category = Cookies.get("category_id"); // Fetch category ID from cookies
 
       if (!category) {
@@ -37,7 +37,7 @@ export default function SingleExam({ slug }: SingleExamProps) {
       setLoading(true); // Start loading state
 
       try {
-        // Use axios to fetch exam details from the backend API
+        // Use axios to fetch test details from the backend API
         const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/practice-set-detail/${slug}`, {
           params: { category }, // Send slug and category as query params
           headers: {
@@ -48,54 +48,54 @@ export default function SingleExam({ slug }: SingleExamProps) {
         const data = response.data;
 
         if (data.status) {
-          setExamDetails(data.data); // Set exam details if found
+          setTestDetails(data.data); // Set test details if found
         } else {
-          setExamDetails(null); // Clear exam details if not found
+          setTestDetails(null); // Clear test details if not found
         }
       } catch (error) {
-        console.error("Error fetching exam details:", error);
-        setExamDetails(null); // Clear exam details on error
+        console.error("Error fetching test details:", error);
+        setTestDetails(null); // Clear test details on error
       } finally {
         setLoading(false); // Stop loading state
       }
     };
 
-    fetchExamDetails();
-  }, [slug]); // Fetch new exam details when slug changes
+    fetchTestDetails();
+  }, [slug]); // Fetch new test details when slug changes
 
   // Loading state
   if (loading) {
     return <Loader />;
   }
 
-  // No exam details found
-  if (!examDetails) {
+  // No test details found
+  if (!testDetails) {
     return <NoData />;
   }
 
   return (
     <div className="mx-auto p-5 shadow-sm bg-white rounded-lg">
-      {/* Display exam details */}
+      {/* Display test details */}
       <div className="mb-8">
         <p className="bg-cyan-100 text-cyan-700 px-4 py-2 text-sm rounded-full inline-block mb-4">
-          {examDetails.syllabus}
+          {testDetails.syllabus}
         </p>
-        <h1 className="text-3xl font-bold text-primary mb-2">{examDetails.title}</h1>
-        <h2 className="text-lg font-medium text-primary-600">{examDetails.examType}</h2>
+        <h1 className="text-3xl font-bold text-primary mb-2">{testDetails.title}</h1>
+        <h2 className="text-lg font-medium text-primary-600">{testDetails.testType}</h2>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 py-3 border-y border-gray-300 mb-8">
         <div className="flex items-center space-x-2 text-gray-700">
           <FaQuestionCircle className="text-primary" />
-          <span className="text-base font-semibold">Questions: {examDetails.totalQuestions}</span>
+          <span className="text-base font-semibold">Questions: {testDetails.totalQuestions}</span>
         </div>
         <div className="flex items-center space-x-2 text-gray-700">
           <FaClock className="text-primary" />
-          <span className="text-base font-semibold">Duration: {examDetails.duration}</span>
+          <span className="text-base font-semibold">Duration: {testDetails.duration}</span>
         </div>
         <div className="flex items-center space-x-2 text-gray-700">
           <FaStar className="text-primary" />
-          <span className="text-base font-semibold">Marks: {examDetails.marks}</span>
+          <span className="text-base font-semibold">Marks: {testDetails.marks}</span>
         </div>
       </div>
 
@@ -114,20 +114,20 @@ export default function SingleExam({ slug }: SingleExamProps) {
         </div>
       </div>
 
-      {/* Exam Description */}
+      {/* test Description */}
       <div className="mb-8">
         <h3 className="text-xl font-semibold text-primary mb-4 flex items-center">
-          <FaInfoCircle className="text-primary mr-2" /> Exam Description
+          <FaInfoCircle className="text-primary mr-2" /> test Description
         </h3>
         <div
-          dangerouslySetInnerHTML={{ __html: examDetails.description || "" }}
+          dangerouslySetInnerHTML={{ __html: testDetails.description || "" }}
           className="text-gray-600 bg-gray-50 p-5 rounded-lg border border-gray-300"
         />
       </div>
 
-      {/* Start Exam Button */}
-      <Link href={`/dashboard/exam-play/${slug}`} className="w-full bg-primary block text-center text-white font-semibold py-2 rounded-lg hover:bg-primary-dark transition-all duration-200"
-      >Start Exam</Link>
+      {/* Start test Button */}
+      <Link href={`/dashboard/practice-test-play/${slug}`} className="w-full bg-primary block text-center text-white font-semibold py-2 rounded-lg hover:bg-primary-dark transition-all duration-200"
+      >Start test</Link>
     </div>
   );
 }

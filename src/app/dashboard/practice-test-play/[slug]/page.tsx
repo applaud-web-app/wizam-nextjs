@@ -28,15 +28,15 @@ interface Question {
   options?: string[]; // The answer options, if applicable (for multiple-choice, matching, etc.)
 }
 
-// quizData interface
-interface quizData {
+// PracticeData interface
+interface PracticeData {
   title: string;
   questions: Question[];
   duration: string;
   points: number;
 }
 
-export default function PlayQuizPage({
+export default function PracticeTestDetailPage({
   params,
 }: {
   params: { slug: string };
@@ -46,10 +46,9 @@ export default function PlayQuizPage({
   const [timeLeft, setTimeLeft] = useState<number>(1800); // Timer (in seconds)
   const [submitted, setSubmitted] = useState<boolean>(false);
   const [slug, setSlug] = useState<string | null>(null);
-  const [quizData, setquizData] = useState<quizData | null>(null);
+  const [practiceData, setPracticeData] = useState<PracticeData | null>(null);
   const router = useRouter();
   const [loading, setLoading] = useState<boolean>(true);
-  const [uuid, setUuid] = useState<string | null>(null);
   let timerId: NodeJS.Timeout | null = null; // Variable to store the timer reference
 
   useEffect(() => {
@@ -60,7 +59,7 @@ export default function PlayQuizPage({
     const fetchPracticeSet = async () => {
       try {
         const response = await axios.get(
-          `${process.env.NEXT_PUBLIC_API_URL}/play-quiz/${slug}`,
+          `${process.env.NEXT_PUBLIC_API_URL}/play-practice-set/${slug}`,
           {
             params: { category },
             headers: {
@@ -69,16 +68,15 @@ export default function PlayQuizPage({
           }
         );
         if (response.data.status) {
-          const fetchQuizData = response.data.data;
-          setUuid(fetchQuizData.uuid);
-          setquizData({
-            title: fetchQuizData.title,
-            questions: fetchQuizData.questions,
-            duration: fetchQuizData.duration,
-            points: fetchQuizData.points,
+          const fetchPracticeData = response.data.data;
+          setPracticeData({
+            title: fetchPracticeData.title,
+            questions: fetchPracticeData.questions,
+            duration: fetchPracticeData.duration,
+            points: fetchPracticeData.points,
           });
           // Convert duration to seconds
-          setTimeLeft(Math.round(parseFloat(fetchQuizData.duration) * 60));
+          setTimeLeft(Math.round(parseFloat(fetchPracticeData.duration) * 60));
         } else {
           toast.error("No practice set found for this category");
         }
@@ -95,7 +93,7 @@ export default function PlayQuizPage({
 
   // Countdown timer logic
   useEffect(() => {
-    if (!quizData || submitted) return;
+    if (!practiceData || submitted) return;
 
     timerId = setInterval(() => {
       setTimeLeft((prev) => {
@@ -111,7 +109,7 @@ export default function PlayQuizPage({
     }, 1000);
 
     return () => clearInterval(timerId!); // Clean up the timer when the component unmounts
-  }, [quizData, submitted]);
+  }, [practiceData, submitted]);
 
   const handleAnswerChange = (
     questionId: number,
@@ -151,8 +149,8 @@ export default function PlayQuizPage({
 
   const handleNextQuestion = () => {
     if (
-      quizData?.questions &&
-      currentQuestionIndex < quizData.questions.length - 1
+      practiceData?.questions &&
+      currentQuestionIndex < practiceData.questions.length - 1
     ) {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
     }
@@ -164,13 +162,14 @@ export default function PlayQuizPage({
     }
   };
 
+  
   const handleSubmit = async () => {
     if (submitted) return;
     setSubmitted(true); // Mark as submitted
     if (timerId) clearInterval(timerId); // Stop the timer when submitting manually
   
     // Structure answers based on question type for submission
-    const formattedAnswers = quizData?.questions.map((question: Question) => {
+    const formattedAnswers = practiceData?.questions.map((question: Question) => {
       const userAnswer = answers[question.id];
   
       // Handle unanswered questions: Include them with an empty or null answer
@@ -275,34 +274,12 @@ export default function PlayQuizPage({
   
     // Prepare the payload for submission
     const payload = {
-      practiceSetId: uuid,
-      answers: formattedAnswers?.filter((answer:any) => answer !== null), // Keep all questions, even skipped ones with empty answers
+      practiceSetId: slug,
+      answers: formattedAnswers?.filter((answer) => answer !== null), // Keep all questions, even skipped ones with empty answers
     };
   
     console.log("Submitting answers:", payload);
     // Here, you would make an API call to submit the answers
-     // API call to submit the answers
-    try {
-      const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/finish-quiz/${uuid}`,
-        payload,
-        {
-          headers: {
-            Authorization: `Bearer ${Cookies.get("jwt")}`,
-          },
-        }
-      );
-
-      if (response.data.status) {
-        toast.success("Quiz submitted successfully!");
-        // Optionally redirect or display a success message here
-      } else {
-        toast.error("Error submitting quiz");
-      }
-    } catch (error) {
-      console.error("Error submitting quiz:", error);
-      toast.error("An error occurred during submission");
-    }
   };
   
   
@@ -319,8 +296,8 @@ export default function PlayQuizPage({
   };
 
   const getSkippedCount = () => {
-    return quizData?.questions
-      ? quizData.questions.length - getAnsweredCount()
+    return practiceData?.questions
+      ? practiceData.questions.length - getAnsweredCount()
       : 0;
   };
 
@@ -344,8 +321,8 @@ export default function PlayQuizPage({
 
   // Move useEffect for initializing answers for "ORD" outside of the switch statement
   useEffect(() => {
-    if (quizData?.questions) {
-      quizData.questions.forEach((question) => {
+    if (practiceData?.questions) {
+      practiceData.questions.forEach((question) => {
         if (!answers[question.id] && question.type === "ORD") {
           // Initialize answers for ordering questions if not already set
           setAnswers((prev) => ({
@@ -355,7 +332,7 @@ export default function PlayQuizPage({
         }
       });
     }
-  }, [quizData?.questions, answers]);
+  }, [practiceData?.questions, answers]);
 
   const renderQuestion = (question: Question) => {
     return (
@@ -394,32 +371,32 @@ export default function PlayQuizPage({
             ));
 
             case "MMA": // Multiple Match Answer
-              return question.options?.map((option, index) => (
-                <label
-                  key={index}
-                  className={`flex items-center space-x-3 p-4 rounded-lg cursor-pointer transition-all mb-3 ${
-                    answers[question.id]?.includes(option)
-                      ? "bg-green-200"
-                      : "bg-gray-100"
-                  } hover:bg-yellow-100`}
-                >
-                  <input
-                    type="checkbox"
-                    name={`question-${question.id}`}
-                    value={option}
-                    onChange={() => {
-                      const currentAnswers = answers[question.id] || [];
-                      const newAnswers = currentAnswers.includes(option)
-                        ? currentAnswers.filter((a) => a !== option)
-                        : [...currentAnswers, option];
-                      handleAnswerChange(question.id, newAnswers);
-                    }}
-                    checked={answers[question.id]?.includes(option) || false} // Default to false if undefined
-                    className="cursor-pointer"
-                  />
-                  <div dangerouslySetInnerHTML={{ __html: option }}></div>
-                </label>
-              ));
+  return question.options?.map((option, index) => (
+    <label
+      key={index}
+      className={`flex items-center space-x-3 p-4 rounded-lg cursor-pointer transition-all mb-3 ${
+        answers[question.id]?.includes(option)
+          ? "bg-green-200"
+          : "bg-gray-100"
+      } hover:bg-yellow-100`}
+    >
+      <input
+        type="checkbox"
+        name={`question-${question.id}`}
+        value={option}
+        onChange={() => {
+          const currentAnswers = answers[question.id] || [];
+          const newAnswers = currentAnswers.includes(option)
+            ? currentAnswers.filter((a) => a !== option)
+            : [...currentAnswers, option];
+          handleAnswerChange(question.id, newAnswers);
+        }}
+        checked={answers[question.id]?.includes(option) || false} // Default to false if undefined
+        className="cursor-pointer"
+      />
+      <div dangerouslySetInnerHTML={{ __html: option }}></div>
+    </label>
+  ));
 
 
   case "TOF": // True or False
@@ -575,7 +552,7 @@ export default function PlayQuizPage({
                               <label
                                 key={index}
                                 className={`flex items-center space-x-3 p-4 rounded-lg cursor-pointer transition-all mb-3 ${
-                                  answers[question.id]?.includes(option)
+                                  answers[question.id]?.[questionIndex] === option
                                     ? "bg-green-200"
                                     : "bg-gray-100"
                                 } hover:bg-yellow-100`}
@@ -587,11 +564,10 @@ export default function PlayQuizPage({
                                   onChange={() =>
                                     handleAnswerChange(question.id, [option], questionIndex)
                                   }
+                                  checked={answers[question.id]?.[questionIndex] === option} // Make sure the selected option is checked
                                   className="cursor-pointer"
                                 />
-                                <div
-                                  dangerouslySetInnerHTML={{ __html: option }}
-                                ></div>
+                                <div dangerouslySetInnerHTML={{ __html: option }}></div>
                               </label>
                             ))}
                           </div>
@@ -600,6 +576,7 @@ export default function PlayQuizPage({
                     ))}
                 </div>
               );
+            
 
             default:
               return <div>Unknown question type</div>;
@@ -611,7 +588,7 @@ export default function PlayQuizPage({
 
   if (loading) return <Loader />;
 
-  if (!quizData || !quizData.questions)
+  if (!practiceData || !practiceData.questions)
     return <div>No practice set data available</div>;
 
   return (
@@ -623,13 +600,13 @@ export default function PlayQuizPage({
             <div className="flex justify-between mb-4">
               <h3 className="text-2xl font-semibold text-primary">
                 Question {currentQuestionIndex + 1}/
-                {quizData.questions.length}
+                {practiceData.questions.length}
               </h3>
               <FaClock className="text-primary" size={24} />
             </div>
 
             <div className="space-y-4">
-              {renderQuestion(quizData.questions[currentQuestionIndex])}
+              {renderQuestion(practiceData.questions[currentQuestionIndex])}
             </div>
 
             <div className="flex justify-between mt-6">
@@ -641,7 +618,7 @@ export default function PlayQuizPage({
                 <FaArrowLeft className="inline mr-2" /> Previous
               </button>
 
-              {currentQuestionIndex < quizData.questions.length - 1 ? (
+              {currentQuestionIndex < practiceData.questions.length - 1 ? (
                 <button
                   className="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary-dark transition-colors"
                   onClick={handleNextQuestion}
@@ -711,7 +688,7 @@ export default function PlayQuizPage({
                 style={{
                   width: `${
                     (Object.keys(answers).length /
-                      quizData.questions.length) *
+                      practiceData.questions.length) *
                     100
                   }%`,
                 }}
@@ -721,7 +698,7 @@ export default function PlayQuizPage({
 
           {/* Question Navigation Grid */}
           <div className="grid grid-cols-5 gap-2 text-center">
-            {quizData.questions.map((question, index) => (
+            {practiceData.questions.map((question, index) => (
               <div
                 key={index}
                 className={`p-2 rounded-lg border ${
