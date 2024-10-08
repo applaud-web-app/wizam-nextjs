@@ -109,7 +109,7 @@ export default function PlayQuiz({ params }: { params: { slug: string } }) {
   // Countdown timer logic
   useEffect(() => {
     if (!quizData || submitted) return;
-
+  
     timerId = setInterval(() => {
       setTimeLeft((prev) => {
         if (prev <= 0) {
@@ -122,7 +122,7 @@ export default function PlayQuiz({ params }: { params: { slug: string } }) {
         return prev - 1;
       });
     }, 1000);
-
+  
     return () => clearInterval(timerId!); // Clean up the timer when the component unmounts
   }, [quizData, submitted]);
 
@@ -173,36 +173,40 @@ export default function PlayQuiz({ params }: { params: { slug: string } }) {
     }
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (submitted) return; // Prevent resubmission if already submitted
     setSubmitted(true); // Mark as submitted
-
     if (timerId) clearInterval(timerId); // Stop the timer when submitting manually
-
     // Structure answers in the required format for submission
     const formattedAnswers = quizData?.questions.map((question) => {
       if (question.type === "MTF") {
         // For MTF, the answers are stored as pairs
         return {
-          [question.id]: answers[question.id] || [],
+          questionId: question.id,
+          answers: answers[question.id] || [],
         };
       } else if (question.type === "EMQ") {
         // For EMQ, each sub-question has its own answer
         return {
-          [question.id]: answers[question.id] || [],
+          questionId: question.id,
+          answers: answers[question.id] || [],
         };
       } else {
         // For other question types
         return {
-          [question.id]: answers[question.id] || [], // Default to empty array if no answer
+          questionId: question.id,
+          answers: answers[question.id] || [], // Default to empty array if no answer
         };
       }
     });
-
-    // Preview the answers in the console for testing
-    console.log("Submitting answers:", formattedAnswers);
-
-    // Send the formattedAnswers object to the backend here
+    // Prepare the payload for submission
+    const payload = {
+      quizId: slug, // Assuming slug holds the quiz ID or relevant identifier
+      answers: formattedAnswers,
+    };
+    // Log the payload for testing
+    console.log("Submitting answers:", payload);
+  
   };
 
   const formatTimeLeft = (time: number) => {
