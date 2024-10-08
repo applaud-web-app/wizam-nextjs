@@ -40,7 +40,7 @@ interface QuizData {
   finish_button: string;
 }
 
-export default function PlayExam({ params }: { params: { slug: string } }) {
+export default function PlayQuiz({ params }: { params: { slug: string } }) {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState<number>(0);
   const [answers, setAnswers] = useState<{ [key: number]: string[] }>({});
   const [timeLeft, setTimeLeft] = useState<number>(1800); // Timer (in seconds)
@@ -49,13 +49,15 @@ export default function PlayExam({ params }: { params: { slug: string } }) {
   const [quizData, setQuiz] = useState<QuizData | null>(null);
   const router = useRouter();
   const [loading, setLoading] = useState<boolean>(true);
+  const [uuid, setUuid] = useState<string | null>(null);
+  let timerId: NodeJS.Timeout | null = null; // Variable to store the timer reference
 
   useEffect(() => {
     const { slug } = params;
     setSlug(slug);
     const category = Cookies.get("category_id");
-
-    const fetchExams = async () => {
+  
+    const fetchQuiz = async () => {
       try {
         const response = await axios.get(
           `${process.env.NEXT_PUBLIC_API_URL}/play-quiz/${slug}`,
@@ -67,13 +69,11 @@ export default function PlayExam({ params }: { params: { slug: string } }) {
           }
         );
         if (response.data.status) {
-          if (
-            response.data.status &&
-            response.data.message === "Quiz Timed Out"
-          ) {
+          if (response.data.message === "Quiz Timed Out") {
             toast.success(response.data.message);
-            const examId = response.data.data;
-            console.log(examId.uuid); // EXAM PREVIEW URL
+            const quizId = response.data.data;
+            console.log(quizId.uuid); // Console log the UUID
+            setUuid(quizId.uuid);
             setSubmitted(true);
           } else {
             const fetchQuizData = response.data.data;
@@ -86,21 +86,22 @@ export default function PlayExam({ params }: { params: { slug: string } }) {
               finish_button: fetchQuizData.finish_button,
             };
             setQuiz(Item);
+            setUuid(fetchQuizData.uuid);
             // Convert duration to seconds
             setTimeLeft(Math.round(parseFloat(fetchQuizData.duration) * 60));
           }
         } else {
-          toast.error("No exams found for this category");
+          toast.error("No quizzes found for this category");
         }
       } catch (error) {
-        console.error("Error fetching exams:", error);
-        toast.error("An error occurred while fetching exams");
+        console.error("Error fetching quizzes:", error);
+        toast.error("An error occurred while fetching quizzes");
       } finally {
         setLoading(false);
       }
     };
-
-    fetchExams();
+  
+    fetchQuiz();
   }, [params, router]);
 
   useEffect(() => {
@@ -115,28 +116,30 @@ export default function PlayExam({ params }: { params: { slug: string } }) {
 
   // Countdown timer logic
   useEffect(() => {
-    if (!quizData) return;
+    if (!quizData || submitted) return;
 
-    const intervalId = setInterval(() => {
+    timerId = setInterval(() => {
       setTimeLeft((prev) => {
         if (prev <= 0) {
-          clearInterval(intervalId);
-          handleSubmit(); // Auto-submit when time is up
+          if (!submitted) {
+            clearInterval(timerId!); // Clear the timer first
+            handleSubmit(); // Auto-submit when time is up
+          }
           return 0;
         }
         return prev - 1;
       });
     }, 1000);
 
-    return () => clearInterval(intervalId);
-  }, [quizData]);
+    return () => clearInterval(timerId!); // Clean up the timer when the component unmounts
+  }, [quizData, submitted]);
 
   const handleAnswerChange = (
     questionId: number,
     answer: string[],
     subQuestionIndex?: number // for handling sub-questions like in EMQ
   ) => {
-    setAnswers((prev:any) => {
+    setAnswers((prev: any) => {
       const existingAnswers = prev[questionId] || [];
   
       if (typeof subQuestionIndex === "number") {
@@ -165,7 +168,7 @@ export default function PlayExam({ params }: { params: { slug: string } }) {
       }
     });
   };
-  
+
   const handleNextQuestion = () => {
     if (currentQuestionIndex < (quizData?.questions.length || 0) - 1) {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
@@ -179,7 +182,10 @@ export default function PlayExam({ params }: { params: { slug: string } }) {
   };
 
   const handleSubmit = () => {
-    setSubmitted(true);
+    if (submitted) return; // Prevent resubmission if already submitted
+    setSubmitted(true); // Mark as submitted
+
+    if (timerId) clearInterval(timerId); // Stop the timer when submitting manually
 
     // Structure answers in the required format for submission
     const formattedAnswers = quizData?.questions.map((question) => {
@@ -243,7 +249,6 @@ export default function PlayExam({ params }: { params: { slug: string } }) {
 
     handleAnswerChange(questionId, reorderedAnswers);
   };
-
   const renderQuestion = (question: Question) => {
     return (
       <div>
@@ -380,8 +385,8 @@ export default function PlayExam({ params }: { params: { slug: string } }) {
                             {question.options
                               ?.slice(question.options.length / 2)
                               .map((match, j) => (
-                                <option key={j} value={match}>
-                                  <span  dangerouslySetInnerHTML={{ __html: match }}></span>
+                                <option key={j} value={match} dangerouslySetInnerHTML={{ __html: match }}>
+                                  
                                 </option>
                               ))}
                           </select>
@@ -512,7 +517,7 @@ export default function PlayExam({ params }: { params: { slug: string } }) {
 
   return (
     <div className="dashboard-page flex flex-col md:flex-row gap-6">
-      {/* Main Exam Content */}
+      {/* Main Quiz Content */}
       <div className="flex-1 lg:p-6 bg-white rounded-lg shadow-sm p-4">
         {!submitted ? (
           <>
@@ -548,7 +553,7 @@ export default function PlayExam({ params }: { params: { slug: string } }) {
                   className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors"
                   onClick={handleSubmit}
                 >
-                  Submit Exam
+                  Submit Quiz
                 </button>
               )}
             </div>
@@ -560,90 +565,90 @@ export default function PlayExam({ params }: { params: { slug: string } }) {
               size={42}
             />
             <h1 className="text-3xl font-bold mb-4 text-green-600">
-              Exam Submitted
+              Quiz Submitted
             </h1>
             <p className="text-lg text-gray-600">
-              Thank you for completing the exam. Your answers have been
+              Thank you for completing the quiz. Your answers have been
               submitted successfully!
             </p>
           </div>
         )}
       </div>
 
-     {/* Sidebar for Timer and Progress */}
-{!submitted && timeLeft > 0 && (
-  <div className="w-full md:w-1/3 bg-white shadow-sm p-4 lg:p-6 rounded-lg">
-    {/* Time Remaining */}
-    <div className="mb-6 text-center">
-      <h3 className="text-gray-600 font-semibold">Time Remaining</h3>
-      <p className="text-3xl text-orange-600 font-semibold">
-        {formatTimeLeft(timeLeft)}
-      </p>
-    </div>
+      {/* Sidebar for Timer and Progress */}
+      {!submitted && timeLeft > 0 && (
+        <div className="w-full md:w-1/3 bg-white shadow-sm p-4 lg:p-6 rounded-lg">
+          {/* Time Remaining */}
+          <div className="mb-6 text-center">
+            <h3 className="text-gray-600 font-semibold">Time Remaining</h3>
+            <p className="text-3xl text-orange-600 font-semibold">
+              {formatTimeLeft(timeLeft)}
+            </p>
+          </div>
 
-    {/* Answered and Skipped Count */}
-    <div className="mb-6 text-center">
-      <div className="flex justify-around">
-        <div className="flex items-center space-x-2">
-          <FaRegSmile className="text-green-500" size={20} />
-          <span className="text-gray-700">
-            Attempted: {getAnsweredCount()}
-          </span>
+          {/* Answered and Skipped Count */}
+          <div className="mb-6 text-center">
+            <div className="flex justify-around">
+              <div className="flex items-center space-x-2">
+                <FaRegSmile className="text-green-500" size={20} />
+                <span className="text-gray-700">
+                  Attempted: {getAnsweredCount()}
+                </span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <FaRegFrown className="text-yellow-500" size={20} />
+                <span className="text-gray-700">Skipped: {getSkippedCount()}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Progress Bar */}
+          <div className="mb-6">
+            <p className="font-semibold text-gray-700 mb-2">Progress</p>
+            <div className="h-2 w-full bg-gray-200 rounded-lg overflow-hidden mt-2">
+              <div
+                className="h-full bg-primary"
+                style={{
+                  width: `${
+                    (Object.keys(answers).length / quizData.questions.length) * 100
+                  }%`,
+                }}
+              ></div>
+            </div>
+          </div>
+
+          {/* Question Navigation Grid */}
+          <div className="grid grid-cols-5 gap-2 text-center">
+            {quizData.questions.map((question, index) => (
+              <div
+                key={index}
+                className={`p-2 rounded-lg border cursor-pointer ${
+                  currentQuestionIndex === index
+                    ? "bg-primary text-white"
+                    : answers[question.id]
+                    ? "bg-green-200 text-black"
+                    : "bg-yellow-200 text-black"
+                }`}
+                onClick={() => setCurrentQuestionIndex(index)}
+              >
+                {index + 1}
+              </div>
+            ))}
+          </div>
+
+          {/* Quiz Instructions */}
+          <div className="mt-3 ">
+            <h3 className="text-lg text-gray-700 font-semibold">Quiz Guide</h3>
+            <p className="text-sm text-gray-500">
+              - Answer all questions to the best of your ability.
+              <br />
+              - You can navigate between questions.
+              <br />
+              - Make sure to submit your quiz before time runs out.
+            </p>
+          </div>
         </div>
-        <div className="flex items-center space-x-2">
-          <FaRegFrown className="text-yellow-500" size={20} />
-          <span className="text-gray-700">Skipped: {getSkippedCount()}</span>
-        </div>
-      </div>
-    </div>
-
-    {/* Progress Bar */}
-    <div className="mb-6">
-      <p className="font-semibold text-gray-700 mb-2">Progress</p>
-      <div className="h-2 w-full bg-gray-200 rounded-lg overflow-hidden mt-2">
-        <div
-          className="h-full bg-primary"
-          style={{
-            width: `${
-              (Object.keys(answers).length / quizData.questions.length) * 100
-            }%`,
-          }}
-        ></div>
-      </div>
-    </div>
-
-    {/* Question Navigation Grid */}
-    <div className="grid grid-cols-5 gap-2 text-center">
-      {quizData.questions.map((question, index) => (
-        <div
-          key={index}
-          className={`p-2 rounded-lg border cursor-pointer ${
-            currentQuestionIndex === index
-              ? "bg-primary text-white"
-              : answers[question.id]
-              ? "bg-green-200 text-black"
-              : "bg-yellow-200 text-black"
-          }`}
-          onClick={() => setCurrentQuestionIndex(index)}
-        >
-          {index + 1}
-        </div>
-      ))}
-    </div>
-
-    {/* Exam Instructions */}
-    <div className="mt-3 ">
-      <h3 className="text-lg text-gray-700 font-semibold">Exam Guide</h3>
-      <p className="text-sm text-gray-500">
-        - Answer all questions to the best of your ability.
-        <br />
-        - You can navigate between questions.
-        <br />
-        - Make sure to submit your exam before time runs out.
-      </p>
-    </div>
-  </div>
-)}
+      )}
 
     </div>
   );
