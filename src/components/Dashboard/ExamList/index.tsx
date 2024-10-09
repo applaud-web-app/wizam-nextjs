@@ -1,28 +1,64 @@
-import { FiArrowRight } from "react-icons/fi"; // Import the arrow icon from react-icons
+"use client";
+
+import { useState, useEffect } from "react";
+import axios from "axios";
+import Cookies from "js-cookie";
+import { FiArrowRight } from "react-icons/fi";
+import Link from "next/link";
+
+// Define the TypeScript interface for the exam object
+interface Exam {
+  title: string | null;
+  duration_mode: string | null;
+  exam_duration: string | null;
+  is_free: number | null;
+  price: string | null;
+  total_questions: number | null;
+  total_marks: string | null;
+  total_time: string | null;
+}
 
 export default function ExamList() {
-  // Sample data for the table
-  const exams = [
-    { title: "Math Exam", available: "Nov 1 - Nov 30", duration: "2 hrs", fee: "$50", questions: 50, status: "In Progress" },
-    { title: "Science Quiz", available: "Fixed - Nov 15, 2023", duration: "1 hr", fee: "$30", questions: 30, status: "Completed" },
-    { title: "History Test", available: "Dec 1 - Dec 31", duration: "1.5 hrs", fee: "$40", questions: 40, status: "Pending" },
-    { title: "English Exam", available: "Nov 20 - Dec 20", duration: "2 hrs", fee: "$45", questions: 45, status: "In Progress" },
-    { title: "Geography Quiz", available: "Fixed - Dec 10, 2023", duration: "1 hr", fee: "$25", questions: 25, status: "Completed" },
-  ];
+  const [exams, setExams] = useState<Exam[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
-  // Function to return the appropriate badge based on status
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "In Progress":
-        return <span className="bg-yellow-100 text-yellow-800 text-xs font-semibold px-2.5 py-0.5 rounded">In Progress</span>;
-      case "Completed":
-        return <span className="bg-green-100 text-green-800 text-xs font-semibold px-2.5 py-0.5 rounded">Completed</span>;
-      case "Pending":
-        return <span className="bg-red-100 text-red-800 text-xs font-semibold px-2.5 py-0.5 rounded">Pending</span>;
-      default:
-        return <span className="bg-gray-100 text-gray-800 text-xs font-semibold px-2.5 py-0.5 rounded">Unknown</span>;
-    }
-  };
+  // Fetch exams when the component is mounted
+  useEffect(() => {
+    const fetchExams = async () => {
+      try {
+        const jwt = Cookies.get("jwt");
+        const category_id = Cookies.get("category_id");
+
+        if (!jwt || !category_id) {
+          setError("Authentication or category data is missing.");
+          return;
+        }
+
+        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/exam-all`, {
+          headers: {
+            Authorization: `Bearer ${jwt}`,
+          },
+          params: {
+            category: category_id,
+          },
+        });
+
+        if (response.data && response.data.data) {
+          setExams(response.data.data); // Set the exams data in state
+        } else {
+          setError("Invalid data format received from the server.");
+        }
+      } catch (error) {
+        setError("Failed to fetch exams from the server.");
+      }
+    };
+
+    fetchExams();
+  }, []);
+
+  if (error) {
+    return <div className="text-red-500">{error}</div>;
+  }
 
   return (
     <div className="p-5 bg-white shadow-sm rounded-lg mb-8">
@@ -45,23 +81,29 @@ export default function ExamList() {
             <tr>
               <th className="p-3 text-left rounded-tl-lg">S.No</th>
               <th className="p-3 text-left">Exam Title</th>
-              <th className="p-3 text-left">Available Between/Fixed (EST)</th>
-              <th className="p-3 text-left">Duration</th>
-              <th className="p-3 text-left">Fee</th>
-              <th className="p-3 text-left">Questions</th>
-              <th className="p-3 text-left rounded-tr-lg">Status</th>
+              <th className="p-3 text-left">Duration Mode</th>
+              <th className="p-3 text-left">Is Free</th>
+              <th className="p-3 text-left">Price</th>
+              <th className="p-3 text-left">Total Questions</th>
+              <th className="p-3 text-left">Total Marks</th>
+              <th className="p-3 text-left">Total Time</th>
+              <th className="p-3 text-left rounded-tr-lg">Actions</th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
             {exams.map((exam, index) => (
               <tr key={index} className="hover:bg-gray-50">
                 <td className="p-4">{index + 1}</td>
-                <td className="p-4">{exam.title}</td>
-                <td className="p-4">{exam.available}</td>
-                <td className="p-4">{exam.duration}</td>
-                <td className="p-4">{exam.fee}</td>
-                <td className="p-4">{exam.questions}</td>
-                <td className="p-4">{getStatusBadge(exam.status)}</td>
+                <td className="p-4">{exam.title || '-'}</td> 
+                <td className="p-4">{exam.duration_mode || '-'}</td> 
+                <td className="p-4">{exam.is_free !== null ? (exam.is_free === 1 ? 'Yes' : 'No') : '-'}</td> 
+                <td className="p-4">{exam.is_free === 1 || !exam.price ? 'Free' : `$${exam.price}` || '-'}</td> 
+                <td className="p-4">{exam.total_questions !== null ? exam.total_questions : '-'}</td> 
+                <td className="p-4">{exam.total_marks || '-'}</td> 
+                <td className="p-4">{exam.total_time || '-'}</td> 
+                <td className="p-4">
+                  <Link href={`/dashboard/exam/${exam.title?.toLowerCase().replace(/\s+/g, '-')}`} className="text-primary font-semibold hover:underline">View Exam</Link>
+                </td>
               </tr>
             ))}
           </tbody>
