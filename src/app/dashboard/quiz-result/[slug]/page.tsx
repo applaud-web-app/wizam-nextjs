@@ -92,7 +92,7 @@ const QuizResult = ({ params }: QuizResultProps) => {
             skippedCount: resultData.result.skipped,
             marks: parseInt(resultData.result.marks),
             status: resultData.result.status,
-            timeTaken: resultData.result.timeTaken,
+            timeTaken: resultData.result.timeTaken, 
           });
         } else {
           toast.error("No quiz results found for this category");
@@ -116,12 +116,12 @@ const QuizResult = ({ params }: QuizResultProps) => {
   const percentageCorrect = userQuizResult.correctCount / totalQuestions;
   const passed = percentageCorrect >= passingScore;
 
-  const formatTimeTaken = (time?: number) => {
-    if (!time) return "N/A";
-    const minutes = Math.floor(time / 60);
-    const seconds = time % 60;
-    return `${minutes}m ${seconds}s`;
-  };
+// Time formatting function for minutes and seconds
+const formatTimeTaken = (timeInMinutes?: number) => {
+  if (!timeInMinutes) return "N/A";
+ 
+  return `${timeInMinutes} min`; // Display minutes and seconds
+}; 
 
   const isUserAnswerIncludes = (option: string, userAnswer?: string[] | string | Record<string, string>) => {
     if (Array.isArray(userAnswer)) {
@@ -242,30 +242,32 @@ const QuizResult = ({ params }: QuizResultProps) => {
             </ul>
           );
         
-        case "EMQ": // Extended Matching Questions
+          case "EMQ": // Extended Matching Questions
           return (
             <div>
               {Array.isArray(question.question) &&
-                question.question.map((subQuestion, questionIndex) => (
-                  <div key={questionIndex} className="mb-4">
-                    <p className="font-medium" dangerouslySetInnerHTML={{ __html: subQuestion }} />
-                    {question.options?.map((option, index) => (
-                      <div
-                        key={index}
-                        className={`p-4 rounded-lg mb-3 ${
-                          Array.isArray(question.userAnswer) && question.userAnswer.includes(String(option))
-                            ? "bg-green-200"
-                            : "bg-gray-100"
-                        }`}
-                      >
-                        <div dangerouslySetInnerHTML={{ __html: String(option) }} />
-                      </div>
-                    ))}
-
-                  </div>
-                ))}
+                question.question
+                  .slice(1) // Skip the first question by slicing the array
+                  .map((subQuestion, questionIndex) => (
+                    <div key={questionIndex + 1} className="mb-4"> {/* Adjust key to start at 1 */}
+                      <p className="font-medium" dangerouslySetInnerHTML={{ __html: subQuestion }} />
+                      {question.options?.map((option, index) => (
+                        <div
+                          key={index}
+                          className={`p-4 rounded-lg mb-3 ${
+                            Array.isArray(question.userAnswer) && question.userAnswer.includes(String(option))
+                              ? "bg-green-200"
+                              : "bg-gray-100"
+                          }`}
+                        >
+                          <div dangerouslySetInnerHTML={{ __html: String(option) }} />
+                        </div>
+                      ))}
+                    </div>
+                  ))}
             </div>
           );
+        
         default:
           return <p>Unknown question type</p>;
       }
@@ -321,7 +323,7 @@ const QuizResult = ({ params }: QuizResultProps) => {
         </div>
 
         {/* User's Quiz Result Breakdown */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-5 mb-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5 mb-5">
           <div className="p-6 border rounded-lg bg-white text-center shadow-sm">
             <h3 className="text-xl font-semibold mb-2">Total Questions</h3>
             <p className="text-2xl">{totalQuestions}</p>
@@ -342,10 +344,10 @@ const QuizResult = ({ params }: QuizResultProps) => {
             <h3 className="text-xl font-semibold mb-2">Marks</h3>
             <p className="text-2xl">{userQuizResult.marks}</p>
           </div>
-          {/* <div className="p-6 border rounded-lg bg-white text-center shadow-sm">
+          <div className="p-6 border rounded-lg bg-white text-center shadow-sm">
             <h3 className="text-xl font-semibold mb-2">Time Taken</h3>
             <p className="text-2xl">{formatTimeTaken(userQuizResult.timeTaken)}</p>
-          </div> */}
+          </div>
         </div>
 
         {/* Render Questions */}
