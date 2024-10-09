@@ -10,10 +10,13 @@ import {
   FaRegSmile,
   FaRegFrown,
 } from "react-icons/fa";
+import { AiOutlineArrowRight } from 'react-icons/ai'; // For icons
+
 import Cookies from "js-cookie";
 import { useRouter } from "next/navigation";
 import axios from "axios";
 import { toast } from "react-toastify";
+import Link from "next/link";
 
 // Option interface
 interface Option {
@@ -49,6 +52,8 @@ export default function PracticeTestDetailPage({
   const [practiceData, setPracticeData] = useState<PracticeData | null>(null);
   const router = useRouter();
   const [loading, setLoading] = useState<boolean>(true);
+  const [uuid, setUuid] = useState<string | null>(null);
+
   let timerId: NodeJS.Timeout | null = null; // Variable to store the timer reference
 
   useEffect(() => {
@@ -69,6 +74,7 @@ export default function PracticeTestDetailPage({
         );
         if (response.data.status) {
           const fetchPracticeData = response.data.data;
+          setUuid(fetchPracticeData.uuid);
           setPracticeData({
             title: fetchPracticeData.title,
             questions: fetchPracticeData.questions,
@@ -274,12 +280,34 @@ export default function PracticeTestDetailPage({
   
     // Prepare the payload for submission
     const payload = {
-      practiceSetId: slug,
-      answers: formattedAnswers?.filter((answer) => answer !== null), // Keep all questions, even skipped ones with empty answers
+      practiceSetId: uuid,
+      answers: formattedAnswers?.filter((answer:any) => answer !== null), // Keep all questions, even skipped ones with empty answers
     };
   
     console.log("Submitting answers:", payload);
     // Here, you would make an API call to submit the answers
+     // API call to submit the answers
+    try {
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_API_URL}/finish-practice-set/${uuid}`,
+        payload,
+        {
+          headers: {
+            Authorization: `Bearer ${Cookies.get("jwt")}`,
+          },
+        }
+      );
+
+      if (response.data.status) {
+        toast.success("Quiz submitted successfully!");
+        // Optionally redirect or display a success message here
+      } else {
+        toast.error("Error submitting quiz");
+      }
+    } catch (error) {
+      console.error("Error submitting quiz:", error);
+      toast.error("An error occurred during submission");
+    }
   };
   
   
@@ -648,7 +676,17 @@ export default function PracticeTestDetailPage({
               Thank you for completing the practice test. Your answers have been
               submitted successfully!
             </p>
+            <div>
+            <Link
+                href={`/dashboard`}
+                className="mt-4  text-center w-full bg-primary text-white font-semibold py-2 px-4 rounded hover:bg-primary-dark transition-colors flex justify-center items-center"
+              >
+                Go to Result
+                <AiOutlineArrowRight className="ml-2" /> {/* Add the icon here */}
+              </Link>
+            </div>
           </div>
+          
         )}
       </div>
 

@@ -93,7 +93,7 @@ export default function Sidebar({ isSyllabusEnabled, isOpen, toggleSidebar }: Si
                 <MdOutlinePayment className="mr-3" /> My Payments
               </Link>
               <Link href="/logout" className="flex items-center px-4 py-2 hover:bg-red-600 rounded-md transition">
-               <MdLogout /> Logout
+               <MdLogout className="mr-3"/> Logout
               </Link>
             </nav>
           </div>

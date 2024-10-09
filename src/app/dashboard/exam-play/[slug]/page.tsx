@@ -1,6 +1,8 @@
 "use client";
 
 import Loader from "@/components/Common/Loader";
+import { AiOutlineArrowRight } from 'react-icons/ai'; // For icons
+
 import { useState, useEffect } from "react";
 import {
   FaCheckCircle,
@@ -10,100 +12,145 @@ import {
   FaRegSmile,
   FaRegFrown,
 } from "react-icons/fa";
-import Cookies from 'js-cookie'; // Access cookies
-import { useRouter } from "next/navigation"; // Use router to redirect
-import axios from 'axios'; // Ensure axios is installed
-import { toast } from 'react-toastify'; // Optional: For notifications
+import Cookies from "js-cookie";
+import { useRouter } from "next/navigation";
+import axios from "axios";
+import { toast } from "react-toastify";
+import Link from 'next/link';
 
 // Option interface
 interface Option {
   text: string;
-  image?: string; // Optional image for options
 }
 
 // Question interface
 interface Question {
   id: number;
-  type: string; // "single", "multiple", "truefalse", "short", "match", "sequence", "fill", "extended"
-  question: string;
-  image?: string; // Optional image for the question
-  options?: Option[];
-  blanks?: { position: number; value?: string }[]; // for fill in the blanks
+  type: string; // Question type (MSA, MMA, TOF, etc.)
+  question: string | string[]; // The question text
+  options?: string[]; // The answer options, if applicable (for multiple-choice, matching, etc.)
 }
 
 // ExamData interface
-// interface ExamData {
-//   title: string;
-//   questions: Question[];
-//   duration: string; // e.g., "30 mins"
-// }
-
-interface QuizData {
+interface ExamData {
   title: string;
   questions: Question[];
-  duration: string; // e.g., "30 mins"
-  points: string; 
-  question_view: string; 
-  finish_button: string; 
+  duration: string;
+  points: number;
 }
 
-// Main PlayExam Component
-export default function PlayExam({
+export default function PlayExamPage({
   params,
 }: {
   params: { slug: string };
 }) {
-
-  // const [examData, setExamData] = useState<ExamData | null>(null);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState<number>(0);
-  const [answers, setAnswers] = useState<{ [key: number]: string[] }>({});
-  const [timeLeft, setTimeLeft] = useState<number>(1800); // Timer (in seconds, 30 minutes)
+  const [answers, setAnswers] = useState<{ [key: number]: string[] | null }>({});
+  const [timeLeft, setTimeLeft] = useState<number>(1800); // Timer (in seconds)
   const [submitted, setSubmitted] = useState<boolean>(false);
   const [slug, setSlug] = useState<string | null>(null);
-  const [quizData, setQuiz] = useState<QuizData | null>(null);
-  const router = useRouter(); // For redirecting to other pages
+  const [examData, setExamData] = useState<ExamData | null>(null);
+  const router = useRouter();
   const [loading, setLoading] = useState<boolean>(true);
+  const [uuid, setUuid] = useState<string | null>(null);
+  let timerId: NodeJS.Timeout | null = null;
 
   useEffect(() => {
     const { slug } = params;
     setSlug(slug);
-    const category = Cookies.get("category_id"); // Get category from cookies
+    const category = Cookies.get("category_id");
 
-    // Fetch exams from API based on slug and category
-    const fetchExams = async () => {
+    const fetchExamSet = async () => {
       try {
-        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/play-quiz/${slug}`, {
-          params: { category }, // Send slug and category as query params
-          headers: {
-            Authorization: `Bearer ${Cookies.get("jwt")}`, // JWT token from cookies
-          },
-        });
-
+        const response = await axios.get(
+          `${process.env.NEXT_PUBLIC_API_URL}/play-exam/${slug}`,
+          {
+            params: { category },
+            headers: {
+              Authorization: `Bearer ${Cookies.get("jwt")}`,
+            },
+          }
+        );
         if (response.data.status) {
-          const fetchQuizData = response.data.data[slug] || [];
-            setQuiz(fetchQuizData);
+          const fetchExamData = response.data.data;
+          setUuid(fetchExamData.uuid);
+          setExamData({
+            title: fetchExamData.title,
+            questions: fetchExamData.questions,
+            duration: fetchExamData.duration,
+            points: fetchExamData.points,
+          });
+          setTimeLeft(Math.round(parseFloat(fetchExamData.duration) * 60));
         } else {
-          toast.error('No exams found for this category');
-          // router.push('/dashboard/all-exams');
+          toast.error("No exam found for this category");
         }
       } catch (error) {
-        console.error('Error fetching exams:', error);
-        toast.error('An error occurred while fetching exams');
-        // router.push('/dashboard/all-exams');
+        console.error("Error fetching exam:", error);
+        toast.error("An error occurred while fetching the exam");
       } finally {
         setLoading(false);
       }
     };
 
-    fetchExams();
+    fetchExamSet();
   }, [params, router]);
 
-  const handleAnswerChange = (questionId: number, answer: string[]) => {
-    setAnswers((prev) => ({ ...prev, [questionId]: answer }));
+  // Countdown timer logic
+  useEffect(() => {
+    if (!examData || submitted) return;
+
+    timerId = setInterval(() => {
+      setTimeLeft((prev) => {
+        if (prev <= 0) {
+          if (!submitted) {
+            clearInterval(timerId!);
+            handleSubmit();
+          }
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timerId!);
+  }, [examData, submitted]);
+
+  const handleAnswerChange = (
+    questionId: number,
+    answer: string[],
+    subQuestionIndex?: number // for handling sub-questions like in EMQ
+  ) => {
+    setAnswers((prev: any) => {
+      const existingAnswers = { ...prev };
+
+      // Handle sub-questions (like in EMQ)
+      if (typeof subQuestionIndex === "number") {
+        const updatedSubAnswers = existingAnswers[questionId] || [];
+        updatedSubAnswers[subQuestionIndex] = answer[0];
+        existingAnswers[questionId] = updatedSubAnswers;
+      } else if (answer.length === 2) {
+        // For MTF, handle pairs of answers
+        const updatedPairs = [...(existingAnswers[questionId] || [])];
+        const existingIndex = updatedPairs.findIndex(
+          (pair) => pair[0] === answer[0]
+        );
+
+        if (existingIndex > -1) {
+          updatedPairs[existingIndex] = answer;
+        } else {
+          updatedPairs.push(answer);
+        }
+        existingAnswers[questionId] = updatedPairs;
+      } else {
+        existingAnswers[questionId] = answer;
+      }
+
+      return existingAnswers;
+    });
   };
 
   const handleNextQuestion = () => {
-    if (currentQuestionIndex < (quizData?.questions.length || 0) - 1) {
+    if (examData?.questions && currentQuestionIndex < examData.questions.length - 1) {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
     }
   };
@@ -114,8 +161,133 @@ export default function PlayExam({
     }
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
+    if (submitted) return;
     setSubmitted(true);
+    if (timerId) clearInterval(timerId);
+
+    const formattedAnswers = examData?.questions.map((question: Question) => {
+      const userAnswer = answers[question.id];
+
+      if (!userAnswer || userAnswer.length === 0) {
+        return {
+          id: question.id,
+          type: question.type,
+          answer: [],
+        };
+      }
+
+      switch (question.type) {
+        case "MSA":
+          return {
+            id: question.id,
+            type: question.type,
+            answer: question.options
+              ? question.options.indexOf(userAnswer[0]) + 1
+              : 0,
+          };
+
+        case "MMA":
+          return {
+            id: question.id,
+            type: question.type,
+            answer: userAnswer.map((ans: string) =>
+              question.options ? question.options.indexOf(ans) + 1 : 0
+            ),
+          };
+
+        case "TOF":
+          return {
+            id: question.id,
+            type: question.type,
+            answer: userAnswer[0] === "true" ? 1 : 2,
+          };
+
+        case "SAQ":
+          return {
+            id: question.id,
+            type: question.type,
+            answer: userAnswer[0],
+          };
+
+        case "FIB":
+          return {
+            id: question.id,
+            type: question.type,
+            answer: Array.isArray(userAnswer)
+              ? userAnswer.map((ans) => (typeof ans === "string" ? ans : String(ans)))
+              : [],
+          };
+
+        case "MTF":
+          const matches: { [key: number]: string } = {};
+          if (Array.isArray(userAnswer) && userAnswer.every(pair => Array.isArray(pair) && pair.length === 2)) {
+            (userAnswer as unknown as [string, string][]).forEach((pair: [string, string]) => {
+              if (question.options) {
+                const termIndex = question.options.indexOf(pair[0]) + 1;
+                matches[termIndex] = pair[1];
+              }
+            });
+          }
+          return {
+            id: question.id,
+            type: question.type,
+            answer: matches,
+          };
+
+        case "ORD":
+          return {
+            id: question.id,
+            type: question.type,
+            answer: userAnswer.map((opt: string) =>
+              question.options ? question.options.indexOf(opt) : -1
+            ),
+          };
+
+        case "EMQ":
+          const filteredAnswers = userAnswer
+            .map((ans: string, index: number) => {
+              return ans ? (question.options ? question.options.indexOf(ans) + 1 : null) : null;
+            })
+            .filter((ans) => ans !== null);
+          return {
+            id: question.id,
+            type: question.type,
+            answer: filteredAnswers.length > 0 ? filteredAnswers : [],
+          };
+
+        default:
+          return null;
+      }
+    });
+
+    const payload = {
+      examId: uuid,
+      answers: formattedAnswers?.filter((answer: any) => answer !== null),
+    };
+
+    console.log("Submitting answers:", payload);
+    // API call to submit the answers
+    try {
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_API_URL}/finish-exam/${uuid}`,
+        payload,
+        {
+          headers: {
+            Authorization: `Bearer ${Cookies.get("jwt")}`,
+          },
+        }
+      );
+
+      if (response.data.status) {
+        toast.success("Exam submitted successfully!");
+      } else {
+        toast.error("Error submitting exam");
+      }
+    } catch (error) {
+      console.error("Error submitting exam:", error);
+      toast.error("An error occurred during submission");
+    }
   };
 
   const formatTimeLeft = (time: number) => {
@@ -129,55 +301,62 @@ export default function PlayExam({
   };
 
   const getSkippedCount = () => {
-    return quizData?.questions.length
-      ? quizData.questions.length - getAnsweredCount()
+    return examData?.questions
+      ? examData.questions.length - getAnsweredCount()
       : 0;
   };
 
-  const moveItem = (questionId: number, fromIndex: number, toIndex: number) => {
-    const currentAnswers = answers[questionId] || quizData?.questions[questionId]?.options?.map((opt) => opt.text) || [];
+  const moveItem = (
+    questionId: number,
+    fromIndex: number,
+    toIndex: number
+  ) => {
+    const currentAnswers = answers[questionId] || [];
 
     if (toIndex < 0 || toIndex >= currentAnswers.length) {
-      return; // Prevent moving out of bounds
+      return;
     }
 
     const reorderedAnswers = [...currentAnswers];
-    
-    // Move the item
     const [movedItem] = reorderedAnswers.splice(fromIndex, 1);
     reorderedAnswers.splice(toIndex, 0, movedItem);
 
     handleAnswerChange(questionId, reorderedAnswers);
   };
 
-  const renderQuestion = (question: Question) => {
-    // Initialize answers for sequence questions if not yet answered
-    if (question.type === "sequence" && !answers[question.id]) {
-      setAnswers((prev) => ({
-        ...prev,
-        [question.id]: question.options?.map((opt) => opt.text) || [],
-      }));
+  useEffect(() => {
+    if (examData?.questions) {
+      examData.questions.forEach((question) => {
+        if (!answers[question.id] && question.type === "ORD") {
+          setAnswers((prev) => ({
+            ...prev,
+            [question.id]: question.options || [],
+          }));
+        }
+      });
     }
+  }, [examData?.questions, answers]);
 
+  const renderQuestion = (question: Question) => {
     return (
       <div>
-        {question.image && (
-          <img
-            src={question.image}
-            alt="Question related"
-            className="w-full h-48 object-cover rounded-md mb-4"
-          />
-        )}
-        <p className="text-lg mb-4 font-medium">{question.question}</p>
+        <p
+          className="mb-4"
+          dangerouslySetInnerHTML={{
+            __html: Array.isArray(question.question)
+              ? question.question[0]
+              : question.question,
+          }}
+        ></p>
 
         {(() => {
           switch (question.type) {
-            case "single":
+            case "MSA":
               return question.options?.map((option, index) => (
                 <label
                   key={index}
                   className={`flex items-center space-x-3 p-4 rounded-lg cursor-pointer transition-all mb-3 ${
-                    answers[question.id]?.includes(option.text)
+                    answers[question.id]?.includes(option)
                       ? "bg-green-200"
                       : "bg-gray-100"
                   } hover:bg-yellow-100`}
@@ -185,21 +364,21 @@ export default function PlayExam({
                   <input
                     type="radio"
                     name={`question-${question.id}`}
-                    value={option.text}
-                    checked={answers[question.id]?.includes(option.text)}
-                    onChange={() => handleAnswerChange(question.id, [option.text])}
+                    value={option}
+                    onChange={() => handleAnswerChange(question.id, [option])}
+                    checked={answers[question.id]?.includes(option) || false}
                     className="cursor-pointer"
                   />
-                  <span>{option.text}</span>
+                  <div dangerouslySetInnerHTML={{ __html: option }}></div>
                 </label>
               ));
 
-            case "multiple":
+            case "MMA":
               return question.options?.map((option, index) => (
                 <label
                   key={index}
                   className={`flex items-center space-x-3 p-4 rounded-lg cursor-pointer transition-all mb-3 ${
-                    answers[question.id]?.includes(option.text)
+                    answers[question.id]?.includes(option)
                       ? "bg-green-200"
                       : "bg-gray-100"
                   } hover:bg-yellow-100`}
@@ -207,22 +386,22 @@ export default function PlayExam({
                   <input
                     type="checkbox"
                     name={`question-${question.id}`}
-                    value={option.text}
-                    checked={answers[question.id]?.includes(option.text)}
+                    value={option}
                     onChange={() => {
                       const currentAnswers = answers[question.id] || [];
-                      const newAnswers = currentAnswers.includes(option.text)
-                        ? currentAnswers.filter((a) => a !== option.text)
-                        : [...currentAnswers, option.text];
+                      const newAnswers = currentAnswers.includes(option)
+                        ? currentAnswers.filter((a) => a !== option)
+                        : [...currentAnswers, option];
                       handleAnswerChange(question.id, newAnswers);
                     }}
+                    checked={answers[question.id]?.includes(option) || false}
                     className="cursor-pointer"
                   />
-                  <span>{option.text}</span>
+                  <div dangerouslySetInnerHTML={{ __html: option }}></div>
                 </label>
               ));
 
-            case "truefalse":
+            case "TOF":
               return (
                 <div className="space-y-4">
                   <label className="flex items-center space-x-3 p-4 rounded-lg cursor-pointer transition-all bg-gray-100 hover:bg-yellow-100">
@@ -230,8 +409,8 @@ export default function PlayExam({
                       type="radio"
                       name={`question-${question.id}`}
                       value="true"
-                      checked={answers[question.id]?.includes("true")}
                       onChange={() => handleAnswerChange(question.id, ["true"])}
+                      checked={answers[question.id]?.includes("true") || false}
                       className="cursor-pointer"
                     />
                     <span>True</span>
@@ -241,8 +420,8 @@ export default function PlayExam({
                       type="radio"
                       name={`question-${question.id}`}
                       value="false"
-                      checked={answers[question.id]?.includes("false")}
                       onChange={() => handleAnswerChange(question.id, ["false"])}
+                      checked={answers[question.id]?.includes("false") || false}
                       className="cursor-pointer"
                     />
                     <span>False</span>
@@ -250,49 +429,69 @@ export default function PlayExam({
                 </div>
               );
 
-            case "short":
+            case "SAQ":
               return (
                 <input
                   type="text"
                   className="w-full p-4 rounded-lg border border-gray-300"
                   placeholder="Type your answer here..."
                   value={answers[question.id]?.[0] || ""}
-                  onChange={(e) => handleAnswerChange(question.id, [e.target.value])}
+                  onChange={(e) =>
+                    handleAnswerChange(question.id, [e.target.value])
+                  }
                 />
               );
 
-            case "match":
+            case "MTF":
               return (
                 <div>
                   <p className="mb-4 font-medium">Match the following:</p>
-                  {question.options?.slice(0, 3).map((opt, i) => (
-                    <div key={i} className="flex space-x-4 mb-4">
-                      <p className="flex-1 p-2 rounded bg-gray-100">{opt.text}</p>
-                      <select
-                        className="flex-1 p-2 rounded border border-gray-300"
-                        onChange={(e) =>
-                          handleAnswerChange(question.id, [e.target.value])
-                        }
-                      >
-                        {question.options?.slice(3).map((match, i) => (
-                          <option key={i} value={match.text}>
-                            {match.text}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  ))}
+                  {question.options
+                    ?.slice(0, question.options.length / 2)
+                    .map((opt, i) => (
+                      <div key={i} className="flex space-x-4 mb-4">
+                        <p
+                          className="flex-1 p-2 rounded bg-gray-100"
+                          dangerouslySetInnerHTML={{ __html: opt }}
+                        ></p>
+                        <select
+                          className="flex-1 p-2 rounded border border-gray-300"
+                          onChange={(e) =>
+                            handleAnswerChange(question.id, [opt, e.target.value])
+                          }
+                          value={
+                            answers[question.id]?.find((pair) => pair[0] === opt)?.[1] || ""
+                          }
+                        >
+                          <option value="">Select match</option>
+                          {question.options
+                            ?.slice(question.options.length / 2)
+                            .map((match, j) => (
+                              <option
+                                key={j}
+                                value={match}
+                                dangerouslySetInnerHTML={{ __html: match }}
+                              ></option>
+                            ))}
+                        </select>
+                      </div>
+                    ))}
                 </div>
               );
 
-            case "sequence":
+            case "ORD":
               return (
                 <div>
-                  <p className="mb-4 font-medium">Arrange in sequence (Use the arrows to reorder):</p>
+                  <p className="mb-4 font-medium">
+                    Arrange in sequence (Use the arrows to reorder):
+                  </p>
                   <ul>
                     {answers[question.id]?.map((option, index) => (
-                      <li key={index} className="p-4 bg-gray-100 rounded-lg mb-2 flex items-center justify-between">
-                        <span>{option}</span>
+                      <li
+                        key={index}
+                        className="p-4 bg-gray-100 rounded-lg mb-2 flex items-center justify-between"
+                      >
+                        <div dangerouslySetInnerHTML={{ __html: option }}></div>
                         <div className="flex items-center space-x-2">
                           <button
                             className="p-2 bg-gray-300 rounded hover:bg-gray-400"
@@ -304,7 +503,7 @@ export default function PlayExam({
                           <button
                             className="p-2 bg-gray-300 rounded hover:bg-gray-400"
                             onClick={() => moveItem(question.id, index, index + 1)}
-                            disabled={index === answers[question.id]?.length - 1}
+                            disabled={index === (answers[question.id]?.length || 0) - 1}
                           >
                             ↓
                           </button>
@@ -315,18 +514,18 @@ export default function PlayExam({
                 </div>
               );
 
-            case "fill":
+            case "FIB":
+              const numberOfBlanks = Number(question.options?.[0]) || 0;
               return (
                 <div>
-                  {question.blanks?.map((blank, index) => (
+                  {Array.from({ length: numberOfBlanks }).map((_, index) => (
                     <input
                       key={index}
                       type="text"
                       className="p-4 rounded-lg border border-gray-300 w-full mb-2"
-                      placeholder="Type your answer here..."
-                      value={answers[question.id]?.[index] || ""}
-                      onChange={(e) => {
-                        const newAnswers = answers[question.id] || [];
+                      placeholder={`Answer ${index + 1}`}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                        const newAnswers = [...(answers[question.id] || [])];
                         newAnswers[index] = e.target.value;
                         handleAnswerChange(question.id, newAnswers);
                       }}
@@ -335,17 +534,49 @@ export default function PlayExam({
                 </div>
               );
 
-            case "extended":
+            case "EMQ":
               return (
-                <textarea
-                  className="w-full p-4 rounded-lg border border-gray-300"
-                  rows={6}
-                  placeholder="Write your answer..."
-                  value={answers[question.id]?.[0] || ""}
-                  onChange={(e) =>
-                    handleAnswerChange(question.id, [e.target.value])
-                  }
-                />
+                <div>
+                  {Array.isArray(question.question) &&
+                    question.question.map((subQuestion, questionIndex) => (
+                      <div key={questionIndex} className="mb-4">
+                        {questionIndex > 0 && (
+                          <div>
+                            <b>{"Question " + questionIndex}</b>
+                            <p
+                              className="mb-4 font-medium"
+                              dangerouslySetInnerHTML={{
+                                __html: subQuestion,
+                              }}
+                            ></p>
+                            {question.options?.map((option, index) => (
+                              <label
+                                key={index}
+                                className={`flex items-center space-x-3 p-4 rounded-lg cursor-pointer transition-all mb-3 ${
+                                  answers[question.id]?.includes(option)
+                                    ? "bg-green-200"
+                                    : "bg-gray-100"
+                                } hover:bg-yellow-100`}
+                              >
+                                <input
+                                  type="radio"
+                                  name={`question-${question.id}-${questionIndex}`}
+                                  value={option}
+                                  onChange={() =>
+                                    handleAnswerChange(question.id, [option], questionIndex)
+                                  }
+                                  className="cursor-pointer"
+                                />
+                                <div
+                                  dangerouslySetInnerHTML={{ __html: option }}
+                                ></div>
+                              </label>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                </div>
               );
 
             default:
@@ -356,27 +587,28 @@ export default function PlayExam({
     );
   };
 
-  if (!quizData) return <Loader />;
+  if (loading) return <Loader />;
+
+  if (!examData || !examData.questions)
+    return <div>No exam data available</div>;
 
   return (
     <div className="dashboard-page flex flex-col md:flex-row gap-6">
       {/* Main Exam Content */}
-      <div className="flex-1 lg:p-6 bg-white rounded-lg shadow-sm p-4 ">
+      <div className="flex-1 lg:p-6 bg-white rounded-lg shadow-sm p-4">
         {!submitted ? (
           <>
             <div className="flex justify-between mb-4">
               <h3 className="text-2xl font-semibold text-primary">
-                Question {currentQuestionIndex + 1}/{quizData.questions.length}
+                Question {currentQuestionIndex + 1}/{examData.questions.length}
               </h3>
               <FaClock className="text-primary" size={24} />
             </div>
 
-            {/* Render question based on type */}
             <div className="space-y-4">
-              {renderQuestion(quizData.questions[currentQuestionIndex])}
+              {renderQuestion(examData.questions[currentQuestionIndex])}
             </div>
 
-            {/* Navigation Buttons */}
             <div className="flex justify-between mt-6">
               <button
                 className="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg disabled:opacity-50"
@@ -386,7 +618,7 @@ export default function PlayExam({
                 <FaArrowLeft className="inline mr-2" /> Previous
               </button>
 
-              {currentQuestionIndex < quizData.questions.length - 1 ? (
+              {currentQuestionIndex < examData.questions.length - 1 ? (
                 <button
                   className="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary-dark transition-colors"
                   onClick={handleNextQuestion}
@@ -405,102 +637,105 @@ export default function PlayExam({
           </>
         ) : (
           <div className="text-center">
-               <FaCheckCircle className="inline text-green-600 mr-2 mb-3" size={42}/> 
+            <FaCheckCircle
+              className="inline text-green-600 mr-2 mb-3"
+              size={42}
+            />
             <h1 className="text-3xl font-bold mb-4 text-green-600">
-           Exam Submitted
+              Exam Submitted
             </h1>
             <p className="text-lg text-gray-600">
-              Thank you for completing the exam. Your answers have been submitted
-              successfully!
+              Thank you for completing the exam. Your answers have been
+              submitted successfully!
             </p>
-            <button
-              className="mt-6 bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary-dark transition-colors"
-              onClick={() => window.location.reload()}
-            >
-              Go Back to Exam List
-            </button>
+            <div>
+              <Link
+                href={`/dashboard/exam-result/${uuid}`}
+                className="mt-4 text-center w-full bg-primary text-white font-semibold py-2 px-4 rounded hover:bg-primary-dark transition-colors flex justify-center items-center"
+              >
+                Go to Result
+                <AiOutlineArrowRight className="ml-2" />
+              </Link>
+            </div>
           </div>
         )}
       </div>
 
       {/* Sidebar for Timer and Progress */}
-      <div className="w-full md:w-1/3 bg-white shadow-sm p-4 lg:p-6 rounded-lg ">
-        {/* Heading */}
-        <div className="mb-4">
-          <h2 className="text-2xl font-semibold text-primary text-center">
-            Exam Progress
-          </h2>
-        </div>
+      {!submitted && timeLeft > 0 && (
+        <div className="w-full md:w-1/3 bg-white shadow-sm p-4 lg:p-6 rounded-lg">
+          {/* Time Remaining */}
+          <div className="mb-6 text-center">
+            <h3 className="text-gray-600 font-semibold">Time Remaining</h3>
+            <p className="text-3xl text-orange-600 font-semibold">
+              {formatTimeLeft(timeLeft)}
+            </p>
+          </div>
 
-        {/* Time Remaining */}
-        <div className="mb-6 text-center">
-          <h3 className="text-gray-600 font-semibold">Time Remaining</h3>
-          <p className="text-3xl text-orange-600 font-semibold">
-            {formatTimeLeft(timeLeft)}
-          </p>
-        </div>
-
-        {/* Answered and Skipped Count */}
-        <div className="mb-6 text-center">
-          <div className="flex justify-around">
-            <div className="flex items-center space-x-2">
-              <FaRegSmile className="text-green-500" size={20} />
-              <span className="text-gray-700">Attempted: {getAnsweredCount()}</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <FaRegFrown className="text-yellow-500" size={20} />
-              <span className="text-gray-700">Skipped: {getSkippedCount()}</span>
+          {/* Answered and Skipped Count */}
+          <div className="mb-6 text-center">
+            <div className="flex justify-around">
+              <div className="flex items-center space-x-2">
+                <FaRegSmile className="text-green-500" size={20} />
+                <span className="text-gray-700">
+                  Attempted: {getAnsweredCount()}
+                </span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <FaRegFrown className="text-yellow-500" size={20} />
+                <span className="text-gray-700">Skipped: {getSkippedCount()}</span>
+              </div>
             </div>
           </div>
-        </div>
 
-       
-
-       
-
-        {/* Progress Bar */}
-        <div className="mb-6">
-          <p className="font-semibold text-gray-700 mb-2">Progress</p>
-          <div className="h-2 w-full bg-gray-200 rounded-lg overflow-hidden mt-2">
-            <div
-              className="h-full bg-primary"
-              style={{
-                width: `${(Object.keys(answers).length / quizData.questions.length) * 100}%`,
-              }}
-            ></div>
-          </div>
-        </div>
-
-      
-
-        {/* Question Navigation Grid */}
-        <div className="grid grid-cols-5 gap-2 text-center">
-          {quizData.questions.map((question, index) => (
-            <div
-              key={index}
-              className={`p-2 rounded-lg border cursor-pointer ${
-                currentQuestionIndex === index
-                  ? "bg-primary text-white"
-                  : answers[question.id]
-                  ? "bg-green-200 text-black"
-                  : "bg-yellow-200 text-black"
-              }`}
-              onClick={() => setCurrentQuestionIndex(index)}
-            >
-              {index + 1}
+          {/* Progress Bar */}
+          <div className="mb-6">
+            <p className="font-semibold text-gray-700 mb-2">Progress</p>
+            <div className="h-2 w-full bg-gray-200 rounded-lg overflow-hidden mt-2">
+              <div
+                className="h-full bg-primary"
+                style={{
+                  width: `${
+                    (Object.keys(answers).length / examData.questions.length) *
+                    100
+                  }%`,
+                }}
+              ></div>
             </div>
-          ))}
-        </div>
+          </div>
+
+          {/* Question Navigation Grid */}
+          <div className="grid grid-cols-5 gap-2 text-center">
+            {examData.questions.map((question, index) => (
+              <div
+                key={index}
+                className={`p-2 rounded-lg border ${
+                  currentQuestionIndex === index
+                    ? "bg-primary text-white"
+                    : answers[question.id]
+                    ? "bg-green-200 text-black"
+                    : "bg-yellow-200 text-black"
+                }`}
+                onClick={() => setCurrentQuestionIndex(index)}
+              >
+                {index + 1}
+              </div>
+            ))}
+          </div>
+
           {/* Exam Instructions */}
           <div className="mt-3 ">
-          <h3 className="text-lg text-gray-700 font-semibold">Exam Guide</h3>
-          <p className="text-sm text-gray-500">
-            - Answer all questions to the best of your ability.<br />
-            - You can navigate between questions.<br />
-            - Make sure to submit your exam before time runs out.
-          </p>
+            <h3 className="text-lg text-gray-700 font-semibold">Exam Guide</h3>
+            <p className="text-sm text-gray-500">
+              - Answer all questions to the best of your ability.
+              <br />
+              - You can navigate between questions.
+              <br />
+              - Make sure to submit your exam before time runs out.
+            </p>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

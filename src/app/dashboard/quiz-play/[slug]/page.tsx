@@ -1,6 +1,8 @@
 "use client";
 
 import Loader from "@/components/Common/Loader";
+import { AiOutlineArrowRight } from 'react-icons/ai'; // For icons
+
 import { useState, useEffect } from "react";
 import {
   FaCheckCircle,
@@ -673,8 +675,12 @@ export default function PlayQuizPage({
               submitted successfully!
             </p>
             <div>
-              <Link href={`/dashboard/quiz-result/${uuid}`} className="mt-4 block text-center w-full bg-primary text-white font-semibold py-2 px-4 rounded hover:bg-primary-dark transition-colors">
-                  Start Exam
+            <Link
+                href={`/dashboard/quiz-result/${uuid}`}
+                className="mt-4  text-center w-full bg-primary text-white font-semibold py-2 px-4 rounded hover:bg-primary-dark transition-colors flex justify-center items-center"
+              >
+                Go to Result
+                <AiOutlineArrowRight className="ml-2" /> {/* Add the icon here */}
               </Link>
             </div>
           </div>

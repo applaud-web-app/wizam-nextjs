@@ -1,32 +1,33 @@
 "use client";
-import { useEffect, useState } from "react";
-import { FaCheckCircle, FaTimesCircle, FaCheck, FaTimes, FaRegCircle } from "react-icons/fa"; // Icons
-import axios from 'axios'; // For API calls
-import { toast } from 'react-toastify'; // Optional: For notifications
-import Cookies from 'js-cookie'; // For cookies
-import { useRouter } from "next/navigation"; // For navigation
-import Loader from '@/components/Common/Loader'; // Custom Loader (if you have one)
 
-// Interfaces
+import { useEffect, useState } from "react";
+import { FaCheckCircle, FaTimesCircle, FaCheck, FaTimes, FaRegCircle } from "react-icons/fa";
+import axios from "axios";
+import { toast } from "react-toastify";
+import Cookies from "js-cookie";
+import { useRouter } from "next/navigation";
+import Loader from "@/components/Common/Loader";
+
+// TypeScript interfaces
 interface Option {
   text: string;
-  image?: string; // Optional image for options
+  image?: string;
 }
 
 interface Question {
   id: number;
-  type: string; // E.g., "single", "multiple", "truefalse", etc.
-  question: string;
-  correctAnswer: string[];
-  userAnswer?: string[];
+  type: string;
+  question: string | string[];
+  correctAnswer: string[] | string;
+  userAnswer?: string[] | string;
   isCorrect?: boolean;
   explanation?: string;
-  options?: Option[];
+  options?: Option[] | string[];
 }
 
 interface ExamData {
   title: string;
-  duration: string; // E.g., "30 mins"
+  duration: string;
   questions: Question[];
 }
 
@@ -35,48 +36,46 @@ interface UserResult {
   wrongCount: number;
   skippedCount: number;
   status: string;
-  timeTaken?: number; // Optional field for time taken
+  marks: number;
+  timeTaken?: number;
 }
 
 interface LeaderboardEntry {
   username: string;
   score: number;
-  status: string; // "PASS" or "FAIL"
+  status: string;
 }
 
 const ExamResult = ({ params }: { params: { slug: string } }) => {
   const [examData, setExamData] = useState<ExamData | null>(null);
   const [userResult, setUserResult] = useState<UserResult | null>(null);
-  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
-  const router = useRouter(); // For navigation
+  const router = useRouter();
 
   useEffect(() => {
     const { slug } = params;
 
     const fetchExams = async () => {
       try {
-        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/quiz-result/${slug}`, {
+        const response = await axios.get(`https://wizam.awmtab.in/api/quiz-result/${slug}`, {
           headers: {
-            Authorization: `Bearer ${Cookies.get("jwt")}`, // Replace with actual auth token
+            Authorization: `Bearer ${Cookies.get("jwt")}`,
           },
         });
 
         if (response.data.status) {
           const resultData = response.data;
 
-          // Map the exam and user result data from API response
           setExamData({
-            title: "resultData.quiz.title",
-            duration: "resultData.quiz.duration",
+            title: resultData.quiz.title,
+            duration: resultData.quiz.duration,
             questions: resultData.exam_preview.map((q: any) => ({
               id: q.question_id,
               question: q.question_text,
-              correctAnswer: q.correct_answer,
-              userAnswer: q.user_answer,
+              correctAnswer: Array.isArray(q.correct_answer) ? q.correct_answer : [q.correct_answer],
+              userAnswer: Array.isArray(q.user_answer) ? q.user_answer.map(String) : [q.user_answer],
               isCorrect: q.is_correct,
-              options: q.options || [], // Ensure options are optional
-              explanation: q.explanation, // If explanation is provided
+              options: q.question_option || [],
             })),
           });
 
@@ -84,23 +83,15 @@ const ExamResult = ({ params }: { params: { slug: string } }) => {
             correctCount: parseInt(resultData.result.correct),
             wrongCount: parseInt(resultData.result.incorrect),
             skippedCount: resultData.result.skipped,
+            marks: parseInt(resultData.result.marks),
             status: resultData.result.status,
-            timeTaken: resultData.result.timeTaken, // Add time taken if available
+            timeTaken: resultData.result.timeTaken,
           });
-
-          // Map leaderboard data
-          setLeaderboard(resultData.leaderBoard.map((entry: any) => ({
-            username: entry.username,
-            score: entry.score,
-            status: entry.status,
-          })));
         } else {
-          toast.error('No exams found for this category');
-        //   router.push('/dashboard/all-exams');
+          toast.error("No exams found for this category");
         }
       } catch (error) {
-        toast.error('Error fetching exam results : ' + error);
-        // router.push('/dashboard/all-exams');
+        toast.error("Error fetching exam results: " + error);
       } finally {
         setLoading(false);
       }
@@ -113,13 +104,11 @@ const ExamResult = ({ params }: { params: { slug: string } }) => {
     return <Loader />;
   }
 
-  // Calculate whether the user passed the exam
-  const passingScore = 0.6; // 60% passing criteria
+  const passingScore = 0.6;
   const totalQuestions = examData.questions.length;
   const percentageCorrect = userResult.correctCount / totalQuestions;
   const passed = percentageCorrect >= passingScore;
 
-  // Helper function to format time
   const formatTimeTaken = (time?: number) => {
     if (!time) return "N/A";
     const minutes = Math.floor(time / 60);
@@ -127,52 +116,128 @@ const ExamResult = ({ params }: { params: { slug: string } }) => {
     return `${minutes}m ${seconds}s`;
   };
 
-  // Render each question result
   const renderQuestionResult = (question: Question) => {
     const isCorrect = question.isCorrect;
 
+    const renderOptions = () => {
+      if (!question.options) return null;
+
+      switch (question.type) {
+        case "MSA":
+        case "MMA":
+        case "TOF":
+          return (
+            <div className="mb-4">
+              {question.options.map((option, index) => {
+                const isUserAnswer = question.userAnswer?.includes(String(option)) || false;
+                const isCorrectAnswer = question.correctAnswer.includes(String(option));
+
+                return (
+                  <div key={index} className="flex items-center mb-2">
+                    <span className="mr-2">
+                      {isCorrectAnswer ? (
+                        <FaCheck className="text-green-500" />
+                      ) : isUserAnswer ? (
+                        <FaTimes className="text-red-500" />
+                      ) : (
+                        <FaRegCircle className="text-gray-400" />
+                      )}
+                    </span>
+                    <span
+                      className={isCorrectAnswer ? "text-green-600" : isUserAnswer ? "text-red-600" : ""}
+                    >
+                      <div dangerouslySetInnerHTML={{ __html: typeof option === "string" ? option : option.text }} />
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          );
+        case "SAQ":
+          return (
+            <div className="p-4 bg-gray-100 rounded-lg">
+              {Array.isArray(question.userAnswer) ? question.userAnswer[0] : question.userAnswer || "Skipped"}
+            </div>
+          );
+        case "FIB":
+          const blanks = Number(question.options?.[0]) || 0;
+          return (
+            <div>
+              {Array.from({ length: blanks }).map((_, index) => (
+                <div key={index} className="p-4 bg-gray-100 rounded-lg mb-2">
+                  {Array.isArray(question.userAnswer) ? question.userAnswer[index] : ""}
+                </div>
+              ))}
+            </div>
+          );
+        case "MTF":
+          return (
+            <div>
+              <p className="mb-4 font-medium">Match the following:</p>
+              {question.options?.slice(0, question.options.length / 2).map((opt, i) => (
+                <div key={i} className="flex space-x-4 mb-4">
+                  <p className="flex-1 p-2 rounded bg-gray-100">{typeof opt === "string" ? opt : opt.text}</p>
+                  <div className="flex-1 p-2 rounded bg-gray-200">{question.userAnswer?.[i] || ""}</div>
+                </div>
+              ))}
+            </div>
+          );
+        case "ORD":
+          return (
+            <ul>
+              {Array.isArray(question.userAnswer) ? (
+                question.userAnswer.map((option, index) => (
+                  <li key={index} className="p-4 bg-gray-100 rounded-lg mb-2 flex items-center justify-between">
+                    {option}
+                  </li>
+                ))
+              ) : (
+                <li className="p-4 bg-gray-100 rounded-lg mb-2 flex items-center justify-between">
+                  {question.userAnswer || "No answer provided"}
+                </li>
+              )}
+            </ul>
+          );
+        case "EMQ":
+          return (
+            <div>
+              {Array.isArray(question.question) &&
+                question.question.map((subQuestion, questionIndex) => (
+                  <div key={questionIndex} className="mb-4">
+                    <p className="font-medium" dangerouslySetInnerHTML={{ __html: subQuestion }} />
+                    {question.options?.map((option, index) => (
+                      <div
+                        key={index}
+                        className={`p-4 rounded-lg mb-3 ${
+                          question.userAnswer?.includes(String(option)) ? "bg-green-200" : "bg-gray-100"
+                        }`}
+                      >
+                        <div dangerouslySetInnerHTML={{ __html: String(option) }} />
+                      </div>
+                    ))}
+                  </div>
+                ))}
+            </div>
+          );
+        default:
+          return <p>Unknown question type</p>;
+      }
+    };
+
     return (
       <div key={question.id} className="p-4 border rounded-lg bg-white shadow-sm">
-        <h3 className="text-lg font-semibold mb-2" dangerouslySetInnerHTML={{ __html: question.question }}></h3>
-        
-        {/* Render options if available */}
-        {question.options && (
-          <div className="mb-4">
-            {question.options.map((option, index) => {
-              const isUserAnswer = question.userAnswer?.includes(option.text) || false;
-              const isCorrectAnswer = question.correctAnswer.includes(option.text);
+        <h3 className="text-lg font-semibold mb-2">
+          {Array.isArray(question.question) ? question.question[0] : question.question}
+        </h3>
+        {renderOptions()}
 
-              return (
-                <div key={index} className="flex items-center mb-2">
-                  <span className="mr-2">
-                    {isCorrectAnswer ? (
-                      <FaCheck className="text-green-500" />
-                    ) : isUserAnswer ? (
-                      <FaTimes className="text-red-500" />
-                    ) : (
-                      <FaRegCircle className="text-gray-400" />
-                    )}
-                  </span>
-                  <span className={isCorrectAnswer ? "text-green-600" : isUserAnswer ? "text-red-600" : ""}>
-                    {option.text}
-                  </span>
-                </div>
-              );
-            })}
-          </div>
-        )}
-
-        {/* User's Answer and Correct Answer */}
         <p className={`font-semibold ${isCorrect ? "text-green-500" : "text-red-500"}`}>
-          {/* Your answer: {question.userAnswer?.join(", ") || "Skipped"} */}
-          {question.userAnswer}
+          Your answer: {Array.isArray(question.userAnswer) ? question.userAnswer.join(", ") : "Skipped"}
         </p>
         <p className="font-semibold text-green-600">
-          {/* Correct answer: {question.correctAnswer.join(", ")} */}
-          Correct answer: {question.correctAnswer}
+          Correct answer: {Array.isArray(question.correctAnswer) ? question.correctAnswer.join(", ") : "N/A"}
         </p>
 
-        {/* Explanation if available */}
         {question.explanation && (
           <p className="mt-2 text-gray-600">
             <strong>Explanation: </strong>{question.explanation}
@@ -181,46 +246,6 @@ const ExamResult = ({ params }: { params: { slug: string } }) => {
       </div>
     );
   };
-
-  // Render the leaderboard
-  const renderLeaderboard = () => (
-    <div className="mt-10">
-      <h2 className="text-3xl font-semibold mb-4">Leaderboard</h2>
-      <div className="overflow-x-auto">
-        <table className="min-w-full bg-white border rounded-lg shadow-sm">
-          <thead className="bg-primary text-white">
-            <tr>
-              <th className="py-3 px-6 border-b">Rank</th>
-              <th className="py-3 px-6 border-b">Username</th>
-              <th className="py-3 px-6 border-b">Score</th>
-              <th className="py-3 px-6 border-b">Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {leaderboard
-              .sort((a, b) => b.score - a.score)
-              .map((entry, index) => (
-                <tr
-                  key={index}
-                  className={`${
-                    entry.username === "You"
-                      ? "bg-blue-100 text-primary font-bold"
-                      : index % 2 === 0
-                      ? "bg-gray-100"
-                      : "bg-white"
-                  } text-center`}
-                >
-                  <td className="py-3 px-6 border-b">{index + 1}</td>
-                  <td className="py-3 px-6 border-b">{entry.username}</td>
-                  <td className="py-3 px-6 border-b">{entry.score}%</td>
-                  <td className="py-3 px-6 border-b">{entry.status}</td>
-                </tr>
-              ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
 
   return (
     <div className="dashboard-page">
@@ -261,25 +286,20 @@ const ExamResult = ({ params }: { params: { slug: string } }) => {
             <p className="text-2xl text-gray-500">{userResult.skippedCount}</p>
           </div>
           <div className="p-6 border rounded-lg bg-white text-center shadow-sm">
-            <h3 className="text-xl font-semibold mb-2">Time Taken</h3>
-            <p className="text-2xl">{formatTimeTaken(userResult.timeTaken)}</p>
+            <h3 className="text-xl font-semibold mb-2">Marks</h3>
+            <p className="text-2xl">{userResult.marks}</p>
           </div>
           <div className="p-6 border rounded-lg bg-white text-center shadow-sm">
-            <h3 className="text-xl font-semibold mb-2">Status</h3>
-            <p className="text-2xl">{userResult.status}</p>
+            <h3 className="text-xl font-semibold mb-2">Time Taken</h3>
+            <p className="text-2xl">{formatTimeTaken(userResult.timeTaken)}</p>
           </div>
         </div>
 
         {/* Render Questions */}
         <div className="mb-8">
           <h2 className="text-3xl font-semibold mb-4">Exam Review</h2>
-          <div className="grid gap-6">
-            {examData.questions.map((question) => renderQuestionResult(question))}
-          </div>
+          <div className="grid gap-6">{examData.questions.map((question) => renderQuestionResult(question))}</div>
         </div>
-
-        {/* Render Leaderboard */}
-        {leaderboard.length > 0 && renderLeaderboard()}
       </div>
     </div>
   );
