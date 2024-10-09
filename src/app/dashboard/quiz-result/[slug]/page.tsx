@@ -18,20 +18,20 @@ interface Question {
   id: number;
   type: string;
   question: string | string[];
-  correctAnswer: string[] | string;
-  userAnswer?: string[] | string;
+  correctAnswer: string[] | string | Record<string, string>;
+  userAnswer?: string[] | string | Record<string, string>;
   isCorrect?: boolean;
   explanation?: string;
   options?: Option[] | string[];
 }
 
-interface ExamData {
+interface QuizData {
   title: string;
   duration: string;
   questions: Question[];
 }
 
-interface UserResult {
+interface UserQuizResult {
   correctCount: number;
   wrongCount: number;
   skippedCount: number;
@@ -46,16 +46,22 @@ interface LeaderboardEntry {
   status: string;
 }
 
-const ExamResult = ({ params }: { params: { slug: string } }) => {
-  const [examData, setExamData] = useState<ExamData | null>(null);
-  const [userResult, setUserResult] = useState<UserResult | null>(null);
+interface QuizResultProps {
+  params: {
+    slug: string;
+  };
+}
+
+const QuizResult = ({ params }: QuizResultProps) => {
+  const [quizData, setQuizData] = useState<QuizData | null>(null);
+  const [userQuizResult, setUserQuizResult] = useState<UserQuizResult | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const router = useRouter();
 
   useEffect(() => {
     const { slug } = params;
 
-    const fetchExams = async () => {
+    const fetchQuizResults = async () => {
       try {
         const response = await axios.get(`https://wizam.awmtab.in/api/quiz-result/${slug}`, {
           headers: {
@@ -66,20 +72,21 @@ const ExamResult = ({ params }: { params: { slug: string } }) => {
         if (response.data.status) {
           const resultData = response.data;
 
-          setExamData({
+          setQuizData({
             title: resultData.quiz.title,
             duration: resultData.quiz.duration,
             questions: resultData.exam_preview.map((q: any) => ({
               id: q.question_id,
+              type: q.question_type,
               question: q.question_text,
-              correctAnswer: Array.isArray(q.correct_answer) ? q.correct_answer : [q.correct_answer],
-              userAnswer: Array.isArray(q.user_answer) ? q.user_answer.map(String) : [q.user_answer],
+              correctAnswer: q.correct_answer,
+              userAnswer: q.user_answer,
               isCorrect: q.is_correct,
               options: q.question_option || [],
             })),
           });
 
-          setUserResult({
+          setUserQuizResult({
             correctCount: parseInt(resultData.result.correct),
             wrongCount: parseInt(resultData.result.incorrect),
             skippedCount: resultData.result.skipped,
@@ -88,25 +95,25 @@ const ExamResult = ({ params }: { params: { slug: string } }) => {
             timeTaken: resultData.result.timeTaken,
           });
         } else {
-          toast.error("No exams found for this category");
+          toast.error("No quiz results found for this category");
         }
       } catch (error) {
-        toast.error("Error fetching exam results: " + error);
+        toast.error("Error fetching quiz results: " + error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchExams();
+    fetchQuizResults();
   }, [params, router]);
 
-  if (loading || !examData || !userResult) {
+  if (loading || !quizData || !userQuizResult) {
     return <Loader />;
   }
 
   const passingScore = 0.6;
-  const totalQuestions = examData.questions.length;
-  const percentageCorrect = userResult.correctCount / totalQuestions;
+  const totalQuestions = quizData.questions.length;
+  const percentageCorrect = userQuizResult.correctCount / totalQuestions;
   const passed = percentageCorrect >= passingScore;
 
   const formatTimeTaken = (time?: number) => {
@@ -116,24 +123,33 @@ const ExamResult = ({ params }: { params: { slug: string } }) => {
     return `${minutes}m ${seconds}s`;
   };
 
-  const renderQuestionResult = (question: Question) => {
+  const isUserAnswerIncludes = (option: string, userAnswer?: string[] | string | Record<string, string>) => {
+    if (Array.isArray(userAnswer)) {
+      return userAnswer.includes(option);
+    }
+    return false;
+  };
+
+  const renderQuestionResult = (question: Question, index: number) => {
     const isCorrect = question.isCorrect;
 
     const renderOptions = () => {
       if (!question.options) return null;
 
       switch (question.type) {
-        case "MSA":
-        case "MMA":
-        case "TOF":
+        case "TOF": // True or False
+        case "MSA": // Multiple Single Answer
+        case "MMA": // Multiple Match Answer
           return (
             <div className="mb-4">
               {question.options.map((option, index) => {
-                const isUserAnswer = question.userAnswer?.includes(String(option)) || false;
-                const isCorrectAnswer = question.correctAnswer.includes(String(option));
+                const isUserAnswer = isUserAnswerIncludes(String(option), question.userAnswer);
+                const isCorrectAnswer = Array.isArray(question.correctAnswer)
+                  ? question.correctAnswer.includes(String(option))
+                  : question.correctAnswer === String(option);
 
                 return (
-                  <div key={index} className="flex items-center mb-2">
+                  <div key={index} className="flex items-center bg-gray-100 p-3 rounded-md mb-2">
                     <span className="mr-2">
                       {isCorrectAnswer ? (
                         <FaCheck className="text-green-500" />
@@ -153,13 +169,18 @@ const ExamResult = ({ params }: { params: { slug: string } }) => {
               })}
             </div>
           );
-        case "SAQ":
+        case "SAQ": // Short Answer Question
           return (
             <div className="p-4 bg-gray-100 rounded-lg">
-              {Array.isArray(question.userAnswer) ? question.userAnswer[0] : question.userAnswer || "Skipped"}
+              {Array.isArray(question.userAnswer)
+                ? question.userAnswer[0]
+                : typeof question.userAnswer === "string"
+                ? question.userAnswer
+                : JSON.stringify(question.userAnswer) || "Skipped"} {/* Safely handle object */}
             </div>
           );
-        case "FIB":
+        
+        case "FIB": // Fill in the Blanks
           const blanks = Number(question.options?.[0]) || 0;
           return (
             <div>
@@ -170,35 +191,58 @@ const ExamResult = ({ params }: { params: { slug: string } }) => {
               ))}
             </div>
           );
-        case "MTF":
+        case "MTF": // Match the Following
+          const correctAnswerPairs = Object.entries(question.correctAnswer as Record<string, string>);
+          const userAnswerPairs = Object.entries(question.userAnswer || {});
+        
           return (
             <div>
               <p className="mb-4 font-medium">Match the following:</p>
-              {question.options?.slice(0, question.options.length / 2).map((opt, i) => (
-                <div key={i} className="flex space-x-4 mb-4">
-                  <p className="flex-1 p-2 rounded bg-gray-100">{typeof opt === "string" ? opt : opt.text}</p>
-                  <div className="flex-1 p-2 rounded bg-gray-200">{question.userAnswer?.[i] || ""}</div>
+              {correctAnswerPairs.map(([key, value], index) => (
+                <div key={index} className="flex space-x-4 mb-4">
+                  {/* Using dangerouslySetInnerHTML for key (question side) */}
+                  <div className="flex-1 p-2 rounded bg-gray-100">
+                    <div dangerouslySetInnerHTML={{ __html: key }} />
+                  </div>
+        
+                  {/* User answer, using dangerouslySetInnerHTML */}
+                  <div className="flex-1 p-2 rounded bg-gray-200">
+                    {userAnswerPairs[index] ? (
+                      <div dangerouslySetInnerHTML={{ __html: userAnswerPairs[index][1] }} />
+                    ) : (
+                      ""
+                    )}
+                  </div>
+        
+                  {/* Correct answer, using dangerouslySetInnerHTML */}
+                  <div className="flex-1 p-2 rounded bg-gray-300">
+                    Correct: <div dangerouslySetInnerHTML={{ __html: value }} />
+                  </div>
                 </div>
               ))}
             </div>
           );
-        case "ORD":
+        
+        case "ORD": // Ordering
           return (
             <ul>
               {Array.isArray(question.userAnswer) ? (
                 question.userAnswer.map((option, index) => (
                   <li key={index} className="p-4 bg-gray-100 rounded-lg mb-2 flex items-center justify-between">
-                    {option}
+                    {typeof option === 'string' ? option : JSON.stringify(option)} {/* Ensure it's a string */}
                   </li>
                 ))
               ) : (
                 <li className="p-4 bg-gray-100 rounded-lg mb-2 flex items-center justify-between">
-                  {question.userAnswer || "No answer provided"}
+                  {typeof question.userAnswer === 'string' 
+                    ? question.userAnswer 
+                    : "No answer provided"}
                 </li>
               )}
             </ul>
           );
-        case "EMQ":
+        
+        case "EMQ": // Extended Matching Questions
           return (
             <div>
               {Array.isArray(question.question) &&
@@ -209,12 +253,15 @@ const ExamResult = ({ params }: { params: { slug: string } }) => {
                       <div
                         key={index}
                         className={`p-4 rounded-lg mb-3 ${
-                          question.userAnswer?.includes(String(option)) ? "bg-green-200" : "bg-gray-100"
+                          Array.isArray(question.userAnswer) && question.userAnswer.includes(String(option))
+                            ? "bg-green-200"
+                            : "bg-gray-100"
                         }`}
                       >
                         <div dangerouslySetInnerHTML={{ __html: String(option) }} />
                       </div>
                     ))}
+
                   </div>
                 ))}
             </div>
@@ -224,10 +271,16 @@ const ExamResult = ({ params }: { params: { slug: string } }) => {
       }
     };
 
+    const questionSkipped = !question.userAnswer || (Array.isArray(question.userAnswer) && question.userAnswer.length === 0);
+
     return (
-      <div key={question.id} className="p-4 border rounded-lg bg-white shadow-sm">
+      <div 
+        key={question.id} 
+        className={`p-4 border rounded-lg bg-white shadow-sm ${questionSkipped ? 'bg-yellow-100' : ''}`} // Set yellow bg if skipped
+      >
         <h3 className="text-lg font-semibold mb-2">
-          {Array.isArray(question.question) ? question.question[0] : question.question}
+          <span className="underline">Question {index + 1}:</span> {/* Question Number */}
+          <div dangerouslySetInnerHTML={{ __html: Array.isArray(question.question) ? question.question[0] : question.question }} />
         </h3>
         {renderOptions()}
 
@@ -256,53 +309,55 @@ const ExamResult = ({ params }: { params: { slug: string } }) => {
             <div className="bg-white p-6 rounded-lg shadow-sm">
               <FaCheckCircle className="text-green-500 mx-auto mb-3" size={60} />
               <h1 className="text-4xl font-bold text-green-500">Congratulations! You Passed!</h1>
-              <p className="text-gray-600 mt-2">You have successfully passed the exam.</p>
+              <p className="text-gray-600 mt-2">You have successfully passed the quiz.</p>
             </div>
           ) : (
             <div className="bg-white p-6 rounded-lg shadow-sm">
               <FaTimesCircle className="text-red-500 mx-auto mb-3" size={60} />
               <h1 className="text-4xl font-bold text-red-500">Sorry, You Failed</h1>
-              <p className="text-gray-600 mt-2">You did not reach the required score to pass.</p>
+              <p className="text-gray-600 mt-2">You did not reach the required score to pass the quiz.</p>
             </div>
           )}
         </div>
 
-        {/* User's Score Breakdown */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 mb-5">
+        {/* User's Quiz Result Breakdown */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-5 mb-5">
           <div className="p-6 border rounded-lg bg-white text-center shadow-sm">
             <h3 className="text-xl font-semibold mb-2">Total Questions</h3>
             <p className="text-2xl">{totalQuestions}</p>
           </div>
           <div className="p-6 border rounded-lg bg-white text-center shadow-sm">
             <h3 className="text-xl font-semibold mb-2">Correct Answers</h3>
-            <p className="text-2xl text-green-500">{userResult.correctCount}</p>
+            <p className="text-2xl text-green-500">{userQuizResult.correctCount}</p>
           </div>
           <div className="p-6 border rounded-lg bg-white text-center shadow-sm">
             <h3 className="text-xl font-semibold mb-2">Wrong Answers</h3>
-            <p className="text-2xl text-red-500">{userResult.wrongCount}</p>
+            <p className="text-2xl text-red-500">{userQuizResult.wrongCount}</p>
           </div>
           <div className="p-6 border rounded-lg bg-white text-center shadow-sm">
             <h3 className="text-xl font-semibold mb-2">Skipped</h3>
-            <p className="text-2xl text-gray-500">{userResult.skippedCount}</p>
+            <p className="text-2xl text-gray-500">{userQuizResult.skippedCount}</p>
           </div>
           <div className="p-6 border rounded-lg bg-white text-center shadow-sm">
             <h3 className="text-xl font-semibold mb-2">Marks</h3>
-            <p className="text-2xl">{userResult.marks}</p>
+            <p className="text-2xl">{userQuizResult.marks}</p>
           </div>
-          <div className="p-6 border rounded-lg bg-white text-center shadow-sm">
+          {/* <div className="p-6 border rounded-lg bg-white text-center shadow-sm">
             <h3 className="text-xl font-semibold mb-2">Time Taken</h3>
-            <p className="text-2xl">{formatTimeTaken(userResult.timeTaken)}</p>
-          </div>
+            <p className="text-2xl">{formatTimeTaken(userQuizResult.timeTaken)}</p>
+          </div> */}
         </div>
 
         {/* Render Questions */}
         <div className="mb-8">
-          <h2 className="text-3xl font-semibold mb-4">Exam Review</h2>
-          <div className="grid gap-6">{examData.questions.map((question) => renderQuestionResult(question))}</div>
+          <h2 className="text-3xl font-semibold mb-4">Quiz Review</h2>
+          <div className="grid gap-6">
+            {quizData.questions.map((question, index) => renderQuestionResult(question, index))}
+          </div>
         </div>
       </div>
     </div>
   );
 };
 
-export default ExamResult;
+export default QuizResult;
