@@ -299,19 +299,16 @@ export default function PracticeTestDetailPage({
       );
 
       if (response.data.status) {
-        toast.success("Quiz submitted successfully!");
+        toast.success("Practice Set submitted successfully!");
         // Optionally redirect or display a success message here
       } else {
-        toast.error("Error submitting quiz");
+        toast.error("Error submitting Practice Set");
       }
     } catch (error) {
-      console.error("Error submitting quiz:", error);
+      console.error("Error submitting Practice Set: ", error);
       toast.error("An error occurred during submission");
     }
   };
-  
-  
-  
 
   const formatTimeLeft = (time: number) => {
     const minutes = Math.floor(time / 60);
@@ -678,7 +675,7 @@ export default function PracticeTestDetailPage({
             </p>
             <div>
             <Link
-                href={`/dashboard`}
+                href={`/dashboard/practice-test-result/${uuid}`}
                 className="mt-4  text-center w-full bg-primary text-white font-semibold py-2 px-4 rounded hover:bg-primary-dark transition-colors flex justify-center items-center"
               >
                 Go to Result
