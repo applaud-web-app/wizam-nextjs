@@ -34,7 +34,8 @@ interface UserResult {
   correctCount: number;
   wrongCount: number;
   skippedCount: number;
-  timeTaken: number;
+  status: string;
+  timeTaken?: number; // Optional field for time taken
 }
 
 interface LeaderboardEntry {
@@ -66,22 +67,25 @@ const ExamResult = ({ params }: { params: { slug: string } }) => {
 
           // Map the exam and user result data from API response
           setExamData({
-            title: resultData.quiz.title,
-            duration: resultData.quiz.duration,
+            title: "resultData.quiz.title",
+            duration: "resultData.quiz.duration",
             questions: resultData.exam_preview.map((q: any) => ({
               id: q.question_id,
               question: q.question_text,
               correctAnswer: q.correct_answer,
               userAnswer: q.user_answer,
               isCorrect: q.is_correct,
+              options: q.options || [], // Ensure options are optional
+              explanation: q.explanation, // If explanation is provided
             })),
           });
 
           setUserResult({
-            correctCount: resultData.result.correct,
-            wrongCount: resultData.result.incorrect,
+            correctCount: parseInt(resultData.result.correct),
+            wrongCount: parseInt(resultData.result.incorrect),
             skippedCount: resultData.result.skipped,
-            timeTaken: resultData.result.timeTaken,
+            status: resultData.result.status,
+            timeTaken: resultData.result.timeTaken, // Add time taken if available
           });
 
           // Map leaderboard data
@@ -92,11 +96,11 @@ const ExamResult = ({ params }: { params: { slug: string } }) => {
           })));
         } else {
           toast.error('No exams found for this category');
-          router.push('/dashboard/all-exams');
+        //   router.push('/dashboard/all-exams');
         }
       } catch (error) {
-        toast.error('Error fetching exam results');
-        router.push('/dashboard/all-exams');
+        toast.error('Error fetching exam results : ' + error);
+        // router.push('/dashboard/all-exams');
       } finally {
         setLoading(false);
       }
@@ -116,7 +120,8 @@ const ExamResult = ({ params }: { params: { slug: string } }) => {
   const passed = percentageCorrect >= passingScore;
 
   // Helper function to format time
-  const formatTimeTaken = (time: number) => {
+  const formatTimeTaken = (time?: number) => {
+    if (!time) return "N/A";
     const minutes = Math.floor(time / 60);
     const seconds = time % 60;
     return `${minutes}m ${seconds}s`;
@@ -128,7 +133,7 @@ const ExamResult = ({ params }: { params: { slug: string } }) => {
 
     return (
       <div key={question.id} className="p-4 border rounded-lg bg-white shadow-sm">
-        <h3 className="text-lg font-semibold mb-2">{question.question}</h3>
+        <h3 className="text-lg font-semibold mb-2" dangerouslySetInnerHTML={{ __html: question.question }}></h3>
         
         {/* Render options if available */}
         {question.options && (
@@ -159,10 +164,12 @@ const ExamResult = ({ params }: { params: { slug: string } }) => {
 
         {/* User's Answer and Correct Answer */}
         <p className={`font-semibold ${isCorrect ? "text-green-500" : "text-red-500"}`}>
-          Your answer: {question.userAnswer?.join(", ") || "Skipped"}
+          {/* Your answer: {question.userAnswer?.join(", ") || "Skipped"} */}
+          {question.userAnswer}
         </p>
         <p className="font-semibold text-green-600">
-          Correct answer: {question.correctAnswer.join(", ")}
+          {/* Correct answer: {question.correctAnswer.join(", ")} */}
+          Correct answer: {question.correctAnswer}
         </p>
 
         {/* Explanation if available */}
@@ -256,6 +263,10 @@ const ExamResult = ({ params }: { params: { slug: string } }) => {
           <div className="p-6 border rounded-lg bg-white text-center shadow-sm">
             <h3 className="text-xl font-semibold mb-2">Time Taken</h3>
             <p className="text-2xl">{formatTimeTaken(userResult.timeTaken)}</p>
+          </div>
+          <div className="p-6 border rounded-lg bg-white text-center shadow-sm">
+            <h3 className="text-xl font-semibold mb-2">Status</h3>
+            <p className="text-2xl">{userResult.status}</p>
           </div>
         </div>
 
