@@ -63,7 +63,7 @@ const QuizResult = ({ params }: QuizResultProps) => {
 
     const fetchQuizResults = async () => {
       try {
-        const response = await axios.get(`https://wizam.awmtab.in/api/practice-set-result/${slug}`, {
+        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/practice-set-result/${slug}`, {
           headers: {
             Authorization: `Bearer ${Cookies.get("jwt")}`,
           },
