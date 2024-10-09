@@ -16,6 +16,7 @@ interface Exam {
   total_questions: number | null;
   total_marks: string | null;
   total_time: string | null;
+  slug: string | null;
 }
 
 export default function ExamList() {
@@ -56,6 +57,16 @@ export default function ExamList() {
     fetchExams();
   }, []);
 
+  // Function to handle payment logic
+  const handlePayment = (slug: string | null) => {
+    if (!slug) {
+      alert("No exam slug available.");
+      return;
+    }
+    // Implement your payment logic here
+    alert(`Redirecting to payment for ${slug}`);
+  };
+
   if (error) {
     return <div className="text-red-500">{error}</div>;
   }
@@ -94,15 +105,26 @@ export default function ExamList() {
             {exams.map((exam, index) => (
               <tr key={index} className="hover:bg-gray-50">
                 <td className="p-4">{index + 1}</td>
-                <td className="p-4">{exam.title || '-'}</td> 
-                <td className="p-4">{exam.duration_mode || '-'}</td> 
-                <td className="p-4">{exam.is_free !== null ? (exam.is_free === 1 ? 'Yes' : 'No') : '-'}</td> 
-                <td className="p-4">{exam.is_free === 1 || !exam.price ? 'Free' : `$${exam.price}` || '-'}</td> 
-                <td className="p-4">{exam.total_questions !== null ? exam.total_questions : '-'}</td> 
-                <td className="p-4">{exam.total_marks || '-'}</td> 
-                <td className="p-4">{exam.total_time || '-'}</td> 
+                <td className="p-4">{exam.title || '-'}</td> {/* Handle missing titles */}
+                <td className="p-4">{exam.duration_mode || '-'}</td> {/* Handle missing duration mode */}
+                <td className="p-4">{exam.is_free !== null ? (exam.is_free === 1 ? 'Yes' : 'No') : '-'}</td> {/* Handle is_free */}
+                <td className="p-4">{exam.is_free === 1 || !exam.price ? 'Free' : `$${exam.price}`}</td> {/* Handle price */}
+                <td className="p-4">{exam.total_questions !== null ? exam.total_questions : '-'}</td> {/* Handle missing questions */}
+                <td className="p-4">{exam.total_marks || '-'}</td> {/* Handle missing marks */}
+                <td className="p-4">{exam.total_time || '-'}</td> {/* Handle missing time */}
                 <td className="p-4">
-                  <Link href={`/dashboard/exam/${exam.title?.toLowerCase().replace(/\s+/g, '-')}`} className="text-primary font-semibold hover:underline">View Exam</Link>
+                  {exam.is_free === 1 ? (
+                    <Link href={`/dashboard/exam-detail/${exam.slug}`} className="text-primary font-semibold hover:underline">
+                      View Details
+                    </Link>
+                  ) : (
+                    <button
+                      className="bg-primary text-white py-1 px-5 rounded-full font-semibold hover:bg-primary-dark text-sm"
+                      onClick={() => handlePayment(exam.slug)}
+                    >
+                      Pay Now
+                    </button>
+                  )}
                 </td>
               </tr>
             ))}
