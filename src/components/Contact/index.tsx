@@ -254,8 +254,8 @@ const Contact: React.FC = () => {
                   className="w-full bg-transparent rounded-md border py-[10px] px-5 focus:ring-1 focus:ring-primary focus:border-primary"
                 >
                   <option value="">Select Study Mode</option>
-                  <option value="Full-Time">Full-Time</option>
-                  <option value="Part-Time">Part-Time</option>
+                  <option value="Full Time">Full Time</option>
+                  <option value="Part Time">Part Time</option>
                 </select>
                 {formik.touched.study_mode && formik.errors.study_mode ? (
                   <p className="text-red-500 text-sm">

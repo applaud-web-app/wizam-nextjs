@@ -5,7 +5,6 @@ import axios from "axios";
 import SingleBlog from "@/components/Blog/SingleBlog";
 import { format } from "date-fns";
 import Image from "next/image";
-import Link from "next/link";
 import Loader from "@/components/Common/Loader";
 
 // Type for Blog Post data from API
@@ -54,7 +53,7 @@ export default function Post({ params }: Props) {
       try {
         // Fetch the blog post by slug
         const postResponse = await axios.get<{ status: boolean; data: BlogPost; related: BlogPost[] }>(
-          `${process.env.NEXT_PUBLIC_API_URL}/${params.slug}`
+          `${process.env.NEXT_PUBLIC_API_URL}/resource/${params.slug}`
         );
         const fetchedPost = postResponse.data.data;
 

@@ -91,6 +91,7 @@ const Exams = () => {
     }
 
     setFilteredExams(filtered);
+    setCurrentPage(1); // Reset pagination to the first page
   };
 
   // Truncate long strings for title or description
@@ -170,15 +171,15 @@ const Exams = () => {
         <hr className="h-px my-8 bg-gray-200 border-0 dark:bg-gray-700" />
 
         {/* Exam Cards */}
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3">
-          {loading ? (
-            <div className="flex justify-center items-center h-[300px]">
-              <Loader />
-            </div>
-          ) : error ? (
-            <p className="text-center text-red-600">{error}</p>
-          ) : currentExams.length > 0 ? (
-            currentExams.map((exam: any) => (
+        {loading ? (
+          <div className="flex justify-center items-center h-[300px]">
+            <Loader />
+          </div>
+        ) : error ? (
+          <p className="text-center text-red-600">{error}</p>
+        ) : currentExams.length > 0 ? (
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3">
+            {currentExams.map((exam: any) => (
               <Link href={`/exams/${exam.slug}`} key={exam.slug}>
                 <div className="flex flex-col overflow-hidden rounded-lg bg-white shadow-md transition hover:shadow-lg cursor-pointer h-full">
                   {/* Image */}
@@ -230,7 +231,6 @@ const Exams = () => {
                           </span>
                         ) : (
                           <>
-                           
                             <span className="text-xl font-bold text-dark">
                               {siteSettings?.currency_symbol}
                               {Number(exam.price).toFixed(2)}
@@ -249,13 +249,13 @@ const Exams = () => {
                   </div>
                 </div>
               </Link>
-            ))
-          ) : (
-            <div className="flex justify-center items-center h-[300px]">
-              <NoData message="No exams available" />
-            </div>
-          )}
-        </div>
+            ))}
+          </div>
+        ) : (
+          <div className="flex justify-center items-center h-[300px]">
+            <NoData message="No exams available" />
+          </div>
+        )}
 
         {/* Pagination */}
         {filteredExams.length > itemsPerPage && (
