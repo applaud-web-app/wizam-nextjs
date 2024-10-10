@@ -310,20 +310,20 @@ const QuizResult = ({ params }: QuizResultProps) => {
           {passed ? (
             <div className="bg-white p-6 rounded-lg shadow-sm">
               <FaCheckCircle className="text-green-500 mx-auto mb-3" size={60} />
-              <h1 className="text-4xl font-bold text-green-500">Congratulations! You Passed!</h1>
-              <p className="text-gray-600 mt-2">You have successfully passed the quiz.</p>
+              <h1 className="text-4xl font-bold text-green-500">Test Completed</h1>
+              <p className="text-gray-600 mt-2">You've successfully completed the test. Keep up the great work and continue improving your skills!</p>
             </div>
           ) : (
             <div className="bg-white p-6 rounded-lg shadow-sm">
               <FaTimesCircle className="text-red-500 mx-auto mb-3" size={60} />
-              <h1 className="text-4xl font-bold text-red-500">Sorry, You Failed</h1>
-              <p className="text-gray-600 mt-2">You did not reach the required score to pass the quiz.</p>
+              <h1 className="text-4xl font-bold text-red-500">Test Completed</h1>
+              <p className="text-gray-600 mt-2">Don't worry, progress takes time. Review your results and keep practicing to improve.</p>
             </div>
           )}
         </div>
 
         {/* User's Quiz Result Breakdown */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5 mb-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-5 mb-5">
           <div className="p-6 border rounded-lg bg-white text-center shadow-sm">
             <h3 className="text-xl font-semibold mb-2">Total Questions</h3>
             <p className="text-2xl">{totalQuestions}</p>
@@ -352,7 +352,7 @@ const QuizResult = ({ params }: QuizResultProps) => {
 
         {/* Render Questions */}
         <div className="mb-8">
-          <h2 className="text-3xl font-semibold mb-4">Quiz Review</h2>
+          <h2 className="text-3xl font-semibold mb-4">Practice Test Review</h2>
           <div className="grid gap-6">
             {quizData.questions.map((question, index) => renderQuestionResult(question, index))}
           </div>

@@ -16,6 +16,7 @@ interface PracticeSet {
   questions: number; // Number of questions
   time: number; // Time limit for the practice set
   marks: number; // Total marks for the practice set
+  is_free:number;
 }
 
 interface skillsData {
@@ -63,6 +64,7 @@ export default function PracticeSetPage() {
               questions: practice.practice_question,
               time: practice.practice_time, // Time in seconds
               marks: practice.practice_marks,
+              is_free: practice.is_free,
             })),
           }));
 
@@ -72,7 +74,7 @@ export default function PracticeSetPage() {
         }
       } catch (err) {
         console.error('Error fetching videos:', err);
-        setError('An error occurred while fetching videos');
+        setError('No Practice Test Found');
       }
 
       setLoading(false);
@@ -123,11 +125,21 @@ export default function PracticeSetPage() {
                   </p>
 
                   {/* Start Test Button */}
-                  <Link href={`/dashboard/practice-test/${practiceSet.slug}`}>
-                    <span className="bg-primary block text-center text-white px-4 py-2 rounded hover:bg-primary-dark transition duration-200 w-full">
-                      Start Test
-                    </span>
-                  </Link>
+                  {practiceSet.is_free === 1 ? (
+                    <Link href={`/dashboard/practice-test/${practiceSet.slug}`}>
+                      <span className="bg-primary block text-center text-white px-4 py-2 rounded hover:bg-primary-dark transition duration-200 w-full">
+                        Start Test
+                      </span>
+                    </Link>
+                  ) : (
+                    <Link href={``}>
+                      <span className="bg-primary block text-center text-white px-4 py-2 rounded hover:bg-primary-dark transition duration-200 w-full">
+                        Paid Exam
+                      </span>
+                    </Link>
+                  )}
+
+                  
                 </div>
               ))}
             </div>

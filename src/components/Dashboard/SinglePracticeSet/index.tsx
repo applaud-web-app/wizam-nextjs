@@ -117,7 +117,7 @@ export default function SinglePracticeSet({ slug }: SinglePracticeSetProps) {
       {/* test Description */}
       <div className="mb-8">
         <h3 className="text-xl font-semibold text-primary mb-4 flex items-center">
-          <FaInfoCircle className="text-primary mr-2" /> test Description
+          <FaInfoCircle className="text-primary mr-2" /> Test Description
         </h3>
         <div
           dangerouslySetInnerHTML={{ __html: testDetails.description || "" }}
