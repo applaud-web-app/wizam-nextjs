@@ -95,12 +95,14 @@ const ResetPassword = () => {
       {/* Header */}
       <header className="w-full py-4">
         <div className="container flex items-center justify-between mx-auto">
-          <Image
-            src="/images/logo/wizam-logo.png"
-            alt="Wizam Logo"
-            width={160}
-            height={40}
-          />
+        <Link href="/">
+            <Image
+              src="/images/logo/wizam-logo.png"
+              alt="Wizam Logo"
+              width={160}
+              height={40}
+            />
+          </Link>
           <Link
             href="/"
             className="flex items-center text-lg text-gray-700 hover:underline"

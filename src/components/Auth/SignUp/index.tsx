@@ -110,12 +110,14 @@ const SignUp = () => {
       {/* Header */}
       <header className="w-full py-4 z-20">
         <div className="container mx-auto flex items-center justify-between px-4">
-          <Image
-            src="/images/logo/wizam-logo.png"
-            alt="Wizam Logo"
-            width={160}
-            height={40}
-          />
+        <Link href="/">
+            <Image
+              src="/images/logo/wizam-logo.png"
+              alt="Wizam Logo"
+              width={160}
+              height={40}
+            />
+          </Link>
           <Link
             href="/"
             className="flex items-center text-lg text-gray-700 hover:underline"
