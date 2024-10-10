@@ -14,8 +14,12 @@ import axios from "axios";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css"; // Import Toastify styles
 import Cookies from "js-cookie";
+import { useSiteSettings } from "@/context/SiteContext"; // Import the hook to use site settings
+
 
 const SignUp = () => {
+  const { siteSettings, error } = useSiteSettings(); // Access site settings from the context
+
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [selectedCountry, setSelectedCountry] = useState<string>("");
   const router = useRouter(); // For redirecting to other pages
@@ -105,18 +109,24 @@ const SignUp = () => {
     }
   };
 
+  if (error || !siteSettings) {
+    return <p>Error loading site settings...</p>; // Handle the case where settings couldn't be fetched
+  }
   return (
     <section className="relative min-h-screen flex flex-col items-center">
       {/* Header */}
       <header className="w-full py-4 z-20">
         <div className="container mx-auto flex items-center justify-between px-4">
         <Link href="/">
-            <Image
-              src="/images/logo/wizam-logo.png"
-              alt="Wizam Logo"
-              width={160}
-              height={40}
-            />
+            {siteSettings.site_logo && (
+                <Image
+                  src={siteSettings.site_logo}
+                  alt={`${siteSettings.site_name} logo`}
+                  width={150}
+                  height={30}
+                  className="dark:hidden"
+                />
+              )}
           </Link>
           <Link
             href="/"

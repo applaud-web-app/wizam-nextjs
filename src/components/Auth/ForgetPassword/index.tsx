@@ -7,8 +7,12 @@ import { FaHome } from "react-icons/fa";
 import { useRouter } from "next/navigation"; // Use router to redirect
 import { toast } from "react-toastify"; // Import toast from react-toastify
 import Cookies from "js-cookie";
+import { useSiteSettings } from "@/context/SiteContext"; // Import the hook to use site settings
+
 
 const ForgetPassword = () => {
+  const { siteSettings } = useSiteSettings(); // Access site settings from the context
+
   const [email, setEmail] = useState<string>("");
   const [submitted, setSubmitted] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
@@ -81,7 +85,9 @@ const ForgetPassword = () => {
     }
   };
 
-
+  if (error || !siteSettings) {
+    return <p>Error loading site settings...</p>; // Handle the case where settings couldn't be fetched
+  }
 
   return (
     <section className="relative min-h-screen flex flex-col items-center px-4 md:px-0">
@@ -89,12 +95,15 @@ const ForgetPassword = () => {
       <header className="w-full py-4">
         <div className="container flex items-center justify-between mx-auto">
         <Link href="/">
-            <Image
-              src="/images/logo/wizam-logo.png"
-              alt="Wizam Logo"
-              width={160}
-              height={40}
-            />
+        {siteSettings.site_logo && (
+                <Image
+                  src={siteSettings.site_logo}
+                  alt={`${siteSettings.site_name} logo`}
+                  width={150}
+                  height={30}
+                  className="dark:hidden"
+                />
+              )}
           </Link>
           <Link
             href="/"
@@ -109,7 +118,7 @@ const ForgetPassword = () => {
       {/* Forgot Password Card */}
       <div className="relative mt-16 bg-white rounded-lg  shadow-2xl max-w-xl w-full mx-auto md:mx-0">
         <div className="p-6 sm:p-10 md:p-14">
-          <h2 className="text-[24px] md:text-[27px] font-semibold text-left text-gray-800">
+          <h2 className="text-[24px] md:text-[27px] font-bold text-left text-gray-800">
             Forgot your password?
           </h2>
           <p className="mt-2 text-sm md:text-base text-gray-500">
