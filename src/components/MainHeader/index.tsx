@@ -24,7 +24,7 @@ const Header = () => {
   // Search overlay state
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState(""); // State for search query
-  const [suggestions, setSuggestions] = useState<string[]>([]); // State for suggestions
+  const [suggestions, setSuggestions] = useState<any[]>([]); // State for exam suggestions
 
   // Handle sticky navbar on scroll
   useEffect(() => {
@@ -52,7 +52,6 @@ const Header = () => {
     const token = Cookies.get("jwt");
     setIsLoggedIn(!!token);
   }, []);
-
 
   // LOGOUT
   const handleLogout = async () => {
@@ -94,55 +93,71 @@ const Header = () => {
       }
     } catch (error) {
       console.error("Logout failed:", error);
-      // Handle any errors (optional: show a notification to the user)
     }
   };
 
   // Toggle the mobile navbar
   const handleNavbarToggle = () => setNavbarOpen(!navbarOpen);
 
-  // Fetch suggestions based on search query
+  // Fetch exam and resource suggestions based on search query
   useEffect(() => {
-    if (searchQuery) {
-      const fetchSuggestions = async () => {
-        // Mock search suggestions - you can replace this with an API call
-        const mockData = [
-          "React",
-          "React Native",
-          "Next.js",
-          "JavaScript",
-          "TypeScript",
-          "GraphQL",
-          "Tailwind CSS",
-        ];
+    const fetchExamsAndResources = async () => {
+      if (searchQuery) {
+        try {
+          // Fetch both exams and resources
+          const [examResponse, resourceResponse] = await Promise.all([
+            axios.get(`${process.env.NEXT_PUBLIC_API_URL}/exams`),
+            axios.get(`${process.env.NEXT_PUBLIC_API_URL}/resource`), // Assuming /resources endpoint exists
+          ]);
 
-        // Filter suggestions based on the query
-        const filteredSuggestions = mockData.filter(item =>
-          item.toLowerCase().includes(searchQuery.toLowerCase())
-        );
-        setSuggestions(filteredSuggestions);
-      };
+          // Filter exams based on search query
+          const filteredExams = examResponse.data.data.filter((exam: any) =>
+            exam.title.toLowerCase().includes(searchQuery.toLowerCase())
+          );
 
-      fetchSuggestions();
-    } else {
-      setSuggestions([]);
-    }
+          // Filter resources based on search query
+          const filteredResources = resourceResponse.data.data.filter((resource: any) =>
+            resource.title.toLowerCase().includes(searchQuery.toLowerCase())
+          );
+
+          // Combine exams and resources for the suggestions list
+          const combinedSuggestions = [
+            ...filteredExams.map((exam: any) => ({ ...exam, type: "exam" })), // Label as exam
+            ...filteredResources.map((resource: any) => ({ ...resource, type: "resource" })), // Label as resource
+          ];
+
+          setSuggestions(combinedSuggestions);
+        } catch (error) {
+          console.error("Error fetching suggestions:", error);
+        }
+      } else {
+        setSuggestions([]);
+      }
+    };
+
+    fetchExamsAndResources();
   }, [searchQuery]);
 
   // Handle form submit
   const handleSearchSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    console.log(`Searching for: ${searchQuery}`);
-    // Handle the search action (e.g., router.push with searchQuery)
-    // Close search overlay after search submission
-    setSuggestions([]); // Clear suggestions after search
-    setSearchOpen(false); // Close search overlay after search
+    if (suggestions.length === 1) {
+      // If there is exactly one suggestion, redirect to its detail page
+      const suggestion = suggestions[0];
+      handleSuggestionClick(suggestion);
+    }
   };
 
-  // Handle suggestion click with a single click
-  const handleSuggestionClick = (suggestion: string) => {
-    setSearchQuery(suggestion); // Populate the input with the clicked suggestion
-    setSuggestions([]); // Clear the suggestions but don't close the overlay
+  // Handle suggestion click
+  const handleSuggestionClick = (suggestion: any) => {
+    setSearchQuery(suggestion.title); // Populate the input with the clicked suggestion
+    if (suggestion.type === "exam") {
+      router.push(`/exams/${suggestion.slug}`); // Redirect to exam detail page
+    } else if (suggestion.type === "resource") {
+      router.push(`/blogs/${suggestion.slug}`); // Redirect to resource detail page
+    }
+    setSuggestions([]); // Clear suggestions
+    setSearchOpen(false); // Close search overlay
   };
 
   if (loading) {
@@ -219,10 +234,12 @@ const Header = () => {
 
             {isLoggedIn ? (
               <>
-                <Link href="/dashboard" className="bg-secondary text-white py-2 px-6 rounded-full hover:bg-secondary-dark transition"
-                >Dashboard</Link>
-                <button onClick={handleLogout} className="bg-primary text-white py-2 px-6 rounded-full hover:bg-primary-dark transition"
-                >Sign Out</button>
+                <Link href="/dashboard" className="bg-secondary text-white py-2 px-6 rounded-full hover:bg-secondary-dark transition">
+                  Dashboard
+                </Link>
+                <button onClick={handleLogout} className="bg-primary text-white py-2 px-6 rounded-full hover:bg-primary-dark transition">
+                  Sign Out
+                </button>
               </>
             ) : (
               <>
@@ -340,7 +357,7 @@ const Header = () => {
               <div className="flex items-center border border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden">
                 <input
                   type="text"
-                  placeholder="Search for courses, articles, or resources..."
+                  placeholder="Search for exams..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)} // Update search query
                   className="w-full h-12 px-4 text-gray-800 dark:text-white bg-white dark:bg-gray-700 border-0 focus:outline-none"
@@ -357,13 +374,13 @@ const Header = () => {
               {/* Suggestions Dropdown */}
               {suggestions.length > 0 && (
                 <ul className="absolute left-0 right-0 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg mt-2 max-h-60 overflow-y-auto z-50">
-                  {suggestions.map((suggestion, index) => (
+                  {suggestions.map((suggestion: any, index) => (
                     <li
                       key={index}
                       className="px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 cursor-pointer text-gray-800 dark:text-white transition duration-200"
                       onClick={() => handleSuggestionClick(suggestion)} // Single click handler
                     >
-                      {suggestion}
+                      {suggestion.title}
                     </li>
                   ))}
                 </ul>
@@ -372,7 +389,7 @@ const Header = () => {
 
             {/* Search Prompt Text */}
             <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-              Start typing to search across our platform.
+              Start typing to search across exams.
             </p>
           </div>
         </div>
