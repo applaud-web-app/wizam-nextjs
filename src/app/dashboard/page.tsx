@@ -7,6 +7,7 @@ import ExamTable from "@/components/ExamTable";
 import QuizTable from "@/components/QuizTable";
 import { FiCheckCircle, FiPercent, FiThumbsUp, FiThumbsDown } from "react-icons/fi";
 import DashboardCard from "@/components/DashboardCards";
+import NoData from "@/components/Common/NoData";
 
 // Type definitions for the response
 interface Exam {
@@ -52,9 +53,12 @@ export default function DashboardPage() {
       const jwt = Cookies.get("jwt");
       const category_id = Cookies.get("category_id");
 
-      if (!jwt || !category_id) {
+      if (!jwt) {
         setError("Missing authentication data.");
         return;
+      }
+      if (!category_id) {
+        return <NoData message="Syallabus not found"/>;
       }
       try {
         const response = await axios.get<DashboardData>(`${process.env.NEXT_PUBLIC_API_URL}/student-dashboard`, {
