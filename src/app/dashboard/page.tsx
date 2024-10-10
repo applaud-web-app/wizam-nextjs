@@ -17,7 +17,7 @@ interface Exam {
   duration_mode: string;
   total_questions: number;
   total_marks: string;
-  total_time: string;
+  total_time: number;
   duration:string;
   point_mode:string;
   point:number;
@@ -33,7 +33,7 @@ interface Quiz {
   point_mode:string;
   point:number;
   duration_mode: string;
-  total_time: string;
+  total_time: number;
 }
 
 interface DashboardData {

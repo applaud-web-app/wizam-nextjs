@@ -13,7 +13,7 @@ interface Quiz {
   point_mode:string;
   point:number;
   duration_mode: string;
-  total_time: string;
+  total_time: number;
 }
 
 interface QuizTableProps {
@@ -49,9 +49,9 @@ export default function QuizTable({ quizzes }: QuizTableProps) {
               <tr key={index} className="hover:bg-gray-50">
                 <td className="p-4">{index + 1}</td>
                 <td className="p-4">{quiz.title}</td>
-                <td className="p-4">{quiz.duration_mode == "manual" ? quiz.duration : quiz.total_time}</td>
+                <td className="p-4">{quiz.duration_mode === "manual" ? quiz.duration : Math.floor(quiz.total_time / 60)} min</td>
                 <td className="p-4">{quiz.total_questions}</td>
-                <td className="p-4">{quiz.point_mode == "manual" ? (quiz.total_questions * quiz.point) : quiz.total_time}</td>
+                <td className="p-4">{quiz.point_mode == "manual" ? (quiz.total_questions * quiz.point) : quiz.total_marks}</td>
               </tr>
             ))}
           </tbody>

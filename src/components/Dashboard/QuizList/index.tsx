@@ -12,9 +12,10 @@ interface Quiz {
   duration: string;
   is_free: number;
   total_questions: number;
-  total_time: string;
+  total_time: number;
   pass_percentage: string;
   slug: string;
+  duration_mode:string;
 }
 
 export default function QuizList() {
@@ -68,13 +69,13 @@ export default function QuizList() {
       {/* Flexbox container to align heading and "See All" link */}
       <div className="flex justify-between items-center mb-3 flex-wrap">
         <h2 className="text-lg font-bold mb-2 md:mb-0">All Quizzes</h2>
-        <a
+        {/* <a
           href="#"
           className="text-secondary font-semibold flex items-center space-x-2 hover:underline transition duration-200"
         >
           <span>See All</span>
-          <FiArrowRight /> {/* React Icon for arrow */}
-        </a>
+          <FiArrowRight /> 
+        </a> */}
       </div>
 
       {/* Table container with horizontal scrolling on small screens */}
@@ -96,13 +97,14 @@ export default function QuizList() {
               <tr key={index} className="hover:bg-gray-50">
                 <td className="p-4">{index + 1}</td>
                 <td className="p-4">{quiz.title}</td>
-                <td className="p-4">{quiz.duration}</td>
+                {/* <td className="p-4">{quiz.duration}</td> */}
+                <td className="p-4">{quiz.duration_mode == "manual" ? quiz.duration : Math.floor(quiz.total_time / 60)} min</td> 
                 <td className="p-4">{quiz.is_free ? 'Free' : `$${quiz.total_time}`}</td>
                 <td className="p-4">{quiz.total_questions}</td>
                 <td className="p-4">{quiz.pass_percentage}%</td>
                 <td className="p-4">
                   {quiz.is_free ? (
-                    <Link href={`/dashboard/exam-detail/${quiz.slug}`} className="text-secondary font-semibold hover:underline">
+                    <Link href={`/dashboard/quiz-detail/${quiz.slug}`} className="text-secondary font-semibold hover:underline">
                       View Details
                     </Link>
                   ) : (
