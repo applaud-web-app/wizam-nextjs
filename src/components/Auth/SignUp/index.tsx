@@ -176,7 +176,7 @@ const SignUp = () => {
                 Contact
               </Link>{" "}
               •{" "}
-              <Link href="/privacy" className="hover:underline">
+              <Link href="/privacy-policy" className="hover:underline">
                 Privacy & Terms
               </Link>
             </p>
@@ -335,7 +335,7 @@ const SignUp = () => {
                       />
                       <span className="ml-2 text-sm text-gray-700">
                         By creating an account, you confirm that you have read and agree to Wizam's{" "}
-                        <Link href="/terms" className="text-primary hover:underline">
+                        <Link href="/term-and-condition" className="text-primary hover:underline">
                           Terms and Conditions
                         </Link>
                       </span>
