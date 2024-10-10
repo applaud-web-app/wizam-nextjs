@@ -10,8 +10,12 @@ import { useRouter } from "next/navigation";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
 import Cookies from "js-cookie";
+import { useSiteSettings } from "@/context/SiteContext"; // Import the hook to use site settings
+
 
 const ResetPassword = () => {
+  const { siteSettings, error } = useSiteSettings(); // Access site settings from the context
+
   const [passwordVisible, setPasswordVisible] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
   const router = useRouter();
@@ -90,18 +94,25 @@ const ResetPassword = () => {
       .required("Confirm password is required"),
   });
 
+  if (error || !siteSettings) {
+    return <p>Error loading site settings...</p>; // Handle the case where settings couldn't be fetched
+  }
+
   return (
     <section className="relative min-h-screen flex flex-col items-center px-4 md:px-0">
       {/* Header */}
       <header className="w-full py-4">
         <div className="container flex items-center justify-between mx-auto">
         <Link href="/">
-            <Image
-              src="/images/logo/wizam-logo.png"
-              alt="Wizam Logo"
-              width={160}
-              height={40}
-            />
+          {siteSettings.site_logo && (
+                <Image
+                  src={siteSettings.site_logo}
+                  alt={`${siteSettings.site_name} logo`}
+                  width={150}
+                  height={30}
+                  className="dark:hidden"
+                />
+              )}
           </Link>
           <Link
             href="/"
