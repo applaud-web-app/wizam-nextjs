@@ -92,16 +92,16 @@ export default function DashboardPage() {
   return (
     <div className="dashboard-page">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <DashboardCard title="Completed Exams" content={`${data.completed_exam}`} icon={<FiThumbsUp />} iconColor="text-green-500" />
+        <DashboardCard title="Completed Exams" content={`${data.completed_exam} Completed`} icon={<FiThumbsUp />} iconColor="text-green-500" />
         <DashboardCard title="Passed Exams" content={`${data.pass_exam} Passed`} icon={<FiCheckCircle />} iconColor="text-primary" />
         <DashboardCard title="Failed Exams" content={`${data.failed_exam} Failed`} icon={<FiThumbsDown />} iconColor="text-red-500" />
-        <DashboardCard title="Average Score" content={`${roundedAverageScore}%`} icon={<FiPercent />} iconColor="text-indigo-500" />
+        <DashboardCard title="Average Score" content={`${roundedAverageScore}% Score`} icon={<FiPercent />} iconColor="text-indigo-500" />
        
       </div>
 
       {/* Check if exams and quizzes exist before rendering */}
-      {data.exams && data.exams.length > 0 ? <ExamTable exams={data.exams} /> : <p>No exams available</p>}
-      {data.quizzes && data.quizzes.length > 0 ? <QuizTable quizzes={data.quizzes} /> : <p>No quizzes available</p>}
+      {data.exams && data.exams.length > 0 ? <ExamTable exams={data.exams} /> : ''}
+      {data.quizzes && data.quizzes.length > 0 ? <QuizTable quizzes={data.quizzes} /> : ''}
     </div>
   );
 }
