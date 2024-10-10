@@ -1,5 +1,4 @@
-"use client"; // Use client-side features
-
+"use client";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import SectionTitle from "../Common/SectionTitle";
@@ -87,19 +86,21 @@ const PopularExams = () => {
           <SectionTitle title={sectionData.title} align="center" />
         )}
 
-        {/* Grid Layout for Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {loading ? (
-            // Display skeleton loader while loading
-            <>
-              <div className="animate-pulse bg-gray-200 h-[300px] w-full rounded-md"></div>
-              <div className="animate-pulse bg-gray-200 h-[300px] w-full rounded-md"></div>
-              <div className="animate-pulse bg-gray-200 h-[300px] w-full rounded-md"></div>
-            </>
-          ) : error ? (
-            <p className="text-center w-full text-lg text-red-600">{error}</p>
-          ) : exams.length > 0 ? (
-            exams.map((exam, i) => (
+        {/* Content Area */}
+        {loading ? (
+          // Display skeleton loader while loading
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className="animate-pulse bg-gray-200 h-[300px] w-full rounded-md"></div>
+            <div className="animate-pulse bg-gray-200 h-[300px] w-full rounded-md"></div>
+            <div className="animate-pulse bg-gray-200 h-[300px] w-full rounded-md"></div>
+          </div>
+        ) : error ? (
+          // Display error message
+          <p className="text-center w-full text-lg text-red-600">{error}</p>
+        ) : exams.length > 0 ? (
+          // Grid Layout for Cards
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {exams.map((exam, i) => (
               <Link
                 href={`/exams/${exam.slug}`}
                 key={i}
@@ -155,11 +156,14 @@ const PopularExams = () => {
                   </div>
                 </div>
               </Link>
-            ))
-          ) : (
+            ))}
+          </div>
+        ) : (
+          // NoData component centered outside the grid
+          <div className="flex justify-center items-center py-8">
             <NoData message="No popular exams available" />
-          )}
-        </div>
+          </div>
+        )}
 
         {/* More Exams Button */}
         {exams.length > 0 && sectionData && (

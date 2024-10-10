@@ -8,6 +8,8 @@ import QuizTable from "@/components/QuizTable";
 import { FiCheckCircle, FiPercent, FiThumbsUp, FiThumbsDown } from "react-icons/fi";
 import DashboardCard from "@/components/DashboardCards";
 import NoData from "@/components/Common/NoData";
+import Loader from "@/components/Common/Loader";
+import { useRouter } from 'next/navigation';
 
 // Type definitions for the response
 interface Exam {
@@ -46,9 +48,11 @@ interface DashboardData {
 export default function DashboardPage() {
   const [data, setData] = useState<DashboardData | null>(null); // Initialize with null to handle data loading
   const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
 
   useEffect(() => {
     const fetchData = async () => {
+      <Loader />
       // Retrieve JWT and category_id from cookies using js-cookie
       const jwt = Cookies.get("jwt");
       const category_id = Cookies.get("category_id");
@@ -58,7 +62,8 @@ export default function DashboardPage() {
         return;
       }
       if (!category_id) {
-        return <NoData message="Syallabus not found"/>;
+        router.push("/dashboard/change-syllabus");
+        return;
       }
       try {
         const response = await axios.get<DashboardData>(`${process.env.NEXT_PUBLIC_API_URL}/student-dashboard`, {
@@ -67,7 +72,7 @@ export default function DashboardPage() {
           },
           params: { category: category_id }, // Send category_id as a query parameter
         });
-      
+        console.log(response.data);
         setData(response.data);
       } catch (error) {
         setError("Failed to fetch data");
@@ -79,7 +84,7 @@ export default function DashboardPage() {
   }, []);
 
   if (error) return <div>{error}</div>;
-  if (!data) return <div>Loading...</div>; // Wait for data to be fetched
+  if (!data) return <NoData message="No Data Found"/>; // Wait for data to be fetched
 
   // Calculate rounded average score and total completed exams
   const roundedAverageScore = Math.round(data.average_exam);

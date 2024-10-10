@@ -74,7 +74,7 @@ export default function ChangeSyllabus() {
   }
 
   if (syllabuses.length === 0) {
-    return <NoData message="No syllabuses available." />; // Show NoData component if no syllabuses
+    return <NoData message="No syllabus available." />; // Show NoData component if no syllabuses
   }
 
   return (

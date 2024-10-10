@@ -6,9 +6,9 @@ const NotFound = () => {
   return (
     <section className=" flex items-center justify-center  dark:bg-dark-2 py-20 lg:py-[60px]">
       <div className="container mx-auto text-center">
-        <div className="flex flex-wrap items-center justify-center">
+        <div className="max-w-2xl mx-auto">
           {/* Left Side: 404 Illustration */}
-          <div className="w-full md:w-5/12 lg:w-6/12 mb-12 md:mb-0">
+          <div className="mb-0">
             <div className="relative mx-auto aspect-[129/138] max-w-[357px]">
               <Image
                 src="/images/404.svg"
@@ -25,7 +25,7 @@ const NotFound = () => {
             </div>
           </div>
           {/* Right Side: Text and Button */}
-          <div className="w-full md:w-7/12 lg:w-6/12 xl:w-5/12">
+          <div className="w-full ">
             <div className="mb-8 animate-bounce">
               <svg
                 width="327"

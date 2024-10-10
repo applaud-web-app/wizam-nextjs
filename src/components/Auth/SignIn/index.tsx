@@ -25,7 +25,7 @@ const SignIn = () => {
     }
   }, []);
 
-  const handleSignIn = async (values:any) => {
+  const handleSignIn = async (values: any, { resetForm }: any) => {
     setLoading(true);
 
     try {
@@ -40,12 +40,9 @@ const SignIn = () => {
 
       // Check if the response contains status true/false
       if (response.data.status === true) {
-        console.log(response.data);
-        // Optionally, store token in local storage if needed
         const token = response.data.token; // Extract token from the response
         // Set the token in a cookie
         Cookies.set('jwt', token, { expires: 1 }); // Set cookie to expire in 1 day
-        
 
         // Show success toast notification
         toast.success("Login successful!", {
@@ -57,9 +54,9 @@ const SignIn = () => {
           draggable: true,
         });
 
-        // Redirect to another page after a brief delay to let the toast show
+        // Redirect to the homepage after login
         setTimeout(() => {
-          router.push("/"); // Redirect to the /about page after login
+          router.push("/"); 
         }, 1000);
       } else {
         // Display an error toast when status is false
@@ -72,8 +69,11 @@ const SignIn = () => {
           pauseOnHover: true,
           draggable: true,
         });
+
+        // Reset the form after invalid login attempt
+        resetForm();
       }
-    } catch (error:any) {
+    } catch (error: any) {
       // Display a generic error toast if the request fails (e.g., network issue)
       const errorMessage = error.response?.data?.message || "An error occurred during sign-in.";
       toast.error(errorMessage, {
@@ -84,6 +84,9 @@ const SignIn = () => {
         pauseOnHover: true,
         draggable: true,
       });
+
+      // Reset the form after invalid login attempt
+      resetForm();
     } finally {
       setLoading(false); // Reset the loading state
     }
