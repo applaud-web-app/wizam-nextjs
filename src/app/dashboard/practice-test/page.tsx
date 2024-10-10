@@ -14,7 +14,7 @@ interface PracticeSet {
   slug: string;
   syllabus: string; // Syllabus replaces category
   questions: number; // Number of questions
-  time: string; // Time limit for the practice set
+  time: number; // Time limit for the practice set
   marks: number; // Total marks for the practice set
 }
 
@@ -43,7 +43,6 @@ export default function PracticeSetPage() {
 
       try {
         const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/practice-set`, {
-        
           params: {
             category: categoryId, // Pass category_id as a query parameter
           },
@@ -59,10 +58,10 @@ export default function PracticeSetPage() {
             name: key, // This will dynamically set the name to 'Learning', 'Music', etc.
             practiceSets: response.data.data[key].map((practice: any) => ({
               title: practice.practice_title,
-              syllabus:categoryName,
+              syllabus: categoryName,
               slug: practice.practice_slug,
               questions: practice.practice_question,
-              time: `${practice.practice_time} min`,
+              time: practice.practice_time, // Time in seconds
               marks: practice.practice_marks,
             })),
           }));
@@ -114,7 +113,8 @@ export default function PracticeSetPage() {
 
                   {/* Time */}
                   <p className="text-gray-600 mb-1">
-                    <FaClock className="inline mr-2 text-primary" /> <strong>Time: </strong>{practiceSet.time}
+                    <FaClock className="inline mr-2 text-primary" /> 
+                    <strong>Time: </strong>{practiceSet.time ? Math.floor(practiceSet.time / 60) : 0} min
                   </p>
 
                   {/* Marks */}
