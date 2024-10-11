@@ -22,7 +22,7 @@ const Values: React.FC<ValuesProps> = ({ data }) => {
                 {data.title}
               </h2>
               <div
-                className="mb-8 text-lg sm:text-xl leading-relaxed text-body-color dark:text-dark"
+                className="mb-8 text-lg sm:text-xl leading-relaxed text-body-color dark:text-dark-6"
                 dangerouslySetInnerHTML={{ __html: data.description }}
               />
             </div>

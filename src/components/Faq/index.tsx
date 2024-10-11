@@ -55,7 +55,7 @@ const AccordionItem: FC<AccordionItemProps> = ({ header, text }) => {
       </button>
 
       <div className={`duration-200 ease-in-out ${active ? "block" : "hidden"}`}>
-        <p className="py-3 text-base leading-relaxed text-body-color dark:text-dark">
+        <p className="py-3 text-base leading-relaxed text-body-color dark:text-dark-6">
           {text}
         </p>
       </div>
@@ -133,7 +133,7 @@ const Faq = () => {
         {/* More FAQs Button */}
         <div className="text-center mt-8">
           <Link href={faqMeta?.button_link || "/faq"}>
-            <span className="px-6 py-3 rounded-full bg-primary text-dark font-semibold transition hover:bg-primary-dark">
+            <span className="px-6 py-3 rounded-full bg-primary text-white font-medium transition hover:bg-primary-dark">
               {faqMeta?.button_text || "More FAQs"}
             </span>
           </Link>

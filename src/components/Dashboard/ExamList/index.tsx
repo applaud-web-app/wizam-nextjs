@@ -88,7 +88,7 @@ export default function ExamList() {
       {/* Table container with horizontal scrolling on small screens */}
       <div className="overflow-x-auto">
         <table className="min-w-full table-auto">
-          <thead className="bg-primary text-dark font-semibold">
+          <thead className="bg-primary text-white">
             <tr>
               <th className="p-3 text-left rounded-tl-lg">S.No</th>
               <th className="p-3 text-left">Exam Title</th>
@@ -119,7 +119,7 @@ export default function ExamList() {
                     </Link>
                   ) : (
                     <button
-                      className="bg-primary text-dark font-semibold py-1 px-5 rounded-full font-semibold hover:bg-primary-dark text-sm"
+                      className="bg-primary text-white py-1 px-5 rounded-full font-semibold hover:bg-primary-dark text-sm"
                       onClick={() => handlePayment(exam.slug)}
                     >
                       Pay Now

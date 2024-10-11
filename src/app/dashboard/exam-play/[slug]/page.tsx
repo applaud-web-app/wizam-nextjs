@@ -620,7 +620,7 @@ export default function PlayExamPage({
 
               {currentQuestionIndex < examData.questions.length - 1 ? (
                 <button
-                  className="bg-primary text-dark font-semibold px-4 py-2 rounded-lg hover:bg-primary-dark transition-colors"
+                  className="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary-dark transition-colors"
                   onClick={handleNextQuestion}
                 >
                   Next <FaArrowRight className="inline ml-2" />
@@ -651,7 +651,7 @@ export default function PlayExamPage({
             <div>
               <Link
                 href={`/dashboard/exam-result/${uuid}`}
-                className="mt-4 text-center w-full bg-primary text-dark font-semibold font-semibold py-2 px-4 rounded hover:bg-primary-dark transition-colors flex justify-center items-center"
+                className="mt-4 text-center w-full bg-primary text-white font-semibold py-2 px-4 rounded hover:bg-primary-dark transition-colors flex justify-center items-center"
               >
                 Go to Result
                 <AiOutlineArrowRight className="ml-2" />
@@ -711,7 +711,7 @@ export default function PlayExamPage({
                 key={index}
                 className={`p-2 rounded-lg border ${
                   currentQuestionIndex === index
-                    ? "bg-primary text-dark font-semibold"
+                    ? "bg-primary text-white"
                     : answers[question.id]
                     ? "bg-green-200 text-black"
                     : "bg-yellow-200 text-black"

@@ -379,7 +379,7 @@ const Contact: React.FC = () => {
 
               <button
                 type="submit"
-                className="w-full bg-primary text-dark font-semibold py-3 rounded-full hover:bg-[#57a628] focus:ring-1 focus:ring-primary"
+                className="w-full bg-primary text-white py-3 rounded-full hover:bg-[#57a628] focus:ring-1 focus:ring-primary"
                 disabled={loading}
               >
                 {loading ? "Submitting..." : "Submit"}

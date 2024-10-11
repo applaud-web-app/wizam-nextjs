@@ -35,7 +35,7 @@ export default function QuizTable({ quizzes }: QuizTableProps) {
 
       <div className="overflow-x-auto">
         <table className="min-w-full table-auto">
-          <thead className="bg-primary text-dark font-semibold">
+          <thead className="bg-primary text-white">
             <tr>
               <th className="p-3 text-left">S.No</th>
               <th className="p-3 text-left">Quiz Title</th>

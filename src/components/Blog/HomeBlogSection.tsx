@@ -95,7 +95,7 @@ const HomeBlogSection = ({}: HomeBlogSectionProps) => {
         {posts.length > 0 && (
           <div className="text-center mt-8">
             <Link href={resourceData?.button_link || "/blog"}>
-              <span className="px-6 py-4 rounded-full bg-primary font-semibold  text-dark transition hover:bg-primary-dark">
+              <span className="px-6 py-3 rounded-full bg-primary text-white font-medium transition hover:bg-primary-dark">
                 {resourceData?.button_text || "More Resources"}
               </span>
             </Link>

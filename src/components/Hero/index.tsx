@@ -67,7 +67,7 @@ const Hero = () => {
                 </p>
                 <Link
                   href={banner.button_link}
-                  className="inline-flex items-center justify-center rounded-full bg-secondary px-8 py-4 text-lg text-white transition duration-300 ease-in-out hover:bg-secondary-dark"
+                  className="inline-flex items-center justify-center rounded-full bg-secondary px-8 py-4 text-lg text-white transition duration-300 ease-in-out hover:bg-primary"
                 >
                   {banner.button_text}
                 </Link>

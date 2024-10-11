@@ -19,7 +19,7 @@ const Vision: React.FC<VisionProps> = ({ data }) => {
 
         {/* Vision Description */}
         <div
-          className="text-lg sm:text-xl text-dark dark:text-dark max-w-2xl mx-auto leading-relaxed"
+          className="text-lg sm:text-xl text-dark dark:text-dark-6 max-w-2xl mx-auto leading-relaxed"
           dangerouslySetInnerHTML={{ __html: data.description }}
         />
       </div>

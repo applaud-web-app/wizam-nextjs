@@ -18,7 +18,7 @@ const Strategy: React.FC<StrategyProps> = ({ data, operate, bestData }) => {
         <div className="bg-white shadow-xl border border-gray-50 rounded-lg p-8 mb-8">
           <h2 className="text-3xl font-bold mb-4 text-dark sm:text-4xl">{data.title}</h2>
           <div
-            className="text-lg leading-relaxed text-dark dark:text-dark"
+            className="text-lg leading-relaxed text-dark dark:text-dark-6"
             dangerouslySetInnerHTML={{ __html: data.description }}
           />
         </div>
@@ -27,7 +27,7 @@ const Strategy: React.FC<StrategyProps> = ({ data, operate, bestData }) => {
         <div className="bg-white shadow-xl border border-gray-50 rounded-lg p-8 mb-8">
           <h2 className="text-3xl font-bold mb-4 text-dark sm:text-4xl">{operate.title}</h2>
           <div
-            className="text-lg leading-relaxed text-dark dark:text-dark"
+            className="text-lg leading-relaxed text-dark dark:text-dark-6"
             dangerouslySetInnerHTML={{ __html: operate.description }}
           />
         </div>
@@ -36,7 +36,7 @@ const Strategy: React.FC<StrategyProps> = ({ data, operate, bestData }) => {
         <div className="bg-white shadow-xl border border-gray-50 rounded-lg p-8 mb-8">
           <h2 className="text-3xl font-bold mb-4 text-dark sm:text-4xl">{bestData.title}</h2>
           <div
-            className="text-lg leading-relaxed text-dark dark:text-dark"
+            className="text-lg leading-relaxed text-dark dark:text-dark-6"
             dangerouslySetInnerHTML={{ __html: bestData.description }}
           />
         </div>

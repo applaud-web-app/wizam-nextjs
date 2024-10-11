@@ -146,7 +146,7 @@ export default function UpdatePassword({
             <div className="mt-6">
               <button
                 type="submit"
-                className="bg-primary text-dark font-semibold py-3 px-5 rounded-md hover:bg-primary-dark"
+                className="bg-primary text-white py-3 px-5 rounded-md hover:bg-primary-dark"
               >
                 Update Password
               </button>

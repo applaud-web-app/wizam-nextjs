@@ -52,23 +52,23 @@ const CallToAction = () => {
   }
 
   return (
-    <section className="relative z-10 overflow-hidden bg-[#2179DE] py-20">
+    <section className="relative z-10 overflow-hidden bg-[#faf8ed] py-20">
       <div className="container mx-auto">
         <div className="text-center">
           {/* Dynamic Heading */}
-          <h2 className="mb-6 text-4xl font-bold text-white sm:text-5xl">
+          <h2 className="mb-6 text-4xl font-bold text-gray-900 sm:text-5xl">
             {data.title}
           </h2>
 
           {/* Dynamic Description */}
-          <p className="mb-8 max-w-xl mx-auto text-lg leading-relaxed text-gray-100">
+          <p className="mb-8 max-w-xl mx-auto text-lg leading-relaxed text-gray-600">
             {data.description}
           </p>
 
           {/* Dynamic Button */}
           <Link
             href={data.button_link || "/"} // Fallback to "/" if button_link is empty
-            className="inline-block rounded-full bg-primary px-8 py-4 text-lg font-semibold  text-dark shadow-md transition hover:bg-primary-dark"
+            className="inline-block rounded-full bg-secondary px-8 py-4 text-lg  text-white shadow-md transition hover:bg-[#56a528]"
           >
             {data.button_text || "Get Started"}
           </Link>

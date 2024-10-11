@@ -70,7 +70,7 @@ a,button{
 }
 
 .sticky-menu .signUpBtn {
-  @apply bg-primary text-[#2E3C71] font-semibold;
+  @apply bg-primary text-white;
 }
 
 .sticky-menu .signUpBtn:hover {
@@ -94,7 +94,7 @@ a,button{
 /* Blog details styling */
 .blog-details,
 .blog-details p {
-  @apply text-body-color dark:text-dark text-base leading-relaxed;
+  @apply text-body-color dark:text-dark-6 text-base leading-relaxed;
 }
 
 .blog-details p {
