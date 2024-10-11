@@ -27,12 +27,12 @@ const PopularArticle = (props: {
           <h4>
             <Link
               href="/#"
-              className="mb-1 inline-block text-lg font-medium leading-snug text-dark hover:text-primary dark:text-dark-6 dark:hover:text-primary lg:text-base xl:text-lg"
+              className="mb-1 inline-block text-lg font-medium leading-snug text-dark hover:text-primary dark:text-dark dark:hover:text-primary lg:text-base xl:text-lg"
             >
               {title}
             </Link>
           </h4>
-          <p className="text-sm text-body-color dark:text-dark-6">{name}</p>
+          <p className="text-sm text-body-color dark:text-dark">{name}</p>
         </div>
       </div>
     </div>

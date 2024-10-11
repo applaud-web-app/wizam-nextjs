@@ -40,7 +40,7 @@ const NotFound = () => {
             <h3 className="mb-4 text-3xl font-bold text-dark dark:text-white">
               Oops! We can't find the page you're looking for.
             </h3>
-            <p className="mb-8 text-lg text-body-color dark:text-dark-6">
+            <p className="mb-8 text-lg text-body-color dark:text-dark">
               The page might have been moved, deleted, or you may have mistyped the URL.
               Don't worry! You can head back to the homepage and continue exploring.
             </p>
