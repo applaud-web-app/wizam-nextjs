@@ -26,7 +26,6 @@ const config: Config = {
           DEFAULT: '#76b51b', // Main secondary color
           dark: '#5b8614',    // Darker shade of #76b51b
         },
-        // Add the custom dark color for the `text-dark` class
         dark: '#2E3C71', // You can change this to your desired dark color
       },
     },

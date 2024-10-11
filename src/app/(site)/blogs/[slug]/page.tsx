@@ -101,7 +101,7 @@ export default function Post({ params }: Props) {
           <div className="bg-white shadow-lg p-5 md:p-6 lg:p-8 rounded-lg">
             <div className="w-full">
               {/* Category Badge */}
-              <span className="inline-block bg-primary text-dark font-semibold text-xs font-semibold uppercase px-3 py-1 rounded-full mb-4">
+              <span className="inline-block bg-primary text-dark font-semibold text-xs  uppercase px-3 py-1 rounded-full mb-4">
                 {post.category.name}
               </span>
 

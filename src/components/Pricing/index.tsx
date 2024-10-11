@@ -75,13 +75,14 @@ const Pricing = () => {
 
   // Map plan names to static Stripe price IDs
   const getStaticStripePriceId = (planName: string) => {
+    console.log("Checking plan:", planName); // Debugging log for the plan name
     switch (planName) {
       case 'Basic Plan':
-        return 'price_1Q8cKASALL6oCDIiz3rlJIqv'; // Replace with actual Stripe price ID
+        return 'price_1Q8cKASALL6oCDIiz3rlJIqv'; // Your static Stripe price ID
       case 'Pro Plan':
-        return 'price_1Q9bNBILLqBBIzyjlNq12345'; // Replace with actual Stripe price ID
+        return 'price_1Q8cKASALL6oCDIiz3rlJIqv'; // Replace with actual Stripe price ID
       case 'Enterprise Plan':
-        return 'price_1Q9bNBILRsZZcdPxWXd56789'; // Replace with actual Stripe price ID
+        return 'price_1Q8cKASALL6oCDIiz3rlJIqv'; // Replace with actual Stripe price ID
       default:
         return ''; // Fallback for unknown plans
     }
@@ -129,17 +130,20 @@ const Pricing = () => {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {filteredPlans.length > 0 ? (
-              filteredPlans.map((plan, index) => (
-                <PricingCard
-                  key={index}
-                  title={plan.name}
-                  price={`$${plan.price}`}
-                  priceId={plan.stripe_price_id} // Pass the priceId directly from the plan
-                  features={Array.isArray(plan.features) ? plan.features : []}
-                  buttonLabel="Subscribe Now"
-                  popular={plan.popular}
-                />
-              ))
+              filteredPlans.map((plan, index) => {
+                console.log("Rendering pricing card with priceId:", plan.stripe_price_id); // Debugging log for the price ID
+                return (
+                  <PricingCard
+                    key={index}
+                    title={plan.name}
+                    price={`$${plan.price}`}
+                    priceId={plan.stripe_price_id} // Pass the priceId directly from the plan
+                    features={Array.isArray(plan.features) ? plan.features : []}
+                    buttonLabel="Subscribe Now"
+                    popular={plan.popular}
+                  />
+                );
+              })
             ) : (
               <NoData message="No pricing plans available for this category." />
             )}

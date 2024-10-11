@@ -93,7 +93,7 @@ const PricingCard: React.FC<PricingCardProps> = ({
       <button
         onClick={handleSubscribe}
         disabled={loading}
-        className="block w-full text-center bg-primary text-dark font-semibold py-3 px-5 rounded-full hover:bg-primary-dark transition-colors duration-300 font-semibold"
+        className="block w-full text-center bg-primary text-dark  py-3 px-5 rounded-full hover:bg-primary-dark transition-colors duration-300 font-semibold"
       >
         {loading ? 'Loading...' : buttonLabel}
       </button>
