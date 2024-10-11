@@ -68,7 +68,7 @@ const AccordionItem: FC<AccordionItemProps> = ({ header, text }) => {
         style={{ maxHeight: height }}
         className={`overflow-hidden transition-max-height duration-300 ease-in-out`}
       >
-        <p className="py-3 text-base leading-relaxed text-body-color dark:text-dark-6">
+        <p className="py-3 text-base leading-relaxed text-body-color ">
           {text}
         </p>
       </div>
