@@ -192,7 +192,7 @@ const ExamResult = () => {
         <h2 className="text-3xl font-semibold mb-4">Leaderboard</h2>
         <div className="overflow-x-auto">
           <table className="min-w-full bg-white border rounded-lg shadow-sm">
-            <thead className="bg-primary text-white">
+            <thead className="bg-primary text-dark font-semibold">
               <tr>
                 <th className="py-3 px-6 border-b">Rank</th>
                 <th className="py-3 px-6 border-b">Username</th>

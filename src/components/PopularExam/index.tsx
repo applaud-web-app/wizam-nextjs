@@ -169,7 +169,7 @@ const PopularExams = () => {
         {exams.length > 0 && sectionData && (
           <div className="text-center mt-8">
             <Link href={sectionData.button_link}>
-              <span className="px-6 py-3 rounded-full bg-primary text-white font-medium transition hover:bg-primary-dark">
+              <span className="px-6 py-3 rounded-full bg-primary text-dark font-semibold font-medium transition hover:bg-primary-dark">
                 {sectionData.button_text}
               </span>
             </Link>

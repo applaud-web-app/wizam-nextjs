@@ -237,7 +237,7 @@ const Header = () => {
                 <Link href="/dashboard" className="bg-secondary text-white py-2 px-6 rounded-full hover:bg-secondary-dark transition">
                   Dashboard
                 </Link>
-                <button onClick={handleLogout} className="bg-primary text-white py-2 px-6 rounded-full hover:bg-primary-dark transition">
+                <button onClick={handleLogout} className="bg-primary text-dark font-semibold py-2 px-6 rounded-full hover:bg-primary-dark transition">
                   Sign Out
                 </button>
               </>
@@ -296,7 +296,7 @@ const Header = () => {
                   <Link
                     href={menuItem.path || "#"}
                     className={`block w-full text-base text-dark dark:text-white py-2 px-6 hover:bg-primary hover:text-white transition rounded-md ${
-                      pathUrl === menuItem.path ? "bg-primary text-white" : ""
+                      pathUrl === menuItem.path ? "bg-primary text-dark font-semibold" : ""
                     }`}
                     onClick={() => setNavbarOpen(false)}
                   >
@@ -309,7 +309,7 @@ const Header = () => {
               {isLoggedIn ? (
                 <>
                   <Link href="/dashboard" className="bg-secondary text-white py-2 px-6 rounded-full hover:bg-secondary-dark transition">Dashboard</Link>
-                  <button onClick={handleLogout} className="bg-primary text-white py-2 px-6 mx-4 rounded-full hover:bg-primary-dark transition w-full">Sign Out</button>
+                  <button onClick={handleLogout} className="bg-primary text-dark font-semibold py-2 px-6 mx-4 rounded-full hover:bg-primary-dark transition w-full">Sign Out</button>
                 </>
               ) : (
                 <>
@@ -364,7 +364,7 @@ const Header = () => {
                 />
                 <button
                   type="submit"
-                  className="bg-primary text-white h-12 px-3 flex items-center justify-center hover:bg-primary-dark transition duration-200 focus:outline-none"
+                  className="bg-primary text-dark font-semibold h-12 px-3 flex items-center justify-center hover:bg-primary-dark transition duration-200 focus:outline-none"
                   aria-label="Submit Search"
                 >
                   <IoSearchSharp className="text-xl" />

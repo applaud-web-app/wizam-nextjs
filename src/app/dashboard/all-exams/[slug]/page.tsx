@@ -123,7 +123,7 @@ export default function ExamTypeDetailPage({
               </div>
             </div>
             <div>
-              <Link href={`/dashboard/exam-detail/${exam.slug}`} className="mt-4 block text-center w-full bg-primary text-white font-semibold py-2 px-4 rounded hover:bg-primary-dark transition-colors">
+              <Link href={`/dashboard/exam-detail/${exam.slug}`} className="mt-4 block text-center w-full bg-primary text-dark font-semibold font-semibold py-2 px-4 rounded hover:bg-primary-dark transition-colors">
                   Start Exam
               </Link>
             </div>

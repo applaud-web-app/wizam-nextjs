@@ -34,7 +34,7 @@ export default function ExamTable({ exams }: ExamTableProps) {
 
       <div className="overflow-x-auto">
         <table className="min-w-full table-auto">
-          <thead className="bg-primary text-white">
+          <thead className="bg-primary text-dark font-semibold">
             <tr>
               <th className="p-3 text-left">S.No</th>
               <th className="p-3 text-left">Exam Title</th>
