@@ -10,6 +10,7 @@ import { useRouter } from "next/navigation";
 import { useSiteSettings } from "@/context/SiteContext"; // Import the hook to use site settings
 import axios from "axios"; // Axios for API calls
 import { toast } from "react-toastify"; // Import toast from react-toastify
+import { MdOutlineArrowForwardIos } from "react-icons/md";
 
 const Header = () => {
   const { siteSettings, loading, error } = useSiteSettings(); // Access site settings from the context
@@ -207,13 +208,13 @@ const Header = () => {
           <div className="hidden lg:flex items-center space-x-6">
             {/* Navigation */}
             <nav>
-              <ul className="flex gap-8 items-center">
+              <ul className="flex gap-5 items-center">
                 {menuData.map((menuItem, index) => (
                   <li key={index} className="group relative">
                     <Link
                       href={menuItem.path || "#"}
-                      className={`block text-base text-dark dark:text-white hover:text-primary dark:hover:text-primary ${
-                        pathUrl === menuItem.path ? "text-primary" : ""
+                      className={`block text-base text-dark dark:text-white hover:text-primary dark:hover:text-secondary px-5 py-2 rounded-full ${
+                        pathUrl === menuItem.path ? "bg-primary/15 text-dark" : ""
                       }`}
                     >
                       {menuItem.title}
@@ -245,15 +246,15 @@ const Header = () => {
               <>
                 <Link
                   href="/signin"
-                  className=" border border-primary bg-primary font-semibold text-secondary py-2 px-6 rounded-full hover:bg-secondary hover:border-secondary hover:text-primary transition"
+                  className="flex items-center border border-primary bg-primary font-semibold text-secondary py-2 px-6 rounded-full hover:bg-secondary hover:border-secondary hover:text-primary transition"
                 >
-                  Login
+                  Login <MdOutlineArrowForwardIos className="ms-1" /> 
                 </Link>
                 <Link
                   href="/signup"
-                  className="border border-primary  font-semibold text-secondary py-2 px-6 rounded-full hover:bg-primary hover:text-secondary transition"
+                  className="flex items-center border border-primary  font-semibold text-secondary py-2 px-6 rounded-full hover:bg-primary hover:text-secondary transition"
                 >
-                  Register
+                  Register <MdOutlineArrowForwardIos className="ms-1" />  
                 </Link>
               </>
             )}
@@ -315,15 +316,15 @@ const Header = () => {
                 <>
                   <Link
                     href="/signin"
-                    className="border border-primary bg-primary font-semibold text-secondary py-2 px-6 rounded-full hover:bg-secondary hover:border-secondary hover:text-primary transition w-full"
+                    className="flex items-center border border-primary bg-primary font-semibold text-secondary py-2 px-6 rounded-full hover:bg-secondary hover:border-secondary hover:text-primary transition w-full"
                   >
-                    Login
+                    Login <MdOutlineArrowForwardIos className="ms-1" /> 
                   </Link>
                   <Link
                     href="/signup"
-                    className="border border-primary  font-semibold text-secondary py-2 px-6 rounded-full hover:bg-primary hover:text-secondary transition w-full"
+                    className=" flex items-center border border-primary  font-semibold text-secondary py-2 px-6 rounded-full hover:bg-primary hover:text-secondary transition w-full"
                   >
-                    Register
+                    Register <MdOutlineArrowForwardIos className="ms-1" /> 
                   </Link>
                 </>
               )}

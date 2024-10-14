@@ -1,4 +1,5 @@
 // app/page.tsx (or wherever the home component is located)
+import BannerSection from "@/components/BannerSection";
 import HomeBlogSection from "@/components/Blog/HomeBlogSection";
 import CallToAction from "@/components/CallToAction";
 import ScrollUp from "@/components/Common/ScrollUp";
@@ -21,8 +22,9 @@ export default function Home() {
   return (
     <main>
       <ScrollUp />
-      <Hero />
-      <HomeFilterBox />
+      {/* <Hero /> */}
+      <BannerSection />
+      {/* <HomeFilterBox /> */}
       <PopularExams />
       <Features />
       <WhyChoose />
