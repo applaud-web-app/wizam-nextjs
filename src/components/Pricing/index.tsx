@@ -6,6 +6,7 @@ import axios from "axios";
 import NoData from "../Common/NoData";
 import { loadStripe } from "@stripe/stripe-js";
 import PricingCard from "./pricingcard";
+import Cookies from "js-cookie";
 
 interface PricingPlan {
   id: number;
@@ -40,9 +41,11 @@ const Pricing = () => {
   useEffect(() => {
     const fetchPricingPlans = async () => {
       try {
-        const response = await axios.get<PricingApiResponse>(
-          `${process.env.NEXT_PUBLIC_API_URL}/pricing`
-        );
+        const response = await axios.get<PricingApiResponse>(`${process.env.NEXT_PUBLIC_API_URL}/pricing`, {
+          headers: {
+            Authorization: `Bearer ${Cookies.get("jwt")}`,
+          },
+        });
 
         const plans = response.data.data.map((plan) => ({
           ...plan,
