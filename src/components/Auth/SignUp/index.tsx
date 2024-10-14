@@ -154,7 +154,7 @@ const SignUp = () => {
             </h3>
             <ul className="space-y-4 text-gray-700 text-justify">
               <li className="flex items-start space-x-2">
-                <span className="text-primary font-semibold mt-1">
+                <span className="text-defaultcolor font-semibold mt-1">
                   <FaRegCircleCheck />
                 </span>
                 <p>
@@ -162,7 +162,7 @@ const SignUp = () => {
                 </p>
               </li>
               <li className="flex items-start space-x-2">
-                <span className="text-primary font-semibold mt-1">
+                <span className="text-defaultcolor font-semibold mt-1">
                   <FaRegCircleCheck />
                 </span>
                 <p>
@@ -170,7 +170,7 @@ const SignUp = () => {
                 </p>
               </li>
               <li className="flex items-start space-x-2">
-                <span className="text-primary font-semibold mt-1">
+                <span className="text-defaultcolor font-semibold mt-1">
                   <FaRegCircleCheck />
                 </span>
                 <p>
@@ -225,7 +225,7 @@ const SignUp = () => {
                       type="text"
                       id="firstName"
                       name="firstName"
-                      className="w-full bg-white border border-gray-300 rounded-md py-2 px-4 text-gray-700 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition"
+                      className="w-full bg-white border border-gray-300 rounded-md py-2 px-4 text-gray-700 focus:outline-none focus:ring-1 focus:ring-defaultcolor focus:border-defaultcolor transition"
                       placeholder="First Name"
                     />
                     <ErrorMessage name="firstName" component="div" className="text-red-500 text-sm" />
@@ -240,7 +240,7 @@ const SignUp = () => {
                       type="text"
                       id="lastName"
                       name="lastName"
-                      className="w-full bg-white border border-gray-300 rounded-md py-2 px-4 text-gray-700 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition"
+                      className="w-full bg-white border border-gray-300 rounded-md py-2 px-4 text-gray-700 focus:outline-none focus:ring-1 focus:ring-defaultcolor focus:border-defaultcolor transition"
                       placeholder="Last Name"
                     />
                     <ErrorMessage name="lastName" component="div" className="text-red-500 text-sm" />
@@ -275,7 +275,7 @@ const SignUp = () => {
                       type="tel"
                       id="phoneNumber"
                       name="phoneNumber"
-                      className="w-full bg-white border border-gray-300 rounded-md py-2 px-4 text-gray-700 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition"
+                      className="w-full bg-white border border-gray-300 rounded-md py-2 px-4 text-gray-700 focus:outline-none focus:ring-1 focus:ring-defaultcolor focus:border-defaultcolor transition"
                       placeholder="Phone Number"
                     />
                     <ErrorMessage name="phoneNumber" component="div" className="text-red-500 text-sm" />
@@ -290,7 +290,7 @@ const SignUp = () => {
                       type="email"
                       id="email"
                       name="email"
-                      className="w-full bg-white border border-gray-300 rounded-md py-2 px-4 text-gray-700 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition"
+                      className="w-full bg-white border border-gray-300 rounded-md py-2 px-4 text-gray-700 focus:outline-none focus:ring-1 focus:ring-defaultcolor focus:border-defaultcolor transition"
                       placeholder="you@example.com"
                     />
                     <ErrorMessage name="email" component="div" className="text-red-500 text-sm" />
@@ -306,7 +306,7 @@ const SignUp = () => {
                         type={showPassword ? "text" : "password"}
                         id="password"
                         name="password"
-                        className="w-full bg-white border border-gray-300 rounded-md py-2 px-4 text-gray-700 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition"
+                        className="w-full bg-white border border-gray-300 rounded-md py-2 px-4 text-gray-700 focus:outline-none focus:ring-1 focus:ring-defaultcolor focus:border-defaultcolor transition"
                         placeholder="••••••••"
                       />
                       <button
@@ -329,7 +329,7 @@ const SignUp = () => {
                       type={showPassword ? "text" : "password"}
                       id="confirmPassword"
                       name="confirmPassword"
-                      className="w-full bg-white border border-gray-300 rounded-md py-2 px-4 text-gray-700 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition"
+                      className="w-full bg-white border border-gray-300 rounded-md py-2 px-4 text-gray-700 focus:outline-none focus:ring-1 focus:ring-defaultcolor focus:border-defaultcolor transition"
                       placeholder="••••••••"
                     />
                     <ErrorMessage name="confirmPassword" component="div" className="text-red-500 text-sm" />
@@ -341,11 +341,11 @@ const SignUp = () => {
                       <Field
                         type="checkbox"
                         name="termsAccepted"
-                        className="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
+                        className="h-4 w-4 text-defaultcolor focus:ring-defaultcolor border-gray-300 rounded"
                       />
                       <span className="ml-2 text-sm text-gray-700">
                         By creating an account, you confirm that you have read and agree to Wizam's{" "}
-                        <Link href="/term-and-condition" className="text-primary hover:underline">
+                        <Link href="/term-and-condition" className="text-defaultcolor hover:underline">
                           Terms and Conditions
                         </Link>
                       </span>
@@ -358,7 +358,7 @@ const SignUp = () => {
                     <button
                       type="submit"
                       disabled={isSubmitting}
-                      className="w-full bg-primary text-white py-2 px-4 rounded-md hover:bg-primary-dark transition"
+                      className="w-full bg-defaultcolor text-white py-2 px-4 rounded-md hover:bg-defaultcolor-dark transition"
                     >
                       {isSubmitting ? "Submitting..." : "Sign Up"}
                     </button>
@@ -371,7 +371,7 @@ const SignUp = () => {
           <div className="text-center p-2 col-span-2">
             <p className="text-sm text-gray-600 bg-[#F6F9FC] rounded-sm p-4">
               Already have an account?{" "}
-              <Link href="/signin" className="text-primary font-semibold hover:underline">
+              <Link href="/signin" className="text-defaultcolor font-semibold hover:underline">
                 Sign In
               </Link>
             </p>

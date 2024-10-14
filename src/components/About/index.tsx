@@ -7,7 +7,8 @@ import Values from "./values";
 import Vision from "./vision";
 import Loader from "../Common/Loader"; // Assuming you have a Loader component
 import axios from "axios";
-import Cookies from "js-cookie";
+import Image from "next/image";
+
 
 interface AboutData {
   mission: SectionData;
@@ -46,31 +47,9 @@ const About: React.FC = () => {
       }
     };
 
-    // const fetchUserProfile = async () => {
-    //   try {
-    //     const token = Cookies.get('jwt'); // Use the correct key for your token
-    //     if (!token) {
-    //       console.error('No authentication token found');
-    //       return;
-    //     }
-    //     const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/profile`, {
-    //       headers: {
-    //         'Authorization': `Bearer ${token}`,
-    //       },
-    //       withCredentials: true, // Important for CORS
-    //     });
-    //     if (response.data.status) {
-    //       console.log('User Details:', response.data.user);
-    //     } else {
-    //       console.error('Failed to fetch user details');
-    //     }
-    //   } catch (error) {
-    //     console.error('Error fetching user details:', error);
-    //   }
-    // };
 
     fetchAboutData();
-    // fetchUserProfile();
+  
 
   }, []);
 
@@ -96,6 +75,7 @@ const About: React.FC = () => {
       <Vision data={aboutData.vision} />
       <Values data={aboutData.values} />
       <Strategy data={aboutData.strategy} operate={aboutData.operate} bestData={aboutData.bestData} />
+      <Image className="w-full h-auto" src="/images/about/bottom-banner.png" width={1920} height={500} alt={""} />
     </>
   );
 };

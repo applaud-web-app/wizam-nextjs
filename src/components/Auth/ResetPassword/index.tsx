@@ -152,7 +152,7 @@ const ResetPassword = () => {
                     id="password"
                     name="password"
                     required
-                    className="w-full bg-transparent rounded-md border border-stroke py-[10px] px-5 text-body-color outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-gray-2 disabled:border-gray-2"
+                    className="w-full bg-transparent rounded-md border border-stroke py-[10px] px-5 text-body-color outline-none transition focus:border-defaultcolor active:border-defaultcolor disabled:cursor-default disabled:bg-gray-2 disabled:border-gray-2"
                     placeholder="Enter new password"
                   />
                   <button
@@ -178,7 +178,7 @@ const ResetPassword = () => {
                     id="confirmPassword"
                     name="confirmPassword"
                     required
-                    className="w-full bg-transparent rounded-md border border-stroke py-[10px] px-5 text-body-color outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-gray-2 disabled:border-gray-2"
+                    className="w-full bg-transparent rounded-md border border-stroke py-[10px] px-5 text-body-color outline-none transition focus:border-defaultcolor active:border-defaultcolor disabled:cursor-default disabled:bg-gray-2 disabled:border-gray-2"
                     placeholder="Confirm your new password"
                   />
                   <button

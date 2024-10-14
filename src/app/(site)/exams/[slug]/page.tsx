@@ -70,7 +70,7 @@ const ExamDetailPage = ({ params }: ExamDetailProps) => {
           <div className="flex flex-col items-center space-y-4 p-6 sm:flex-row sm:justify-around sm:space-x-8 sm:space-y-0">
             <div className="text-center">
               <p className="text-lg text-gray-500">Available Between</p>
-              <p className="text-xl font-bold text-primary">
+              <p className="text-xl font-bold text-blue-500">
                 {exam.availableFrom || "N/A"} - {exam.availableTo || "N/A"}
               </p>
             </div>
@@ -120,7 +120,7 @@ const ExamDetailPage = ({ params }: ExamDetailProps) => {
               <input
                 id="instruction-checkbox"
                 type="checkbox"
-                className="h-5 w-5 rounded border-gray-300 bg-gray-100 text-primary transition duration-200 ease-in-out hover:cursor-pointer focus:ring-primary"
+                className="h-5 w-5 rounded border-gray-300 bg-gray-100 text-secondary transition duration-200 ease-in-out hover:cursor-pointer focus:ring-secondary"
               />
               <label
                 htmlFor="instruction-checkbox"
@@ -130,7 +130,7 @@ const ExamDetailPage = ({ params }: ExamDetailProps) => {
               </label>
             </div>
 
-            <button className="mt-6 w-full rounded-full bg-secondary px-6 py-3 text-white  transition duration-300 ease-in-out hover:bg-primary focus:ring-4 focus:ring-primary">
+            <button className="mt-6 w-full rounded-full bg-primary px-6 py-3 text-secondary  transition duration-300 ease-in-out hover:bg-secondary hover:text-secondary focus:ring-4 focus:ring-primary">
               Start Exam
             </button>
           </div>

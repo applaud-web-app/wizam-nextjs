@@ -162,7 +162,7 @@ const Exams = () => {
           {/* Filter Button */}
           <button
             onClick={handleFilterSubmit}
-            className="w-full rounded-lg bg-[#63C132] px-6 py-3 font-medium text-white transition duration-300 ease-in-out hover:bg-[#57a628]"
+            className="w-full rounded-lg bg-primary px-6 py-3 font-semibold text-secondary transition duration-300 ease-in-out hover:bg-secondary hover:text-primary"
           >
             Filter
           </button>

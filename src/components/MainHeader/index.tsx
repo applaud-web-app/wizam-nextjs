@@ -235,10 +235,10 @@ const Header = () => {
 
             {isLoggedIn ? (
               <>
-                <Link href="/dashboard" className="bg-secondary text-white py-2 px-6 rounded-full hover:bg-secondary-dark transition">
+                <Link href="/dashboard" className="bg-secondary font-semibold text-white py-2 px-6 rounded-full hover:bg-secondary-dark transition">
                   Dashboard
                 </Link>
-                <button onClick={handleLogout} className="bg-primary text-white py-2 px-6 rounded-full hover:bg-primary-dark transition">
+                <button onClick={handleLogout} className="bg-primary font-semibold text-secondary py-2 px-6 rounded-full hover:bg-primary-dark transition">
                   Sign Out
                 </button>
               </>

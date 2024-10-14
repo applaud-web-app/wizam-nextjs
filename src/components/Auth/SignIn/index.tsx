@@ -157,7 +157,7 @@ const SignIn = () => {
                     type="email"
                     id="email"
                     name="email"
-                    className="w-full bg-transparent rounded-md border border-stroke py-[10px] px-5 text-body-color outline-none transition focus:border-primary"
+                    className="w-full bg-transparent rounded-md border border-stroke py-[10px] px-5 text-body-color outline-none transition focus:border-defaultcolor"
                     placeholder="Enter Email Address"
                   />
                   <ErrorMessage name="email" component="div" className="text-red-500 text-sm" />
@@ -168,7 +168,7 @@ const SignIn = () => {
                     <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
                       Password
                     </label>
-                    <Link href="/forget-password" className="text-primary text-sm font-bold hover:underline">
+                    <Link href="/forget-password" className="text-defaultcolor text-sm font-bold hover:underline">
                       Forgot Password?
                     </Link>
                   </div>
@@ -178,7 +178,7 @@ const SignIn = () => {
                       type={showPassword ? "text" : "password"}
                       id="password"
                       name="password"
-                      className="w-full bg-transparent rounded-md border border-stroke py-[10px] px-5 text-body-color outline-none transition focus:border-primary"
+                      className="w-full bg-transparent rounded-md border border-stroke py-[10px] px-5 text-body-color outline-none transition focus:border-defaultcolor"
                       placeholder="Enter Password"
                     />
                     <button
@@ -195,7 +195,7 @@ const SignIn = () => {
                 <button
                   type="submit"
                   disabled={loading || isSubmitting}
-                  className={`w-full px-4 py-2 text-white bg-primary hover:bg-primary-dark rounded-lg transition ${
+                  className={`w-full px-4 py-2 text-white bg-defaultcolor hover:bg-defaultcolor-dark rounded-lg transition ${
                     loading ? "opacity-50 cursor-not-allowed" : ""
                   }`}
                 >
@@ -211,7 +211,7 @@ const SignIn = () => {
         <div className="text-center p-2">
           <p className="text-sm text-gray-600 bg-[#F6F9FC] rounded-sm p-4">
             Don’t have an account?{" "}
-            <Link href="/signup" className="text-primary font-bold hover:underline">
+            <Link href="/signup" className="text-defaultcolor font-bold hover:underline">
               Sign Up
             </Link>
           </p>

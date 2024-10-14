@@ -149,7 +149,7 @@ const ForgetPassword = () => {
                 id="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full bg-transparent rounded-md border border-stroke py-[10px] px-5 text-body-color outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-gray-2 disabled:border-gray-2"
+                className="w-full bg-transparent rounded-md border border-stroke py-[10px] px-5 text-body-color outline-none transition focus:border-defaultcolor active:border-defaultcolor disabled:cursor-default disabled:bg-gray-2 disabled:border-gray-2"
                 required
                 placeholder="you@example.com"
               />

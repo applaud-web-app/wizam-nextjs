@@ -5,6 +5,7 @@ import CallToAction from "@/components/CallToAction";
 import ScrollUp from "@/components/Common/ScrollUp";
 import Faq from "@/components/Faq";
 import Features from "@/components/Features";
+import HelpArea from "@/components/HelpArea";
 import Hero from "@/components/Hero";
 import HomeFilterBox from "@/components/HomeFilterBox";
 import PopularExams from "@/components/PopularExam";
@@ -24,7 +25,7 @@ export default function Home() {
       <ScrollUp />
       {/* <Hero /> */}
       <BannerSection />
-      {/* <HomeFilterBox /> */}
+      <HelpArea />
       <PopularExams />
       <Features />
       <WhyChoose />
