@@ -1,5 +1,4 @@
 import { loadStripe } from "@stripe/stripe-js";
-import Cookies from "js-cookie"; // To access cookies for JWT if needed
 import React from "react";
 import { useRouter } from "next/navigation";
 
@@ -32,20 +31,13 @@ const PricingCard: React.FC<PricingCardProps> = ({
 
   const handleCheckout = async () => {
     const stripe = await stripePromise;
-    const token = Cookies.get("jwt"); // Assuming you have the user JWT in cookies
-
-    if (!token) {
-      alert("User is not authenticated");
-      return;
-    }
 
     try {
-      // Call the API to create a checkout session
+      // Call the API to create a checkout session without passing the token
       const response = await fetch("/api/create-checkout-session", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`, // Pass the JWT token to authorize the user on the backend
         },
         body: JSON.stringify({
           priceId,
@@ -54,7 +46,13 @@ const PricingCard: React.FC<PricingCardProps> = ({
         }),
       });
 
-      console.log(response);
+      // Check if the response is OK
+      if (!response.ok) {
+        const errorResponse = await response.json();
+        console.error("Error during checkout:", errorResponse);
+        alert(`Failed to initiate checkout: ${errorResponse.error}`);
+        return;
+      }
 
       const { id: sessionId } = await response.json(); // Get sessionId from the response
 
