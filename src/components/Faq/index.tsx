@@ -133,7 +133,7 @@ const Faq = () => {
         {/* More FAQs Button */}
         <div className="text-center mt-8">
           <Link href={faqMeta?.button_link || "/faq"}>
-            <span className="px-6 py-3 rounded-full bg-primary text-white font-medium transition hover:bg-primary-dark">
+            <span className="primary-btn">
               {faqMeta?.button_text || "More FAQs"}
             </span>
           </Link>

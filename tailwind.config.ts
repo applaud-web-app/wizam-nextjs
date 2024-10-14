@@ -19,7 +19,7 @@ const config: Config = {
         primary: {
           light: '#7FFFF0',    // Lighter shade of primary color
           DEFAULT: '#2AFFD4',  // Main primary color
-          dark: '#00C2A2',     // Darker shade of primary color
+          dark: '#1ef1c6',     // Darker shade of primary color
         },
         secondary: {
           light: '#7986B3',    // Lighter shade of secondary color
