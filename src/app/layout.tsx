@@ -15,12 +15,12 @@ import { ToastContainer } from "react-toastify"; // Import ToastContainer
 import "react-toastify/dist/ReactToastify.css"; // Import Toastify styles
 
 // Import the Nunito font from next/font/google
-import { Nunito } from "next/font/google";
+import { Plus_Jakarta_Sans } from "next/font/google";
 import { SiteProvider } from "@/context/SiteContext"; // Import SiteProvider
 import { SyllabusProvider } from "@/context/SyllabusContext";
 
 // Load the Nunito font
-const nunito = Nunito({
+const plus_jakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
   weight: ["400", "600", "700"], // You can load multiple weights as needed
 });
@@ -79,7 +79,7 @@ export default function RootLayout({
   return (
     <html
       suppressHydrationWarning={true}
-      className={`${nunito.className} !scroll-smooth`}
+      className={`${plus_jakarta.className} !scroll-smooth`}
       lang="en"
     >
       <head />

@@ -17,14 +17,19 @@ const config: Config = {
         background: "var(--background)",
         foreground: "var(--foreground)",
         primary: {
-          light: '#66aed3',    // Lighter shade of #3394c6
-          DEFAULT: '#3394c6',  // Your main primary color
-          dark: '#28759a',     // Darker shade of #3394c6
+          light: '#7FFFF0',    // Lighter shade of primary color
+          DEFAULT: '#2AFFD4',  // Main primary color
+          dark: '#00C2A2',     // Darker shade of primary color
         },
         secondary: {
-          light: '#94c94e',    // Lighter shade of #76b51b
-          DEFAULT: '#76b51b',  // Your main secondary color
-          dark: '#5b8614',     // Darker shade of #76b51b
+          light: '#7986B3',    // Lighter shade of secondary color
+          DEFAULT: '#2E3C71',  // Main secondary color
+          dark: '#1F274D',     // Darker shade of secondary color
+        },
+        tertiary: {
+          light: '#4C5DA0',    // Lighter shade of tertiary color
+          DEFAULT: '#0E1F5B',  // Main tertiary color (as requested)
+          dark: '#0A1744',     // Darker shade of tertiary color
         },
       },
     },
