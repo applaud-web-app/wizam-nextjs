@@ -77,11 +77,12 @@ const PricingCard: React.FC<PricingCardProps> = ({
 
   const handleClick = () => {
     console.log(customerId);
-    if (!customerId) {
-      router.push(buttonLink); // Navigate to the provided link if no customer ID
-    } else {
-      handleCheckout(); // Initiate checkout process
-    }
+    handleCheckout(); 
+    // if (!customerId) {
+    //   router.push(buttonLink); // Navigate to the provided link if no customer ID
+    // } else {
+    //   handleCheckout(); // Initiate checkout process
+    // }
   };
 
   return (
