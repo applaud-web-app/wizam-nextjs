@@ -1,19 +1,22 @@
 import { loadStripe } from "@stripe/stripe-js";
 import React from "react";
 import { useRouter } from "next/navigation";
+import axios from "axios";
+import Cookies from "js-cookie";
 
 interface PricingCardProps {
   title: string;
   price: string;
   features: string[];
   buttonLabel: string;
-  buttonLink: string; // Add back buttonLink for navigation
+  buttonLink: string; // Link to navigate if no customer ID
   popular?: boolean;
-  priceId: string;
-  priceType: string; // Fixed or monthly
-  customerId: string; // Stripe customer ID
+  priceId: string; // The price ID for the Stripe checkout
+  priceType: string; // "fixed" or "monthly"
+  customerId: string | null; // Stripe customer ID (can be null)
 }
 
+// Load Stripe instance
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
 
 const PricingCard: React.FC<PricingCardProps> = ({
@@ -21,7 +24,7 @@ const PricingCard: React.FC<PricingCardProps> = ({
   price,
   features,
   buttonLabel,
-  buttonLink, // Receive buttonLink for navigation
+  buttonLink,
   popular = false,
   priceId,
   priceType,
@@ -32,29 +35,32 @@ const PricingCard: React.FC<PricingCardProps> = ({
   const handleCheckout = async () => {
     const stripe = await stripePromise;
 
+    if (!stripe) {
+      console.error("Stripe.js has not loaded yet.");
+      alert("Failed to load Stripe. Please try again later.");
+      return;
+    }
+
     try {
-      // Call the API to create a checkout session without passing the token
-      const response = await fetch("/api/create-checkout-session", {
-        method: "POST",
+      // Send the POST request to create a checkout session
+      const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/create-checkout-session`, {
+        priceId,
+        priceType,
+        customerId,
+      }, {
         headers: {
-          "Content-Type": "application/json",
+          Authorization: `Bearer ${Cookies.get("jwt")}`,
         },
-        body: JSON.stringify({
-          priceId,
-          priceType,
-          customerId, // Pass customerId along with priceId and priceType
-        }),
       });
 
-      // Check if the response is OK
-      if (!response.ok) {
-        const errorResponse = await response.json();
-        console.error("Error during checkout:", errorResponse);
-        alert(`Failed to initiate checkout: ${errorResponse.error}`);
+      // Check if the response indicates success
+      if (response.status !== 200) {
+        console.error("Error during checkout:", response.data);
+        alert(`Failed to initiate checkout: ${response.data.error}`);
         return;
       }
 
-      const { id: sessionId } = await response.json(); // Get sessionId from the response
+      const { sessionId } = response.data; // Get sessionId from the response
 
       // Check if the sessionId is available
       if (!sessionId) {
@@ -62,7 +68,7 @@ const PricingCard: React.FC<PricingCardProps> = ({
       }
 
       // Redirect to Stripe Checkout
-      await stripe?.redirectToCheckout({ sessionId });
+      await stripe.redirectToCheckout({ sessionId });
     } catch (error) {
       console.error("Error during checkout:", error);
       alert("Failed to initiate checkout. Please try again.");
@@ -70,11 +76,13 @@ const PricingCard: React.FC<PricingCardProps> = ({
   };
 
   const handleClick = () => {
-    if (!customerId) {
-      router.push(buttonLink); // Navigate to the provided link
-    } else {
-      handleCheckout(); // Otherwise, initiate checkout process
-    }
+    console.log(customerId);
+    handleCheckout(); 
+    // if (!customerId) {
+    //   router.push(buttonLink); // Navigate to the provided link if no customer ID
+    // } else {
+    //   handleCheckout(); // Initiate checkout process
+    // }
   };
 
   return (
