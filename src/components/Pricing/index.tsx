@@ -27,7 +27,10 @@ interface PricingPlan {
 
 interface PricingApiResponse {
   status: boolean;
-  data: PricingPlan[];
+  data: {
+    pricing: PricingPlan[];
+    customer_id: string; // Include customer_id in the response
+  };
 }
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
@@ -36,6 +39,7 @@ const Pricing = () => {
   const [category, setCategory] = useState<string>(""); 
   const [pricingPlans, setPricingPlans] = useState<PricingPlan[]>([]); 
   const [categories, setCategories] = useState<string[]>([]); 
+  const [customerId, setCustomerId] = useState<string>(""); // New state for customer_id
   const [loading, setLoading] = useState<boolean>(true); 
 
   useEffect(() => {
@@ -47,7 +51,7 @@ const Pricing = () => {
           },
         });
 
-        const plans = response.data.data.map((plan) => ({
+        const plans = response.data.data.pricing.map((plan) => ({
           ...plan,
           features:
             typeof plan.features === "string"
@@ -59,7 +63,8 @@ const Pricing = () => {
         }));
 
         setPricingPlans(plans);
-
+        setCustomerId(response.data.data.customer_id); // Set the customer_id from the response
+        console.log(customerId);
         const uniqueCategories = Array.from(
           new Set(plans.map((plan) => plan.category_name))
         );
@@ -130,6 +135,7 @@ const Pricing = () => {
                   popular={plan.popular}
                   priceId={plan.stripe_price_id} // Dynamic priceId
                   priceType={plan.price_type} // Use price_type to determine fixed or monthly
+                  customerId={customerId} // Pass customer_id to the PricingCard
                 />
               ))
             ) : (

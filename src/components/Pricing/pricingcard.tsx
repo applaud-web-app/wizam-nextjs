@@ -1,16 +1,18 @@
 import { loadStripe } from "@stripe/stripe-js";
 import Cookies from "js-cookie"; // To access cookies for JWT if needed
 import React from "react";
+import { useRouter } from "next/navigation";
 
 interface PricingCardProps {
   title: string;
   price: string;
   features: string[];
   buttonLabel: string;
-  buttonLink: string;
+  buttonLink: string; // Add back buttonLink for navigation
   popular?: boolean;
   priceId: string;
-  priceType: string; // Add priceType (fixed or monthly)
+  priceType: string; // Fixed or monthly
+  customerId: string; // Stripe customer ID
 }
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
@@ -20,10 +22,14 @@ const PricingCard: React.FC<PricingCardProps> = ({
   price,
   features,
   buttonLabel,
+  buttonLink, // Receive buttonLink for navigation
   popular = false,
   priceId,
-  priceType, // Get priceType from props
+  priceType,
+  customerId,
 }) => {
+  const router = useRouter(); // For route navigation
+
   const handleCheckout = async () => {
     const stripe = await stripePromise;
     const token = Cookies.get("jwt"); // Assuming you have the user JWT in cookies
@@ -41,10 +47,16 @@ const PricingCard: React.FC<PricingCardProps> = ({
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`, // Pass the JWT token to authorize the user on the backend
         },
-        body: JSON.stringify({ priceId, priceType }), // Pass priceId and priceType to the backend
+        body: JSON.stringify({
+          priceId,
+          priceType,
+          customerId, // Pass customerId along with priceId and priceType
+        }),
       });
 
-      const { id: sessionId } = await response.json(); // Get sessionId from response
+      console.log(response);
+
+      const { id: sessionId } = await response.json(); // Get sessionId from the response
 
       // Check if the sessionId is available
       if (!sessionId) {
@@ -56,6 +68,14 @@ const PricingCard: React.FC<PricingCardProps> = ({
     } catch (error) {
       console.error("Error during checkout:", error);
       alert("Failed to initiate checkout. Please try again.");
+    }
+  };
+
+  const handleClick = () => {
+    if (!customerId) {
+      router.push(buttonLink); // Navigate to the provided link
+    } else {
+      handleCheckout(); // Otherwise, initiate checkout process
     }
   };
 
@@ -86,7 +106,7 @@ const PricingCard: React.FC<PricingCardProps> = ({
             >
               <path
                 fillRule="evenodd"
-                d="M16.707 5.293a1 1 0 00-1.414 0L8 12.586l-3.293-3.293a1 1 0 00-1.414 1.414l4 4a 1 1 0 001.414 0l8-8a1 1 0 000-1.414z"
+                d="M16.707 5.293a1 1 0 00-1.414 0L8 12.586l-3.293-3.293a1 1 0 00-1.414 1.414l4 4a1 1 0 001.414 0l8-8a1 1 0 000-1.414z"
                 clipRule="evenodd"
               />
             </svg>
@@ -97,7 +117,7 @@ const PricingCard: React.FC<PricingCardProps> = ({
 
       <button
         className="block w-full text-center bg-primary text-white py-3 px-5 rounded-full hover:bg-primary-dark transition-colors duration-300 font-semibold"
-        onClick={handleCheckout} // Trigger the checkout process
+        onClick={handleClick} // Either checkout or navigate
       >
         {buttonLabel}
       </button>
