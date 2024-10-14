@@ -96,7 +96,7 @@ const PricingCard: React.FC<PricingCardProps> = ({
       <h3 className="text-xl sm:text-2xl font-bold text-gray-800 mb-4 text-center">
         {title}
       </h3>
-      <p className="text-4xl sm:text-5xl font-bold text-primary text-center mb-4">
+      <p className="text-4xl sm:text-5xl font-bold text-secondary text-center mb-4">
         {price}
       </p>
       <p className="text-gray-500 text-center mb-6">Per month, billed annually</p>
@@ -122,7 +122,7 @@ const PricingCard: React.FC<PricingCardProps> = ({
       </ul>
 
       <button
-        className="block w-full text-center bg-primary text-white py-3 px-5 rounded-full hover:bg-primary-dark transition-colors duration-300 font-semibold"
+        className="block w-full primary-button"
         onClick={handleClick} // Either checkout or navigate
       >
         {buttonLabel}
