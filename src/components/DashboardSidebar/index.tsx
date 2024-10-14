@@ -27,9 +27,9 @@ export default function Sidebar({ isSyllabusEnabled, isOpen, toggleSidebar }: Si
           <h2 className="text-2xl font-bold text-white lg:hidden mb-5">Dashboard</h2>
 
           {/* Syllabus Section */}
-          <div className="mt-3 p-3 bg-gray-800 border-l-4 border-primary rounded-md">
+          <div className="mt-3 p-3 bg-gray-800 border-l-4 border-defaultcolor rounded-md">
             <div className="flex items-center">
-              <FiBookOpen className="text-primary mr-2" />
+              <FiBookOpen className="text-defaultcolor mr-2" />
               <p className="text-white font-semibold">{isSyllabusEnabled ? Cookies.get("category_name") : "No syllabus selected"}</p>
             </div>
 

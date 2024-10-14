@@ -26,8 +26,8 @@ const Progress: React.FC = () => {
             onClick={() => setActiveTab(tab.name)}
             className={`w-full sm:w-auto flex items-center justify-center sm:justify-start px-6 py-2 text-lg font-semibold transition-colors duration-300 rounded-lg ${
               activeTab === tab.name
-                ? "bg-primary text-white"
-                : "bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-primary"
+                ? "bg-defaultcolor text-white"
+                : "bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-defaultcolor"
             }`}
           >
             <span className="mr-2">{tab.icon}</span>

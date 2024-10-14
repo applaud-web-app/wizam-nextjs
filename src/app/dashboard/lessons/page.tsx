@@ -105,7 +105,7 @@ export default function LessonsPage() {
               {/* Loop through the lessons */}
               {skill.lessons.map((lesson) => (
                 <Link key={lesson.slug} href={`/dashboard/lessons/${lesson.slug}`} passHref>
-                  <div className="card bg-white rounded-lg shadow-sm p-4 cursor-pointer transition-shadow border border-white hover:border-primary">
+                  <div className="card bg-white rounded-lg shadow-sm p-4 cursor-pointer transition-shadow border border-white hover:border-defaultcolor">
                     <h3 className="text-lg font-semibold">{lesson.title}</h3>
                     <p className="text-gray-600">Category: {lesson.category}</p>
                     <p className="text-gray-600">Difficulty: {lesson.difficulty.replace(/_/g, ' ').replace(/\b\w/g, char => char.toUpperCase())}</p>

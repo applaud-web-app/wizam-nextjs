@@ -11,7 +11,7 @@ interface ExamPacksProps {
 const ExamPacks: React.FC<ExamPacksProps> = ({ title, icon, iconColor, slug }) => {
   return (
     <Link href={`/dashboard/all-exams/${slug}`}>
-      <div className="bg-white p-5 rounded-xl  border border-white shadow-sm hover:border-primary transform  transition-all duration-300 cursor-pointer">
+      <div className="bg-white p-5 rounded-xl  border border-white shadow-sm hover:border-defaultcolor transform  transition-all duration-300 cursor-pointer">
         <div className={`${iconColor} text-4xl mr-4 mb-2`}>{icon}</div>
         <div>
           <h2 className="text-lg font-semibold ">{title}</h2>

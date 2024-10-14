@@ -105,35 +105,35 @@ export default function PracticeSetPage() {
 
                   {/* Syllabus */}
                   <p className="text-gray-600 mb-1">
-                    <FaBook className="inline mr-2 text-primary" /> <strong>Syllabus: </strong>{practiceSet.syllabus}
+                    <FaBook className="inline mr-2 text-defaultcolor" /> <strong>Syllabus: </strong>{practiceSet.syllabus}
                   </p>
 
                   {/* Questions */}
                   <p className="text-gray-600 mb-1">
-                    <FaQuestionCircle className="inline mr-2 text-primary" /> <strong>Questions: </strong>{practiceSet.questions}
+                    <FaQuestionCircle className="inline mr-2 text-defaultcolor" /> <strong>Questions: </strong>{practiceSet.questions}
                   </p>
 
                   {/* Time */}
                   <p className="text-gray-600 mb-1">
-                    <FaClock className="inline mr-2 text-primary" /> 
+                    <FaClock className="inline mr-2 text-defaultcolor" /> 
                     <strong>Time: </strong>{practiceSet.time ? Math.floor(practiceSet.time / 60) : 0} min
                   </p>
 
                   {/* Marks */}
                   <p className="text-gray-600 mb-4">
-                    <FaCheck className="inline mr-2 text-primary" /> <strong>Marks: </strong>{practiceSet.marks}
+                    <FaCheck className="inline mr-2 text-defaultcolor" /> <strong>Marks: </strong>{practiceSet.marks}
                   </p>
 
                   {/* Start Test Button */}
                   {practiceSet.is_free === 1 ? (
                     <Link href={`/dashboard/practice-test/${practiceSet.slug}`}>
-                      <span className="bg-primary block text-center text-white px-4 py-2 rounded hover:bg-primary-dark transition duration-200 w-full">
+                      <span className="bg-defaultcolor block text-center text-white px-4 py-2 rounded hover:bg-defaultcolor-dark transition duration-200 w-full">
                         Start Test
                       </span>
                     </Link>
                   ) : (
                     <Link href={``}>
-                      <span className="bg-primary block text-center text-white px-4 py-2 rounded hover:bg-primary-dark transition duration-200 w-full">
+                      <span className="bg-defaultcolor block text-center text-white px-4 py-2 rounded hover:bg-defaultcolor-dark transition duration-200 w-full">
                         Paid Exam
                       </span>
                     </Link>

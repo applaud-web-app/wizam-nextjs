@@ -108,7 +108,7 @@ export default function LessonDetailPage({ params }: { params: { slug: string } 
 
         {/* Skill Name at the top */}
         <div className="mb-3">
-          <h2 className="text-lg text-primary underline">{lessonData.skill}</h2> {/* Skill name */}
+          <h2 className="text-lg text-defaultcolor underline">{lessonData.skill}</h2> {/* Skill name */}
         </div>
 
         {/* Title Section */}

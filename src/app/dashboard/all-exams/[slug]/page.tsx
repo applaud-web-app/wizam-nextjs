@@ -101,19 +101,19 @@ export default function ExamTypeDetailPage({
             </h2>
             <div className="space-y-3">
               <div className="flex items-center space-x-2 text-gray-700">
-                <FaQuestionCircle className="text-primary" />
+                <FaQuestionCircle className="text-defaultcolor" />
                 <span className="text-sm md:text-base">
                   <strong>Questions:</strong> {exam.questions}
                 </span>
               </div>
               <div className="flex items-center space-x-2 text-gray-700">
-                <FaClock className="text-primary" />
+                <FaClock className="text-defaultcolor" />
                 <span className="text-sm md:text-base">
                   <strong>Time:</strong> {exam.time}
                 </span>
               </div>
               <div className="flex items-center space-x-2 text-gray-700">
-                <FaStar className="text-primary" />
+                <FaStar className="text-defaultcolor" />
                 <span className="text-sm md:text-base">
                   <strong>Marks:</strong> {exam.marks}
                 </span>
@@ -123,7 +123,7 @@ export default function ExamTypeDetailPage({
               </div>
             </div>
             <div>
-              <Link href={`/dashboard/exam-detail/${exam.slug}`} className="mt-4 block text-center w-full bg-primary text-white font-semibold py-2 px-4 rounded hover:bg-primary-dark transition-colors">
+              <Link href={`/dashboard/exam-detail/${exam.slug}`} className="mt-4 block text-center w-full bg-defaultcolor text-white font-semibold py-2 px-4 rounded hover:bg-defaultcolor-dark transition-colors">
                   Start Exam
               </Link>
             </div>

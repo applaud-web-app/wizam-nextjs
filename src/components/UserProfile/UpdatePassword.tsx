@@ -70,7 +70,7 @@ export default function UpdatePassword({
                   id="current_password"
                   name="current_password"
                   type={showCurrentPassword ? "text" : "password"}
-                  className="w-full bg-white border border-gray-300 rounded-md py-2 px-4 text-gray-700 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition"
+                  className="w-full bg-white border border-gray-300 rounded-md py-2 px-4 text-gray-700 focus:outline-none focus:ring-1 focus:ring-defaultcolor focus:border-defaultcolor transition"
                 />
                 <button
                   type="button"
@@ -98,7 +98,7 @@ export default function UpdatePassword({
                   id="new_password"
                   name="new_password"
                   type={showNewPassword ? "text" : "password"}
-                  className="w-full bg-white border border-gray-300 rounded-md py-2 px-4 text-gray-700 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition"
+                  className="w-full bg-white border border-gray-300 rounded-md py-2 px-4 text-gray-700 focus:outline-none focus:ring-1 focus:ring-defaultcolor focus:border-defaultcolor transition"
                 />
                 <button
                   type="button"
@@ -126,7 +126,7 @@ export default function UpdatePassword({
                   id="new_password_confirmation"
                   name="new_password_confirmation"
                   type={showConfirmPassword ? "text" : "password"}
-                  className="w-full bg-white border border-gray-300 rounded-md py-2 px-4 text-gray-700 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition"
+                  className="w-full bg-white border border-gray-300 rounded-md py-2 px-4 text-gray-700 focus:outline-none focus:ring-1 focus:ring-defaultcolor focus:border-defaultcolor transition"
                 />
                 <button
                   type="button"
@@ -146,7 +146,7 @@ export default function UpdatePassword({
             <div className="mt-6">
               <button
                 type="submit"
-                className="bg-primary text-white py-3 px-5 rounded-md hover:bg-primary-dark"
+                className="bg-defaultcolor text-white py-3 px-5 rounded-md hover:bg-defaultcolor-dark"
               >
                 Update Password
               </button>

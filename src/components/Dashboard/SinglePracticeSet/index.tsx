@@ -80,29 +80,29 @@ export default function SinglePracticeSet({ slug }: SinglePracticeSetProps) {
         <p className="bg-cyan-100 text-cyan-700 px-4 py-2 text-sm rounded-full inline-block mb-4">
           {testDetails.syllabus}
         </p>
-        <h1 className="text-3xl font-bold text-primary mb-2">{testDetails.title}</h1>
-        <h2 className="text-lg font-medium text-primary-600">{testDetails.testType}</h2>
+        <h1 className="text-3xl font-bold text-defaultcolor mb-2">{testDetails.title}</h1>
+        <h2 className="text-lg font-medium text-defaultcolor-600">{testDetails.testType}</h2>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 py-3 border-y border-gray-300 mb-8">
         <div className="flex items-center space-x-2 text-gray-700">
-          <FaQuestionCircle className="text-primary" />
+          <FaQuestionCircle className="text-defaultcolor" />
           <span className="text-base font-semibold">Questions: {testDetails.totalQuestions}</span>
         </div>
         <div className="flex items-center space-x-2 text-gray-700">
-          <FaClock className="text-primary" />
+          <FaClock className="text-defaultcolor" />
           <span className="text-base font-semibold">Duration: {testDetails.duration}</span>
         </div>
         <div className="flex items-center space-x-2 text-gray-700">
-          <FaStar className="text-primary" />
+          <FaStar className="text-defaultcolor" />
           <span className="text-base font-semibold">Marks: {testDetails.marks}</span>
         </div>
       </div>
 
       {/* Instructions */}
       <div className="mb-8">
-        <h3 className="text-xl font-semibold text-primary mb-4 flex items-center">
-          <FaCheckCircle className="text-primary mr-2" /> Instructions
+        <h3 className="text-xl font-semibold text-defaultcolor mb-4 flex items-center">
+          <FaCheckCircle className="text-defaultcolor mr-2" /> Instructions
         </h3>
         <div className="text-gray-600 bg-gray-50 p-5 rounded-lg border border-gray-300">
           <ol className="list-decimal list-inside">
@@ -116,8 +116,8 @@ export default function SinglePracticeSet({ slug }: SinglePracticeSetProps) {
 
       {/* test Description */}
       <div className="mb-8">
-        <h3 className="text-xl font-semibold text-primary mb-4 flex items-center">
-          <FaInfoCircle className="text-primary mr-2" /> Test Description
+        <h3 className="text-xl font-semibold text-defaultcolor mb-4 flex items-center">
+          <FaInfoCircle className="text-defaultcolor mr-2" /> Test Description
         </h3>
         <div
           dangerouslySetInnerHTML={{ __html: testDetails.description || "" }}
@@ -126,7 +126,7 @@ export default function SinglePracticeSet({ slug }: SinglePracticeSetProps) {
       </div>
 
       {/* Start test Button */}
-      <Link href={`/dashboard/practice-test-play/${slug}`} className="w-full bg-primary block text-center text-white font-semibold py-2 rounded-lg hover:bg-primary-dark transition-all duration-200"
+      <Link href={`/dashboard/practice-test-play/${slug}`} className="w-full bg-defaultcolor block text-center text-white font-semibold py-2 rounded-lg hover:bg-defaultcolor-dark transition-all duration-200"
       >Start test</Link>
     </div>
   );

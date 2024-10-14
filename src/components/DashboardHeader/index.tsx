@@ -137,7 +137,7 @@ export default function Header({ toggleSidebar }: HeaderProps) {
       </div>
 
       <div className="flex items-center space-x-6">
-        <Link href="/"><FiGlobe size={24} className="text-primary dark:text-gray-300" aria-label="Website" /></Link>
+        <Link href="/"><FiGlobe size={24} className="text-defaultcolor dark:text-gray-300" aria-label="Website" /></Link>
 
         <div className="relative" ref={dropdownRef}>
           <button

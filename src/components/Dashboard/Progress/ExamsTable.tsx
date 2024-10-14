@@ -67,7 +67,7 @@ const ExamsTable: React.FC = () => {
   return (
     <div className="overflow-x-auto">
       <table className="min-w-full table-auto whitespace-nowrap">
-        <thead className="bg-primary text-white">
+        <thead className="bg-defaultcolor text-white">
           <tr>
             <th className="p-3 text-left rounded-tl-lg">S.No</th>
             <th className="p-3 text-left">Exam Title</th>

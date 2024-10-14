@@ -623,11 +623,11 @@ export default function PracticeTestDetailPage({
         {!submitted ? (
           <>
             <div className="flex justify-between mb-4">
-              <h3 className="text-2xl font-semibold text-primary">
+              <h3 className="text-2xl font-semibold text-defaultcolor">
                 Question {currentQuestionIndex + 1}/
                 {practiceData.questions.length}
               </h3>
-              <FaClock className="text-primary" size={24} />
+              <FaClock className="text-defaultcolor" size={24} />
             </div>
 
             <div className="space-y-4">
@@ -645,7 +645,7 @@ export default function PracticeTestDetailPage({
 
               {currentQuestionIndex < practiceData.questions.length - 1 ? (
                 <button
-                  className="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary-dark transition-colors"
+                  className="bg-defaultcolor text-white px-4 py-2 rounded-lg hover:bg-defaultcolor-dark transition-colors"
                   onClick={handleNextQuestion}
                 >
                   Next <FaArrowRight className="inline ml-2" />
@@ -676,7 +676,7 @@ export default function PracticeTestDetailPage({
             <div>
             <Link
                 href={`/dashboard/practice-test-result/${uuid}`}
-                className="mt-4  text-center w-full bg-primary text-white font-semibold py-2 px-4 rounded hover:bg-primary-dark transition-colors flex justify-center items-center"
+                className="mt-4  text-center w-full bg-defaultcolor text-white font-semibold py-2 px-4 rounded hover:bg-defaultcolor-dark transition-colors flex justify-center items-center"
               >
                 Go to Result
                 <AiOutlineArrowRight className="ml-2" /> {/* Add the icon here */}
@@ -719,7 +719,7 @@ export default function PracticeTestDetailPage({
             <p className="font-semibold text-gray-700 mb-2">Progress</p>
             <div className="h-2 w-full bg-gray-200 rounded-lg overflow-hidden mt-2">
               <div
-                className="h-full bg-primary"
+                className="h-full bg-defaultcolor"
                 style={{
                   width: `${
                     (Object.keys(answers).length /
@@ -738,7 +738,7 @@ export default function PracticeTestDetailPage({
                 key={index}
                 className={`p-2 rounded-lg border ${
                   currentQuestionIndex === index
-                    ? "bg-primary text-white"
+                    ? "bg-defaultcolor text-white"
                     : answers[question.id]
                     ? "bg-green-200 text-black"
                     : "bg-yellow-200 text-black"

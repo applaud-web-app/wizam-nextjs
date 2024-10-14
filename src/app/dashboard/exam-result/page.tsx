@@ -192,7 +192,7 @@ const ExamResult = () => {
         <h2 className="text-3xl font-semibold mb-4">Leaderboard</h2>
         <div className="overflow-x-auto">
           <table className="min-w-full bg-white border rounded-lg shadow-sm">
-            <thead className="bg-primary text-white">
+            <thead className="bg-defaultcolor text-white">
               <tr>
                 <th className="py-3 px-6 border-b">Rank</th>
                 <th className="py-3 px-6 border-b">Username</th>
@@ -208,7 +208,7 @@ const ExamResult = () => {
                     key={index}
                     className={`${
                       entry.username === "You"
-                        ? "bg-blue-100 text-primary font-bold"
+                        ? "bg-blue-100 text-defaultcolor font-bold"
                         : index % 2 === 0
                         ? "bg-gray-100"
                         : "bg-white"

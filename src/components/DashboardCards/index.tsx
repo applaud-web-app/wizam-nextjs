@@ -14,7 +14,7 @@ const DashboardCard: React.FC<DashboardCardProps> = ({ title, content, icon, ico
         {/* Icon with dynamic color */}
         <div className={`${iconColor} text-4xl mr-4`}>{icon}</div> {/* Apply dynamic color to icon */}
         <div>
-          <h2 className="text-lg font-semibold text-primary-700">{title}</h2> {/* Use a slightly darker primary color */}
+          <h2 className="text-lg font-semibold text-defaultcolor-dark">{title}</h2> {/* Use a slightly darker defaultcolor color */}
           <p className="text-gray-600 mt-2 text-base">{content}</p>
         </div>
       </div>

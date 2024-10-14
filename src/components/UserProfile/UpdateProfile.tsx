@@ -90,7 +90,7 @@ export default function UpdateProfile({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="col-span-1">
                 <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-2">Title <span className="text-red-500">*</span></label>
-                <Field as="select" id="title" name="title" className="w-full bg-white border border-gray-300 rounded-md py-2 px-4 text-gray-700 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition">
+                <Field as="select" id="title" name="title" className="w-full bg-white border border-gray-300 rounded-md py-2 px-4 text-gray-700 focus:outline-none focus:ring-1 focus:ring-defaultcolor focus:border-defaultcolor transition">
                   <option value="">Select Title</option>
                   <option value="Mr">Mr</option>
                   <option value="Mrs">Mrs</option>
@@ -101,31 +101,31 @@ export default function UpdateProfile({
 
               <div className="col-span-1">
                 <label htmlFor="fullname" className="block text-sm font-medium text-gray-700 mb-2">Full Name <span className="text-red-500">*</span></label>
-                <Field id="fullname" name="fullname" className="w-full bg-white border border-gray-300 rounded-md py-2 px-4 text-gray-700 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition" />
+                <Field id="fullname" name="fullname" className="w-full bg-white border border-gray-300 rounded-md py-2 px-4 text-gray-700 focus:outline-none focus:ring-1 focus:ring-defaultcolor focus:border-defaultcolor transition" />
                 <ErrorMessage name="fullname" component="div" className="text-red-500 text-sm" />
               </div>
 
               <div className="col-span-1">
                 <label htmlFor="mobile" className="block text-sm font-medium text-gray-700 mb-2">Mobile Number <span className="text-red-500">*</span></label>
-                <Field id="mobile" name="mobile" className="w-full bg-white border border-gray-300 rounded-md py-2 px-4 text-gray-700 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition" />
+                <Field id="mobile" name="mobile" className="w-full bg-white border border-gray-300 rounded-md py-2 px-4 text-gray-700 focus:outline-none focus:ring-1 focus:ring-defaultcolor focus:border-defaultcolor transition" />
                 <ErrorMessage name="mobile" component="div" className="text-red-500 text-sm" />
               </div>
 
               <div className="col-span-1">
                 <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">Email <span className="text-red-500">*</span></label>
-                <Field id="email" name="email" type="email" className="w-full bg-white border border-gray-300 rounded-md py-2 px-4 text-gray-700 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition" />
+                <Field id="email" name="email" type="email" className="w-full bg-white border border-gray-300 rounded-md py-2 px-4 text-gray-700 focus:outline-none focus:ring-1 focus:ring-defaultcolor focus:border-defaultcolor transition" />
                 <ErrorMessage name="email" component="div" className="text-red-500 text-sm" />
               </div>
 
               <div className="col-span-1">
                 <label htmlFor="dob" className="block text-sm font-medium text-gray-700 mb-2">Date of Birth <span className="text-red-500">*</span></label>
-                <Field id="dob" name="dob" type="date" className="w-full bg-white border border-gray-300 rounded-md py-2 px-4 text-gray-700 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition" />
+                <Field id="dob" name="dob" type="date" className="w-full bg-white border border-gray-300 rounded-md py-2 px-4 text-gray-700 focus:outline-none focus:ring-1 focus:ring-defaultcolor focus:border-defaultcolor transition" />
                 <ErrorMessage name="dob" component="div" className="text-red-500 text-sm" />
               </div>
             </div>
 
             <div className="mt-6">
-              <button type="submit" className="bg-primary text-white py-3 px-5 rounded-md hover:bg-primary-dark">
+              <button type="submit" className="bg-defaultcolor text-white py-3 px-5 rounded-md hover:bg-defaultcolor-dark">
                 Update Details
               </button>
             </div>

@@ -95,9 +95,9 @@ export default function VideosPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
               {skill.videos.map((video) => (
                 <Link key={video.slug} href={`/dashboard/videos/${video.slug}`}>
-                  <div className="card bg-white rounded-lg shadow-sm p-4 cursor-pointer transition-shadow border border-white hover:border-primary">
+                  <div className="card bg-white rounded-lg shadow-sm p-4 cursor-pointer transition-shadow border border-white hover:border-defaultcolor">
                     <div className="flex items-center mb-3">
-                      <FaPlayCircle className="text-primary mr-2" /> {/* Video play icon */}
+                      <FaPlayCircle className="text-defaultcolor mr-2" /> {/* Video play icon */}
                       <h3 className="text-lg font-semibold">{video.title}</h3>
                     </div>
                     <p className="text-gray-600">Syllabus: {video.syllabus}</p>

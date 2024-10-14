@@ -73,7 +73,7 @@ export default function AllExamPage() {
               key={index} // Pass index as the key
               title={type.title}
               icon={getRandomIcon()} // Random icon function
-              iconColor="text-primary"
+              iconColor="text-defaultcolor"
               slug={type.slug}
             />
           ))

@@ -27,7 +27,7 @@ export default function QuizTable({ quizzes }: QuizTableProps) {
     <div className="p-5 bg-white shadow-sm rounded-lg mb-8">
       <div className="flex justify-between items-center mb-3 flex-wrap">
         <h2 className="text-lg font-bold mb-2 md:mb-0">Quizzes</h2>
-        <Link href="/dashboard/quizzes" className="text-primary font-semibold flex items-center space-x-2 hover:underline transition duration-200">
+        <Link href="/dashboard/quizzes" className="text-defaultcolor font-semibold flex items-center space-x-2 hover:underline transition duration-200">
           <span>See All</span>
           <FiArrowRight />
         </Link>
@@ -35,7 +35,7 @@ export default function QuizTable({ quizzes }: QuizTableProps) {
 
       <div className="overflow-x-auto">
         <table className="min-w-full table-auto">
-          <thead className="bg-primary text-white">
+          <thead className="bg-defaultcolor text-white">
             <tr>
               <th className="p-3 text-left">S.No</th>
               <th className="p-3 text-left">Quiz Title</th>
