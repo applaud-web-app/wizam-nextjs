@@ -61,14 +61,14 @@ const CallToAction = () => {
           </h2>
 
           {/* Dynamic Description */}
-          <p className="mb-8 max-w-xl mx-auto text-lg leading-relaxed text-gray-600">
+          <p className="mb-8 max-w-xl mx-auto text-lg leading-relaxed text-gray-100">
             {data.description}
           </p>
 
           {/* Dynamic Button */}
           <Link
             href={data.button_link || "/"} // Fallback to "/" if button_link is empty
-            className="inline-block rounded-full bg-primary px-8 py-4 text-lg  text-white shadow-md transition hover:bg-[#56a528]"
+            className="primary-button"
           >
             {data.button_text || "Get Started"}
           </Link>

@@ -11,6 +11,7 @@
   "dependencies": {
     "@stripe/stripe-js": "^4.8.0",
     "axios": "^1.7.7",
+    "cookie": "^1.0.1",
     "date-fns": "^4.1.0",
     "flowbite": "^2.5.1",
     "flowbite-react": "^0.10.1",

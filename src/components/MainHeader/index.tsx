@@ -245,15 +245,15 @@ const Header = () => {
               <>
                 <Link
                   href="/signin"
-                  className="bg-primary/10 border border-primary text-primary py-2 px-6 rounded-full hover:bg-primary hover:text-white transition"
+                  className=" border border-primary bg-primary font-semibold text-secondary py-2 px-6 rounded-full hover:bg-secondary hover:border-secondary hover:text-primary transition"
                 >
-                  Sign In
+                  Login
                 </Link>
                 <Link
                   href="/signup"
-                  className="border border-secondary bg-secondary/10 text-secondary py-2 px-6 rounded-full hover:bg-secondary hover:text-white transition"
+                  className="border border-primary  font-semibold text-secondary py-2 px-6 rounded-full hover:bg-primary hover:text-secondary transition"
                 >
-                  Sign Up
+                  Register
                 </Link>
               </>
             )}
@@ -315,15 +315,15 @@ const Header = () => {
                 <>
                   <Link
                     href="/signin"
-                    className="bg-primary/10 border border-primary text-primary text-center py-2 px-6  rounded-full hover:bg-primary hover:text-white transition w-full"
+                    className="border border-primary bg-primary font-semibold text-secondary py-2 px-6 rounded-full hover:bg-secondary hover:border-secondary hover:text-primary transition w-full"
                   >
-                    Sign In
+                    Login
                   </Link>
                   <Link
                     href="/signup"
-                    className="border border-secondary bg-secondary/10 text-secondary text-center py-2 px-6  rounded-full hover:bg-secondary hover:text-white transition w-full"
+                    className="border border-primary  font-semibold text-secondary py-2 px-6 rounded-full hover:bg-primary hover:text-secondary transition w-full"
                   >
-                    Sign Up
+                    Register
                   </Link>
                 </>
               )}

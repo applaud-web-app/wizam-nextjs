@@ -1,5 +1,6 @@
-// components/PricingCard.tsx
 import { loadStripe } from "@stripe/stripe-js";
+import Cookies from "js-cookie"; // To access cookies for JWT if needed
+import React from "react";
 
 interface PricingCardProps {
   title: string;
@@ -25,6 +26,12 @@ const PricingCard: React.FC<PricingCardProps> = ({
 }) => {
   const handleCheckout = async () => {
     const stripe = await stripePromise;
+    const token = Cookies.get("jwt"); // Assuming you have the user JWT in cookies
+
+    if (!token) {
+      alert("User is not authenticated");
+      return;
+    }
 
     try {
       // Call the API to create a checkout session
@@ -32,6 +39,7 @@ const PricingCard: React.FC<PricingCardProps> = ({
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`, // Pass the JWT token to authorize the user on the backend
         },
         body: JSON.stringify({ priceId, priceType }), // Pass priceId and priceType to the backend
       });
