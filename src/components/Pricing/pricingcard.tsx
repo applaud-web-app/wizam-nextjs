@@ -1,6 +1,7 @@
 import { loadStripe } from "@stripe/stripe-js";
 import React from "react";
 import { useRouter } from "next/navigation";
+import axios from "axios";
 
 interface PricingCardProps {
   title: string;
@@ -29,43 +30,79 @@ const PricingCard: React.FC<PricingCardProps> = ({
 }) => {
   const router = useRouter(); // For route navigation
 
+  // const handleCheckout = async () => {
+  //   const stripe = await stripePromise;
+
+  //   try {
+  //     const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/create-checkout-session`, {
+  //       method: "POST",
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //       },
+  //       body: JSON.stringify({
+  //         priceId,
+  //         priceType,
+  //         customerId,
+  //       }),
+  //     });
+
+  //     if (!response.ok) {
+  //       const errorResponse = await response.json();
+  //       console.error("Error during checkout:", errorResponse);
+  //       alert(`Failed to initiate checkout: ${errorResponse.error}`);
+  //       return;
+  //     }
+
+  //     const { id: sessionId } = await response.json(); // Get sessionId from the response
+
+  //     // Check if the sessionId is available
+  //     if (!sessionId) {
+  //       throw new Error("Failed to create session ID.");
+  //     }
+
+  //     // Redirect to Stripe Checkout
+  //     await stripe?.redirectToCheckout({ sessionId });
+  //   } catch (error) {
+  //     console.error("Error during checkout:", error);
+  //     alert("Failed to initiate checkout. Please try again.");
+  //   }
+  // };
+
+
   const handleCheckout = async () => {
     const stripe = await stripePromise;
 
     try {
-      // Call the API to create a checkout session without passing the token
-      const response = await fetch("/api/create-checkout-session", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          priceId,
-          priceType,
-          customerId, // Pass customerId along with priceId and priceType
-        }),
-      });
+        // Send the POST request to create a checkout session
+        const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/create-checkout-session`, {
+            priceId,
+            priceType,
+            customerId,
+        }, {
+            headers: {
+                "Content-Type": "application/json",
+            },
+        });
 
-      // Check if the response is OK
-      if (!response.ok) {
-        const errorResponse = await response.json();
-        console.error("Error during checkout:", errorResponse);
-        alert(`Failed to initiate checkout: ${errorResponse.error}`);
-        return;
-      }
+        // Check if the response indicates success
+        if (response.status !== 200) {
+            console.error("Error during checkout:", response.data);
+            alert(`Failed to initiate checkout: ${response.data.error}`);
+            return;
+        }
 
-      const { id: sessionId } = await response.json(); // Get sessionId from the response
+        const { sessionId } = response.data; // Get sessionId from the response
 
-      // Check if the sessionId is available
-      if (!sessionId) {
-        throw new Error("Failed to create session ID.");
-      }
+        // Check if the sessionId is available
+        if (!sessionId) {
+            throw new Error("Failed to create session ID.");
+        }
 
-      // Redirect to Stripe Checkout
-      await stripe?.redirectToCheckout({ sessionId });
+        // Redirect to Stripe Checkout
+        await stripe.redirectToCheckout({ sessionId });
     } catch (error) {
-      console.error("Error during checkout:", error);
-      alert("Failed to initiate checkout. Please try again.");
+        console.error("Error during checkout:", error);
+        alert("Failed to initiate checkout. Please try again.");
     }
   };
 
