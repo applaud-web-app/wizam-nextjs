@@ -1,3 +1,5 @@
+"use client";
+
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
@@ -47,32 +49,32 @@ const Header = () => {
   // Toggle Search Overlay
   const handleSearchToggle = () => setSearchOpen(!searchOpen);
 
-  // Toggle login dropdown
   const handleLoginDropdownToggle = () => {
     setLoginDropdownOpen(!loginDropdownOpen);
   };
 
-  // Close login dropdown on outside click
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
+      const targetElement = event.target as HTMLElement;
+
+      // Check if the clicked element has the class or identifier of the dropdown or button
       if (
-        dropdownRef.current && // Make sure the ref exists
-        !dropdownRef.current.contains(event.target as Node) // Check if the clicked target is outside the dropdown
+        !targetElement.closest('.login-dropdown') && // Ensure the click is outside dropdown
+        !targetElement.closest('.login-dropdown-toggle') // Ensure the click is outside toggle button
       ) {
-        setLoginDropdownOpen(true); // Close the dropdown if clicked outside
+        setLoginDropdownOpen(false); // Close the dropdown
       }
     };
 
-    // Add event listener when dropdown is open
     if (loginDropdownOpen) {
-      document.addEventListener("mousedown", handleClickOutside);
+      document.addEventListener('mousedown', handleClickOutside);
     }
 
-    // Clean up the event listener when dropdown is closed
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [loginDropdownOpen]);
+  
 
   // Close search with escape key
   useEffect(() => {
@@ -299,16 +301,24 @@ const Header = () => {
                 >
                   Register <MdOutlineArrowForwardIos className="ms-1" />
                 </Link>
-                <div className="relative" ref={dropdownRef}>
+                <div className="relative" >
                   <button
                     onClick={handleLoginDropdownToggle}
-                    className="flex items-center border border-primary font-semibold text-secondary py-2 px-6 rounded-full hover:bg-primary hover:text-secondary transition"
+                    className="flex items-center login-dropdown-toggle border border-primary font-semibold text-secondary py-2 px-6 rounded-full hover:bg-primary hover:text-secondary transition"
                   >
                     Login <BsChevronDown className="ml-1" />
                   </button>
 
                   {loginDropdownOpen && (
-                    <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-dark shadow-lg border rounded-lg py-2 z-50">
+                    <div className="login-dropdown absolute right-0 mt-2 w-48 bg-white dark:bg-dark shadow-lg border rounded-lg py-2 z-50" tabIndex={-1}>
+                        <Link
+                        href="/signin"
+                        className="block px-4 py-2 text-gray-800 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-600"
+                        onClick={() => setLoginDropdownOpen(false)}
+                      >
+                        Student Login
+                      </Link>
+
                       <Link
                         href={`${process.env.NEXT_PUBLIC_BACKEND_URL}`}
                         className="block px-4 py-2 text-gray-800 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-600"
@@ -316,13 +326,7 @@ const Header = () => {
                       >
                         Teacher Login
                       </Link>
-                      <Link
-                        href="/signin"
-                        className="block px-4 py-2 text-gray-800 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-600"
-                        onClick={() => setLoginDropdownOpen(false)}
-                      >
-                        Student Login
-                      </Link>
+                    
                     </div>
                   )}
                 </div>
@@ -452,7 +456,15 @@ const Header = () => {
                     </button>
 
                     {loginDropdownOpen && (
-                      <div className="absolute w-full bg-white dark:bg-dark shadow-lg border rounded-lg py-2 z-50">
+                      <div className="absolute w-full bg-white dark:bg-dark shadow-lg border rounded-lg py-2 z-50" tabIndex={-1}>
+                         <Link
+                          href="/signin"
+                          className="block px-4 py-2 text-gray-800 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-600"
+                          onClick={() => setLoginDropdownOpen(false)}
+                        >
+                          Student Login
+                        </Link>
+                        
                         <Link
                           href={`${process.env.NEXT_PUBLIC_BACKEND_URL}`}
                           className="block px-4 py-2 text-gray-800 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-600"
@@ -460,13 +472,7 @@ const Header = () => {
                         >
                           Teacher Login
                         </Link>
-                        <Link
-                          href="/signin"
-                          className="block px-4 py-2 text-gray-800 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-600"
-                          onClick={() => setLoginDropdownOpen(false)}
-                        >
-                          Student Login
-                        </Link>
+                       
                       </div>
                     )}
                   </div>

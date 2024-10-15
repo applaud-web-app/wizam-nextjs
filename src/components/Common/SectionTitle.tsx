@@ -9,9 +9,9 @@ const SectionTitle = ({ title, subtitle, align = 'center' }: SectionTitleProps) 
   const textAlignClass = align === 'left' ? 'text-left' : align === 'right' ? 'text-right' : 'text-center';
 
   return (
-    <div className={`mb-12 max-w-2xl mx-auto ${textAlignClass}`}>
+    <div className={`mb-12 max-w-xl mx-auto ${textAlignClass}`}>
       {/* Title */}
-      <h2 className="text-3xl text-secondary font-bold mb-3 md:text-4xl lg:text-5xl">{title}</h2>
+      <h2 className="text-3xl text-secondary font-bold mb-3 md:text-4xl lg:text-5xl leading-loose">{title}</h2>
       
       {/* Optional Subtitle */}
       {subtitle && <p className="text-lg text-gray-500">{subtitle}</p>}
