@@ -86,11 +86,31 @@ export default function PracticeTestDetailPage({
         } else {
           toast.error("No practice set found for this category");
         }
-      } catch (error) {
+      } catch (error:any) {
         console.error("Error fetching practice set:", error);
-        toast.error("An error occurred while fetching the practice set");
+    
+        // Handle errors during the API request
+        if (error.response) {
+          const { status, data } = error.response;
+    
+          // Handle specific error statuses
+          if (status === 401) {
+            toast.error("User is not authenticated. Please log in.");
+            router.push("/signin"); // Redirect to sign-in page
+          } else if (status === 404) {
+            toast.error("Please buy a subscription to access this course.");
+            router.push("/pricing"); // Redirect to pricing page
+          } else if (status === 403) {
+            toast.error("Feature not available in your plan. Please upgrade your subscription.");
+            router.push("/pricing"); // Redirect to pricing page
+          } else {
+            toast.error(`An error occurred: ${data.error || 'Unknown error'}`);
+          }
+        } else {
+          toast.error("An error occurred. Please try again.");
+        }
       } finally {
-        setLoading(false);
+        setLoading(false); // Stop the loading state once the request is complete
       }
     };
 
@@ -683,7 +703,6 @@ export default function PracticeTestDetailPage({
               </Link>
             </div>
           </div>
-          
         )}
       </div>
 

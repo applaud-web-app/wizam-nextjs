@@ -3,10 +3,10 @@
 import { useEffect, useState } from 'react';
 import { FaClock, FaQuestionCircle, FaStar } from "react-icons/fa"; // Icons for the card
 import axios from 'axios'; // Ensure axios is installed
-import { toast } from 'react-toastify'; // Optional: For notifications
 import Cookies from 'js-cookie'; // Access cookies
 import Loader from '@/components/Common/Loader';
 import { useRouter } from "next/navigation"; // Use router to redirect
+import { toast } from 'react-toastify'; // Optional: For notifications
 import Link from 'next/link';
 
 // Define the Quiz type
@@ -16,6 +16,7 @@ interface Quiz {
   questions: number;
   time: string;
   marks: number;
+  is_free: number;
 }
 
 // Define the QuizData type, where each slug corresponds to an array of quizzes
@@ -32,6 +33,62 @@ export default function QuizTypeDetailPage({
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const router = useRouter(); // For redirecting to other pages
+
+
+  // Function to handle payment logic
+  const handlePayment = async (slug: string) =>  {
+    try {
+      // Get JWT token from cookies
+      const jwt = Cookies.get("jwt");
+      const type = "quizzes"; // assuming "quizzes" is the type
+
+      if (!jwt) {
+        toast.error("User is not authenticated. Please log in.");
+        return;
+      }
+
+      // Make the API request to check the user's subscription
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/user-subscription`, {
+        headers: {
+          Authorization: `Bearer ${jwt}`,
+        },
+        params: {
+          type: type, // Pass the type as a parameter
+        },
+      });
+
+      // Handle the response
+      if (response.data.status === true) {
+        // toast.success(`Subscription is active. Access granted for ${slug}.`);
+        router.push(`${slug}`);
+      } else {
+        toast.error('Please buy a subscription to access this course.');
+        router.push("/pricing");
+      }
+    } catch (error:any) {
+      console.log(error);
+      // Handle errors such as network issues or API errors
+      if (error.response) {
+        // API responded with an error status
+        const { status, data } = error.response;
+        
+        if (status === 401) {
+          toast.error('User is not authenticated. Please log in.');
+          router.push("/signin");
+        } else if (status === 404) {
+          toast.error('Please buy a subscription to access this course.');
+          router.push("/pricing");
+        } else if (status === 403) {
+          toast.error('Feature not available in your plan. Please upgrade your subscription.');
+          router.push("/pricing");
+        } else {
+          toast.error(`An error occurred: ${data.error || 'Unknown error'}`);
+        }
+      } else {
+        toast.error("An error occurred. Please try again.");
+      }
+    }
+  };
 
    // Fetch the quiz based on the slug from params
    useEffect(() => {
@@ -125,10 +182,14 @@ export default function QuizTypeDetailPage({
                 <strong>Quiz Type:</strong> {formattedSlug}
               </div>
             </div>
-            <Link href={`/dashboard/quiz-detail/${quiz?.slug}`} className="mt-4 block text-center w-full bg-secondary text-white font-semibold py-2 px-4 rounded hover:bg-secondary-dark transition-colors"
-            >
-              Start Quiz
-              </Link>
+            {quiz.is_free ? (
+              <Link href={`/dashboard/quiz-detail/${quiz?.slug}`} className="mt-4 block text-center w-full bg-green-500 text-white font-semibold py-2 px-4 rounded hover:bg-green-700 transition-colors"
+               > Start Quiz </Link>
+            ) : (
+              <button className="mt-4 block text-center w-full bg-secondary text-white font-semibold py-2 px-4 rounded hover:bg-secondary-dark transition-colors" onClick={() => handlePayment(`/dashboard/quiz-detail/${quiz?.slug}`)}>
+                Pay Now
+              </button>
+            )}
           </div>
         ))}
       </div>

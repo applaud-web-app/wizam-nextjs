@@ -62,39 +62,67 @@ export default function PlayQuizPage({
 
     const fetchPracticeSet = async () => {
       try {
+        // Make the API request to fetch quizzes
         const response = await axios.get(
-          `${process.env.NEXT_PUBLIC_API_URL}/play-quiz/${slug}`,
+          `${process.env.NEXT_PUBLIC_API_URL}/play-quiz/${slug}`, // Ensure the slug is passed correctly
           {
-            params: { category },
+            params: { category }, // Pass the category as a parameter
             headers: {
-              Authorization: `Bearer ${Cookies.get("jwt")}`,
+              Authorization: `Bearer ${Cookies.get("jwt")}`, // Include the JWT token for authentication
             },
           }
         );
+    
+        // Handle the response from the API
         if (response.data.status) {
           const fetchQuizData = response.data.data;
-          setUuid(fetchQuizData.uuid);
+    
+          // Assuming you get the necessary quiz data here
+          setUuid(fetchQuizData.uuid); // Set UUID from the fetched quiz data
           setquizData({
             title: fetchQuizData.title,
-            questions: fetchQuizData.questions,
-            duration: fetchQuizData.duration,
-            points: fetchQuizData.points,
+            questions: fetchQuizData.questions, // Assuming questions array is included
+            duration: fetchQuizData.duration, // Duration of the quiz
+            points: fetchQuizData.points, // Points for the quiz
           });
-          // Convert duration to seconds
+    
+          // Convert duration from minutes to seconds and set the timer
           setTimeLeft(Math.round(parseFloat(fetchQuizData.duration) * 60));
         } else {
-          toast.error("No practice set found for this category");
+          toast.error("No practice set found for this category.");
         }
-      } catch (error) {
+      } catch (error:any) {
         console.error("Error fetching practice set:", error);
-        toast.error("An error occurred while fetching the practice set");
+    
+        // Handle errors during the API request
+        if (error.response) {
+          const { status, data } = error.response;
+    
+          // Handle specific error statuses
+          if (status === 401) {
+            toast.error("User is not authenticated. Please log in.");
+            router.push("/signin"); // Redirect to sign-in page
+          } else if (status === 404) {
+            toast.error("Please buy a subscription to access this course.");
+            router.push("/pricing"); // Redirect to pricing page
+          } else if (status === 403) {
+            toast.error("Feature not available in your plan. Please upgrade your subscription.");
+            router.push("/pricing"); // Redirect to pricing page
+          } else {
+            toast.error(`An error occurred: ${data.error || 'Unknown error'}`);
+          }
+        } else {
+          toast.error("An error occurred. Please try again.");
+        }
       } finally {
-        setLoading(false);
+        setLoading(false); // Stop the loading state once the request is complete
       }
     };
-
+    
+    // Call the fetch function on component mount or based on dependencies
     fetchPracticeSet();
-  }, [params, router]);
+    }, [slug, router]); // Ensure necessary dependencies like slug, category, and router are included
+    
 
   // Countdown timer logic
   useEffect(() => {
