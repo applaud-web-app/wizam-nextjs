@@ -34,7 +34,7 @@ const config: Config = {
 
         defaultcolor: {
           light: '#82C3EB',   // Lighter shade of default
-          DEFAULT: '#5AA0D5', // Main default color (original color)
+          DEFAULT: '#3394C6', // Main default color (original color)
           dark: '#3A73A2',    // Darker shade of default
         },
       },

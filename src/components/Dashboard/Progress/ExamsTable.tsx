@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import Cookies from "js-cookie";
+import Link from "next/link";
 
 // Define the structure of the exam data
 interface ExamData {
@@ -22,6 +23,7 @@ const formatDate = (dateString: string) => {
 const ExamsTable: React.FC = () => {
   const [data, setData] = useState<ExamData[]>([]);
   const [error, setError] = useState<string | null>(null);
+
 
   // Fetch exam progress data from the API when the component mounts
   useEffect(() => {
@@ -49,6 +51,7 @@ const ExamsTable: React.FC = () => {
         // Assuming the response contains the data in the expected format
         if (response.data && response.data.data) {
           setData(response.data.data); // Set the exam progress data in state
+         
         } else {
           setError("Invalid data format received from the server.");
         }
@@ -101,9 +104,9 @@ const ExamsTable: React.FC = () => {
                   </span>
                 </td> {/* Status Badge */}
                 <td className="p-4">
-                  <button className="bg-blue-500 text-white px-3 py-1 text-sm rounded-lg hover:bg-blue-600 transition">
-                    View Exam Details
-                  </button>
+                  <Link href={`/dashboard/exam-result/${exam.uuid}`} className="bg-blue-500 text-white px-3 py-1 text-sm rounded-lg hover:bg-blue-600 transition">
+                    Result
+                  </Link>
                 </td> {/* Action Button */}
               </tr>
             ))
