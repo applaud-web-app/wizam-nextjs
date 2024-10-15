@@ -45,7 +45,7 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
   } catch (error) {
     console.error("Error fetching metadata:", error);
     return {
-      title: "Error - Wizam",
+      title: "Pages - Wizam",
       description: "An error occurred while fetching metadata.",
     };
   }

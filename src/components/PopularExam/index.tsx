@@ -150,7 +150,7 @@ const PopularExams = () => {
                         </>
                       )}
                     </div>
-                    <div className="flex items-center text-primary font-semibold">
+                    <div className="flex items-center text-defaultcolor font-semibold">
                       <FaArrowRight size={24} />
                     </div>
                   </div>
@@ -169,7 +169,7 @@ const PopularExams = () => {
         {exams.length > 0 && sectionData && (
           <div className="text-center mt-8">
             <Link href={sectionData.button_link}>
-              <span className="primary-btn">
+              <span className="primary-button">
                 {sectionData.button_text}
               </span>
             </Link>

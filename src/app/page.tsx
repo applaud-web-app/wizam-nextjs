@@ -27,7 +27,7 @@ export default function Home() {
       <BannerSection />
       <HelpArea />
       <PopularExams />
-      <Features />
+      {/* <Features /> */}
       <WhyChoose />
       <Faq />
       <HomeBlogSection />

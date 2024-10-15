@@ -57,12 +57,21 @@ const Success: FC = () => {
         </p>
       </div>
 
-      {/* Back to Home Button */}
-      <Link href="/" passHref>
-        <button className="mt-8 bg-primary text-white px-8 py-3 rounded-lg shadow hover:bg-primary-dark transition-colors duration-300">
-          Back to Home
-        </button>
-      </Link>
+      {/* Buttons */}
+      <div className="flex justify-center gap-4">
+        <Link href="/" passHref>
+          <button className="primary-button">
+            Back to Home
+          </button>
+        </Link>
+
+        {/* View Invoice Button */}
+        <Link href="/invoice" >
+          <button className="secondary-button">
+            View Invoice
+          </button>
+        </Link>
+      </div>
     </div>
   );
 };

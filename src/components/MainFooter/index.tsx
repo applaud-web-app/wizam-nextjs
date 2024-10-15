@@ -137,7 +137,7 @@ const Footer = () => {
           </div>
 
           {/* Newsletter Signup */}
-          <div className="lg:col-span-1">
+          <div className="lg:col-span-1 col-span-2">
             <h4 className="mb-4 font-semibold leading-snug">
               Subscribe to Newsletter
             </h4>

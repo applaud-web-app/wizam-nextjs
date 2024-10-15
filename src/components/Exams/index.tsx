@@ -192,7 +192,7 @@ const Exams = () => {
                   />
                   <div className="flex flex-col justify-between flex-grow p-6">
                     {/* Title */}
-                    <h3 className="mb-2 text-lg font-bold text-gray-900">
+                    <h3 className="mb-2 text-xl font-semibold text-gray-900">
                       {exam.title} {/* Limit to 40 characters */}
                     </h3>
 
@@ -200,7 +200,7 @@ const Exams = () => {
                     <p
                       className="mb-4 text-gray-600 flex-grow"
                       dangerouslySetInnerHTML={{
-                        __html: truncateText(exam.description, 230),
+                        __html: truncateText(exam.description, 180),
                       }}
                     />
 
@@ -224,14 +224,14 @@ const Exams = () => {
 
                     {/* Price */}
                     <div className="flex items-center justify-between">
-                      <div className="flex gap-2">
+                      <div className="flex items-center gap-2">
                         {exam.is_free ? (
                           <span className="text-xl font-bold text-dark">
                             Free
                           </span>
                         ) : (
                           <>
-                            <span className="text-xl font-bold text-dark">
+                            <span className="text-2xl font-semibold text-dark">
                               {siteSettings?.currency_symbol}
                               {Number(exam.price).toFixed(2)}
                             </span>
@@ -242,7 +242,7 @@ const Exams = () => {
                           </>
                         )}
                       </div>
-                      <div className="flex items-center text-primary font-semibold">
+                      <div className="flex items-center text-defaultcolor font-semibold">
                         <FaArrowRight size={24} />
                       </div>
                     </div>
