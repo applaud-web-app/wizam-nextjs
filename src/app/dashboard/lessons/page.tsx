@@ -6,6 +6,8 @@ import axios from 'axios';
 import Cookies from 'js-cookie'; // For handling cookies
 import Loader from '@/components/Common/Loader';
 import NoData from '@/components/Common/NoData';
+import { useRouter } from "next/navigation"; // Use router to redirect
+import { toast } from 'react-toastify'; // Optional: For notifications
 
 // Define interfaces for lessons
 interface Lesson {
@@ -25,6 +27,62 @@ export default function LessonsPage() {
   const [skillsData, setSkillsData] = useState<Skill[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const router = useRouter(); // For redirecting to other pages
+
+  // Function to handle payment logic
+  const handlePayment = async (slug: string) => {
+    try {
+      // Get JWT token from cookies
+      const jwt = Cookies.get("jwt");
+      const type = "lessons"; // assuming "quizzes" is the type
+
+      if (!jwt) {
+        toast.error("User is not authenticated. Please log in.");
+        return;
+      }
+
+      // Make the API request to check the user's subscription
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/user-subscription`, {
+        headers: {
+          Authorization: `Bearer ${jwt}`,
+        },
+        params: {
+          type: type, // Pass the type as a parameter
+        },
+      });
+
+      // Handle the response
+      if (response.data.status === true) {
+        // toast.success(`Subscription is active. Access granted for ${slug}.`);
+        router.push(`${slug}`);
+      } else {
+        toast.error('Please buy a subscription to access this course.');
+        router.push("/pricing");
+      }
+    } catch (error: any) {
+      console.log(error);
+      // Handle errors such as network issues or API errors
+      if (error.response) {
+        // API responded with an error status
+        const { status, data } = error.response;
+
+        if (status === 401) {
+          toast.error('User is not authenticated. Please log in.');
+          router.push("/signin");
+        } else if (status === 404) {
+          toast.error('Please buy a subscription to access this course.');
+          router.push("/pricing");
+        } else if (status === 403) {
+          toast.error('Feature not available in your plan. Please upgrade your subscription.');
+          router.push("/pricing");
+        } else {
+          toast.error(`An error occurred: ${data.error || 'Unknown error'}`);
+        }
+      } else {
+        toast.error("An error occurred. Please try again.");
+      }
+    }
+  };
 
   useEffect(() => {
     const controller = new AbortController();
@@ -104,15 +162,14 @@ export default function LessonsPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
               {/* Loop through the lessons */}
               {skill.lessons.map((lesson) => (
-                <Link key={lesson.slug} href={`/dashboard/lessons/${lesson.slug}`} passHref>
+                <div key={lesson.slug} onClick={() => handlePayment(`/dashboard/lessons/${lesson.slug}`)}>
                   <div className="card bg-white rounded-lg shadow-sm p-4 cursor-pointer transition-shadow border border-white hover:border-defaultcolor">
                     <h3 className="text-lg font-semibold">{lesson.title}</h3>
                     <p className="text-gray-600">Category: {lesson.category}</p>
                     <p className="text-gray-600">Difficulty: {lesson.difficulty.replace(/_/g, ' ').replace(/\b\w/g, char => char.toUpperCase())}</p>
                     <p className="text-gray-600">Read time: {lesson.readTime}</p>
-                    
                   </div>
-                </Link>
+                </div>
               ))}
             </div>
           </div>

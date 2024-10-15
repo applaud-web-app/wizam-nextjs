@@ -7,6 +7,7 @@ import { FaClock, FaBook, FaPlayCircle } from 'react-icons/fa'; // Icons for vid
 import Loader from '@/components/Common/Loader';
 import NoData from '@/components/Common/NoData';
 import Cookies from 'js-cookie'; // To handle cookies
+import { toast } from 'react-toastify'; // Optional: For notifications
 
 export default function VideoDetailPage({ params }: { params: { slug: string } }) {
   const [videoData, setVideoData] = useState<any>(null); // State for storing video data
@@ -45,9 +46,28 @@ export default function VideoDetailPage({ params }: { params: { slug: string } }
         } else {
           setError('Failed to fetch video details');
         }
-      } catch (err) {
-        console.error('Error fetching video details:', err);
-        setError('An error occurred while fetching video details');
+      }catch (error:any) {
+        console.log(error);
+        // Handle errors such as network issues or API errors
+        if (error.response) {
+          // API responded with an error status
+          const { status, data } = error.response;
+          
+          if (status === 401) {
+            toast.error('User is not authenticated. Please log in.');
+            router.push("/signin");
+          } else if (status === 404) {
+            toast.error('Please buy a subscription to access this course.');
+            router.push("/pricing");
+          } else if (status === 403) {
+            toast.error('Feature not available in your plan. Please upgrade your subscription.');
+            router.push("/pricing");
+          } else {
+            toast.error(`An error occurred: ${data.error || 'Unknown error'}`);
+          }
+        } else {
+          toast.error("An error occurred. Please try again.");
+        }
       }
 
       setLoading(false);

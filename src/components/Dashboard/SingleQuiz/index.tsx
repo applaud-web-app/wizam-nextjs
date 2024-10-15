@@ -7,6 +7,8 @@ import Cookies from "js-cookie"; // Ensure js-cookie is installed
 import axios from "axios"; // Make sure axios is installed
 import NoData from '@/components/Common/NoData'; // Import NoData component
 import Link from "next/link";
+import { toast } from 'react-toastify'; // Optional: For notifications
+import { useRouter } from "next/navigation"; // Use router to redirect
 
 // Define the type for quiz details
 interface QuizDetails {
@@ -17,6 +19,7 @@ interface QuizDetails {
   duration: string;
   marks: number; // Adjusted for quiz points instead of marks
   description: string;
+  is_free: number;
 }
 
 
@@ -28,6 +31,62 @@ export default function SingleQuiz({ slug }: SingleQuizProps) {
   // State to hold quiz details, initially null
   const [quizDetails, setQuizDetails] = useState<QuizDetails | null>(null);
   const [loading, setLoading] = useState<boolean>(true); // State for loading
+  const router = useRouter(); // For redirecting to other pages
+
+  // Function to handle payment logic
+  const handlePayment = async (slug: string) =>  {
+    try {
+      // Get JWT token from cookies
+      const jwt = Cookies.get("jwt");
+      const type = "quizzes"; // assuming "quizzes" is the type
+
+      if (!jwt) {
+        toast.error("User is not authenticated. Please log in.");
+        return;
+      }
+
+      // Make the API request to check the user's subscription
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/user-subscription`, {
+        headers: {
+          Authorization: `Bearer ${jwt}`,
+        },
+        params: {
+          type: type, // Pass the type as a parameter
+        },
+      });
+
+      // Handle the response
+      if (response.data.status === true) {
+        // toast.success(`Subscription is active. Access granted for ${slug}.`);
+        router.push(`${slug}`);
+      } else {
+        toast.error('Please buy a subscription to access this course.');
+        router.push("/pricing");
+      }
+    } catch (error:any) {
+      console.log(error);
+      // Handle errors such as network issues or API errors
+      if (error.response) {
+        // API responded with an error status
+        const { status, data } = error.response;
+        
+        if (status === 401) {
+          toast.error('User is not authenticated. Please log in.');
+          router.push("/signin");
+        } else if (status === 404) {
+          toast.error('Please buy a subscription to access this course.');
+          router.push("/pricing");
+        } else if (status === 403) {
+          toast.error('Feature not available in your plan. Please upgrade your subscription.');
+          router.push("/pricing");
+        } else {
+          toast.error(`An error occurred: ${data.error || 'Unknown error'}`);
+        }
+      } else {
+        toast.error("An error occurred. Please try again.");
+      }
+    }
+  };
 
   useEffect(() => {
     const fetchExamDetails = async () => {
@@ -139,11 +198,14 @@ export default function SingleQuiz({ slug }: SingleQuizProps) {
       </div>
 
       {/* Start Quiz Button */}
-      <Link href={`/dashboard/quiz-play/${slug}`}
-        className="w-full block text-center bg-secondary text-white font-semibold py-2 rounded-lg hover:bg-secondary-dark transition-all duration-200"
-      >
-        Start Quiz
-      </Link>
+      {quizDetails.is_free ? (
+        <Link href={`/dashboard/quiz-play/${slug}`} className="w-full block text-center bg-green-500 text-white font-semibold py-2 rounded-lg hover:bg-green-700 transition-all duration-200"
+          > Start Quiz </Link>
+      ) : (
+        <button className="mt-4 block text-center w-full bg-secondary text-white font-semibold py-2 px-4 rounded hover:bg-secondary-dark transition-colors" onClick={() => handlePayment(`/dashboard/quiz-play/${slug}`)}>
+          Pay Now
+        </button>
+      )}
     </div>
   );
 }
