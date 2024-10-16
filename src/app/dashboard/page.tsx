@@ -18,7 +18,7 @@ interface Exam {
   total_questions: number;
   total_marks: string;
   total_time: number;
-  duration:string;
+  exam_duration:number;
   point_mode:string;
   point:number;
 }
