@@ -1,15 +1,17 @@
-"use client";
 import { FC, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { FaCheckCircle } from 'react-icons/fa';
-import { useRouter } from 'next/router';
+import { useRouter } from 'next/navigation'; // Import from next/navigation for App Router
 
 const Success: FC = () => {
   const router = useRouter();
-  const { session_id } = router.query;
   const [sessionDetails, setSessionDetails] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Using searchParams to get the session_id in the App Router
+  const searchParams = new URLSearchParams(window.location.search);
+  const session_id = searchParams.get('session_id');
 
   useEffect(() => {
     if (session_id) {
@@ -58,9 +60,7 @@ const Success: FC = () => {
             <tbody>
               <tr className="border-b">
                 <td className="py-3 font-semibold">Product:</td>
-                <td className="py-3">
-                  {sessionDetails?.line_items?.data[0]?.description || 'N/A'}
-                </td>
+                <td className="py-3">{sessionDetails?.line_items?.data[0]?.description || 'N/A'}</td>
               </tr>
               <tr className="border-b">
                 <td className="py-3 font-semibold">Price:</td>
