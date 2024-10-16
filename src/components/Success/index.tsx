@@ -1,106 +1,45 @@
-"use client";
-import { FC, useEffect, useState } from 'react';
+import { FC } from 'react';
 import Link from 'next/link';
-import { FaCheckCircle } from 'react-icons/fa';
-import { useRouter } from 'next/navigation'; // Import from next/navigation for App Router
+import { FaCheckCircle, FaEnvelope, FaHome } from 'react-icons/fa';
 
 const Success: FC = () => {
-  const router = useRouter();
-  const [sessionDetails, setSessionDetails] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  // Using searchParams to get the session_id in the App Router
-  const searchParams = new URLSearchParams(window.location.search);
-  const session_id = searchParams.get('session_id');
-
-  useEffect(() => {
-    if (session_id) {
-      // Fetch session details from API
-      fetch(`/api/stripe/session?session_id=${session_id}`)
-        .then((response) => response.json())
-        .then((data) => {
-          if (data.error) {
-            setError(data.error);
-          } else {
-            setSessionDetails(data);
-          }
-          setLoading(false);
-        })
-        .catch((err) => {
-          setError('Failed to load session details');
-          setLoading(false);
-        });
-    }
-  }, [session_id]);
-
-  if (loading) {
-    return <p>Loading...</p>;
-  }
-
-  if (error) {
-    return <p>Error: {error}</p>;
-  }
-
   return (
-    <div className="py-16">
-      <div className="container mx-auto text-center px-6 lg:px-12">
-        {/* Success Icon and Message */}
-        <div className="mb-12">
-          <FaCheckCircle className="text-green-500 text-7xl mx-auto mb-6" />
-          <h1 className="text-5xl font-bold text-gray-800 mb-4">Thank You for Your Purchase!</h1>
-          <p className="text-lg text-gray-600 mb-8">
-            Your transaction was successful, and we appreciate your business.
+    <div className="relative bg-gray-50 py-10 md:py-16  ">
+     
+      <div className="container">
+        <div className="mb-10 md:mb-12 mx-auto max-w-2xl text-center px-4 md:px-6 lg:px-12 relative z-10">
+          <FaCheckCircle className="text-green-500 text-5xl md:text-6xl lg:text-7xl mx-auto mb-4 md:mb-6 animate-bounce" />
+          <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-800 mb-3 md:mb-4">
+            Thank You for Your Purchase!
+          </h1>
+          <p className="text-md md:text-lg lg:text-xl text-gray-600 mb-6 md:mb-8">
+            Your transaction was successful, and we truly appreciate your business. Keep an eye out for a confirmation email.
           </p>
         </div>
 
-        {/* Order Summary */}
-        <div className="bg-white p-8 rounded-lg border border-gray-300 max-w-2xl mx-auto mb-12">
-          <h2 className="text-2xl font-semibold text-gray-700 mb-6">Order Summary</h2>
-          <table className="table-auto w-full text-left text-gray-600">
-            <tbody>
-              <tr className="border-b">
-                <td className="py-3 font-semibold">Product:</td>
-                <td className="py-3">{sessionDetails?.line_items?.data[0]?.description || 'N/A'}</td>
-              </tr>
-              <tr className="border-b">
-                <td className="py-3 font-semibold">Price:</td>
-                <td className="py-3">
-                  {sessionDetails?.amount_total
-                    ? `$${(sessionDetails.amount_total / 100).toFixed(2)}`
-                    : 'N/A'}
-                </td>
-              </tr>
-              <tr className="border-b">
-                <td className="py-3 font-semibold">Transaction ID:</td>
-                <td className="py-3">{sessionDetails?.payment_intent?.id || 'N/A'}</td>
-              </tr>
-              <tr>
-                <td className="py-3 font-semibold">Date:</td>
-                <td className="py-3">
-                  {sessionDetails?.created
-                    ? new Date(sessionDetails.created * 1000).toLocaleDateString()
-                    : 'N/A'}
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
         {/* Buttons */}
-        <div className="flex justify-center space-x-4">
+        <div className="flex justify-center space-x-3 md:space-x-4 mt-6 md:mt-8">
           <Link href="/" passHref>
-            <span className="bg-primary hover:bg-secondary text-secondary hover:text-primary py-3 px-6 rounded-full text-lg font-semibold transition duration-300">
-              Back to Home
+            <span className="inline-flex items-center bg-primary hover:bg-secondary text-secondary hover:text-white py-2 md:py-3 px-6  rounded-full text-sm md:text-base lg:text-lg font-semibold transition duration-300 transform hover:scale-105">
+              <FaHome className="mr-2" /> Back to Home
             </span>
           </Link>
           <Link href="/invoice" passHref>
-            <span className="bg-secondary hover:bg-secondary-dark text-white py-3 px-6 rounded-full text-lg font-semibold transition duration-300">
-              View Invoice
+            <span className="inline-flex items-center bg-secondary hover:bg-secondary-dark text-white py-2 md:py-3 px-6  rounded-full text-sm md:text-base lg:text-lg font-semibold transition duration-300 transform hover:scale-105">
+              <FaEnvelope className="mr-2" /> View Invoice
             </span>
           </Link>
         </div>
+
+        {/* Subtle Animation for User Engagement */}
+        <div className="mt-8 md:mt-10 animate-pulse text-center">
+          <p className="text-sm md:text-md lg:text-lg text-gray-500">
+            You will receive an email with further details shortly.
+          </p>
+        </div>
       </div>
+
+     
     </div>
   );
 };

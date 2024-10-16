@@ -2,41 +2,47 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { FaPlay, FaArrowLeft, FaArrowRight } from "react-icons/fa";
-import AliceCarousel from 'react-alice-carousel'; // Importing Alice Carousel
-import 'react-alice-carousel/lib/alice-carousel.css'; // Importing carousel styles
-import { FC, useState } from "react";
+import { FaPlay } from "react-icons/fa";
+import AliceCarousel from "react-alice-carousel"; // Importing Alice Carousel
+import "react-alice-carousel/lib/alice-carousel.css"; // Importing carousel styles
+import { FC, useState, useEffect } from "react";
 import { MdOutlineKeyboardArrowLeft, MdOutlineKeyboardArrowRight } from "react-icons/md";
+import axios from "axios";
 
 // Define the type for carousel items
 interface CarouselItem {
-  heading: string;
-  buttonText: string;
-  buttonLink: string;
+  title: string;
+  description: string;
+  button_text: string;
+  button_link: string;
+}
+
+// Define the type for YouTube link
+interface YouTubeLink {
+  description: string;
 }
 
 const BannerSection: FC = () => {
-  // Define the carousel items
-  const carouselItems: CarouselItem[] = [
-    {
-      heading: "Prepare for Upcoming Exams with Wizam",
-      buttonText: "Get Started",
-      buttonLink: "/",
-    },
-    {
-      heading: "Unlock Your Potential with Expert Guidance",
-      buttonText: "Join Now",
-      buttonLink: "/join",
-    },
-    {
-      heading: "Achieve Your Goals with Comprehensive Resources",
-      buttonText: "Explore Courses",
-      buttonLink: "/courses",
-    },
-  ];
-
-  // State to manage if the video should be shown
+  const [carouselItems, setCarouselItems] = useState<CarouselItem[]>([]);
+  const [youtubeLink, setYoutubeLink] = useState<string | null>(null);
   const [isVideoPlaying, setIsVideoPlaying] = useState(false);
+
+  // Fetch banner data from the API
+  useEffect(() => {
+    const fetchBannerData = async () => {
+      try {
+        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/banners`);
+        if (response.data.status) {
+          setCarouselItems(response.data.data.banner);
+          setYoutubeLink(response.data.data.youtube[0]?.description || null);
+        }
+      } catch (error) {
+        console.error("Error fetching banner data:", error);
+      }
+    };
+
+    fetchBannerData();
+  }, []);
 
   const handlePlayButtonClick = () => {
     setIsVideoPlaying(true);
@@ -63,12 +69,12 @@ const BannerSection: FC = () => {
             disableDotsControls
             renderPrevButton={() => (
               <button className="absolute left-0 top-1/2 transform -translate-y-1/2  text-white p-2 rounded-full transition">
-                <MdOutlineKeyboardArrowLeft  size={36} />
+                <MdOutlineKeyboardArrowLeft size={36} />
               </button>
             )}
             renderNextButton={() => (
               <button className="absolute right-0 top-1/2 transform -translate-y-1/2  text-white p-2 rounded-full transition">
-                <MdOutlineKeyboardArrowRight  size={36} />
+                <MdOutlineKeyboardArrowRight size={36} />
               </button>
             )}
             items={carouselItems.map((item, index) => (
@@ -77,12 +83,15 @@ const BannerSection: FC = () => {
                   className="mb-6 max-w-4xl mx-auto text-2xl sm:text-3xl lg:text-6xl font-bold text-white leading-snug sm:leading-snug lg:leading-tight"
                   style={{ textShadow: "2px 2px 4px rgba(0, 0, 0, 0.4)" }} // Custom text shadow
                 >
-                  {item.heading}
+                  {item.title}
                 </h2>
+                <p className="mb-4 max-w-2xl mx-auto text-sm sm:text-lg lg:text-2xl text-white leading-relaxed">
+                  {item.description}
+                </p>
 
-                <Link href={item.buttonLink}>
+                <Link href={item.button_link}>
                   <span className="inline-block mt-4 primary-button">
-                    {item.buttonText}
+                    {item.button_text}
                   </span>
                 </Link>
               </div>
@@ -97,7 +106,7 @@ const BannerSection: FC = () => {
             <iframe
               width="100%"
               height="100%"
-              src="https://www.youtube.com/embed/mc7L3NhitUs"
+              src={youtubeLink?.replace("youtu.be", "www.youtube.com/embed") || ""}
               title="YouTube video player"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowFullScreen
@@ -111,7 +120,7 @@ const BannerSection: FC = () => {
                 alt="Wizam Banner"
                 layout="fill"
                 objectFit="cover"
-                className="mx-auto rounded-lg"
+                className="mx-auto p-3 rounded-lg"
               />
 
               {/* Play Button and Logo Overlay */}

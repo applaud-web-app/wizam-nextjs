@@ -10,7 +10,6 @@ const Breadcrumb: React.FC<BreadcrumbProps> = ({
 }) => {
   return (
     <div className="relative z-10 bg-[#2179DE] dark:bg-dark overflow-hidden py-10 sm:py-16 lg:py-[70px]">
-      <div className="absolute bottom-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-gray-700 to-transparent"></div>
       <div className="container mx-auto px-4">
         <div className="text-center">
           {/* Page Title */}
