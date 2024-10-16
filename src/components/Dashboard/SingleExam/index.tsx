@@ -91,7 +91,7 @@ export default function SingleExam({ slug }: SingleExamProps) {
         </div>
         <div className="flex items-center space-x-2 text-gray-700">
           <FaClock className="text-defaultcolor" />
-          <span className="text-base font-semibold">Duration: {examDetails.duration}</span>
+          <span className="text-base font-semibold">Duration: {examDetails.duration} min</span>
         </div>
         <div className="flex items-center space-x-2 text-gray-700">
           <FaStar className="text-defaultcolor" />

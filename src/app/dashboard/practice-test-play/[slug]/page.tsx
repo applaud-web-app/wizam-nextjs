@@ -17,6 +17,7 @@ import { useRouter } from "next/navigation";
 import axios from "axios";
 import { toast } from "react-toastify";
 import Link from "next/link";
+import NoData from "@/components/Common/NoData";
 
 // Option interface
 interface Option {
@@ -634,7 +635,7 @@ export default function PracticeTestDetailPage({
   if (loading) return <Loader />;
 
   if (!practiceData || !practiceData.questions)
-    return <div>No practice set data available</div>;
+    return <NoData message="No Practice Test data available"/>;
 
   return (
     <div className="dashboard-page flex flex-col md:flex-row gap-6">
