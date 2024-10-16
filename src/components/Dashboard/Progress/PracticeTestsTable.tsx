@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import Cookies from "js-cookie";
+import Link from "next/link";
 
 // Define the structure of the practice test data
 interface PracticeTestData {
@@ -99,9 +100,9 @@ const PracticeTestsTable: React.FC = () => {
                   </span>
                 </td> {/* Status Badge */}
                 <td className="p-4">
-                  <button className="bg-yellow-500 text-white px-3 py-1 text-sm rounded-lg hover:bg-yellow-600 transition">
-                    View Test Details
-                  </button>
+                  <Link href={`/dashboard/practice-test-result/${test.uuid}`} className="bg-yellow-500 text-white px-3 py-1 text-sm rounded-lg hover:bg-yellow-600 transition">
+                    Result
+                  </Link>
                 </td> {/* Action Button */}
               </tr>
             ))

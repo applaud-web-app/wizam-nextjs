@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import Cookies from "js-cookie";
+import Link from "next/link";
 
 interface QuizData {
   sno: number;
@@ -102,16 +103,16 @@ const QuizzesTable: React.FC = () => {
                   </span>
                 </td> {/* Status Badge */}
                 <td className="p-4">
-                  <button className="bg-green-500 text-white px-3 py-1 text-sm rounded-lg hover:bg-green-600 transition">
-                    View Quiz
-                  </button>
+                  <Link href={`/dashboard/quiz-result/${quiz.uuid}`} className="bg-green-500 text-white px-3 py-1 text-sm rounded-lg hover:bg-green-600 transition">
+                  Result
+                  </Link>
                 </td> {/* Action Button */}
               </tr>
             ))
           ) : (
             <tr>
               <td className="p-4" colSpan={7}>
-                No quizzes found.
+                Result
               </td>
             </tr>
           )}

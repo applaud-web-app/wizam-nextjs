@@ -86,10 +86,10 @@ export default function Sidebar({ isSyllabusEnabled, isOpen, toggleSidebar }: Si
           <div className="mt-8">
             <h3 className="text-sm font-semibold uppercase text-gray-400">Settings</h3>
             <nav className="mt-4 space-y-2">
-              <Link href="/dashboard/settings" className="flex items-center px-4 py-2 hover:bg-gray-700 rounded-md transition">
+              <Link href="/dashboard/my-subscription" className="flex items-center px-4 py-2 hover:bg-gray-700 rounded-md transition">
                 <TfiIdBadge className="mr-3" /> My Subscriptions
               </Link>
-              <Link href="/dashboard/settings" className="flex items-center px-4 py-2 hover:bg-gray-700 rounded-md transition">
+              <Link href="/dashboard/my-payments" className="flex items-center px-4 py-2 hover:bg-gray-700 rounded-md transition">
                 <MdOutlinePayment className="mr-3" /> My Payments
               </Link>
               <Link href="/logout" className="flex items-center px-4 py-2 hover:bg-red-600 rounded-md transition">
