@@ -72,7 +72,7 @@ export default function DashboardPage() {
           },
           params: { category: category_id }, // Send category_id as a query parameter
         });
-        console.log(response.data);
+        
         setData(response.data);
       } catch (error) {
         setError("Failed to fetch data");
