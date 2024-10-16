@@ -112,7 +112,7 @@ export default function ExamList() {
                 <td className="p-4"><span className={`${exam.is_free ? 'text-sm rounded-full font-semibold py-1 px-5 bg-green-500 text-white' : 'text-sm rounded-full font-semibold py-1 px-5 bg-secondary text-white'}`}>{exam.is_free ? 'Free' : 'Paid'}</span></td>
                 <td className="p-4">{exam.total_questions !== null ? exam.total_questions : '-'}</td> 
                 <td className="p-4">{exam.point_mode  == "manual" ? exam.point * exam.total_questions : exam.total_marks }</td> {/* Handle missing marks */}
-                <td className="p-4">{exam.duration_mode == "manual" ? exam.total_time : Math.floor(exam.total_time / 60)} min</td>
+                <td className="p-4">{exam.duration_mode == "manual" ? exam.exam_duration : Math.floor(exam.total_time / 60)} min</td>
                 <td className="p-4">
                   {exam.is_free === 1 ? (
                     <Link href={`/dashboard/exam-detail/${exam.slug}`} className="text-defaultcolor font-semibold hover:underline">
