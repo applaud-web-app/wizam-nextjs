@@ -17,6 +17,7 @@ import { useRouter } from "next/navigation";
 import axios from "axios";
 import { toast } from "react-toastify";
 import Link from 'next/link';
+import NoData from "@/components/Common/NoData";
 
 // Option interface
 interface Option {
@@ -610,7 +611,7 @@ export default function PlayExamPage({
   if (loading) return <Loader />;
 
   if (!examData || !examData.questions)
-    return <div>No exam data available</div>;
+    return <NoData message="No Exam data available"/>;
 
   return (
     <div className="dashboard-page flex flex-col md:flex-row gap-6">

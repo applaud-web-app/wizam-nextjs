@@ -9,7 +9,7 @@ interface Exam {
   total_questions: number;
   total_marks: string;
   total_time: number;
-  duration:string;
+  exam_duration:number;
   point_mode:string;
   point:number;
 }
@@ -48,7 +48,7 @@ export default function ExamTable({ exams }: ExamTableProps) {
               <tr key={index} className="hover:bg-gray-50">
                 <td className="p-4">{index + 1}</td>
                 <td className="p-4">{exam.title}</td>
-                <td className="p-4">{exam.duration_mode === "manual" ? exam.duration : Math.floor(exam.total_time / 60)} min</td>
+                <td className="p-4">{exam.duration_mode === "manual" ? exam.exam_duration : Math.floor(exam.total_time / 60)} min</td>
                 <td className="p-4">{exam.total_questions}</td>
                 <td className="p-4">{exam.point_mode == "manual" ? (exam.total_questions * exam.point) : exam.total_marks}</td>
               </tr>
