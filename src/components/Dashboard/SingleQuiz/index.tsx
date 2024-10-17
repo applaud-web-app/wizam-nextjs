@@ -160,7 +160,7 @@ export default function SingleQuiz({ slug }: SingleQuizProps) {
         <div className="flex items-center space-x-2 text-gray-700">
           <FaClock className="text-secondary" />
           <span className="text-base font-semibold">
-            Duration: {quizDetails?.duration}
+            Duration: {quizDetails?.duration} min
           </span>
         </div>
         <div className="flex items-center space-x-2 text-gray-700">

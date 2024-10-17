@@ -150,7 +150,7 @@ export default function SinglePracticeSet({ slug }: SinglePracticeSetProps) {
         </div>
         <div className="flex items-center space-x-2 text-gray-700">
           <FaClock className="text-defaultcolor" />
-          <span className="text-base font-semibold">Duration: {testDetails.duration}</span>
+          <span className="text-base font-semibold">Duration: {testDetails.duration} min</span>
         </div>
         <div className="flex items-center space-x-2 text-gray-700">
           <FaStar className="text-defaultcolor" />
