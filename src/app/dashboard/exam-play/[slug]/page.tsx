@@ -238,7 +238,7 @@ export default function PlayExamPage({
             answer: Array.isArray(userAnswer)
               ? userAnswer.map((ans) => (typeof ans === "string" ? ans : String(ans)))
               : [],
-          };
+        };
 
         case "MTF":
           const matches: { [key: number]: string } = {};
@@ -535,25 +535,35 @@ export default function PlayExamPage({
                 </div>
               );
 
-            case "FIB":
-              const numberOfBlanks = Number(question.options?.[0]) || 0;
-              return (
-                <div>
-                  {Array.from({ length: numberOfBlanks }).map((_, index) => (
-                    <input
-                      key={index}
-                      type="text"
-                      className="p-4 rounded-lg border border-gray-300 w-full mb-2"
-                      placeholder={`Answer ${index + 1}`}
-                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                        const newAnswers = [...(answers[question.id] || [])];
-                        newAnswers[index] = e.target.value;
-                        handleAnswerChange(question.id, newAnswers);
-                      }}
-                    />
-                  ))}
-                </div>
-              );
+              case "FIB":
+                // Assuming question.options[0] contains the number of blanks
+                const numberOfBlanks = parseInt(question.options?.[0] ?? "0", 10); // Fallback to "0" if undefined
+
+              
+                return (
+                  <div>
+                    {Array.from({ length: numberOfBlanks }).map((_, index) => (
+                      <input
+                        key={index}
+                        type="text"
+                        className="p-4 rounded-lg border border-gray-300 w-full mb-2"
+                        placeholder={`Answer ${index + 1}`} // Placeholder to label each input
+                        value={answers[question.id]?.[index] || ""} // Bind value to the corresponding answer in the array
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                          // Create a new array to store the updated answers
+                          const newAnswers = [...(answers[question.id] || Array(numberOfBlanks).fill(""))];
+              
+                          // Update the specific blank (index) with the new value
+                          newAnswers[index] = e.target.value;
+              
+                          // Call handleAnswerChange to update the state
+                          handleAnswerChange(question.id, newAnswers);
+                        }}
+                      />
+                    ))}
+                  </div>
+                );
+              
 
             case "EMQ":
               return (

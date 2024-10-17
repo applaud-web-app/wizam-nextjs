@@ -278,7 +278,7 @@ const formatTimeTaken = (timeInMinutes?: number) => {
     return (
       <div 
         key={question.id} 
-        className={`p-4 border rounded-lg bg-white shadow-sm ${questionSkipped ? 'bg-yellow-100' : ''}`} // Set yellow bg if skipped
+        className={`p-4 border rounded-lg bg-white shadow-sm ${questionSkipped ? 'bg-yellow-50' : ''}`} // Set yellow bg if skipped
       >
         <h3 className="text-lg font-semibold mb-2">
           <span className="underline">Question {index + 1}:</span> {/* Question Number */}
