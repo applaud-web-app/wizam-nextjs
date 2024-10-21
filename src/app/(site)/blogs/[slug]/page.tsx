@@ -137,28 +137,31 @@ export default function Post({ params }: Props) {
           </div>
 
           {/* Related Posts */}
-          <div className="mt-14">
-            <h2 className="relative pb-5 text-2xl font-semibold text-dark dark:text-white sm:text-[28px]">
-              Related Articles
-            </h2>
-            <span className="mb-10 inline-block h-[2px] w-20 bg-primary"></span>
+          {relatedPosts.length > 0 && (
+            <div className="mt-14">
+              <h2 className="relative pb-5 text-2xl font-semibold text-dark dark:text-white sm:text-[28px]">
+                Related Articles
+              </h2>
+              <span className="mb-10 inline-block h-[2px] w-20 bg-primary"></span>
 
-            {/* Grid Layout for Related Posts */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-              {relatedPosts.map((relatedPost, key) => (
-                <SingleBlog
-                  key={key}
-                  blog={{
-                    title: relatedPost.title,
-                    coverImage: relatedPost.coverImage,
-                    excerpt: relatedPost.excerpt,
-                    date: relatedPost.date,
-                    slug: relatedPost.slug,
-                  }}
-                />
-              ))}
+              {/* Grid Layout for Related Posts */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                {relatedPosts.map((relatedPost, key) => (
+                  <SingleBlog
+                    key={key}
+                    blog={{
+                      title: relatedPost.title,
+                      coverImage: relatedPost.coverImage,
+                      excerpt: relatedPost.excerpt,
+                      date: relatedPost.date,
+                      slug: relatedPost.slug,
+                    }}
+                  />
+                ))}
+              </div>
             </div>
-          </div>
+          )}
+
 
         </div>
       </section>

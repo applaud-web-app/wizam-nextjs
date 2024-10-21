@@ -20,6 +20,7 @@ const Exams = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [filtering, setFiltering] = useState(false); // State to manage the button loading state
   const itemsPerPage = 6;
 
   const { siteSettings } = useSiteSettings(); // Use site settings from SiteContext
@@ -36,11 +37,20 @@ const Exams = () => {
         const courseResponse = await axios.get(
           `${process.env.NEXT_PUBLIC_API_URL}/course`
         );
+        // Fetch exam packs
+        const examPackResponse = await axios.get(
+          `${process.env.NEXT_PUBLIC_API_URL}/course-exam-type`
+        );
 
-        if (examResponse.data.status && courseResponse.data.status) {
+        if (
+          examResponse.data.status &&
+          courseResponse.data.status &&
+          examPackResponse.data.status
+        ) {
           setExams(examResponse.data.data);
           setFilteredExams(examResponse.data.data); // Show all exams by default
           setCourses(courseResponse.data.data);
+          setExamPacks(examPackResponse.data.data);
         } else {
           setError("Failed to fetch data.");
         }
@@ -55,43 +65,36 @@ const Exams = () => {
   }, []);
 
   // Handle course change
-  const handleCourseChange = async (courseId: string) => {
+  const handleCourseChange = (courseId: string) => {
     setSelectedCourse(courseId);
     setSelectedExamPack(""); // Reset exam pack on course change
-
-    if (courseId) {
-      try {
-        // Fetch exam packs based on the selected course
-        const examPackResponse = await axios.get(
-          `${process.env.NEXT_PUBLIC_API_URL}/course-pack/${courseId}`
-        );
-        if (examPackResponse.data.status) {
-          setExamPacks(examPackResponse.data.data);
-        }
-      } catch (error) {
-        console.error("Error fetching exam packs:", error);
-      }
-    } else {
-      setExamPacks([]);
-    }
   };
 
   // Handle submit to filter exams
   const handleFilterSubmit = () => {
-    let filtered = exams;
+    setFiltering(true); // Show "Filtering..." and disable the button
 
-    if (selectedCourse) {
-      filtered = filtered.filter((exam: any) => exam.course_id === selectedCourse);
-    }
+    setTimeout(() => {
+      let filtered = exams;
 
-    if (selectedExamPack) {
-      filtered = filtered.filter(
-        (exam: any) => exam.exam_pack_id === selectedExamPack
-      );
-    }
+      if (selectedCourse) {
+        filtered = filtered.filter(
+          (exam: any) => exam.subcategory_id === parseInt(selectedCourse)
+        );
+      }
 
-    setFilteredExams(filtered);
-    setCurrentPage(1); // Reset pagination to the first page
+      if (selectedExamPack) {
+        filtered = filtered.filter(
+          (exam: any) => exam.exam_type_id === parseInt(selectedExamPack)
+        );
+      }
+
+      setFilteredExams(filtered);
+      setCurrentPage(1); // Reset pagination to the first page
+
+      // Re-enable the button and remove the "Filtering..." text after filtering
+      setFiltering(false);
+    }, 500); // Simulate a delay to show the filtering process
   };
 
   // Truncate long strings for title or description
@@ -162,9 +165,16 @@ const Exams = () => {
           {/* Filter Button */}
           <button
             onClick={handleFilterSubmit}
-            className="w-full rounded-lg bg-primary px-6 py-3 font-semibold text-secondary transition duration-300 ease-in-out hover:bg-secondary hover:text-primary"
+            disabled={filtering} // Disable the button while filtering
+            className={`w-full rounded-lg ${
+              filtering
+                ? "bg-primary cursor-not-allowed" // Change color and cursor when disabled
+                : "bg-primary cursor-pointer"
+            } px-6 py-3 font-semibold text-secondary transition duration-300 ease-in-out ${
+              filtering ? "" : "hover:bg-secondary hover:text-primary"
+            }`}
           >
-            Filter
+            {filtering ? "Filtering..." : "Filter"}
           </button>
         </div>
 
@@ -237,7 +247,9 @@ const Exams = () => {
                             </span>
                             <span className="text-base text-gray-500 line-through">
                               {siteSettings?.currency_symbol}
-                              {calculateStrikePrice(Number(exam.price)).toFixed(2)}
+                              {calculateStrikePrice(Number(exam.price)).toFixed(
+                                2
+                              )}
                             </span>
                           </>
                         )}

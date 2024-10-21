@@ -14,6 +14,8 @@ import { toast } from "react-toastify";
 import Cookies from "js-cookie";
 import { useRouter } from "next/navigation";
 import Loader from "@/components/Common/Loader";
+import Link from "next/link";
+import ExamReportGenerator from "@/components/ReportCardGenerator";
 
 // TypeScript interfaces
 interface Option {
@@ -527,7 +529,7 @@ const ExamResult = ({ params }: ExamResultProps) => {
         </div>
 
         {/* User's exam Result Breakdown */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5 mb-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-5 mb-5">
           <ResultCard title="Total Questions" value={totalQuestions} />
           <ResultCard
             title="Correct Answers"
@@ -553,7 +555,12 @@ const ExamResult = ({ params }: ExamResultProps) => {
 
         {/* Render Questions */}
         <div className="mb-8">
-          <h2 className="text-3xl font-semibold mb-4">Exam Review</h2>
+          <div className="flex justify-between">
+              <h2 className="text-3xl font-semibold mb-4">Exam Review</h2>
+              <Link href="/" className="bg-secondary text-white px-5 py-2 rounded-lg hover:bg-secondary-dark mb-4">Report Card</Link>
+              <ExamReportGenerator />
+          </div>
+          
           <div className="grid gap-6">
             {quizData.questions.map((question, index) =>
               renderQuestionResult(question, index)

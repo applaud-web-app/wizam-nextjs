@@ -10,6 +10,7 @@ import NoData from "../Common/NoData"; // Custom NoData component
 interface WhyChooseData {
   title: string;
   data: string[];
+  status: string; // "0" or "1" to enable or disable the section
 }
 
 const WhyChoose = () => {
@@ -45,8 +46,13 @@ const WhyChoose = () => {
     return <NoData message="Sorry, we couldn't load the data. Please try again later." />; // Custom error message
   }
 
-  if (!whyChooseData || !whyChooseData.data.length) {
-    return <NoData message="No reasons found to choose us at the moment. Please check back later!" />; // Custom no-data message
+  // Check if the section is disabled based on the status field
+  if (!whyChooseData || whyChooseData.status === "0") {
+    return null; // Don't render the component if the status is "0"
+  }
+
+  if (!whyChooseData.data.length) {
+    return <NoData message="No data available." />; // Custom no-data message
   }
 
   return (

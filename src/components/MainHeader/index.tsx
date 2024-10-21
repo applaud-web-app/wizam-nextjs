@@ -149,43 +149,45 @@ const Header = () => {
   const handleNavbarToggle = () => setNavbarOpen(!navbarOpen);
 
   // Fetch exam and resource suggestions based on search query
-  useEffect(() => {
-    const fetchExamsAndResources = async () => {
-      if (searchQuery) {
-        try {
-          const [examResponse, resourceResponse] = await Promise.all([
-            axios.get(`${process.env.NEXT_PUBLIC_API_URL}/exams`),
-            axios.get(`${process.env.NEXT_PUBLIC_API_URL}/resource`),
-          ]);
+ // Fetch exam and resource suggestions based on search query
+useEffect(() => {
+  const fetchExamsAndResources = async () => {
+    if (searchQuery) {
+      try {
+        const [examResponse, resourceResponse] = await Promise.all([
+          axios.get(`${process.env.NEXT_PUBLIC_API_URL}/exams`),
+          axios.get(`${process.env.NEXT_PUBLIC_API_URL}/resource`),
+        ]);
 
-          const filteredExams = examResponse.data.data.filter((exam: any) =>
-            exam.title.toLowerCase().includes(searchQuery.toLowerCase())
-          );
+        const filteredExams = examResponse.data.data.filter((exam: any) =>
+          exam.title.toLowerCase().includes(searchQuery.toLowerCase())
+        );
 
-          const filteredResources = resourceResponse.data.data.filter(
-            (resource: any) =>
-              resource.title.toLowerCase().includes(searchQuery.toLowerCase())
-          );
+        const filteredResources = resourceResponse.data.data.filter(
+          (resource: any) =>
+            resource.title.toLowerCase().includes(searchQuery.toLowerCase())
+        );
 
-          const combinedSuggestions = [
-            ...filteredExams.map((exam: any) => ({ ...exam, type: "exam" })),
-            ...filteredResources.map((resource: any) => ({
-              ...resource,
-              type: "resource",
-            })),
-          ];
+        const combinedSuggestions = [
+          ...filteredExams.map((exam: any) => ({ ...exam, type: "exam" })),
+          ...filteredResources.map((resource: any) => ({
+            ...resource,
+            type: "resource",
+          })),
+        ];
 
-          setSuggestions(combinedSuggestions);
-        } catch (error) {
-          console.error("Error fetching suggestions:", error);
-        }
-      } else {
-        setSuggestions([]);
+        setSuggestions(combinedSuggestions);
+      } catch (error) {
+        console.error("Error fetching suggestions:", error);
       }
-    };
+    } else {
+      setSuggestions([]);
+    }
+  };
 
-    fetchExamsAndResources();
-  }, [searchQuery]);
+  fetchExamsAndResources();
+}, [searchQuery]);
+
 
   const handleSearchSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -345,7 +347,7 @@ const Header = () => {
                       </div>
                       <input
                         type="text"
-                        placeholder="Search for exams..."
+                        placeholder="Search for exams or resources..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         className="w-full h-12 pr-10 text-gray-800 bg-white border-0 focus:outline-none pl-12"
@@ -360,7 +362,7 @@ const Header = () => {
                       )}
                     </div>
 
-                    {suggestions.length > 0 && (
+                    {suggestions.length > 0 ? (
                       <ul className="absolute left-0 right-0 bg-white border border-gray-200 rounded-lg shadow-lg mt-2 max-h-60 overflow-y-auto z-50">
                         {suggestions.map((suggestion: any, index) => (
                           <li
@@ -372,7 +374,14 @@ const Header = () => {
                           </li>
                         ))}
                       </ul>
+                    ) : (
+                      searchQuery && (
+                        <p className="absolute left-0 right-0 bg-white border border-gray-200 rounded-lg shadow-lg mt-2 py-2 px-4 text-red-500 z-50">
+                          No exam or Resource Available.
+                        </p>
+                      )
                     )}
+
                   </form>
                 </div>
               </div>

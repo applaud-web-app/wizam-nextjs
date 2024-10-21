@@ -15,9 +15,12 @@ const HelpArea = () => {
       try {
         const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/help-data`);
         if (response.data.status) {
-          setTabsData(response.data.data.data);
+          const enabledTabs = response.data.data.data.filter((tab: any) => tab.status === "1"); // Only include tabs with status '1'
+          setTabsData(enabledTabs);
           setTitle(response.data.data.title);
-          setActiveTab(response.data.data.data[0].title); // Set the first tab as active by default
+          if (enabledTabs.length > 0) {
+            setActiveTab(enabledTabs[0].title); // Set the first enabled tab as active by default
+          }
         }
       } catch (error) {
         console.error("Error fetching help data:", error);
