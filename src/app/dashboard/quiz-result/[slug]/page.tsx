@@ -298,26 +298,43 @@ const QuizResult = ({ params }: QuizResultProps) => {
           </div>
         );
 
-      case "ORD": // Ordering
+        case "ORD": // Ordering
         return (
           <div>
             <ul>
               {Array.isArray(question.userAnswer) ? (
-                question.userAnswer.map((option, index) => (
+                question.userAnswer.map((answerIndex:any, index) => (
                   <li
                     key={index}
                     className="p-4 bg-gray-100 rounded-lg mb-2 flex items-center justify-between"
                   >
-                    <span>{typeof option === "string" ? option : JSON.stringify(option)}</span>
-                    {typeof question.correctAnswer === 'string' ? (
-                      <span className="text-green-600">
-                        Correct: {question.correctAnswer}
-                      </span>
-                    ) : Array.isArray(question.correctAnswer) && index < question.correctAnswer.length ? (
-                      <span className="text-green-600">
-                        Correct: {question.correctAnswer[index]}
-                      </span>
-                    ) : null}
+                    {/* Display the text corresponding to user answer using dangerouslySetInnerHTML */}
+                    <span
+                      dangerouslySetInnerHTML={{
+                        __html:
+                          question.options && typeof question.options[answerIndex] === "string"
+                            ? question.options[answerIndex] // Show text from options if available
+                            : "No answer provided",
+                      }}
+                    />
+      
+                    {/* Show correct answer if available using dangerouslySetInnerHTML */}
+                    {Array.isArray(question.correctAnswer) && index < question.correctAnswer.length ? (
+                        <span
+                          className="text-green-600"
+                          dangerouslySetInnerHTML={{
+                            __html:
+                              question.options &&
+                              // Ensure the index is a number before accessing options
+                              typeof question.correctAnswer[index] === "number" &&
+                              typeof question.options[question.correctAnswer[index] as number] === "string"
+                                ? (question.options[question.correctAnswer[index] as number] as string) // Cast to string
+                                : "No correct answer available",
+                          }}
+                        />
+                      ) : null}
+
+
                   </li>
                 ))
               ) : (
@@ -328,37 +345,53 @@ const QuizResult = ({ params }: QuizResultProps) => {
                 </li>
               )}
             </ul>
+      
             {/* Display User's and Correct Answers */}
             <div className="mt-4">
-              <div className="flex">  <p className="font-semibold mr-3">Your Answers:</p>
-              <ul className="flex space-x-3">
-                {Array.isArray(question.userAnswer) ? (
-                  question.userAnswer.map((option, index) => (
-                    <li key={index} className="text-red-600">
-                      {typeof option === "string" ? option : JSON.stringify(option)},
-                    </li>
-                  ))
-                ) : (
-                  <li>{typeof question.userAnswer === "string"
-                    ? question.userAnswer
-                    : "No answer provided"}</li>
-                )}
-              </ul></div>
-              <div className="flex"> 
-              <p className="font-semibold mr-3">Correct Answers:</p>
-              <ul className="flex space-x-3">
-                {Array.isArray(question.correctAnswer) ? (
-                  question.correctAnswer.map((correctOption, index) => (
-                    <li key={index} className="text-green-600">
-                      {typeof correctOption === "string" ? correctOption : JSON.stringify(correctOption)},
-                    </li>
-                  ))
-                ) : (
-                  <li>{typeof question.correctAnswer === "string"
-                    ? question.correctAnswer
-                    : "No correct answer available"}</li>
-                )}
-              </ul>
+              <div className="flex">
+                <p className="font-semibold mr-3">Your Answers:</p>
+                <ul className="flex space-x-3">
+                  {Array.isArray(question.userAnswer) ? (
+                    question.userAnswer.map((answerIndex:any, index) => (
+                      <li key={index} className="text-red-600 flex space-x-3">
+                        <span
+                          dangerouslySetInnerHTML={{
+                            __html:
+                              question.options && typeof question.options[answerIndex] === "string"
+                                ? question.options[answerIndex]
+                                : "No answer available",
+                          }}
+                        />
+                        ,
+                      </li>
+                    ))
+                  ) : (
+                    <li>{typeof question.userAnswer === "string" ? question.userAnswer : "No answer provided"}</li>
+                  )}
+                </ul>
+              </div>
+      
+              <div className="flex">
+                <p className="font-semibold mr-3">Correct Answers:</p>
+                <ul className="flex space-x-3">
+                  {Array.isArray(question.correctAnswer) ? (
+                    question.correctAnswer.map((correctIndex:any, index) => (
+                      <li key={index} className="text-green-600 flex space-x-3">
+                        <span
+                          dangerouslySetInnerHTML={{
+                            __html:
+                              question.options && typeof question.options[correctIndex] === "string"
+                                ? question.options[correctIndex]
+                                : "No correct answer available",
+                          }}
+                        />
+                        ,
+                      </li>
+                    ))
+                  ) : (
+                    <li>{typeof question.correctAnswer === "string" ? question.correctAnswer : "No correct answer available"}</li>
+                  )}
+                </ul>
               </div>
             </div>
           </div>
