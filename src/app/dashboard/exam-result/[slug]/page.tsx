@@ -557,7 +557,7 @@ const ExamResult = ({ params }: ExamResultProps) => {
         <div className="mb-8">
           <div className="flex justify-between">
               <h2 className="text-3xl font-semibold mb-4">Exam Review</h2>
-              <Link href="/" className="bg-secondary text-white px-5 py-2 rounded-lg hover:bg-secondary-dark mb-4">Report Card</Link>
+             
               <ExamReportGenerator />
           </div>
           
