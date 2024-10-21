@@ -6,6 +6,7 @@ import Cookies from "js-cookie";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import { useSiteSettings } from "@/context/SiteContext"; // Import the site settings context
+import NoData from "./NoData";
 import Loader from "./Loader";
 
 interface InvoiceProps {
@@ -98,30 +99,22 @@ const Invoice: FC<Partial<InvoiceProps>> = () => {
     return <div>{error}</div>;
   }
 
-  if (!invoiceData || !userData || siteLoading || !siteSettings) {
-    return <Loader/>;
-  }
-
   if (siteError) {
     return <div>{siteError}</div>;
   }
 
+  if (siteLoading || !siteSettings) {
+    return <Loader />; // Show Loader when data is being fetched
+  }
+
+  if (!invoiceData || !userData) {
+    return <NoData message="No invoice data available." />; // Show NoData when no data is available
+  }
+
   // Extracting invoice data
   const {
-    billing: {
-      vendor_name,
-      address,
-      city_name,
-      state_name,
-      country_name,
-      zip,
-    },
-    subscription: {
-      purchase_date,
-      ends_date,
-      plan_name,
-      plan_price,
-    },
+    billing: { vendor_name, address, city_name, state_name, country_name, zip },
+    subscription: { purchase_date, ends_date, plan_name, plan_price },
   } = invoiceData.data;
 
   const companyName = vendor_name;
@@ -137,7 +130,6 @@ const Invoice: FC<Partial<InvoiceProps>> = () => {
   const customerName = userData.name;
   const email = userData.email;
   const phoneNumber = userData.phone_number;
-  const profileImage = userData.image;
 
   return (
     <section className="py-16 bg-gray-50">
@@ -163,10 +155,18 @@ const Invoice: FC<Partial<InvoiceProps>> = () => {
               <h2 className="text-lg font-semibold text-gray-700 mb-4">Customer Information</h2>
               <div>
                 <div className="text-sm text-gray-600 space-y-2">
-                  <p><strong>Name:</strong> {customerName}</p>
-                  <p><strong>Email:</strong> {email}</p>
-                  <p><strong>Billing Address:</strong> {billingAddress}</p>
-                  <p><strong>Phone:</strong> {phoneNumber}</p>
+                  <p>
+                    <strong>Name:</strong> {customerName}
+                  </p>
+                  <p>
+                    <strong>Email:</strong> {email}
+                  </p>
+                  <p>
+                    <strong>Billing Address:</strong> {billingAddress}
+                  </p>
+                  <p>
+                    <strong>Phone:</strong> {phoneNumber}
+                  </p>
                 </div>
               </div>
             </div>
@@ -175,9 +175,15 @@ const Invoice: FC<Partial<InvoiceProps>> = () => {
             <div className="bg-gray-100 p-6 rounded-lg border border-gray-300">
               <h2 className="text-lg font-semibold text-gray-700 mb-4">Invoice Details</h2>
               <div className="text-sm text-gray-600 space-y-2">
-                <p><strong>Invoice Date:</strong> {date}</p>
-                <p><strong>Transaction ID:</strong> 123456789</p>
-                <p><strong>Payment Method:</strong> Credit Card</p>
+                <p>
+                  <strong>Invoice Date:</strong> {date}
+                </p>
+                <p>
+                  <strong>Transaction ID:</strong> 123456789
+                </p>
+                <p>
+                  <strong>Payment Method:</strong> Credit Card
+                </p>
               </div>
             </div>
           </div>
@@ -217,26 +223,29 @@ const Invoice: FC<Partial<InvoiceProps>> = () => {
           <div className="bg-gray-100 p-6 rounded-lg border border-gray-300 mb-10">
             <h2 className="text-lg font-semibold text-gray-700 mb-4">Owner Information</h2>
             <div className="text-sm text-gray-600 space-y-2">
-              <p><strong>Company:</strong> {siteSettings.site_name}</p>
-              <p><strong>Email:</strong> {siteSettings.email}</p>
-              <p><strong>Address:</strong> {siteSettings.address}</p>
+              <p>
+                <strong>Company:</strong> {siteSettings.site_name}
+              </p>
+              <p>
+                <strong>Email:</strong> {siteSettings.email}
+              </p>
+              <p>
+                <strong>Address:</strong> {siteSettings.address}
+              </p>
             </div>
           </div>
 
           {/* Footer */}
-          <p className="text-center text-xs text-gray-500 mt-10 mb-3">
-            {siteSettings.copyright}
-          </p>
-          
+          <p className="text-center text-xs text-gray-500 mt-10 mb-3">{siteSettings.copyright}</p>
         </div>
         <div className="text-center max-w-4xl mx-auto mt-3">
-            <button
-              onClick={downloadInvoice}
-              className="bg-secondary hover:bg-secondary-dark text-white px-3 py-2 w-full rounded-lg text-center"
-            >
-              Download Invoice
-            </button>
-          </div>
+          <button
+            onClick={downloadInvoice}
+            className="bg-secondary hover:bg-secondary-dark text-white px-3 py-2 w-full rounded-lg text-center"
+          >
+            Download Invoice
+          </button>
+        </div>
       </div>
     </section>
   );

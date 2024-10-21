@@ -3,8 +3,9 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import Cookies from "js-cookie";
-import { FiArrowRight } from "react-icons/fi";
+import { FiArrowRight, FiAlertCircle } from "react-icons/fi"; // Importing icons
 import Link from "next/link";
+import { useRouter } from "next/navigation"; // Use from next/navigation
 
 // Define the TypeScript interface for the exam object
 interface Exam {
@@ -18,12 +19,14 @@ interface Exam {
   total_time: number;
   point: number;
   slug: string | null;
-  point_mode:string | null;
+  point_mode: string | null;
 }
 
 export default function ExamList() {
   const [exams, setExams] = useState<Exam[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [showModal, setShowModal] = useState<boolean>(false); // Modal state
+  const router = useRouter(); // Use router from next/navigation
 
   // Fetch exams when the component is mounted
   useEffect(() => {
@@ -37,14 +40,17 @@ export default function ExamList() {
           return;
         }
 
-        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/exam-all`, {
-          headers: {
-            Authorization: `Bearer ${jwt}`,
-          },
-          params: {
-            category: category_id,
-          },
-        });
+        const response = await axios.get(
+          `${process.env.NEXT_PUBLIC_API_URL}/exam-all`,
+          {
+            headers: {
+              Authorization: `Bearer ${jwt}`,
+            },
+            params: {
+              category: category_id,
+            },
+          }
+        );
 
         if (response.data && response.data.data) {
           setExams(response.data.data); // Set the exams data in state
@@ -65,8 +71,11 @@ export default function ExamList() {
       alert("No exam slug available.");
       return;
     }
-    // Implement your payment logic here
-    alert(`Redirecting to payment for ${slug}`);
+    // Show modal and redirect to pricing page after 3 seconds
+    setShowModal(true);
+    setTimeout(() => {
+      router.push("/pricing"); // Using router from next/navigation
+    }, 5000);
   };
 
   if (error) {
@@ -75,10 +84,30 @@ export default function ExamList() {
 
   return (
     <div className="p-5 bg-white shadow-sm rounded-lg mb-8">
+      {/* Modal component */}
+      {showModal && (
+        <div className="fixed inset-0 bg-gray-800 bg-opacity-75 flex items-center justify-center z-50">
+          <div className="bg-white p-8 rounded-lg shadow-lg text-center">
+            <FiAlertCircle className="text-4xl text-red-500 mb-4 mx-auto"  /> {/* Icon added here */}
+            <h2 className="text-2xl font-semibold mb-4">Subscribe to Access</h2>
+            <p className="mb-4">
+              You don't have an active plan to see this content. Please subscribe.
+            </p>
+            <button
+              className="bg-defaultcolor text-white py-2 px-5 rounded-full mx-auto hover:bg-defaultcolor-dark flex items-center justify-center gap-2"
+              onClick={() => router.push("/pricing")} // Using router.push for immediate navigation
+            >
+              <span>Go to Pricing</span>
+
+              <FiArrowRight /> {/* Arrow icon added to the button */}
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Flexbox container to align heading and "See All" link */}
       <div className="flex justify-between items-center mb-3 flex-wrap">
         <h2 className="text-lg font-bold mb-2 md:mb-0">All Exams</h2>
-       
       </div>
 
       {/* Table container with horizontal scrolling on small screens */}
@@ -90,7 +119,6 @@ export default function ExamList() {
               <th className="p-3 text-left">Exam Title</th>
               <th className="p-3 text-left">Duration Mode</th>
               <th className="p-3 text-left">Type</th>
-              {/* <th className="p-3 text-left">Price</th> */}
               <th className="p-3 text-left">Total Questions</th>
               <th className="p-3 text-left">Total Marks</th>
               <th className="p-3 text-left">Total Time</th>
@@ -101,15 +129,44 @@ export default function ExamList() {
             {exams.map((exam, index) => (
               <tr key={index} className="hover:bg-gray-50">
                 <td className="p-4">{index + 1}</td>
-                <td className="p-4">{exam.title || '-'}</td> {/* Handle missing titles */}
-                <td className="p-4">{exam.duration_mode || '-'}</td> {/* Handle missing duration mode */}
-                <td className="p-4"><span className={`${exam.is_free ? 'text-sm rounded-full font-semibold py-1 px-5 bg-green-500 text-white' : 'text-sm rounded-full font-semibold py-1 px-5 bg-secondary text-white'}`}>{exam.is_free ? 'Free' : 'Paid'}</span></td>
-                <td className="p-4">{exam.total_questions !== null ? exam.total_questions : '-'}</td> 
-                <td className="p-4">{exam.point_mode  == "manual" ? exam.point * exam.total_questions : exam.total_marks }</td> {/* Handle missing marks */}
-                <td className="p-4">{exam.duration_mode == "manual" ? exam.exam_duration : Math.floor(exam.total_time / 60)} min</td>
+                <td className="p-4">{exam.title || "-"}</td>{" "}
+                {/* Handle missing titles */}
+                <td className="p-4">{exam.duration_mode || "-"}</td>{" "}
+                {/* Handle missing duration mode */}
+                <td className="p-4">
+                  <span
+                    className={`${
+                      exam.is_free
+                        ? "text-sm rounded-full font-semibold py-1 px-5 bg-green-500 text-white"
+                        : "text-sm rounded-full font-semibold py-1 px-5 bg-secondary text-white"
+                    }`}
+                  >
+                    {exam.is_free ? "Free" : "Paid"}
+                  </span>
+                </td>
+                <td className="p-4">
+                  {exam.total_questions !== null
+                    ? exam.total_questions
+                    : "-"}
+                </td>
+                <td className="p-4">
+                  {exam.point_mode == "manual"
+                    ? exam.point * exam.total_questions
+                    : exam.total_marks}
+                </td>{" "}
+                {/* Handle missing marks */}
+                <td className="p-4">
+                  {exam.duration_mode == "manual"
+                    ? exam.exam_duration
+                    : Math.floor(exam.total_time / 60)}{" "}
+                  min
+                </td>
                 <td className="p-4">
                   {exam.is_free === 1 ? (
-                    <Link href={`/dashboard/exam-detail/${exam.slug}`} className="text-defaultcolor font-semibold hover:underline">
+                    <Link
+                      href={`/dashboard/exam-detail/${exam.slug}`}
+                      className="text-defaultcolor font-semibold hover:underline"
+                    >
                       View Details
                     </Link>
                   ) : (
