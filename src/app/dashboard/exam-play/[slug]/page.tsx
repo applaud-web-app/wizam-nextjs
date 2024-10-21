@@ -34,6 +34,7 @@ interface Question {
 
 // ExamData interface
 interface ExamData {
+  question_view: string;
   title: string;
   questions: Question[];
   duration: string;
@@ -80,8 +81,9 @@ export default function PlayExamPage({
             questions: fetchExamData.questions,
             duration: fetchExamData.duration,
             points: fetchExamData.points,
+            question_view: fetchExamData.question_view,
           });
-          setTimeLeft(Math.round(parseFloat(fetchExamData.duration) * 60));
+          setTimeLeft(Math.round(parseFloat(fetchExamData.duration) * 6));
         } else {
           toast.error("No exam found for this category");
         }
@@ -125,7 +127,7 @@ export default function PlayExamPage({
         if (prev <= 0) {
           if (!submitted) {
             clearInterval(timerId!);
-            handleSubmit();
+            handleSubmit(); // Auto-submit when time runs out
           }
           return 0;
         }
@@ -190,6 +192,7 @@ export default function PlayExamPage({
     const formattedAnswers = examData?.questions.map((question: Question) => {
       const userAnswer = answers[question.id];
 
+      // Ensure that blank answers are submitted if no answer is provided
       if (!userAnswer || userAnswer.length === 0) {
         return {
           id: question.id,
@@ -736,23 +739,46 @@ export default function PlayExamPage({
           </div>
 
           {/* Question Navigation Grid */}
-          <div className="grid grid-cols-5 gap-2 text-center">
-            {examData.questions.map((question, index) => (
-              <div
-                key={index}
-                className={`p-2 rounded-lg border ${
-                  currentQuestionIndex === index
-                    ? "bg-defaultcolor text-white"
-                    : answers[question.id]
-                    ? "bg-green-200 text-black"
-                    : "bg-yellow-200 text-black"
-                }`}
-                onClick={() => setCurrentQuestionIndex(index)}
-              >
-                {index + 1}
-              </div>
-            ))}
-          </div>
+          {examData?.question_view === 'enable' ? (
+            <div className="grid grid-cols-5 gap-2 text-center">
+              {examData.questions.map((question, index) => (
+                <div
+                  key={index}
+                  className={`p-2 rounded-lg border transition-colors ${
+                    currentQuestionIndex === index
+                      ? "bg-defaultcolor text-white"
+                      : answers[question.id]
+                      ? "bg-green-200 text-black"
+                      : "bg-yellow-200 text-black"
+                  }`}
+                  onClick={() => examData.question_view === 'enable' && setCurrentQuestionIndex(index)} // Only change question if enabled
+                  style={{
+                    cursor: examData.question_view === 'enable' ? 'pointer' : 'not-allowed', // Disable cursor if question view is disabled
+                  }}
+                >
+                  {index + 1}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-5 gap-2 text-center">
+              {examData.questions.map((question, index) => (
+                <div
+                  key={index}
+                  className={`p-2 rounded-lg border ${
+                    currentQuestionIndex === index
+                      ? "bg-defaultcolor text-white"
+                      : answers[question.id]
+                      ? "bg-green-200 text-black"
+                      : "bg-yellow-200 text-black"
+                  } cursor-not-allowed`}
+                >
+                  {index + 1}
+                </div>
+              ))}
+            </div>
+          )}
+
 
           {/* Exam Instructions */}
           <div className="mt-3 ">
