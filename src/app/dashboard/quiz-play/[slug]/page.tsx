@@ -61,7 +61,7 @@ export default function PlayQuizPage({
     setSlug(slug);
     const category = Cookies.get("category_id");
 
-    const fetchPracticeSet = async () => {
+    const fetchquizData = async () => {
       try {
         // Make the API request to fetch quizzes
         const response = await axios.get(
@@ -90,10 +90,10 @@ export default function PlayQuizPage({
           // Convert duration from minutes to seconds and set the timer
           setTimeLeft(Math.round(parseFloat(fetchQuizData.duration) * 60));
         } else {
-          toast.error("No practice set found for this category.");
+          toast.error("No quiz found for this category.");
         }
       } catch (error:any) {
-        console.error("Error fetching practice set:", error);
+        console.error("Error fetching quiz:", error);
     
         // Handle errors during the API request
         if (error.response) {
@@ -121,7 +121,7 @@ export default function PlayQuizPage({
     };
     
     // Call the fetch function on component mount or based on dependencies
-    fetchPracticeSet();
+    fetchquizData();
     }, [slug, router]); // Ensure necessary dependencies like slug, category, and router are included
     
 
@@ -307,7 +307,7 @@ export default function PlayQuizPage({
   
     // Prepare the payload for submission
     const payload = {
-      practiceSetId: uuid,
+      quizDataId: uuid,
       answers: formattedAnswers?.filter((answer:any) => answer !== null), // Keep all questions, even skipped ones with empty answers
     };
   
@@ -656,7 +656,7 @@ export default function PlayQuizPage({
 
   return (
     <div className="dashboard-page flex flex-col md:flex-row gap-6">
-      {/* Main Practice Test Content */}
+      {/* Main Quiz Test Content */}
       <div className="flex-1 lg:p-6 bg-white rounded-lg shadow-sm p-4">
         {!submitted ? (
           <>
@@ -693,7 +693,7 @@ export default function PlayQuizPage({
                   className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors"
                   onClick={handleSubmit}
                 >
-                  Submit Practice Test
+                  Submit Quiz
                 </button>
               )}
             </div>
@@ -705,10 +705,10 @@ export default function PlayQuizPage({
               size={42}
             />
             <h1 className="text-3xl font-bold mb-4 text-green-600">
-              Practice Test Submitted
+            Quiz Submitted
             </h1>
             <p className="text-lg text-gray-600">
-              Thank you for completing the practice test. Your answers have been
+              Thank you for completing the quiz. Your answers have been
               submitted successfully!
             </p>
             <div>
@@ -787,7 +787,7 @@ export default function PlayQuizPage({
             ))}
           </div>
 
-          {/* Practice Test Instructions */}
+          {/* Quiz Test Instructions */}
           <div className="mt-3 ">
             <h3 className="text-lg text-gray-700 font-semibold">Test Guide</h3>
             <p className="text-sm text-gray-500">
