@@ -48,6 +48,8 @@ interface UserExamResult {
   marks: number;
   timeTaken?: number;
   uuid: string;
+  download_report: number;
+
 }
 
 interface LeaderboardEntry {
@@ -110,6 +112,8 @@ const ExamResult = ({ params }: ExamResultProps) => {
             status: resultData.result.status,
             timeTaken: resultData.result.timeTaken,
             uuid: resultData.result.uuid,
+            download_report: resultData.exam.download_report, 
+
           });
 
           setLeaderBoard(resultData.leaderBoard || []);
@@ -595,7 +599,10 @@ const ExamResult = ({ params }: ExamResultProps) => {
           <div className="flex justify-between">
               <h2 className="text-3xl font-semibold mb-4">Exam Review</h2>
              
-              <ExamReportGenerator uuid={userExamResult.uuid} />
+              {/* Check if download_report is enabled */}
+                {userExamResult?.download_report === 1 && (
+                  <ExamReportGenerator uuid={userExamResult.uuid} />
+                )}
           </div>
           
           <div className="grid gap-6">

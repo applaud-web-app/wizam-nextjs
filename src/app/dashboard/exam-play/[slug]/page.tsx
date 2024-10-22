@@ -83,17 +83,17 @@ export default function PlayExamPage({
             points: fetchExamData.points,
             question_view: fetchExamData.question_view,
           });
-          setTimeLeft(Math.round(parseFloat(fetchExamData.duration) * 60));
+          setTimeLeft(Math.round(parseFloat(fetchExamData.duration) * 6));
         } else {
           toast.error("No exam found for this category");
         }
-      } catch (error:any) {
+      } catch (error: any) {
         console.error("Error fetching practice set:", error);
-    
+
         // Handle errors during the API request
         if (error.response) {
           const { status, data } = error.response;
-    
+
           // Handle specific error statuses
           if (status === 401) {
             toast.error("User is not authenticated. Please log in.");
@@ -118,23 +118,25 @@ export default function PlayExamPage({
     fetchExamSet();
   }, [params, router]);
 
-  // Countdown timer logic
   useEffect(() => {
     if (!examData || submitted) return;
 
+    // Set the interval for countdown timer
     timerId = setInterval(() => {
       setTimeLeft((prev) => {
         if (prev <= 0) {
+          // If time runs out, submit the form automatically
+          clearInterval(timerId!); // Clear the timer
           if (!submitted) {
-            clearInterval(timerId!);
-            handleSubmit(); // Auto-submit when time runs out
+            handleSubmit(); // Call submit if not already submitted
           }
-          return 0;
+          return 0; // Timer reaches 0
         }
-        return prev - 1;
+        return prev - 1; // Decrease the timer
       });
     }, 1000);
 
+    // Clean up the interval on component unmount
     return () => clearInterval(timerId!);
   }, [examData, submitted]);
 
@@ -185,9 +187,11 @@ export default function PlayExamPage({
   };
 
   const handleSubmit = async () => {
+    // Prevent submission if it has already been submitted
     if (submitted) return;
-    setSubmitted(true);
-    if (timerId) clearInterval(timerId);
+
+    setSubmitted(true); // Mark the form as submitted
+    if (timerId) clearInterval(timerId); // Stop the timer when submitting
 
     const formattedAnswers = examData?.questions.map((question: Question) => {
       const userAnswer = answers[question.id];
@@ -289,7 +293,6 @@ export default function PlayExamPage({
       examId: uuid,
       answers: formattedAnswers?.filter((answer: any) => answer !== null),
     };
-
     console.log("Submitting answers:", payload);
     // API call to submit the answers
     try {
@@ -778,7 +781,6 @@ export default function PlayExamPage({
               ))}
             </div>
           )}
-
 
           {/* Exam Instructions */}
           <div className="mt-3 ">

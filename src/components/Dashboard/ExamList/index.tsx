@@ -6,6 +6,7 @@ import Cookies from "js-cookie";
 import { FiArrowRight, FiAlertCircle } from "react-icons/fi"; // Importing icons
 import Link from "next/link";
 import { useRouter } from "next/navigation"; // Use from next/navigation
+import { toast } from "react-toastify";
 
 // Define the TypeScript interface for the exam object
 interface Exam {
@@ -64,18 +65,60 @@ export default function ExamList() {
 
     fetchExams();
   }, []);
-
+    
   // Function to handle payment logic
-  const handlePayment = (slug: string | null) => {
-    if (!slug) {
-      alert("No exam slug available.");
-      return;
+  const handlePayment = async (slug: string) =>  {
+    try {
+      // Get JWT token from cookies
+      const jwt = Cookies.get("jwt");
+      const type = "exams"; // assuming "quizzes" is the type
+
+      if (!jwt) {
+        toast.error("User is not authenticated. Please log in.");
+        return;
+      }
+
+      // Make the API request to check the user's subscription
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/user-subscription`, {
+        headers: {
+          Authorization: `Bearer ${jwt}`,
+        },
+        params: {
+          type: type, // Pass the type as a parameter
+        },
+      });
+
+      // Handle the response
+      if (response.data.status === true) {
+        // toast.success(`Subscription is active. Access granted for ${slug}.`);
+        router.push(`${slug}`);
+      } else {
+        toast.error('Please buy a subscription to access this course.');
+        router.push("/pricing");
+      }
+    } catch (error:any) {
+      console.log(error);
+      // Handle errors such as network issues or API errors
+      if (error.response) {
+        // API responded with an error status
+        const { status, data } = error.response;
+        
+        if (status === 401) {
+          toast.error('User is not authenticated. Please log in.');
+          router.push("/signin");
+        } else if (status === 404) {
+          toast.error('Please buy a subscription to access this course.');
+          router.push("/pricing");
+        } else if (status === 403) {
+          toast.error('Feature not available in your plan. Please upgrade your subscription.');
+          router.push("/pricing");
+        } else {
+          toast.error(`An error occurred: ${data.error || 'Unknown error'}`);
+        }
+      } else {
+        toast.error("An error occurred. Please try again.");
+      }
     }
-    // Show modal and redirect to pricing page after 3 seconds
-    setShowModal(true);
-    setTimeout(() => {
-      router.push("/pricing"); // Using router from next/navigation
-    }, 5000);
   };
 
   if (error) {
@@ -172,7 +215,7 @@ export default function ExamList() {
                   ) : (
                     <button
                       className="bg-defaultcolor text-white py-1 px-5 rounded-full font-semibold hover:bg-defaultcolor-dark text-sm"
-                      onClick={() => handlePayment(exam.slug)}
+                     onClick={() => handlePayment(`/dashboard/exam-detail/${exam.slug}`)}
                     >
                       Pay Now
                     </button>
