@@ -83,7 +83,7 @@ export default function PlayExamPage({
             points: fetchExamData.points,
             question_view: fetchExamData.question_view,
           });
-          setTimeLeft(Math.round(parseFloat(fetchExamData.duration) * 6));
+          setTimeLeft(Math.round(parseFloat(fetchExamData.duration) * 60));
         } else {
           toast.error("No exam found for this category");
         }

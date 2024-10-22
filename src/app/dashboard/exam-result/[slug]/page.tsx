@@ -9,9 +9,9 @@ import {
   FaRegCircle,
   FaRibbon,
 } from "react-icons/fa";
-import axios from "axios";
 import { toast } from "react-toastify";
 import Cookies from "js-cookie";
+import axios from "axios";
 import { useRouter } from "next/navigation";
 import Loader from "@/components/Common/Loader";
 import Link from "next/link";
@@ -47,6 +47,7 @@ interface UserExamResult {
   status: string;
   marks: number;
   timeTaken?: number;
+  uuid: string;
 }
 
 interface LeaderboardEntry {
@@ -108,6 +109,7 @@ const ExamResult = ({ params }: ExamResultProps) => {
             marks: parseInt(resultData.result.marks),
             status: resultData.result.status,
             timeTaken: resultData.result.timeTaken,
+            uuid: resultData.result.uuid,
           });
 
           setLeaderBoard(resultData.leaderBoard || []);
@@ -593,7 +595,7 @@ const ExamResult = ({ params }: ExamResultProps) => {
           <div className="flex justify-between">
               <h2 className="text-3xl font-semibold mb-4">Exam Review</h2>
              
-              <ExamReportGenerator />
+              <ExamReportGenerator uuid={userExamResult.uuid} />
           </div>
           
           <div className="grid gap-6">
