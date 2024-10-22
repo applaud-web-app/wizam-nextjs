@@ -96,7 +96,7 @@ export default function PlayExamPage({
             question_view: fetchExamData.question_view,
             finish_button: fetchExamData.finish_button, // Storing the finish_button value
           });
-          setTimeLeft(Math.round(parseFloat(fetchExamData.duration) * 6)); // Assuming duration is in minutes
+          setTimeLeft(Math.round(parseFloat(fetchExamData.duration) * 60)); // Assuming duration is in minutes
         } else {
           toast.error("No exam found for this category");
         }
