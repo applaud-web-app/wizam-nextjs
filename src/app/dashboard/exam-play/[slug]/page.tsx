@@ -2,8 +2,7 @@
 
 import Loader from "@/components/Common/Loader";
 import { AiOutlineArrowRight } from 'react-icons/ai'; // For icons
-
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   FaCheckCircle,
   FaArrowRight,
@@ -39,6 +38,7 @@ interface ExamData {
   questions: Question[];
   duration: string;
   points: number;
+  finish_button: string; // "enable" or "disable"
 }
 
 export default function PlayExamPage({
@@ -49,13 +49,25 @@ export default function PlayExamPage({
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState<number>(0);
   const [answers, setAnswers] = useState<{ [key: number]: string[] | null }>({});
   const [timeLeft, setTimeLeft] = useState<number>(1800); // Timer (in seconds)
-  const [submitted, setSubmitted] = useState<boolean>(false);
+  const [submitted, setSubmitted] = useState<boolean>(false); // Controls whether exam is submitted
   const [slug, setSlug] = useState<string | null>(null);
   const [examData, setExamData] = useState<ExamData | null>(null);
   const router = useRouter();
   const [loading, setLoading] = useState<boolean>(true);
   const [uuid, setUuid] = useState<string | null>(null);
   let timerId: NodeJS.Timeout | null = null;
+
+  // Refs to hold the latest state values
+  const answersRef = useRef<{ [key: number]: string[] | null }>({});
+  const examDataRef = useRef<ExamData | null>(null);
+  const submittedRef = useRef<boolean>(false); // Added ref for submitted flag
+
+  // Synchronize refs with state
+  useEffect(() => {
+    answersRef.current = answers;
+    examDataRef.current = examData;
+    submittedRef.current = submitted; // Keep ref updated with submitted state
+  }, [answers, examData, submitted]);
 
   useEffect(() => {
     const { slug } = params;
@@ -82,8 +94,9 @@ export default function PlayExamPage({
             duration: fetchExamData.duration,
             points: fetchExamData.points,
             question_view: fetchExamData.question_view,
+            finish_button: fetchExamData.finish_button, // Storing the finish_button value
           });
-          setTimeLeft(Math.round(parseFloat(fetchExamData.duration) * 6));
+          setTimeLeft(Math.round(parseFloat(fetchExamData.duration) * 6)); // Assuming duration is in minutes
         } else {
           toast.error("No exam found for this category");
         }
@@ -125,20 +138,19 @@ export default function PlayExamPage({
     timerId = setInterval(() => {
       setTimeLeft((prev) => {
         if (prev <= 0) {
-          // If time runs out, submit the form automatically
-          clearInterval(timerId!); // Clear the timer
-          if (!submitted) {
-            handleSubmit(); // Call submit if not already submitted
+          clearInterval(timerId!);
+          if (!submittedRef.current) {
+            handleSubmit(); // Auto-submit when time runs out
           }
-          return 0; // Timer reaches 0
+          return 0;
         }
-        return prev - 1; // Decrease the timer
+        return prev - 1;
       });
     }, 1000);
 
     // Clean up the interval on component unmount
     return () => clearInterval(timerId!);
-  }, [examData, submitted]);
+  }, [examData]);
 
   const handleAnswerChange = (
     questionId: number,
@@ -188,13 +200,14 @@ export default function PlayExamPage({
 
   const handleSubmit = async () => {
     // Prevent submission if it has already been submitted
-    if (submitted) return;
+    if (submittedRef.current) return; // Use ref to guard against duplicate submissions
 
-    setSubmitted(true); // Mark the form as submitted
+    setSubmitted(true);
+    submittedRef.current = true; // Set ref to prevent future calls
     if (timerId) clearInterval(timerId); // Stop the timer when submitting
 
-    const formattedAnswers = examData?.questions.map((question: Question) => {
-      const userAnswer = answers[question.id];
+    const formattedAnswers = examDataRef.current?.questions.map((question: Question) => {
+      const userAnswer = answersRef.current[question.id];
 
       // Ensure that blank answers are submitted if no answer is provided
       if (!userAnswer || userAnswer.length === 0) {
@@ -245,7 +258,7 @@ export default function PlayExamPage({
             answer: Array.isArray(userAnswer)
               ? userAnswer.map((ans) => (typeof ans === "string" ? ans : String(ans)))
               : [],
-        };
+          };
 
         case "MTF":
           const matches: { [key: number]: string } = {};
@@ -293,8 +306,9 @@ export default function PlayExamPage({
       examId: uuid,
       answers: formattedAnswers?.filter((answer: any) => answer !== null),
     };
+
     console.log("Submitting answers:", payload);
-    // API call to submit the answers
+
     try {
       const response = await axios.post(
         `${process.env.NEXT_PUBLIC_API_URL}/finish-exam/${uuid}`,
@@ -541,35 +555,33 @@ export default function PlayExamPage({
                 </div>
               );
 
-              case "FIB":
-                // Assuming question.options[0] contains the number of blanks
-                const numberOfBlanks = parseInt(question.options?.[0] ?? "0", 10); // Fallback to "0" if undefined
+            case "FIB":
+              // Assuming question.options[0] contains the number of blanks
+              const numberOfBlanks = parseInt(question.options?.[0] ?? "0", 10); // Fallback to "0" if undefined
 
-              
-                return (
-                  <div>
-                    {Array.from({ length: numberOfBlanks }).map((_, index) => (
-                      <input
-                        key={index}
-                        type="text"
-                        className="p-4 rounded-lg border border-gray-300 w-full mb-2"
-                        placeholder={`Answer ${index + 1}`} // Placeholder to label each input
-                        value={answers[question.id]?.[index] || ""} // Bind value to the corresponding answer in the array
-                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                          // Create a new array to store the updated answers
-                          const newAnswers = [...(answers[question.id] || Array(numberOfBlanks).fill(""))];
-              
-                          // Update the specific blank (index) with the new value
-                          newAnswers[index] = e.target.value;
-              
-                          // Call handleAnswerChange to update the state
-                          handleAnswerChange(question.id, newAnswers);
-                        }}
-                      />
-                    ))}
-                  </div>
-                );
-              
+              return (
+                <div>
+                  {Array.from({ length: numberOfBlanks }).map((_, index) => (
+                    <input
+                      key={index}
+                      type="text"
+                      className="p-4 rounded-lg border border-gray-300 w-full mb-2"
+                      placeholder={`Answer ${index + 1}`} // Placeholder to label each input
+                      value={answers[question.id]?.[index] || ""} // Bind value to the corresponding answer in the array
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                        // Create a new array to store the updated answers
+                        const newAnswers = [...(answers[question.id] || Array(numberOfBlanks).fill(""))];
+
+                        // Update the specific blank (index) with the new value
+                        newAnswers[index] = e.target.value;
+
+                        // Call handleAnswerChange to update the state
+                        handleAnswerChange(question.id, newAnswers);
+                      }}
+                    />
+                  ))}
+                </div>
+              );
 
             case "EMQ":
               return (
@@ -627,7 +639,7 @@ export default function PlayExamPage({
   if (loading) return <Loader />;
 
   if (!examData || !examData.questions)
-    return <NoData message="No Exam data available"/>;
+    return <NoData message="No Exam data available" />;
 
   return (
     <div className="dashboard-page flex flex-col md:flex-row gap-6">
@@ -662,13 +674,15 @@ export default function PlayExamPage({
                 >
                   Next <FaArrowRight className="inline ml-2" />
                 </button>
-              ) : (
+              ) : examData?.finish_button === "enable" ? ( // Check if finish_button is enabled
                 <button
                   className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors"
                   onClick={handleSubmit}
                 >
                   Submit Exam
                 </button>
+              ) : (
+               <></>
               )}
             </div>
           </>
