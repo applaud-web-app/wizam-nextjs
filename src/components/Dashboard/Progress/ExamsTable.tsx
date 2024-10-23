@@ -23,7 +23,7 @@ const formatDate = (dateString: string) => {
 const ExamsTable: React.FC = () => {
   const [data, setData] = useState<ExamData[]>([]);
   const [error, setError] = useState<string | null>(null);
-
+  const [loading, setLoading] = useState<boolean>(true); // Add loading state
 
   // Fetch exam progress data from the API when the component mounts
   useEffect(() => {
@@ -39,24 +39,29 @@ const ExamsTable: React.FC = () => {
         }
 
         // Make the API request to fetch exam progress data
-        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/exam-progress`, {
-          headers: {
-            Authorization: `Bearer ${jwt}`, // Pass the JWT token in headers
-          },
-          params: {
-            category: category_id, // Pass the category_id as a parameter
-          },
-        });
+        const response = await axios.get(
+          `${process.env.NEXT_PUBLIC_API_URL}/exam-progress`,
+          {
+            headers: {
+              Authorization: `Bearer ${jwt}`, // Pass the JWT token in headers
+            },
+            params: {
+              category: category_id, // Pass the category_id as a parameter
+            },
+          }
+        );
 
         // Assuming the response contains the data in the expected format
         if (response.data && response.data.data) {
-          setData(response.data.data); // Set the exam progress data in state
-         
+          const examData = response.data.data;
+          setData(examData);
         } else {
           setError("Invalid data format received from the server.");
         }
       } catch (error) {
         setError("Failed to fetch exam progress data.");
+      } finally {
+        setLoading(false); // Set loading to false once data is fetched
       }
     };
 
@@ -65,6 +70,10 @@ const ExamsTable: React.FC = () => {
 
   if (error) {
     return <div className="text-red-500">{error}</div>;
+  }
+
+  if (loading) {
+    return <div className="text-center text-gray-500 py-5">Loading data...</div>; // Show loading state
   }
 
   return (
@@ -85,13 +94,15 @@ const ExamsTable: React.FC = () => {
           {data.length > 0 ? (
             data.map((exam, index) => (
               <tr key={index} className="hover:bg-gray-50">
-                <td className="p-4">{index + 1}</td> {/* S.No */}
+                <td className="p-4">{index + 1}</td> {/* Serial Number */}
                 <td className="p-4">{exam.exam_title}</td>
-                <td className="p-4">{formatDate(exam.updated_at)}</td> {/* Completed Date */}
+                <td className="p-4">{formatDate(exam.updated_at)}</td>
                 <td className="p-4">
-                  {exam.student_percentage !== null ? `${exam.student_percentage}%` : "-"}
-                </td> {/* Student Percentage */}
-                <td className="p-4">{exam.pass_percentage}%</td> {/* Pass Percentage */}
+                  {exam.student_percentage !== null
+                    ? `${exam.student_percentage}%`
+                    : "-"}
+                </td>
+                <td className="p-4">{exam.pass_percentage}%</td>
                 <td className="p-4">
                   <span
                     className={`px-2 py-1 rounded-lg text-sm font-medium ${
@@ -100,14 +111,18 @@ const ExamsTable: React.FC = () => {
                         : "bg-yellow-100 text-yellow-800"
                     }`}
                   >
-                    {exam.status.charAt(0).toUpperCase() + exam.status.slice(1)}
+                    {exam.status.charAt(0).toUpperCase() +
+                      exam.status.slice(1)}
                   </span>
-                </td> {/* Status Badge */}
+                </td>
                 <td className="p-4">
-                  <Link href={`/dashboard/exam-result/${exam.uuid}`} className="bg-blue-500 text-white px-3 py-1 text-sm rounded-lg hover:bg-blue-600 transition">
+                  <Link
+                    href={`/dashboard/exam-result/${exam.uuid}`}
+                    className="bg-blue-500 text-white px-3 py-1 text-sm rounded-lg hover:bg-blue-600 transition"
+                  >
                     Result
                   </Link>
-                </td> {/* Action Button */}
+                </td>
               </tr>
             ))
           ) : (
