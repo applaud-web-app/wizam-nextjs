@@ -126,7 +126,7 @@ export default function ExamList() {
   }
 
   return (
-    <div className="p-5 bg-white shadow-sm rounded-lg mb-8">
+    <div className=" mb-5">
       {/* Modal component */}
       {showModal && (
         <div className="fixed inset-0 bg-gray-800 bg-opacity-75 flex items-center justify-center z-50">
@@ -149,13 +149,13 @@ export default function ExamList() {
       )}
 
       {/* Flexbox container to align heading and "See All" link */}
-      <div className="flex justify-between items-center mb-3 flex-wrap">
-        <h2 className="text-lg font-bold mb-2 md:mb-0">All Exams</h2>
+      <div className="flex justify-between items-center  flex-wrap">
+        <h2 className="text-lg lg:text-2xl font-bold mb-3">All Exams</h2>
       </div>
 
       {/* Table container with horizontal scrolling on small screens */}
-      <div className="overflow-x-auto">
-        <table className="min-w-full table-auto">
+      <div className="overflow-x-auto rounded-lg shadow-sm">
+      <table className="min-w-full table-auto rounded-lg overflow-hidden">
           <thead className="bg-defaultcolor text-white">
             <tr>
               <th className="p-3 text-left rounded-tl-lg">S.No</th>

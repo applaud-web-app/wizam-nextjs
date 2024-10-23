@@ -3,10 +3,10 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import Cookies from "js-cookie"; // For handling cookies
-import { FiArrowRight } from "react-icons/fi";
-import Link from "next/link";
 import { toast } from 'react-toastify'; // Optional: For notifications
 import { useRouter } from "next/navigation"; // Use router to redirect
+import Link from "next/link";
+import Loader from '@/components/Common/Loader'; // Assuming you have a Loader component
 
 // Define the TypeScript interface for the quiz object
 interface Quiz {
@@ -17,12 +17,13 @@ interface Quiz {
   total_time: number;
   pass_percentage: string;
   slug: string;
-  duration_mode:string;
+  duration_mode: string;
 }
 
 export default function QuizList() {
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState<boolean>(true); // Add loading state
   const router = useRouter(); // For redirecting to other pages
   
   // Function to handle payment logic
@@ -49,17 +50,15 @@ export default function QuizList() {
 
       // Handle the response
       if (response.data.status === true) {
-        // toast.success(`Subscription is active. Access granted for ${slug}.`);
         router.push(`${slug}`);
       } else {
         toast.error('Please buy a subscription to access this course.');
         router.push("/pricing");
       }
-    } catch (error:any) {
+    } catch (error: any) {
       console.log(error);
       // Handle errors such as network issues or API errors
       if (error.response) {
-        // API responded with an error status
         const { status, data } = error.response;
         
         if (status === 401) {
@@ -111,36 +110,34 @@ export default function QuizList() {
         }
       } catch (error) {
         setError("Failed to fetch quizzes from the server.");
+      } finally {
+        setLoading(false); // Set loading to false once the request is complete
       }
     };
 
     fetchQuizzes();
   }, []);
 
+  if (loading) {
+    return <Loader />; // Display loader while data is being fetched
+  }
 
   if (error) {
-    return <div className="text-red-500">{error}</div>;
+    return <div className="text-red-500">{error}</div>; // Display error message
   }
 
   return (
-    <div className="p-5 bg-white shadow-sm rounded-lg mb-8">
+    <div className="mb-5">
       {/* Flexbox container to align heading and "See All" link */}
-      <div className="flex justify-between items-center mb-3 flex-wrap">
-        <h2 className="text-lg font-bold mb-2 md:mb-0">All Quizzes</h2>
-        {/* <a
-          href="#"
-          className="text-secondary font-semibold flex items-center space-x-2 hover:underline transition duration-200"
-        >
-          <span>See All</span>
-          <FiArrowRight /> 
-        </a> */}
+      <div className="flex justify-between items-center flex-wrap">
+        <h2 className="text-lg lg:text-2xl font-bold mb-3">All Quizzes</h2>
       </div>
 
       {/* Table container with horizontal scrolling on small screens */}
-      <div className="overflow-x-auto">
-        <table className="min-w-full table-auto">
-          <thead className="bg-secondary text-white">
-            <tr>
+      <div className="overflow-x-auto rounded-lg shadow-sm">
+        <table className="min-w-full table-auto rounded-lg overflow-hidden">
+          <thead className="bg-quaternary text-white">
+            <tr> 
               <th className="p-3 text-left rounded-tl-lg">S.No</th>
               <th className="p-3 text-left">Quiz Title</th>
               <th className="p-3 text-left">Duration (mins)</th>
@@ -151,29 +148,39 @@ export default function QuizList() {
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {quizzes.map((quiz, index) => (
-              <tr key={index} className="hover:bg-gray-50">
-                <td className="p-4">{index + 1}</td>
-                <td className="p-4">{quiz.title}</td>
-                {/* <td className="p-4">{quiz.duration}</td> */}
-                <td className="p-4">{quiz.duration_mode == "manual" ? quiz.duration : Math.floor(quiz.total_time / 60)} min</td> 
-                {/* <td className="p-4">{quiz.is_free ? 'Free' : `$${quiz.total_time}`}</td> */}
-                <td className="p-4"><span className={`${quiz.is_free ? 'text-sm rounded-full font-semibold py-1 px-5 bg-green-500 text-white' : 'text-sm rounded-full font-semibold py-1 px-5 bg-secondary text-white'}`}>{quiz.is_free ? 'Free' : 'Paid'}</span></td>
-                <td className="p-4">{quiz.total_questions}</td>
-                <td className="p-4">{quiz.pass_percentage}%</td>
-                <td className="p-4">
-                  {quiz.is_free ? (
-                    <Link href={`/dashboard/quiz-detail/${quiz.slug}`} className="text-secondary font-semibold hover:underline">
-                      View Details
-                    </Link>
-                  ) : (
-                    <button className="bg-secondary text-white py-1 px-5 rounded-full font-semibold hover:bg-secondary-dark text-sm" onClick={() => handlePayment(`/dashboard/quiz-detail/${quiz.slug}`)}>
-                      Pay Now
-                    </button>
-                  )}
+            {quizzes.length === 0 ? (
+              <tr>
+                <td colSpan={7} className="text-center py-4 text-gray-500">
+                  No quizzes available.
                 </td>
               </tr>
-            ))}
+            ) : (
+              quizzes.map((quiz, index) => (
+                <tr key={index} className="hover:bg-gray-50">
+                  <td className="p-4">{index + 1}</td>
+                  <td className="p-4">{quiz.title}</td>
+                  <td className="p-4">{quiz.duration_mode === "manual" ? quiz.duration : Math.floor(quiz.total_time / 60)} min</td> 
+                  <td className="p-4">
+                    <span className={`${quiz.is_free ? 'text-sm rounded-full font-semibold py-1 px-5 bg-green-500 text-white' : 'text-sm rounded-full font-semibold py-1 px-5 bg-quaternary text-white'}`}>
+                      {quiz.is_free ? 'Free' : 'Paid'}
+                    </span>
+                  </td>
+                  <td className="p-4">{quiz.total_questions}</td>
+                  <td className="p-4">{quiz.pass_percentage}%</td>
+                  <td className="p-4">
+                    {quiz.is_free ? (
+                      <Link href={`/dashboard/quiz-detail/${quiz.slug}`} className="text-quaternary font-semibold hover:underline">
+                        View Details
+                      </Link>
+                    ) : (
+                      <button className="bg-quaternary text-white py-1 px-5 rounded-full font-semibold hover:bg-quaternary-dark text-sm" onClick={() => handlePayment(`/dashboard/quiz-detail/${quiz.slug}`)}>
+                        Pay Now
+                      </button>
+                    )}
+                  </td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>

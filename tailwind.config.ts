@@ -31,12 +31,17 @@ const config: Config = {
           DEFAULT: '#0E1F5B',  // Main tertiary color (as requested)
           dark: '#0A1744',     // Darker shade of tertiary color
         },
-
+        quaternary: {
+          light: '#a1d14b',    // Lighter shade of quaternary color
+          DEFAULT: '#76b51b',  // Main quaternary color
+          dark: '#598f13',     // Darker shade of quaternary color
+        },
         defaultcolor: {
           light: '#82C3EB',   // Lighter shade of default
           DEFAULT: '#3394C6', // Main default color (original color)
           dark: '#3A73A2',    // Darker shade of default
         },
+
       },
     },
   },

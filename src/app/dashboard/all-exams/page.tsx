@@ -1,14 +1,12 @@
-"use client"; // Add this line to mark the component as a Client Component
+"use client"; // Mark this as a Client Component
 
 import { useEffect, useState } from 'react';
 import axios from 'axios'; // Ensure axios is installed
-import { toast } from 'react-toastify'; // Optional: For notifications
 import Cookies from 'js-cookie'; // Access cookies
 import NoData from '@/components/Common/NoData';
 import Loader from '@/components/Common/Loader';
 import ExamList from "@/components/Dashboard/ExamList";
 import ExamPacks from "@/components/Dashboard/ExamPacks";
-import { FaBook, FaPencilAlt, FaGraduationCap, FaFlask, FaGlobe, FaCalculator } from 'react-icons/fa';
 
 interface ExamType {
   title: string;
@@ -35,11 +33,10 @@ export default function AllExamPage() {
           }));
           setExamType(fetchedSyllabuses);
         } else {
-          toast.error('Failed to fetch syllabus data');
+          console.error('Failed to fetch syllabus data');
         }
       } catch (error) {
         console.error('Error fetching syllabus data:', error);
-        toast.error('An error occurred while fetching data');
       } finally {
         setLoading(false);
       }
@@ -49,31 +46,22 @@ export default function AllExamPage() {
   }, []);
 
   if (loading) {
-    return <Loader />; // Loading state
+    return <Loader />; // Show loader while data is being fetched
   }
-
-  const icons = [
-    <FaBook key="book" />, 
-    <FaPencilAlt key="pencil" />, 
-    <FaGraduationCap key="graduation" />, 
-    <FaFlask key="flask" />, 
-    <FaGlobe key="globe" />, 
-    <FaCalculator key="calculator" />
-  ];
-
-  const getRandomIcon = () => icons[Math.floor(Math.random() * icons.length)];
 
   return (
     <div className="dashboard-page">
-      <h1 className="text-2xl font-bold mb-5">Available Exam Packs</h1>
+       <h1 className="text-3xl lg:text-4xl font-bold mb-6">
+        Exams
+      </h1>
+      <h3 className="text-lg lg:text-2xl font-bold mb-3">Available Exam Packs</h3>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5 mb-8">
         {examType.length > 0 ? (
           examType.map((type, index) => (
             <ExamPacks
-              key={index} // Pass index as the key
+              key={index} // Use index as the key
               title={type.title}
-              icon={getRandomIcon()} // Random icon function
-              iconColor="text-defaultcolor"
+              imagePath="/images/teeth.png" // Replace with the path to your image
               slug={type.slug}
             />
           ))
