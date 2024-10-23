@@ -21,7 +21,7 @@ const SignUp = () => {
   const { siteSettings, error } = useSiteSettings(); // Access site settings from the context
 
   const [showPassword, setShowPassword] = useState<boolean>(false);
-  const [selectedCountry, setSelectedCountry] = useState<string>("");
+  const [selectedCountry, setSelectedCountry] = useState("GB")
   const router = useRouter(); // For redirecting to other pages
 
   // Check if user is already signed in
@@ -291,7 +291,7 @@ const SignUp = () => {
                       id="email"
                       name="email"
                       className="w-full bg-white border border-gray-300 rounded-md py-2 px-4 text-gray-700 focus:outline-none focus:ring-1 focus:ring-defaultcolor focus:border-defaultcolor transition"
-                      placeholder="you@example.com"
+                      placeholder="Enter your email address"
                     />
                     <ErrorMessage name="email" component="div" className="text-red-500 text-sm" />
                   </div>
