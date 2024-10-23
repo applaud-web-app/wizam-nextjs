@@ -4,11 +4,11 @@ import { useState } from "react";
 import Header from "@/components/DashboardHeader";
 import Sidebar from "@/components/DashboardSidebar";
 import Footer from "@/components/DashboardFooter";
-import { Poppins } from "next/font/google";
+import { Jost } from "next/font/google";
 import { SyllabusProvider, useSyllabus } from "@/context/SyllabusContext"; // Use Syllabus Context
 
 // Importing the Google font
-const poppins = Poppins({
+const jost = Jost({
   subsets: ["latin"],
   weight: ["400", "600", "700"],
 });
@@ -27,7 +27,7 @@ export default function DashboardLayout({ children }: LayoutProps): JSX.Element 
 
   return (
     
-    <div className={poppins.className}>
+    <div className={jost.className}>
       <div className="bg-slate-100 text-gray-900 dark:bg-gray-900 dark:text-gray-100 transition-colors duration-500">
         <div className="flex flex-col min-h-screen">
           
@@ -45,13 +45,19 @@ export default function DashboardLayout({ children }: LayoutProps): JSX.Element 
             />
 
             {/* Main Content Area */}
-            <main className="flex-1 lg:p-6 p-3 overflow-auto mt-1">
-              {children}
-            </main>
+            <div className="flex-1 overflow-auto mt-1">
+              <main className="lg:p-6 p-3 ">
+                {children}
+              </main>
+
+              {/* Footer */}
+              <Footer />
+              
+            </div>
+           
           </div>
 
-          {/* Footer */}
-          <Footer />
+        
         </div>
       </div>
     </div>
