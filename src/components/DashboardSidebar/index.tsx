@@ -1,6 +1,7 @@
 "use client"; // Ensures this runs on the client-side
 
 import Link from "next/link";
+import { usePathname } from "next/navigation"; // Import useRouter from next/navigation
 import { FiHome, FiEdit, FiBookOpen, FiList, FiCheckSquare, FiBook, FiBarChart } from "react-icons/fi";
 import { TfiIdBadge } from "react-icons/tfi";
 import { MdOutlinePayment, MdLogout } from "react-icons/md";
@@ -13,6 +14,11 @@ interface SidebarProps {
 }
 
 export default function Sidebar({ isSyllabusEnabled, isOpen, toggleSidebar }: SidebarProps) {
+  const pathname = usePathname(); // Get the current path using usePathname
+
+  // Helper function to apply active class if the route matches
+  const isActive = (href: string) => pathname === href ? 'bg-defaultcolor text-white' : '';
+
   return (
     <>
       {/* Sidebar overlay for mobile */}
@@ -29,7 +35,6 @@ export default function Sidebar({ isSyllabusEnabled, isOpen, toggleSidebar }: Si
 
           {/* Syllabus Section */}
           <div className="mt-3 p-3 bg-gray-100 border-l-4 border-defaultcolor rounded-md">
-           
             <div className="flex items-center">
               <FiBookOpen className="text-defaultcolor mr-2" />
               <p className="text-gray-900 font-semibold">
@@ -49,45 +54,50 @@ export default function Sidebar({ isSyllabusEnabled, isOpen, toggleSidebar }: Si
           <div className="mt-8">
             <h3 className="text-sm font-semibold uppercase text-gray-500">Main</h3>
             <nav className="mt-4 space-y-2">
-              <Link
-                href={isSyllabusEnabled ? "/dashboard" : "#"}
-                className={`flex items-center px-4 py-2 rounded-md transition ${
-                  isSyllabusEnabled ? "hover:bg-gray-200" : "cursor-not-allowed opacity-50"
-                }`}
-              >
-                <FiHome className="mr-3" /> Dashboard
+              <Link href="/dashboard">
+                <span
+                  className={`flex items-center px-4 py-2 rounded-md transition ${
+                    isSyllabusEnabled ? `${isActive("/dashboard")} hover:bg-gray-200` : "cursor-not-allowed opacity-50"
+                  }`}
+                >
+                  <FiHome className="mr-3" /> Dashboard
+                </span>
               </Link>
-              <Link
-                href={isSyllabusEnabled ? "/dashboard/all-exams" : "#"}
-                className={`flex items-center px-4 py-2 rounded-md transition ${
-                  isSyllabusEnabled ? "hover:bg-gray-200" : "cursor-not-allowed opacity-50"
-                }`}
-              >
-                <FiList className="mr-3" /> Exams
+              <Link href="/dashboard/all-exams">
+                <span
+                  className={`flex items-center px-4 py-2 rounded-md transition ${
+                    isSyllabusEnabled ? `${isActive("/dashboard/all-exams")} hover:bg-gray-200` : "cursor-not-allowed opacity-50"
+                  }`}
+                >
+                  <FiList className="mr-3" /> Exams
+                </span>
               </Link>
-              <Link
-                href={isSyllabusEnabled ? "/dashboard/quizzes" : "#"}
-                className={`flex items-center px-4 py-2 rounded-md transition ${
-                  isSyllabusEnabled ? "hover:bg-gray-200" : "cursor-not-allowed opacity-50"
-                }`}
-              >
-                <FiCheckSquare className="mr-3" /> Quizzes
+              <Link href="/dashboard/quizzes">
+                <span
+                  className={`flex items-center px-4 py-2 rounded-md transition ${
+                    isSyllabusEnabled ? `${isActive("/dashboard/quizzes")} hover:bg-gray-200` : "cursor-not-allowed opacity-50"
+                  }`}
+                >
+                  <FiCheckSquare className="mr-3" /> Quizzes
+                </span>
               </Link>
-              <Link
-                href={isSyllabusEnabled ? "/dashboard/learn-and-practice" : "#"}
-                className={`flex items-center px-4 py-2 rounded-md transition ${
-                  isSyllabusEnabled ? "hover:bg-gray-200" : "cursor-not-allowed opacity-50"
-                }`}
-              >
-                <FiBook className="mr-3" /> Learn & Practice
+              <Link href="/dashboard/learn-and-practice">
+                <span
+                  className={`flex items-center px-4 py-2 rounded-md transition ${
+                    isSyllabusEnabled ? `${isActive("/dashboard/learn-and-practice")} hover:bg-gray-200` : "cursor-not-allowed opacity-50"
+                  }`}
+                >
+                  <FiBook className="mr-3" /> Learn & Practice
+                </span>
               </Link>
-              <Link
-                href={isSyllabusEnabled ? "/dashboard/my-progress" : "#"}
-                className={`flex items-center px-4 py-2 rounded-md transition ${
-                  isSyllabusEnabled ? "hover:bg-gray-200" : "cursor-not-allowed opacity-50"
-                }`}
-              >
-                <FiBarChart className="mr-3" /> My Progress
+              <Link href="/dashboard/my-progress">
+                <span
+                  className={`flex items-center px-4 py-2 rounded-md transition ${
+                    isSyllabusEnabled ? `${isActive("/dashboard/my-progress")} hover:bg-gray-200` : "cursor-not-allowed opacity-50"
+                  }`}
+                >
+                  <FiBarChart className="mr-3" /> My Progress
+                </span>
               </Link>
             </nav>
           </div>
@@ -96,23 +106,20 @@ export default function Sidebar({ isSyllabusEnabled, isOpen, toggleSidebar }: Si
           <div className="mt-8">
             <h3 className="text-sm font-semibold uppercase text-gray-500">Settings</h3>
             <nav className="mt-4 space-y-2">
-              <Link
-                href="/dashboard/my-subscription"
-                className="flex items-center px-4 py-2 hover:bg-gray-200 rounded-md transition"
-              >
-                <TfiIdBadge className="mr-3" /> My Subscriptions
+              <Link href="/dashboard/my-subscription">
+                <span className={`flex items-center px-4 py-2 hover:bg-gray-200 rounded-md transition ${isActive("/dashboard/my-subscription")}`}>
+                  <TfiIdBadge className="mr-3" /> My Subscriptions
+                </span>
               </Link>
-              <Link
-                href="/dashboard/my-payments"
-                className="flex items-center px-4 py-2 hover:bg-gray-200 rounded-md transition"
-              >
-                <MdOutlinePayment className="mr-3" /> My Payments
+              <Link href="/dashboard/my-payments">
+                <span className={`flex items-center px-4 py-2 hover:bg-gray-200 rounded-md transition ${isActive("/dashboard/my-payments")}`}>
+                  <MdOutlinePayment className="mr-3" /> My Payments
+                </span>
               </Link>
-              <Link
-                href="/logout"
-                className="flex items-center px-4 py-2 hover:bg-red-500 text-red-500 hover:text-white rounded-md transition"
-              >
-                <MdLogout className="mr-3" /> Logout
+              <Link href="/logout">
+                <span className="flex items-center px-4 py-2 hover:bg-red-500 text-red-500 hover:text-white rounded-md transition">
+                  <MdLogout className="mr-3" /> Logout
+                </span>
               </Link>
             </nav>
           </div>

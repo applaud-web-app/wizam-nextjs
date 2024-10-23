@@ -10,7 +10,7 @@ export default function Footer() {
           Need help or advice?
         </h5>
         <p className="text-sm md:text-base text-gray-500 dark:text-gray-400">
-          Please contact us by telephone – <b>0208 993 4500</b> or email- <b>dental@schoolofdentalnursing.com</b> to our friendly administrative team.
+          Please contact us by telephone - <b>0208 993 4500</b> or email - <b>dental@schoolofdentalnursing.com</b> to our friendly administrative team.
         </p>
       </div>
 

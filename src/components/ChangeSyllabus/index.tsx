@@ -12,13 +12,13 @@ import NoData from '@/components/Common/NoData'; // Import NoData component
 interface Syllabus {
   id: number;
   name: string;
-  description: string;
 }
 
 export default function ChangeSyllabus() {
   const [syllabuses, setSyllabuses] = useState<Syllabus[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [activeSyllabus, setActiveSyllabus] = useState<string | null>(null); // To track the active syllabus
   const router = useRouter();
   const { updateSyllabusStatus } = useSyllabus(); // Use context to update syllabus status
 
@@ -38,6 +38,9 @@ export default function ChangeSyllabus() {
 
         if (response.data.status) {
           setSyllabuses(response.data.data);
+          // Retrieve the active syllabus from cookies
+          const activeCategoryName = Cookies.get("category_name");
+          setActiveSyllabus(activeCategoryName || null);
         } else {
           throw new Error("Failed to fetch syllabus data");
         }
@@ -57,11 +60,11 @@ export default function ChangeSyllabus() {
     // Set cookies when the user selects a new syllabus
     Cookies.set("category_name", name);
     Cookies.set("category_id", String(id));
-  
+
     // Update the syllabus status in the context
-    updateSyllabusStatus(); // This is now correctly called from the hook
-  
-    // Redirect to the dashboard or anywhere else
+    updateSyllabusStatus();
+
+    // Redirect to the dashboard
     router.push("/dashboard");
   }
 
@@ -78,17 +81,23 @@ export default function ChangeSyllabus() {
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {syllabuses.map((syllabus) => (
-        <button
-          key={syllabus.id}
-          onClick={() => handleSyllabusClick(syllabus.name, syllabus.id)}
-          className="block bg-white shadow p-6 rounded-lg hover:shadow-lg border border-gray-50 hover:border-primary transition-all duration-300 cursor-pointer"
-        >
-          <h3 className="text-xl font-semibold mb-2">{syllabus.name}</h3>
-          <p className="text-gray-600">{syllabus.description}</p>
-        </button>
-      ))}
+    <div className='bg-white p-3 lg:p-6 rounded-lg'>
+      <div className="grid grid-cols-1 gap-5">
+        {syllabuses.map((syllabus) => (
+          <button
+            key={syllabus.id}
+            onClick={() => handleSyllabusClick(syllabus.name, syllabus.id)}
+            className={`block p-6 rounded-lg border cursor-pointer 
+              ${activeSyllabus === syllabus.name 
+                ? 'bg-defaultcolor text-white border-defaultcolor' 
+                : 'bg-white text-gray-500 border-gray-300 hover:bg-defaultcolor hover:text-white hover:border-defaultcolor'}`}
+          >
+            <h3 className={`text-2xl lg:text-4xl font-semibold mb-2 ${activeSyllabus === syllabus.name ? 'text-white' : 'text-gray-500 hover:text-white'}`}>
+              {syllabus.name}
+            </h3>
+          </button>
+        ))}
+      </div>
     </div>
   );
 }

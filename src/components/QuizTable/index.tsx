@@ -24,9 +24,9 @@ export default function QuizTable({ quizzes }: QuizTableProps) {
   if (!quizzes || quizzes.length === 0) return <p>No quizzes available</p>; // Check if quizzes exist
 
   return (
-    <div className="p-5 bg-white shadow-sm rounded-lg mb-8">
+    <div className=" mb-8">
       <div className="flex justify-between items-center mb-3 flex-wrap">
-        <h2 className="text-lg font-bold mb-2 md:mb-0">Quizzes</h2>
+        <h2 className="text-lg lg:text-2xl font-bold mb-2 md:mb-0">All Quizzes</h2>
         <Link href="/dashboard/quizzes" className="text-defaultcolor font-semibold flex items-center space-x-2 hover:underline transition duration-200">
           <span>See All</span>
           <FiArrowRight />
