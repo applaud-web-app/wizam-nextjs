@@ -8,9 +8,9 @@ import PracticeTestsTable from "./PracticeTestsTable";
 
 
 const tabs = [
-  { name: "Exams", icon: <FaBook /> },
-  { name: "Quizzes", icon: <FaListAlt /> },
-  { name: "Practice Tests", icon: <FaTasks /> },
+  { name: "Exam Attempt", icon: <FaBook /> },
+  { name: "Quiz Attempt", icon: <FaListAlt /> },
+  { name: "Practice Session", icon: <FaTasks /> },
 ];
 
 const Progress: React.FC = () => {
@@ -19,15 +19,15 @@ const Progress: React.FC = () => {
   return (
     <div className="dashboard-page">
       {/* Tab Navigation */}
-      <div className="flex flex-col sm:flex-row justify-start space-y-2 sm:space-y-0 sm:space-x-3 bg-white p-3 rounded-lg shadow-sm mb-5">
+      <div className="flex flex-col sm:flex-row justify-start space-y-2 sm:space-y-0 sm:space-x-3  mb-5">
         {tabs.map((tab) => (
           <button
             key={tab.name}
             onClick={() => setActiveTab(tab.name)}
-            className={`w-full sm:w-auto flex items-center justify-center sm:justify-start px-6 py-2 text-lg font-semibold transition-colors duration-300 rounded-lg ${
+            className={`w-full sm:w-1/3 bg-white flex items-center  justify-center px-6 py-2 text-lg font-semibold transition-colors border-b-2 duration-300 ${
               activeTab === tab.name
-                ? "bg-defaultcolor text-white"
-                : "bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-defaultcolor"
+                ? "border-defaultcolor text-defaultcolor"
+                : " text-gray-600 hover:bg-defaultcolor hover:text-white"
             }`}
           >
             <span className="mr-2">{tab.icon}</span>
@@ -39,9 +39,9 @@ const Progress: React.FC = () => {
       {/* Render the table based on active tab */}
       <div className="bg-white p-1 sm:p-3 rounded-lg shadow-sm">
         <div className="overflow-x-auto">
-          {activeTab === "Exams" && <ExamsTable   />}
-          {activeTab === "Quizzes" && <QuizzesTable  />}
-          {activeTab === "Practice Tests" && <PracticeTestsTable  />}
+          {activeTab === "Exam Attempt" && <ExamsTable   />}
+          {activeTab === "Quiz Attempt" && <QuizzesTable  />}
+          {activeTab === "Practice Session" && <PracticeTestsTable  />}
         </div>
       </div>
     </div>

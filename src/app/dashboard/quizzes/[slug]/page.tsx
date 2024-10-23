@@ -12,14 +12,12 @@ import Link from 'next/link';
 
 // Define the Quiz type
 interface Quiz {
-  quizSlug: string;
   title: string;
-  total_questions: number;
-  total_time: number | null;
-  total_marks: string | null;
+  slug: string;
+  questions: number;
+  time: string;
+  marks: number;
   is_free: number;
-  duration_mode: string;
-  duration: string | null;
 }
 
 export default function QuizTypeDetailPage({
@@ -93,7 +91,7 @@ export default function QuizTypeDetailPage({
         });
 
         if (response.data.status) {
-          const fetchedQuiz = response.data.data || [];
+          const fetchedQuiz = response.data.data[slug] || [];
           setQuizzes(fetchedQuiz);
         } else {
           toast.error('No quiz found for this category');
@@ -167,26 +165,23 @@ export default function QuizTypeDetailPage({
                 </td>
                 <td className="p-4">
                   <div className="text-gray-700">
-                    <span>{quiz.total_questions}</span>
+                    <span>{quiz.questions}</span>
                   </div>
                 </td>
                 <td className="p-4">
                   <div className="text-gray-700">
-                    {/* Show duration if it's manual; otherwise, convert total_time to minutes */}
-                    <span>
-                      {quiz.duration_mode === "manual" ? `${quiz.duration} min` : `${Math.floor(quiz.total_time! / 60)} min`}
-                    </span>
+                    <span>{quiz.time}</span>
                   </div>
                 </td>
                 <td className="p-4">
                   <div className="text-gray-700">
-                    <span>{quiz.total_marks}</span>
+                    <span>{quiz.marks}</span>
                   </div>
                 </td>
                 <td className="p-4">
                   {quiz.is_free === 1 ? (
                     <Link
-                      href={`/dashboard/quiz-detail/${quiz.quizSlug}`}
+                      href={`/dashboard/quiz-detail/${quiz.slug}`}
                       className="bg-green-600 text-white px-4 py-1 rounded-full"
                     >
                       Start Quiz
@@ -194,7 +189,7 @@ export default function QuizTypeDetailPage({
                   ) : (
                     <button
                       className="bg-yellow-500 text-white py-1 px-4 rounded-full flex items-center justify-center"
-                      onClick={() => handlePayment(`/dashboard/quiz-detail/${quiz.quizSlug}`)}
+                      onClick={() => handlePayment(`/dashboard/quiz-detail/${quiz.slug}`)}
                     >
                       Pay Now
                     </button>
