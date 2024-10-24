@@ -82,22 +82,31 @@ export default function ChangeSyllabus() {
 
   return (
     <div className='bg-white p-3 lg:p-6 rounded-lg'>
-      <div className="grid grid-cols-1 gap-5">
-        {syllabuses.map((syllabus) => (
-          <button
-            key={syllabus.id}
-            onClick={() => handleSyllabusClick(syllabus.name, syllabus.id)}
-            className={`block p-6 rounded-lg border cursor-pointer 
-              ${activeSyllabus === syllabus.name 
-                ? 'bg-defaultcolor text-white border-defaultcolor' 
-                : 'bg-white text-gray-500 border-gray-300 hover:bg-defaultcolor hover:text-white hover:border-defaultcolor'}`}
-          >
-            <h3 className={`text-2xl lg:text-4xl font-semibold mb-2 ${activeSyllabus === syllabus.name ? 'text-white' : 'text-gray-500 hover:text-white'}`}>
-              {syllabus.name}
-            </h3>
-          </button>
-        ))}
-      </div>
-    </div>
+  <div className="grid grid-cols-1 gap-5">
+    {syllabuses.map((syllabus) => (
+      <button
+        key={syllabus.id}
+        onClick={() => handleSyllabusClick(syllabus.name, syllabus.id)}
+        className={`group block p-6 rounded-lg border cursor-pointer transition 
+          ${
+            activeSyllabus === syllabus.name
+              ? 'bg-defaultcolor text-white border-defaultcolor'
+              : 'bg-white text-gray-500 border-gray-300 hover:bg-defaultcolor hover:border-defaultcolor'
+          }`}
+      >
+        <h3
+          className={`text-2xl lg:text-4xl font-semibold mb-2 transition 
+            ${activeSyllabus === syllabus.name ? 'text-white' : 'text-gray-500'} 
+            group-hover:text-white`}
+        >
+          {syllabus.name}
+        </h3>
+      </button>
+    ))}
+  </div>
+</div>
+
+
+  
   );
 }

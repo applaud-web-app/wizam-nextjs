@@ -131,7 +131,7 @@ const ExamDetailPage = ({ params }: ExamDetailProps) => {
               </label>
             </div>
 
-            <Link href={`/dashboard/all-exams/${slug}`} className="mt-6 w-full block text-center rounded-full font-semibold bg-primary px-6 py-3 text-secondary  transition duration-300 ease-in-out hover:bg-secondary hover:text-white focus:ring-4 focus:ring-primary">
+            <Link href={`/dashboard/exam-play/${slug}`} className="mt-6 w-full block text-center rounded-full font-semibold bg-primary px-6 py-3 text-secondary  transition duration-300 ease-in-out hover:bg-secondary hover:text-white focus:ring-4 focus:ring-primary">
               Start Exam
             </Link>
           </div>

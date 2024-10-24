@@ -46,7 +46,7 @@ export default function UpdatePassword({
     setShowConfirmPassword(!showConfirmPassword);
 
   return (
-    <div className="bg-white shadow-md rounded-lg p-6">
+    <div className="bg-white shadow-sm rounded-lg p-6 mb-6">
       <h2 className="text-2xl font-semibold">Update Password</h2>
       <hr className="h-px my-4 bg-gray-200 border-0 dark:bg-gray-700" />
 

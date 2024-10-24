@@ -227,10 +227,10 @@ export default function UserProfile() {
   };
 
   return (
-    <div className="space-y-6">
+    <div>
       <ToastContainer /> {/* Toast container for notifications */}
 
-      {/* Update Profile Form */}
+     
       <UpdateProfile
         profileInitialValues={profileInitialValues}
         profileImage={profileImage}
@@ -254,7 +254,7 @@ export default function UserProfile() {
       />
 
       {/* Logout Card */}
-      <div className="bg-white shadow-md rounded-lg p-6">
+      <div className="bg-white shadow-sm rounded-lg p-6 ">
         <h2 className="text-2xl font-semibold mb-4">Logout</h2>
         <p className="mb-4 text-gray-600">
           You can log out from your account if you no longer want to stay signed in.
