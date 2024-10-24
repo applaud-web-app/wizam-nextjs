@@ -126,7 +126,7 @@ export default function UpdateProfile({
 
             <div className="mt-6">
               <button type="submit" className="bg-defaultcolor text-white py-3 px-5 rounded-md hover:bg-defaultcolor-dark">
-                Update Details
+               Save Changes
               </button>
             </div>
           </Form>

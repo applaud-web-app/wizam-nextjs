@@ -148,7 +148,7 @@ export default function Header({ toggleSidebar }: HeaderProps) {
             aria-label="Profile options"
           >
             <Image
-              src={userProfile ? userProfile.image : '/images/user.png'}
+              src="/images/user.png"
               width={32}
               height={32}
               alt="Profile"

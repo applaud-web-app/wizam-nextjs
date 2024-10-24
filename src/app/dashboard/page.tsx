@@ -10,7 +10,6 @@ import DashboardCard from "@/components/DashboardCards";
 import NoData from "@/components/Common/NoData";
 import Loader from "@/components/Common/Loader";
 import { useRouter } from 'next/navigation';
-import ExamReportGenerator from "@/components/ReportCardGenerator";
 
 interface Exam {
   title: string;
@@ -105,7 +104,7 @@ export default function DashboardPage() {
       <h1 className="text-3xl lg:text-4xl font-bold mb-6">
         Welcome <span className="text-defaultcolor">{userName ? userName : "Student"}</span>
       </h1>
-      <ExamReportGenerator />
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <DashboardCard title="Completed Exams" content={`${data.completed_exam}`} icon={<FiThumbsUp />} iconColor="text-green-500" />
         <DashboardCard title="Passed Exams" content={`${data.pass_exam}`} icon={<FiCheckCircle />} iconColor="text-defaultcolor" />
