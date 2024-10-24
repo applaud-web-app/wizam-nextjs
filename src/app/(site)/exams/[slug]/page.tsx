@@ -86,6 +86,7 @@ const ExamDetailPage = ({ params }: ExamDetailProps) => {
     const token = Cookies.get('jwt'); // Replace 'jwt_token' with your actual cookie name
 
     if (token) {
+      Cookies.set('redirect_url', `/dashboard/exam-play/${slug}`, { expires: 1 }); // Set the redirect URL for 1 day
       // If token exists, navigate to the quiz play page
       router.push(`/dashboard/exam-play/${slug}`);
     } else {
