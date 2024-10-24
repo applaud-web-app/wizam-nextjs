@@ -61,6 +61,7 @@ export default function PlayExamPage({
   const answersRef = useRef<{ [key: number]: string[] | null }>({});
   const examDataRef = useRef<ExamData | null>(null);
   const submittedRef = useRef<boolean>(false); // Added ref for submitted flag
+  const hasFetchedData = useRef(false); // New ref to track if API call has been made
 
   // Synchronize refs with state
   useEffect(() => {
@@ -70,6 +71,9 @@ export default function PlayExamPage({
   }, [answers, examData, submitted]);
 
   useEffect(() => {
+    if (hasFetchedData.current) return; // Skip if API call already made
+    hasFetchedData.current = true; // Set to true after first API call
+
     const { slug } = params;
     setSlug(slug);
     const category = Cookies.get("category_id");
