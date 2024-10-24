@@ -31,7 +31,7 @@ const SignIn = () => {
 
   const handleSignIn = async (values: any, { resetForm }: any) => {
     setLoading(true);
-
+  
     try {
       // Make an API request to your Laravel API for login
       const response = await axios.post(
@@ -41,13 +41,14 @@ const SignIn = () => {
           withCredentials: true, // Include credentials (cookies) in the request
         }
       );
-
+  
       // Check if the response contains status true/false
       if (response.data.status === true) {
         const token = response.data.token; // Extract token from the response
+  
         // Set the token in a cookie
         Cookies.set('jwt', token, { expires: 1 }); // Set cookie to expire in 1 day
-
+  
         // Show success toast notification
         toast.success("Login successful!", {
           position: "top-right",
@@ -57,10 +58,18 @@ const SignIn = () => {
           pauseOnHover: true,
           draggable: true,
         });
-
-        // Redirect to the homepage after login
+  
+        // Check if the redirect_url cookie exists
+        const redirectUrl = Cookies.get('redirect_url'); // Get the redirect URL from cookies
+        // If redirect URL exists, redirect to that URL, otherwise go to the homepage
+        const destination = redirectUrl ? redirectUrl : "/";
+  
+        // Clear the redirect_url cookie after redirection
+        Cookies.remove('redirect_url');
+  
+        // Redirect to the destination
         setTimeout(() => {
-          router.push("/"); 
+          router.push(destination); 
         }, 1000);
       } else {
         // Display an error toast when status is false
@@ -73,7 +82,7 @@ const SignIn = () => {
           pauseOnHover: true,
           draggable: true,
         });
-
+  
         // Reset the form after invalid login attempt
         resetForm();
       }
@@ -88,14 +97,14 @@ const SignIn = () => {
         pauseOnHover: true,
         draggable: true,
       });
-
+  
       // Reset the form after invalid login attempt
       resetForm();
     } finally {
       setLoading(false); // Reset the loading state
     }
   };
-
+  
   // Form validation schema using Yup
   const validationSchema = Yup.object({
     email: Yup.string().email("Invalid email address").required("Required"),

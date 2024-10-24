@@ -6,7 +6,10 @@ import { notFound } from "next/navigation";
 import Breadcrumb from "@/components/Common/Breadcrumb";
 import Loader from "@/components/Common/Loader";
 import NoData from "@/components/Common/NoData";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
+import Cookies from 'js-cookie';
+import { Button } from "flowbite-react";
+import { toast } from "react-toastify";
 
 interface ExamDetailProps {
   params: {
@@ -16,9 +19,12 @@ interface ExamDetailProps {
 
 const ExamDetailPage = ({ params }: ExamDetailProps) => {
   const { slug } = params;
-  const [exam, setExam] = useState<any>(null); // State to store the exam details
-  const [loading, setLoading] = useState(true); // Loading state
-  const [error, setError] = useState<string | null>(null); // Error state
+  const [exam, setExam] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
+  const [buttonText, setButtonText] = useState('Start Exam');
+  const [isChecked, setIsChecked] = useState(false); // New state for checkbox
 
   // Fetch exam details from API based on the slug
   useEffect(() => {
@@ -59,15 +65,51 @@ const ExamDetailPage = ({ params }: ExamDetailProps) => {
     return <NoData message={error || "Exam not found."} />;
   }
 
+  const handleStartExam = () => {
+    // Check if the checkbox is checked
+    if (!isChecked) {
+      toast.error("Please accept the instructions before proceeding!", {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+      return; // Stop further execution if checkbox isn't checked
+    }
+
+    // Change the button text to "Processing..."
+    setButtonText('Processing...');
+
+    // Check if JWT token exists in cookies
+    const token = Cookies.get('jwt'); // Replace 'jwt_token' with your actual cookie name
+
+    if (token) {
+      // If token exists, navigate to the quiz play page
+      router.push(`/dashboard/exam-play/${slug}`);
+    } else {
+      // Show warning toast notification
+      toast.error("Login to continue!", {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+
+      // If no token, set a cookie for the current URL and redirect to the sign-in page
+      Cookies.set('redirect_url', `/dashboard/exam-play/${slug}`, { expires: 1 }); // Set the redirect URL for 1 day
+      router.push('/signin'); // Redirect to sign-in page
+    }
+  };
+
   return (
     <main>
       <Breadcrumb pageName={exam.title} />
       <section className="container relative z-10 mx-auto -mt-12 pb-20">
         <div className="mb-3 rounded-lg bg-white shadow-lg">
-        
-   
-
-          {/* Exam Header Section */}
           <div className="flex flex-col items-center space-y-4 p-6 sm:flex-row sm:justify-around sm:space-x-8 sm:space-y-0">
             <div className="text-center">
               <p className="text-lg text-gray-500">Available Between</p>
@@ -75,30 +117,21 @@ const ExamDetailPage = ({ params }: ExamDetailProps) => {
                 {exam.availableFrom || "N/A"} - {exam.availableTo || "N/A"}
               </p>
             </div>
-
-            {/* Divider */}
             <div className="hidden h-12 w-px bg-gray-200 sm:block"></div>
-
             <div className="text-center">
               <p className="text-lg text-gray-500">Duration</p>
               <p className="text-xl font-bold text-gray-900">
                 {exam.exam_duration || "N/A"}
               </p>
             </div>
-
-            {/* Divider */}
             <div className="hidden h-12 w-px bg-gray-200 sm:block"></div>
-
             <div className="text-center">
               <p className="text-lg text-gray-500">Questions</p>
               <p className="text-xl font-bold text-gray-900">
                 {exam.questions_count || "N/A"}
               </p>
             </div>
-
-            {/* Divider */}
             <div className="hidden h-12 w-px bg-gray-200 sm:block"></div>
-
             <div className="text-center">
               <p className="text-lg text-gray-500">Total Marks</p>
               <p className="text-xl font-bold text-gray-900">
@@ -121,6 +154,8 @@ const ExamDetailPage = ({ params }: ExamDetailProps) => {
               <input
                 id="instruction-checkbox"
                 type="checkbox"
+                checked={isChecked}
+                onChange={(e) => setIsChecked(e.target.checked)} // Update checkbox state
                 className="h-5 w-5 rounded border-gray-300 bg-gray-100 text-secondary transition duration-200 ease-in-out hover:cursor-pointer focus:ring-secondary"
               />
               <label
@@ -131,9 +166,13 @@ const ExamDetailPage = ({ params }: ExamDetailProps) => {
               </label>
             </div>
 
-            <Link href={`/dashboard/exam-play/${slug}`} className="mt-6 w-full block text-center rounded-full font-semibold bg-primary px-6 py-3 text-secondary  transition duration-300 ease-in-out hover:bg-secondary hover:text-white focus:ring-4 focus:ring-primary">
-              Start Exam
-            </Link>
+            <Button
+              onClick={handleStartExam}
+              className="mt-6 w-full block text-center flex justify-center rounded-full font-semibold bg-primary px-6 py-3 text-secondary transition duration-300 ease-in-out hover:bg-secondary hover:text-white focus:ring-4 focus:ring-primary text-center"
+              disabled={buttonText === 'Processing...'}
+            >
+              {buttonText}
+            </Button>
           </div>
         </div>
       </section>
