@@ -1,8 +1,22 @@
 import { FC } from 'react';
 import Link from 'next/link';
 import { FaCheckCircle, FaEnvelope, FaHome } from 'react-icons/fa';
+import { useRouter } from "next/navigation"; // Use router to redirect
+import { toast } from "react-toastify"; // Import toast from react-toastify
+import Cookies from "js-cookie";
 
 const Success: FC = () => {
+  const router = useRouter();
+
+  const handleClick = () => {
+    const returnUrl = Cookies.get("redirect_url");
+    if (returnUrl) {
+      router.push(returnUrl); // Redirect to the return URL if it exists
+    } else {
+      router.push("/"); // Otherwise, redirect to the home page
+    }
+  };
+
   return (
     <div className="relative bg-gray-50 py-10 md:py-16  ">
      
@@ -19,11 +33,11 @@ const Success: FC = () => {
 
         {/* Buttons */}
         <div className="flex justify-center space-x-3 md:space-x-4 mt-6 md:mt-8">
-          <Link href="/" passHref>
-            <span className="inline-flex items-center bg-primary hover:bg-secondary text-secondary hover:text-white py-2 md:py-3 px-6  rounded-full text-sm md:text-base lg:text-lg font-semibold transition duration-300 transform hover:scale-105">
-              <FaHome className="mr-2" /> Back to Home
+          <button onClick={handleClick} >
+            <span className="inline-flex items-center bg-primary hover:bg-secondary text-secondary hover:text-white py-2 md:py-3 px-6  rounded-full text-sm md:text-base lg:text-lg font-semibold transition duration-300 transform hover:scale-105 text-center">
+              <FaHome className="mr-2 text-center" /> Back to Home
             </span>
-          </Link>
+          </button>
           <Link href="/invoice" passHref>
             <span className="inline-flex items-center bg-secondary hover:bg-secondary-dark text-white py-2 md:py-3 px-6  rounded-full text-sm md:text-base lg:text-lg font-semibold transition duration-300 transform hover:scale-105">
               <FaEnvelope className="mr-2" /> View Invoice
