@@ -5,7 +5,7 @@ import Header from "@/components/DashboardHeader";
 import Sidebar from "@/components/DashboardSidebar";
 import Footer from "@/components/DashboardFooter";
 import { Jost } from "next/font/google";
-import { SyllabusProvider, useSyllabus } from "@/context/SyllabusContext"; // Use Syllabus Context
+import {  useSyllabus } from "@/context/SyllabusContext"; // Use Syllabus Context
 
 // Importing the Google font
 const jost = Jost({

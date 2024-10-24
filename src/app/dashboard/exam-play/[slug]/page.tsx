@@ -391,7 +391,7 @@ export default function PlayExamPage({
     return (
       <div>
         <p
-          className="mb-4"
+          className="mb-4 bg-white p-3 rounded-lg"
           dangerouslySetInnerHTML={{
             __html: Array.isArray(question.question)
               ? question.question[0]
@@ -408,7 +408,7 @@ export default function PlayExamPage({
                   className={`flex items-center space-x-3 p-4 rounded-lg cursor-pointer transition-all mb-3 ${
                     answers[question.id]?.includes(option)
                       ? "bg-green-200"
-                      : "bg-gray-100"
+                      : "bg-white"
                   } hover:bg-yellow-100`}
                 >
                   <input
@@ -430,7 +430,7 @@ export default function PlayExamPage({
                   className={`flex items-center space-x-3 p-4 rounded-lg cursor-pointer transition-all mb-3 ${
                     answers[question.id]?.includes(option)
                       ? "bg-green-200"
-                      : "bg-gray-100"
+                      : "bg-white"
                   } hover:bg-yellow-100`}
                 >
                   <input
@@ -454,7 +454,7 @@ export default function PlayExamPage({
             case "TOF":
               return (
                 <div className="space-y-4">
-                  <label className="flex items-center space-x-3 p-4 rounded-lg cursor-pointer transition-all bg-gray-100 hover:bg-yellow-100">
+                  <label className="flex items-center space-x-3 p-4 rounded-lg cursor-pointer transition-all bg-white hover:bg-yellow-100">
                     <input
                       type="radio"
                       name={`question-${question.id}`}
@@ -465,7 +465,7 @@ export default function PlayExamPage({
                     />
                     <span>True</span>
                   </label>
-                  <label className="flex items-center space-x-3 p-4 rounded-lg cursor-pointer transition-all bg-gray-100 hover:bg-yellow-100">
+                  <label className="flex items-center space-x-3 p-4 rounded-lg cursor-pointer transition-all bg-white hover:bg-yellow-100">
                     <input
                       type="radio"
                       name={`question-${question.id}`}
@@ -501,7 +501,7 @@ export default function PlayExamPage({
                     .map((opt, i) => (
                       <div key={i} className="flex space-x-4 mb-4">
                         <p
-                          className="flex-1 p-2 rounded bg-gray-100"
+                          className="flex-1 p-2 rounded bg-white"
                           dangerouslySetInnerHTML={{ __html: opt }}
                         ></p>
                         <select
@@ -539,7 +539,7 @@ export default function PlayExamPage({
                     {answers[question.id]?.map((option, index) => (
                       <li
                         key={index}
-                        className="p-4 bg-gray-100 rounded-lg mb-2 flex items-center justify-between"
+                        className="p-4 bg-white rounded-lg mb-2 flex items-center justify-between"
                       >
                         <div dangerouslySetInnerHTML={{ __html: option }}></div>
                         <div className="flex items-center space-x-2">
@@ -597,12 +597,12 @@ export default function PlayExamPage({
                 <div>
                   {Array.isArray(question.question) &&
                     question.question.map((subQuestion, questionIndex) => (
-                      <div key={questionIndex} className="mb-4">
+                      <div key={questionIndex} className="mb-4 ">
                         {questionIndex > 0 && (
                           <div>
                             <b>{"Question " + questionIndex}</b>
                             <p
-                              className="mb-4 font-medium"
+                              className="mb-4 font-medium bg-white p-3 rounded-lg"
                               dangerouslySetInnerHTML={{
                                 __html: subQuestion,
                               }}
@@ -613,7 +613,7 @@ export default function PlayExamPage({
                                 className={`flex items-center space-x-3 p-4 rounded-lg cursor-pointer transition-all mb-3 ${
                                   answers[question.id]?.includes(option)
                                     ? "bg-green-200"
-                                    : "bg-gray-100"
+                                    : "bg-white"
                                 } hover:bg-yellow-100`}
                               >
                                 <input
@@ -654,18 +654,23 @@ export default function PlayExamPage({
     <div className="dashboard-page flex flex-col md:flex-row gap-6">
       {/* Main Exam Content */}
       <div className="flex-1 lg:p-6 bg-white rounded-lg shadow-sm p-4">
+       
         {!submitted ? (
           <>
-            <div className="flex justify-between mb-4">
-              <h3 className="text-2xl font-semibold text-defaultcolor">
-                Question {currentQuestionIndex + 1}/{examData.questions.length}
-              </h3>
-              <FaClock className="text-defaultcolor" size={24} />
-            </div>
 
-            <div className="space-y-4">
-              {renderQuestion(examData.questions[currentQuestionIndex])}
+            <div className="border-s-4 border-defaultcolor bg-[#f6f7f9] p-4">
+              <div className="flex justify-between mb-4">
+                <h3 className="text-2xl font-semibold text-defaultcolor">
+                  Question {currentQuestionIndex + 1}/{examData.questions.length}
+                </h3>
+                <FaClock className="text-defaultcolor" size={24} />
+              </div>
+
+              <div className="space-y-4">
+                {renderQuestion(examData.questions[currentQuestionIndex])}
+              </div>
             </div>
+         
 
             <div className="flex justify-between mt-6">
               <button

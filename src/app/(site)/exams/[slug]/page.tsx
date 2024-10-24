@@ -8,7 +8,6 @@ import Loader from "@/components/Common/Loader";
 import NoData from "@/components/Common/NoData";
 import { useRouter } from "next/navigation";
 import Cookies from 'js-cookie';
-import { Button } from "flowbite-react";
 import { toast } from "react-toastify";
 
 interface ExamDetailProps {
@@ -167,13 +166,13 @@ const ExamDetailPage = ({ params }: ExamDetailProps) => {
               </label>
             </div>
 
-            <Button
+            <button
               onClick={handleStartExam}
-              className="mt-6 w-full block text-center flex justify-center rounded-full font-semibold bg-primary px-6 py-3 text-secondary transition duration-300 ease-in-out hover:bg-secondary hover:text-white focus:ring-4 focus:ring-primary text-center"
+              className="mt-6 w-full  rounded-full font-semibold bg-primary px-6 py-3 text-secondary transition duration-300 ease-in-out hover:bg-secondary hover:text-white focus:ring-4 focus:ring-primary text-center"
               disabled={buttonText === 'Processing...'}
             >
               {buttonText}
-            </Button>
+            </button>
           </div>
         </div>
       </section>
