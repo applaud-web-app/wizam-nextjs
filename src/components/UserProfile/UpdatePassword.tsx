@@ -148,7 +148,7 @@ export default function UpdatePassword({
                 type="submit"
                 className="bg-defaultcolor text-white py-3 px-5 rounded-md hover:bg-defaultcolor-dark"
               >
-                Update Password
+                Save Changes
               </button>
             </div>
           </Form>

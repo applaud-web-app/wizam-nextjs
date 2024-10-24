@@ -14,8 +14,9 @@ interface HeaderProps {
 interface UserProfile {
   id: number;
   title: string | null;
-  name: string;
   email: string;
+  name: string;
+  image: string;
   phone_number: string;
 }
 
@@ -147,11 +148,11 @@ export default function Header({ toggleSidebar }: HeaderProps) {
             aria-label="Profile options"
           >
             <Image
-              src="/images/user.png"
+              src={userProfile ? userProfile.image : '/images/user.png'}
               width={32}
               height={32}
               alt="Profile"
-              className="rounded-full"
+              className="rounded-full w-8 h-8"
             />
             <span className="text-gray-900 dark:text-gray-200 font-semibold">
               {userProfile ? getFirstName(userProfile.name) : 'Guest'}

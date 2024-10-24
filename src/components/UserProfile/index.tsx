@@ -7,6 +7,7 @@ import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import UpdateProfile from "./UpdateProfile";
 import UpdatePassword from "./UpdatePassword";
+import Loader from "../Common/Loader";
 
 // TypeScript interfaces for form values
 interface ProfileFormValues {
@@ -87,7 +88,7 @@ export default function UserProfile() {
   }, []);
 
   if (loading) {
-    return <div>Loading...</div>;
+    return <Loader/>;
   }
 
   if (!userProfile) {
@@ -255,15 +256,15 @@ export default function UserProfile() {
 
       {/* Logout Card */}
       <div className="bg-white shadow-sm rounded-lg p-6 ">
-        <h2 className="text-2xl font-semibold mb-4">Logout</h2>
+        <h2 className="text-2xl font-semibold mb-4">Browser Session</h2>
         <p className="mb-4 text-gray-600">
-          You can log out from your account if you no longer want to stay signed in.
+        If necessary, you may logout of all of your other browser sessions across all of your devices. Some of your recent sessions are listed below; however, this list may not be exhaustive. If you feel your account has been compromised, you should also update your password.
         </p>
         <button
           onClick={handleLogoutFromAllDevices}
           className="bg-red-500 text-white py-2 px-4 rounded-md hover:bg-red-600"
         >
-          Logout from all devices
+          Logout Other Browser Session
         </button>
       </div>
     </div>

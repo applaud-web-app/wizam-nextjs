@@ -76,8 +76,8 @@ const Payment: React.FC = () => {
 
   return (
     <div className="w-full">
-      <div className="bg-white shadow-md rounded-lg lg:p-6 p-3">
-        <h2 className="text-xl font-bold mb-4">Payment History</h2>
+      <div className="bg-white shadow-sm rounded-lg p-1">
+       
         <div className="overflow-x-auto">
           <table className="min-w-full table-auto whitespace-nowrap">
             <thead className="bg-defaultcolor text-white">

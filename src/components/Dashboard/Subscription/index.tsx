@@ -27,7 +27,7 @@ const Subscription: React.FC = () => {
 
         const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/my-subscription`, {
           headers: {
-            Authorization: `Bearer ${token}`,// Sample token
+            Authorization: `Bearer ${token}`,
           },
         });
 
@@ -75,36 +75,35 @@ const Subscription: React.FC = () => {
   }
 
   return (
-    <div className="subscription-details bg-white p-6 rounded-lg shadow-md">
-      <h2 className="text-xl font-bold mb-4">Subscription Details</h2>
-      {subscriptions.map((subscription, index) => (
-        <div
-          key={index}
-          className={`mb-4 p-4 rounded-lg ${subscription.status === "Active" ? "border-2 border-green-500 bg-green-50" : "border border-gray-300"}`}
-        >
-          <div className="mb-2">
-            <span className="font-semibold">Plan Name: </span>
-            <span>{subscription.plan_name}</span>
-          </div>
-          <div className="mb-2">
-            <span className="font-semibold">Plan Price: </span>
-            <span>{subscription.plan_price}</span>
-          </div>
-          <div className="mb-2">
-            <span className="font-semibold">Purchase Date: </span>
-            <span>{subscription.purchase_date}</span>
-          </div>
-          <div className="mb-2">
-            <span className="font-semibold">Ends Date: </span>
-            <span>{subscription.ends_date}</span>
-          </div>
-          <div className="mb-2 flex items-center">
-            <span className="font-semibold mr-2">Status: </span>
-            {getStatusBadge(subscription.status)}
-          </div>
-         
+    <div className="w-full">
+      <div className="bg-white shadow-sm rounded-lg p-1">
+        <div className="overflow-x-auto">
+          <table className="min-w-full table-auto whitespace-nowrap">
+            <thead className="bg-defaultcolor text-white">
+              <tr>
+                <th className="p-3 text-left rounded-tl-lg">S.No</th>
+                <th className="p-3 text-left">Plan Name</th>
+                <th className="p-3 text-left">Plan Price</th>
+                <th className="p-3 text-left">Purchase Date</th>
+                <th className="p-3 text-left">Ends Date</th>
+                <th className="p-3 text-left rounded-tr-lg">Status</th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {subscriptions.map((subscription, index) => (
+                <tr key={index} className="hover:bg-gray-50">
+                  <td className="p-4">{index + 1}</td> {/* S.No */}
+                  <td className="p-4">{subscription.plan_name}</td> {/* Plan Name */}
+                  <td className="p-4">{subscription.plan_price}</td> {/* Plan Price */}
+                  <td className="p-4">{subscription.purchase_date}</td> {/* Purchase Date */}
+                  <td className="p-4">{subscription.ends_date}</td> {/* Ends Date */}
+                  <td className="p-4">{getStatusBadge(subscription.status)}</td> {/* Status */}
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
-      ))}
+      </div>
     </div>
   );
 };
