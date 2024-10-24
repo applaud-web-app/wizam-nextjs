@@ -117,9 +117,13 @@ export default function PlayExamPage({
             router.push("/signin"); // Redirect to sign-in page
           } else if (status === 404) {
             toast.error("Please buy a subscription to access this course.");
+            Cookies.set('redirect_url', `/dashboard/exam-play/${slug}`, { expires: 1 });
+            console.log('exam-play');
             router.push("/pricing"); // Redirect to pricing page
           } else if (status === 403) {
             toast.error("Feature not available in your plan. Please upgrade your subscription.");
+            Cookies.set('redirect_url', `/dashboard/exam-play/${slug}`, { expires: 1 });
+            console.log('exam-play');
             router.push("/pricing"); // Redirect to pricing page
           } else {
             toast.error(`An error occurred: ${data.error || 'Unknown error'}`);
