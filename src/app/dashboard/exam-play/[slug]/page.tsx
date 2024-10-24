@@ -92,15 +92,16 @@ export default function PlayExamPage({
         if (response.data.status) {
           const fetchExamData = response.data.data;
           setUuid(fetchExamData.uuid);
+          Cookies.remove('redirect_url');
           setExamData({
             title: fetchExamData.title,
             questions: fetchExamData.questions,
             duration: fetchExamData.duration,
             points: fetchExamData.points,
             question_view: fetchExamData.question_view,
-            finish_button: fetchExamData.finish_button, // Storing the finish_button value
+            finish_button: fetchExamData.finish_button, 
           });
-          setTimeLeft(Math.round(parseFloat(fetchExamData.duration) * 60)); // Assuming duration is in minutes
+          setTimeLeft(Math.round(parseFloat(fetchExamData.duration) * 60)); 
         } else {
           toast.error("No exam found for this category");
         }
