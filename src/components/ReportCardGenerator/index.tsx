@@ -41,7 +41,17 @@ const styles = StyleSheet.create({
     fontFamily: "Roboto",
     backgroundColor: colors.white,
     lineHeight: 1.2,
+    position: 'relative',  // Ensure positioning context for watermark
+  },
+  watermark: {
+    position: 'absolute',
+    top: '30%',
+    left: '25%',
+    width: 300,
+    height: 'auto',
+    opacity: 0.2,  // Make the watermark faint
    
+    zIndex: 1,  // Ensure it's behind other content
   },
 
   contentWrapper: {
@@ -114,7 +124,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   infoBlock: {
-    width: "48%",
+    width: "46%",
   },
   label: {
     fontWeight: 'bold',
@@ -219,6 +229,11 @@ const ExamReportPDF: React.FC<{ examData: any }> = ({ examData }) => {
   return (
     <Document>
       <Page style={styles.page}>
+         {/* Watermark image with absolute positioning */}
+         <Image
+          src="/images/logo/wizam-logo.png"
+          style={styles.watermark}
+        />
         <View style={styles.contentWrapper}>
 
        
@@ -271,6 +286,7 @@ const ExamReportPDF: React.FC<{ examData: any }> = ({ examData }) => {
                 </Text>
                 <Text style={styles.infoText}>{exam_info.session_id}</Text>
               </View>
+              <View style={{borderRight: "1px solid #d2d2d2", width: "1px", height: "100%"}}><Text></Text></View>
               <View style={styles.infoBlock}>
 
                 <Text style={styles.sectionTitle}>Exams Details</Text>
@@ -351,7 +367,7 @@ const ExamReportGenerator: React.FC<{ uuid: string }> = ({ uuid }) => {
   const [examData, setExamData] = useState<any>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [pdfUrl, setPdfUrl] = useState<string | null>(null); // State to store PDF URL
+  // const [pdfUrl, setPdfUrl] = useState<string | null>(null); 
 
   useEffect(() => {
     const fetchExamData = async () => {
@@ -399,9 +415,9 @@ const ExamReportGenerator: React.FC<{ uuid: string }> = ({ uuid }) => {
         {({ url, error }) => {
           if (error) return <span>Error generating PDF</span>;
 
-          if (url) {
-            setPdfUrl(url); // Save the PDF URL for the iframe
-          }
+          // if (url) {
+          //   setPdfUrl(url); 
+          // }
 
           return (
             <div>
@@ -418,14 +434,14 @@ const ExamReportGenerator: React.FC<{ uuid: string }> = ({ uuid }) => {
       </BlobProvider>
 
       {/* Display the PDF in an iframe */}
-      {pdfUrl && (
+      {/* {pdfUrl && (
         <iframe className="mb-8"
           src={pdfUrl}
           width="100%"
           height="900px"
           style={{ border: "none", marginTop: "20px" }}
         ></iframe>
-      )}
+      )} */}
     </div>
   );
 };
