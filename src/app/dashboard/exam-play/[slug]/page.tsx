@@ -69,82 +69,11 @@ export default function PlayExamPage({
     submittedRef.current = submitted; // Keep ref updated with submitted state
   }, [answers, examData, submitted]);
 
-  // useEffect(() => {
-  //   const { slug } = params;
-  //   setSlug(slug);
-  //   const category = Cookies.get("category_id");
-
-  //   const fetchExamSet = async () => {
-  //     try {
-  //       const response = await axios.get(
-  //         `${process.env.NEXT_PUBLIC_API_URL}/play-exam/${slug}`,
-  //         {
-  //           params: { category },
-  //           headers: {
-  //             Authorization: `Bearer ${Cookies.get("jwt")}`,
-  //           },
-  //         }
-  //       );
-  //       if (response.data.status) {
-  //         const fetchExamData = response.data.data;
-  //         setUuid(fetchExamData.uuid);
-  //         setExamData({
-  //           title: fetchExamData.title,
-  //           questions: fetchExamData.questions,
-  //           duration: fetchExamData.duration,
-  //           points: fetchExamData.points,
-  //           question_view: fetchExamData.question_view,
-  //           finish_button: fetchExamData.finish_button, // Storing the finish_button value
-  //         });
-  //         setTimeLeft(Math.round(parseFloat(fetchExamData.duration) * 60)); // Assuming duration is in minutes
-  //       } else {
-  //         toast.error("No exam found for this category");
-  //       }
-  //     } catch (error: any) {
-  //       console.error("Error fetching practice set:", error);
-
-  //       // Handle errors during the API request
-  //       if (error.response) {
-  //         const { status, data } = error.response;
-
-  //         // Handle specific error statuses
-  //         if (status === 401) {
-  //           toast.error("User is not authenticated. Please log in.");
-  //           router.push("/signin"); // Redirect to sign-in page
-  //         } else if (status === 404) {
-  //           toast.error("Please buy a subscription to access this course.");
-  //           router.push("/pricing"); // Redirect to pricing page
-  //         } else if (status === 403) {
-  //           toast.error("Feature not available in your plan. Please upgrade your subscription.");
-  //           router.push("/pricing"); // Redirect to pricing page
-  //         } else {
-  //           toast.error(`An error occurred: ${data.error || 'Unknown error'}`);
-  //         }
-  //       } else {
-  //         toast.error("An error occurred. Please try again.");
-  //       }
-  //     } finally {
-  //       setLoading(false); // Stop the loading state once the request is complete
-  //     }
-  //   };
-
-  //   fetchExamSet();
-  // }, [params, router]);
-
   useEffect(() => {
     const { slug } = params;
     setSlug(slug);
-  
-    // Guard to prevent API call if JWT is missing
-    const jwtToken = Cookies.get("jwt");
-    if (!jwtToken) {
-      toast.error("User is not authenticated. Please log in.");
-      router.push("/signin");
-      return; // Prevent further execution if not authenticated
-    }
-  
     const category = Cookies.get("category_id");
-  
+
     const fetchExamSet = async () => {
       try {
         const response = await axios.get(
@@ -152,7 +81,7 @@ export default function PlayExamPage({
           {
             params: { category },
             headers: {
-              Authorization: `Bearer ${jwtToken}`, // Use the valid JWT token
+              Authorization: `Bearer ${Cookies.get("jwt")}`,
             },
           }
         );
@@ -172,20 +101,22 @@ export default function PlayExamPage({
           toast.error("No exam found for this category");
         }
       } catch (error: any) {
+        console.error("Error fetching practice set:", error);
+
         // Handle errors during the API request
         if (error.response) {
           const { status, data } = error.response;
-  
-          // Prevent duplicate handling of redirects or error toasts
+
+          // Handle specific error statuses
           if (status === 401) {
             toast.error("User is not authenticated. Please log in.");
-            router.push("/signin");
+            router.push("/signin"); // Redirect to sign-in page
           } else if (status === 404) {
             toast.error("Please buy a subscription to access this course.");
-            router.push("/pricing");
+            router.push("/pricing"); // Redirect to pricing page
           } else if (status === 403) {
             toast.error("Feature not available in your plan. Please upgrade your subscription.");
-            router.push("/pricing");
+            router.push("/pricing"); // Redirect to pricing page
           } else {
             toast.error(`An error occurred: ${data.error || 'Unknown error'}`);
           }
@@ -196,7 +127,7 @@ export default function PlayExamPage({
         setLoading(false); // Stop the loading state once the request is complete
       }
     };
-  
+
     fetchExamSet();
   }, [params, router]);
 
