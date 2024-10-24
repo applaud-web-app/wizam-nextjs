@@ -5,6 +5,7 @@ import {
   Text,
   View,
   Document,
+  Font,
   StyleSheet,
   Image,
   BlobProvider,
@@ -17,22 +18,38 @@ const colors = {
   primary: "#2A3B61",
   secondary: "#A6DCEF",
   gray: "#e5f3ff",
-  black: "#333333",
+  black: "#000",
   white: "#fff",
   green: "#28A745",
   red: "#FF4D4D",
 };
 
+Font.register({
+  family: 'Roboto',
+  fonts: [
+    { src: "https://fonts.gstatic.com/s/roboto/v20/KFOmCnqEu92Fr1Mu4mxP.ttf", fontWeight: 400 }, // Regular
+    { src: "https://fonts.gstatic.com/s/roboto/v20/KFOlCnqEu92Fr1MmWUlfBBc9.ttf", fontWeight: 700 }, // Bold
+    { src: "https://fonts.gstatic.com/s/roboto/v20/KFOjCnqEu92Fr1Mu51TzBic6CsE.ttf", fontWeight: 900 }, // Extra Bold
+  ]
+});
+
 // Create styles for your PDF
 const styles = StyleSheet.create({
- 
   page: {
-    padding: 15,
+    padding: 10,
     fontSize: 12,
-    fontFamily: "Helvetica",
+    fontFamily: "Roboto",
     backgroundColor: colors.white,
     lineHeight: 1.2,
+   
   },
+
+  contentWrapper: {
+    padding: 15, 
+    border: '5px double #e5e7eb', 
+    
+  },
+
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -68,16 +85,25 @@ const styles = StyleSheet.create({
   },
   resultPass: {
     color: colors.green,
+    fontSize: 20,
+    fontWeight: "bold",
+    textTransform: "uppercase",
+    letterSpacing: 2,
   },
   resultFail: {
     color: colors.red,
+    fontSize: 20,
+    fontWeight: "bold",
+    textTransform: "uppercase",
+    letterSpacing: 2,
+
   },
   sectionTitle: {
-    backgroundColor: colors.primary,
+    backgroundColor: "#989898",
     color: colors.white,
     textAlign: "center",
-    borderRadius: 5,
-    padding: 6,
+    
+    padding: 8,
     marginBottom: 10,
     fontSize: 14,
     fontWeight: "bold",
@@ -88,38 +114,59 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   infoBlock: {
-    width: "49%",
-    backgroundColor: colors.gray,
-    padding: 10,
-    borderRadius: 5,
+    width: "48%",
   },
   label: {
-    fontWeight: 900,
+    fontWeight: 'bold',
     marginBottom: 3,
     color: colors.black,
     fontSize: 12,
   },
   infoText: {
     fontSize: 12,
-    marginBottom: 6,
+    marginBottom: 10,
     color: colors.black,
   },
+
+  resultsectionTitle: {
+    backgroundColor: "#3394c6",
+    color: colors.white,
+    textAlign: "center",
+    
+    padding: 6,
+    
+    fontSize: 14,
+    fontWeight: "bold",
+  },
+
+
   resultSection: {
-    backgroundColor: colors.gray,
+    backgroundColor: '#f0f0f0',
     padding: 10,
-    borderRadius: 5,
-    marginBottom: 10,
   },
   resultRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 6,
-    borderBottom: "1px dashed gray",
-    paddingBottom: 6,
+    flexDirection: 'row',  // Align items horizontally
+    justifyContent: 'space-between',  // Spread items equally
+    marginBottom: 8,
+    borderBottom: '1px dashed gray',
+    paddingBottom: 8,
+  },
+  resultlabel: {
+    flex: 1,  // Make label take equal space
+    fontWeight: 'bold',
+    textAlign: 'left',  // Align label to the left
+    fontSize: 12,
+  },
+  colon: {
+    flex: 0.2,  // Small space for colon
+    textAlign: 'center',  // Center colon
+    fontWeight: 'bold',
+    fontSize: 12,
   },
   resultText: {
+    flex: 1,  // Make result text take equal space
+    textAlign: 'right',  // Align result to the right
     fontSize: 12,
-    color: colors.black,
   },
   footer: {
     marginTop: 10,
@@ -129,7 +176,7 @@ const styles = StyleSheet.create({
   },
   divider: {
     borderBottomWidth: 1,
-    borderBottomColor: colors.gray,
+    borderBottomColor: "#d2d2d2",
     marginBottom: 10,
     marginTop: 10,
   },
@@ -139,6 +186,26 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     marginBottom: 5,
   },
+  authorizedSection: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'flex-end',  // Align to the right
+    marginTop: 10,  
+    marginBottom:30,
+  },
+  authorizedByText: {
+    fontSize: 12,
+    fontWeight: "bold",
+    textAlign: 'right',
+    marginBottom: 5,
+  },
+  signature: {
+    fontFamily: 'DancingScript',  // Use the custom signature font
+    fontSize: 20,
+    fontStyle: 'italic',
+    textAlign: 'right',
+  },
+
 });
 
 // Create the PDF document structure
@@ -152,102 +219,129 @@ const ExamReportPDF: React.FC<{ examData: any }> = ({ examData }) => {
   return (
     <Document>
       <Page style={styles.page}>
-        <View style={styles.header}>
-          <Image style={styles.logo} src="/images/logo/wizam-logo.png" />
-          <Image style={{width: 160, height: "auto"}} src="/images/logo/school-of-dental-nursing-logo.png" />
-        
-        </View>
+        <View style={styles.contentWrapper}>
 
-        <View style={styles.divider}></View>
+       
+            <View style={styles.header}>
+              <Image style={styles.logo} src="/images/logo/wizam-logo.png" />
+              <Image style={{ width: 160, height: "auto" }} src="/images/logo/school-of-dental-nursing-logo.png" />
+            </View>
 
-        <View style={styles.row}>
-          <Text style={styles.title}>Final Result: </Text>
-          <Text style={styles.finalResult}>
-            {result_info.final_score === "PASS" ? (
-              <Text style={styles.resultPass}>Pass</Text>
-            ) : (
-              <Text style={styles.resultFail}>Fail</Text>
-            )}
-          </Text>
-        </View>
+            <View style={styles.divider}></View>
 
-        <View style={styles.divider}></View>
+            <View style={styles.row}>
+              <View>
+                <Text style={[styles.title, { fontSize: 20 }]}>Exam Report: </Text>
+                <Text style={{fontSize: 16}}>Dental Nursing </Text>
+              </View>
+              <View>
+              <Text style={{fontSize: 16}}>Final Result </Text>
+                  <Text style={styles.finalResult}>
+                    {result_info.final_score === "PASS" ? (
+                      <Text style={styles.resultPass}>Pass</Text>
+                    ) : (
+                      <Text style={styles.resultFail}>Fail</Text>
+                    )}
+                  </Text>
+                </View>
+              
+             
+            </View>
 
-        <Text style={styles.sectionTitle}>Exams Details</Text>
-        <View style={styles.infoSection}>
-          <View style={styles.infoBlock}>
-            <Text style={[styles.label, { textDecoration: "underline" }]}>
-              Exam Name
-            </Text>
-            <Text style={styles.infoText}>{exam_info.name}</Text>
-            <Text style={[styles.label, { textDecoration: "underline" }]}>
-              Completed on
-            </Text>
-            <Text style={styles.infoText}>{exam_info.completed_on}</Text>
-            <Text style={[styles.label, { textDecoration: "underline" }]}>
-              Session ID
-            </Text>
-            <Text style={styles.infoText}>{exam_info.session_id}</Text>
-          </View>
-          <View style={styles.infoBlock}>
-            <Text style={[styles.label, { textDecoration: "underline" }]}>
-              Test Taker
-            </Text>
-            <Text style={styles.infoText}>{user_info.name}</Text>
-            <Text style={[styles.label, { textDecoration: "underline" }]}>
-              Email
-            </Text>
-            <Text style={styles.infoText}>{user_info.email}</Text>
-            <Text style={[styles.label, { textDecoration: "underline" }]}>
-              Mobile Number
-            </Text>
-            <Text style={styles.infoText}>{user_info.number}</Text>
-          </View>
-        </View>
+            <View style={styles.divider}></View>
 
-        <Text style={styles.sectionTitle}>Test Results</Text>
-        <View style={styles.resultSection}>
-          <View style={styles.resultRow}>
-            <Text style={styles.label}>Total Questions</Text>
-            <Text style={styles.resultText}>{result_info.total_question}</Text>
-          </View>
-          <View style={styles.resultRow}>
-            <Text style={styles.label}>Answered</Text>
-            <Text style={styles.resultText}>{result_info.answered}</Text>
-          </View>
-          <View style={styles.resultRow}>
-            <Text style={styles.label}>Correct</Text>
-            <Text style={styles.resultText}>{result_info.correct}</Text>
-          </View>
-          <View style={styles.resultRow}>
-            <Text style={styles.label}>Wrong</Text>
-            <Text style={styles.resultText}>{result_info.wrong}</Text>
-          </View>
-          <View style={styles.resultRow}>
-            <Text style={styles.label}>Pass Percentage</Text>
-            <Text style={styles.resultText}>{result_info.pass_percentage}%</Text>
-          </View>
-          <View style={styles.resultRow}>
-            <Text style={styles.label}>Final Percentage</Text>
-            <Text style={styles.resultText}>{result_info.final_percentage}%</Text>
-          </View>
-          <View style={styles.resultRow}>
-            <Text style={styles.label}>Time Taken</Text>
-            <Text style={styles.resultText}>{Math.round(result_info.time_taken)} mins</Text>
-          </View>
-        </View>
+           
+            <View style={styles.infoSection}>
+              
+              <View style={styles.infoBlock}>
 
-        <Text style={styles.sectionTitle}>Remarks</Text>
-        <View style={styles.remarksSection}>
-          <Text style={styles.infoText}>
-            The candidate has demonstrated a solid understanding of core
-            concepts.
-          </Text>
-        </View>
+                <Text style={styles.sectionTitle}>Exams Details</Text>
 
-        <View style={styles.footer}>
-          <Text>The Knowledge Academy | Empowering learners worldwide</Text>
-        </View>
+      
+                <Text style={styles.label}>
+                  Exam Name
+                </Text>
+                <Text style={styles.infoText}>{exam_info.name}</Text>
+                <Text style={styles.label}>
+                  Completed on
+                </Text>
+                <Text style={styles.infoText}>{exam_info.completed_on}</Text>
+                <Text style={styles.label}>
+                  Session ID
+                </Text>
+                <Text style={styles.infoText}>{exam_info.session_id}</Text>
+              </View>
+              <View style={styles.infoBlock}>
+
+                <Text style={styles.sectionTitle}>Exams Details</Text>
+
+                <Text style={styles.label}>
+                  Test Taker
+                </Text>
+                <Text style={styles.infoText}>{user_info.name}</Text>
+                <Text style={styles.label}>
+                  Email
+                </Text>
+                <Text style={styles.infoText}>{user_info.email}</Text>
+                <Text style={styles.label}>
+                  Mobile Number
+                </Text>
+                <Text style={styles.infoText}>{user_info.number}</Text>
+              </View>
+            </View>
+
+            <Text style={styles.resultsectionTitle}>Test Results</Text>
+            <View style={styles.resultSection}>
+              <View style={styles.resultRow}>
+                <Text style={styles.resultlabel}>Total Questions</Text>
+                 <Text style={styles.colon}>:</Text>
+                <Text style={styles.resultText}>{result_info.total_question}</Text>
+              </View>
+              <View style={styles.resultRow}>
+                <Text style={styles.resultlabel}>Answered</Text>
+                 <Text style={styles.colon}>:</Text>
+                <Text style={styles.resultText}>{result_info.answered}</Text>
+              </View>
+              <View style={styles.resultRow}>
+                <Text style={styles.resultlabel}>Correct</Text>
+                 <Text style={styles.colon}>:</Text>
+                <Text style={styles.resultText}>{result_info.correct}</Text>
+              </View>
+              <View style={styles.resultRow}>
+                <Text style={styles.resultlabel}>Wrong</Text>
+                 <Text style={styles.colon}>:</Text>
+                <Text style={styles.resultText}>{result_info.wrong}</Text>
+              </View>
+              <View style={styles.resultRow}>
+                <Text style={styles.resultlabel}>Pass Percentage</Text>
+                 <Text style={styles.colon}>:</Text>
+                <Text style={styles.resultText}>{result_info.pass_percentage}%</Text>
+              </View>
+              <View style={styles.resultRow}>
+                <Text style={styles.resultlabel}>Final Percentage</Text>
+                 <Text style={styles.colon}>:</Text>
+                <Text style={styles.resultText}>{result_info.final_percentage}%</Text>
+              </View>
+              <View style={styles.resultRow}>
+                <Text style={styles.resultlabel}>Time Taken</Text>
+                 <Text style={styles.colon}>:</Text>
+                <Text style={styles.resultText}>{Math.round(result_info.time_taken)} mins</Text>
+              </View>
+            </View>
+
+            <View style={styles.divider}></View>
+
+            {/* Authorized by section */}
+            <View style={styles.authorizedSection}>
+              <Text style={styles.authorizedByText}>Authorized by</Text>
+              <Image src="/images/sign.png" style={{ width: "auto", height: 20 }} />
+            </View>
+
+          
+          </View>
+            <View style={styles.footer}>
+              <Text>The Knowledge Academy | Empowering learners worldwide</Text>
+            </View>
       </Page>
     </Document>
   );
@@ -257,6 +351,7 @@ const ExamReportGenerator: React.FC<{ uuid: string }> = ({ uuid }) => {
   const [examData, setExamData] = useState<any>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [pdfUrl, setPdfUrl] = useState<string | null>(null); // State to store PDF URL
 
   useEffect(() => {
     const fetchExamData = async () => {
@@ -299,21 +394,38 @@ const ExamReportGenerator: React.FC<{ uuid: string }> = ({ uuid }) => {
 
   return (
     <div>
+      {/* PDF BlobProvider to generate and provide the PDF URL */}
       <BlobProvider document={<ExamReportPDF examData={examData} />}>
         {({ url, error }) => {
           if (error) return <span>Error generating PDF</span>;
+
+          if (url) {
+            setPdfUrl(url); // Save the PDF URL for the iframe
+          }
+
           return (
             <div>
               <Link
                 href={url || "#"}
                 download="exam-report.pdf"
-                className="px-5 py-2 inline-block cursor-pointer bg-secondary rounded-full text-white hover:bg-secondary-dark" >
+                className="px-5 py-2 inline-block cursor-pointer bg-secondary rounded-full text-white hover:bg-secondary-dark"
+              >
                 <span style={{ marginTop: "10px" }}>Download PDF</span>
               </Link>
             </div>
           );
         }}
       </BlobProvider>
+
+      {/* Display the PDF in an iframe */}
+      {pdfUrl && (
+        <iframe className="mb-8"
+          src={pdfUrl}
+          width="100%"
+          height="900px"
+          style={{ border: "none", marginTop: "20px" }}
+        ></iframe>
+      )}
     </div>
   );
 };

@@ -10,13 +10,13 @@ import { useRouter } from "next/navigation"; // Use router to redirect
 import { toast } from 'react-toastify'; // Optional: For notifications
 import Link from 'next/link';
 
-// Define the Quiz type
+// Define the Quiz type based on the response
 interface Quiz {
   title: string;
   slug: string;
   questions: number;
   time: string;
-  marks: number;
+  marks: string; // changed to string to match the response
   is_free: number;
 }
 
@@ -25,74 +25,51 @@ export default function QuizTypeDetailPage({
 }: {
   params: { slug: string };
 }) {
-  const [slug, setSlug] = useState<string | null>(null);
-  const [quizzes, setQuizzes] = useState<Quiz[]>([]);
+  const [quizzes, setQuizzes] = useState<Quiz[]>([]); // Removed slug state
   const [loading, setLoading] = useState<boolean>(true);
   const router = useRouter(); // For redirecting to other pages
+  const category = Cookies.get("category_id");
 
   // Function to handle payment logic
   const handlePayment = async (quizSlug: string) => {
     try {
       const jwt = Cookies.get("jwt");
-      const type = "quizzes";
-
       if (!jwt) {
         toast.error("User is not authenticated. Please log in.");
+        router.push("/signin");
         return;
       }
 
-      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/user-subscription`, {
-        headers: {
-          Authorization: `Bearer ${jwt}`,
-        },
-        params: { type },
+      const { data } = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/user-subscription`, {
+        headers: { Authorization: `Bearer ${jwt}` },
+        params: { type: "quizzes" },
       });
 
-      if (response.data.status === true) {
-        router.push(`${quizSlug}`);
+      if (data.status) {
+        router.push(quizSlug);
       } else {
         toast.error('Please buy a subscription to access this course.');
         router.push("/pricing");
       }
     } catch (error: any) {
-      if (error.response) {
-        const { status, data } = error.response;
-        if (status === 401) {
-          toast.error('User is not authenticated. Please log in.');
-          router.push("/signin");
-        } else if (status === 404) {
-          toast.error('Please buy a subscription to access this course.');
-          router.push("/pricing");
-        } else if (status === 403) {
-          toast.error('Feature not available in your plan. Please upgrade your subscription.');
-          router.push("/pricing");
-        } else {
-          toast.error(`An error occurred: ${data.error || 'Unknown error'}`);
-        }
-      } else {
-        toast.error("An error occurred. Please try again.");
-      }
+      handleAxiosError(error);
     }
   };
 
   // Fetch the quiz based on the slug from params
   useEffect(() => {
-    const { slug } = params;
-    setSlug(slug);
-    const category = Cookies.get("category_id");
-
     const fetchQuiz = async () => {
       try {
-        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/all-quiz`, {
-          params: { slug, category },
+        const jwt = Cookies.get("jwt");
+        const { data } = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/all-quiz`, {
+          params: { slug: params.slug, category },
           headers: {
-            Authorization: `Bearer ${Cookies.get("jwt")}`,
+            Authorization: `Bearer ${jwt}`,
           },
         });
 
-        if (response.data.status) {
-          const fetchedQuiz = response.data.data[slug] || [];
-          setQuizzes(fetchedQuiz);
+        if (data.status) {
+          setQuizzes(data.data || []); // Populate quizzes from the response
         } else {
           toast.error('No quiz found for this category');
           router.push('/dashboard/quizzes');
@@ -107,9 +84,27 @@ export default function QuizTypeDetailPage({
     };
 
     fetchQuiz();
-  }, [params, router]);
+  }, [params.slug, router, category]);
 
-  const formattedSlug = slug ? slug.replace(/-/g, " ") : "";
+  const formattedSlug = params.slug.replace(/-/g, " "); // Formatting slug for display
+
+  // Function to handle axios errors
+  const handleAxiosError = (error: any) => {
+    if (error.response) {
+      const { status } = error.response;
+      if (status === 401) {
+        toast.error('User is not authenticated. Please log in.');
+        router.push("/signin");
+      } else if (status === 404 || status === 403) {
+        toast.error('Please buy a subscription to access this course.');
+        router.push("/pricing");
+      } else {
+        toast.error('An error occurred. Please try again.');
+      }
+    } else {
+      toast.error("An unexpected error occurred. Please try again.");
+    }
+  };
 
   // If loading, show loader
   if (loading) {
@@ -117,7 +112,7 @@ export default function QuizTypeDetailPage({
   }
 
   // If no quizzes are found for the current slug
-  if (!slug || quizzes.length === 0) {
+  if (quizzes.length === 0) {
     return (
       <div className="p-5 bg-white shadow-sm rounded-lg text-center">
         <h2 className="text-xl font-semibold text-red-500 mb-2">No quizzes found</h2>
@@ -158,32 +153,21 @@ export default function QuizTypeDetailPage({
           </thead>
           <tbody className="divide-y divide-gray-200">
             {quizzes.map((quiz, index) => (
-              <tr key={index} className="hover:bg-gray-50">
-                <td className="p-4">{index + 1}</td> {/* Serial Number */}
+              <tr key={quiz.slug} className="hover:bg-gray-50">
+                <td className="p-4">{index + 1}</td>
+                <td className="p-4"><b>{quiz.title}</b></td>
                 <td className="p-4">
-                  <b>{quiz.title}</b>
+                  <div className="text-gray-700">{quiz.questions}</div>
                 </td>
                 <td className="p-4">
-                  <div className="text-gray-700">
-                    <span>{quiz.questions}</span>
-                  </div>
+                  <div className="text-gray-700">{quiz.time}</div>
                 </td>
                 <td className="p-4">
-                  <div className="text-gray-700">
-                    <span>{quiz.time}</span>
-                  </div>
-                </td>
-                <td className="p-4">
-                  <div className="text-gray-700">
-                    <span>{quiz.marks}</span>
-                  </div>
+                  <div className="text-gray-700">{quiz.marks}</div>
                 </td>
                 <td className="p-4">
                   {quiz.is_free === 1 ? (
-                    <Link
-                      href={`/dashboard/quiz-detail/${quiz.slug}`}
-                      className="bg-green-600 text-white px-4 py-1 rounded-full"
-                    >
+                    <Link href={`/dashboard/quiz-detail/${quiz.slug}`} className="bg-green-600 text-white px-4 py-1 rounded-full">
                       Start Quiz
                     </Link>
                   ) : (
