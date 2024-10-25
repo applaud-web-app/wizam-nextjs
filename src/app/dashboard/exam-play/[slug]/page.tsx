@@ -1,12 +1,13 @@
 "use client";
 
 import Loader from "@/components/Common/Loader";
-import { AiOutlineArrowRight } from 'react-icons/ai'; // For icons
+import { AiOutlineArrowRight, AiOutlineClockCircle } from "react-icons/ai"; // For icons
 import { useState, useEffect, useRef } from "react";
 import {
   FaCheckCircle,
   FaArrowRight,
   FaArrowLeft,
+  FaBook,
   FaClock,
   FaRegSmile,
   FaRegFrown,
@@ -15,7 +16,7 @@ import Cookies from "js-cookie";
 import { useRouter } from "next/navigation";
 import axios from "axios";
 import { toast } from "react-toastify";
-import Link from 'next/link';
+import Link from "next/link";
 import NoData from "@/components/Common/NoData";
 
 // Option interface
@@ -41,13 +42,11 @@ interface ExamData {
   finish_button: string; // "enable" or "disable"
 }
 
-export default function PlayExamPage({
-  params,
-}: {
-  params: { slug: string };
-}) {
+export default function PlayExamPage({ params }: { params: { slug: string } }) {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState<number>(0);
-  const [answers, setAnswers] = useState<{ [key: number]: string[] | null }>({});
+  const [answers, setAnswers] = useState<{ [key: number]: string[] | null }>(
+    {}
+  );
   const [timeLeft, setTimeLeft] = useState<number>(1800); // Timer (in seconds)
   const [submitted, setSubmitted] = useState<boolean>(false); // Controls whether exam is submitted
   const [slug, setSlug] = useState<string | null>(null);
@@ -55,6 +54,7 @@ export default function PlayExamPage({
   const router = useRouter();
   const [loading, setLoading] = useState<boolean>(true);
   const [uuid, setUuid] = useState<string | null>(null);
+  const [showModal, setShowModal] = useState<boolean>(false); // State to control modal visibility
   let timerId: NodeJS.Timeout | null = null;
 
   // Refs to hold the latest state values
@@ -70,6 +70,7 @@ export default function PlayExamPage({
     submittedRef.current = submitted; // Keep ref updated with submitted state
   }, [answers, examData, submitted]);
 
+  // Fetch exam data on component mount
   useEffect(() => {
     if (hasFetchedData.current) return; // Skip if API call already made
     hasFetchedData.current = true; // Set to true after first API call
@@ -92,16 +93,16 @@ export default function PlayExamPage({
         if (response.data.status) {
           const fetchExamData = response.data.data;
           setUuid(fetchExamData.uuid);
-          Cookies.remove('redirect_url');
+          Cookies.remove("redirect_url");
           setExamData({
             title: fetchExamData.title,
             questions: fetchExamData.questions,
             duration: fetchExamData.duration,
             points: fetchExamData.points,
             question_view: fetchExamData.question_view,
-            finish_button: fetchExamData.finish_button, 
+            finish_button: fetchExamData.finish_button,
           });
-          setTimeLeft(Math.round(parseFloat(fetchExamData.duration) * 60)); 
+          setTimeLeft(Math.round(parseFloat(fetchExamData.duration) * 60));
         } else {
           toast.error("No exam found for this category");
         }
@@ -118,16 +119,22 @@ export default function PlayExamPage({
             router.push("/signin"); // Redirect to sign-in page
           } else if (status === 404) {
             toast.error("Please buy a subscription to access this course.");
-            Cookies.set('redirect_url', `/dashboard/exam-play/${slug}`, { expires: 1 });
-            console.log('exam-play');
+            Cookies.set("redirect_url", `/dashboard/exam-play/${slug}`, {
+              expires: 1,
+            });
+            console.log("exam-play");
             router.push("/pricing"); // Redirect to pricing page
           } else if (status === 403) {
-            toast.error("Feature not available in your plan. Please upgrade your subscription.");
-            Cookies.set('redirect_url', `/dashboard/exam-play/${slug}`, { expires: 1 });
-            console.log('exam-play');
+            toast.error(
+              "Feature not available in your plan. Please upgrade your subscription."
+            );
+            Cookies.set("redirect_url", `/dashboard/exam-play/${slug}`, {
+              expires: 1,
+            });
+            console.log("exam-play");
             router.push("/pricing"); // Redirect to pricing page
           } else {
-            toast.error(`An error occurred: ${data.error || 'Unknown error'}`);
+            toast.error(`An error occurred: ${data.error || "Unknown error"}`);
           }
         } else {
           toast.error("An error occurred. Please try again.");
@@ -140,6 +147,7 @@ export default function PlayExamPage({
     fetchExamSet();
   }, [params, router]);
 
+  // Countdown timer for exam
   useEffect(() => {
     if (!examData || submitted) return;
 
@@ -160,6 +168,37 @@ export default function PlayExamPage({
     // Clean up the interval on component unmount
     return () => clearInterval(timerId!);
   }, [examData]);
+
+  // Modal Dialog for Confirming Submission
+  const ConfirmationModal = ({}) => {
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-[1001]">
+        <div className="bg-white p-6 rounded-lg shadow-lg w-96">
+          <h2 className="font-bold text-lg mb-2">Are you sure?</h2>
+          <p className="text-gray-600 mb-4">
+            Your exam will be terminated and you will not be graded if you exit!
+          </p>
+          <div className="mt-6 flex justify-between">
+            <button
+              className="border border-gray-400 text-gray-700 px-4 py-2 rounded hover:bg-gray-100"
+              onClick={() => setShowModal(false)}
+            >
+              Cancel
+            </button>
+            <button
+              className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+              onClick={() => {
+                setShowModal(false);
+                handleSubmit();
+              }}
+            >
+              Finish Exam
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   const handleAnswerChange = (
     questionId: number,
@@ -196,7 +235,10 @@ export default function PlayExamPage({
   };
 
   const handleNextQuestion = () => {
-    if (examData?.questions && currentQuestionIndex < examData.questions.length - 1) {
+    if (
+      examData?.questions &&
+      currentQuestionIndex < examData.questions.length - 1
+    ) {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
     }
   };
@@ -215,101 +257,116 @@ export default function PlayExamPage({
     submittedRef.current = true; // Set ref to prevent future calls
     if (timerId) clearInterval(timerId); // Stop the timer when submitting
 
-    const formattedAnswers = examDataRef.current?.questions.map((question: Question) => {
-      const userAnswer = answersRef.current[question.id];
+    const formattedAnswers = examDataRef.current?.questions.map(
+      (question: Question) => {
+        const userAnswer = answersRef.current[question.id];
 
-      // Ensure that blank answers are submitted if no answer is provided
-      if (!userAnswer || userAnswer.length === 0) {
-        return {
-          id: question.id,
-          type: question.type,
-          answer: [],
-        };
+        // Ensure that blank answers are submitted if no answer is provided
+        if (!userAnswer || userAnswer.length === 0) {
+          return {
+            id: question.id,
+            type: question.type,
+            answer: [],
+          };
+        }
+
+        switch (question.type) {
+          case "MSA":
+            return {
+              id: question.id,
+              type: question.type,
+              answer: question.options
+                ? question.options.indexOf(userAnswer[0]) + 1
+                : 0,
+            };
+
+          case "MMA":
+            return {
+              id: question.id,
+              type: question.type,
+              answer: userAnswer.map((ans: string) =>
+                question.options ? question.options.indexOf(ans) + 1 : 0
+              ),
+            };
+
+          case "TOF":
+            return {
+              id: question.id,
+              type: question.type,
+              answer: userAnswer[0] === "true" ? 1 : 2,
+            };
+
+          case "SAQ":
+            return {
+              id: question.id,
+              type: question.type,
+              answer: userAnswer[0],
+            };
+
+          case "FIB":
+            return {
+              id: question.id,
+              type: question.type,
+              answer: Array.isArray(userAnswer)
+                ? userAnswer.map((ans) =>
+                    typeof ans === "string" ? ans : String(ans)
+                  )
+                : [],
+            };
+
+          case "MTF":
+            const matches: { [key: number]: string } = {};
+            if (
+              Array.isArray(userAnswer) &&
+              userAnswer.every(
+                (pair) => Array.isArray(pair) && pair.length === 2
+              )
+            ) {
+              (userAnswer as unknown as [string, string][]).forEach(
+                (pair: [string, string]) => {
+                  if (question.options) {
+                    const termIndex = question.options.indexOf(pair[0]) + 1;
+                    matches[termIndex] = pair[1];
+                  }
+                }
+              );
+            }
+            return {
+              id: question.id,
+              type: question.type,
+              answer: matches,
+            };
+
+          case "ORD":
+            return {
+              id: question.id,
+              type: question.type,
+              answer: userAnswer.map((opt: string) =>
+                question.options ? question.options.indexOf(opt) : -1
+              ),
+            };
+
+          case "EMQ":
+            const filteredAnswers = userAnswer
+              .map((ans: string, index: number) => {
+                return ans
+                  ? question.options
+                    ? question.options.indexOf(ans) + 1
+                    : null
+                  : null;
+              })
+              .filter((ans) => ans !== null);
+            return {
+              id: question.id,
+              type: question.type,
+              answer: filteredAnswers.length > 0 ? filteredAnswers : [],
+            };
+
+          default:
+            return null;
+        }
       }
-
-      switch (question.type) {
-        case "MSA":
-          return {
-            id: question.id,
-            type: question.type,
-            answer: question.options
-              ? question.options.indexOf(userAnswer[0]) + 1
-              : 0,
-          };
-
-        case "MMA":
-          return {
-            id: question.id,
-            type: question.type,
-            answer: userAnswer.map((ans: string) =>
-              question.options ? question.options.indexOf(ans) + 1 : 0
-            ),
-          };
-
-        case "TOF":
-          return {
-            id: question.id,
-            type: question.type,
-            answer: userAnswer[0] === "true" ? 1 : 2,
-          };
-
-        case "SAQ":
-          return {
-            id: question.id,
-            type: question.type,
-            answer: userAnswer[0],
-          };
-
-        case "FIB":
-          return {
-            id: question.id,
-            type: question.type,
-            answer: Array.isArray(userAnswer)
-              ? userAnswer.map((ans) => (typeof ans === "string" ? ans : String(ans)))
-              : [],
-          };
-
-        case "MTF":
-          const matches: { [key: number]: string } = {};
-          if (Array.isArray(userAnswer) && userAnswer.every(pair => Array.isArray(pair) && pair.length === 2)) {
-            (userAnswer as unknown as [string, string][]).forEach((pair: [string, string]) => {
-              if (question.options) {
-                const termIndex = question.options.indexOf(pair[0]) + 1;
-                matches[termIndex] = pair[1];
-              }
-            });
-          }
-          return {
-            id: question.id,
-            type: question.type,
-            answer: matches,
-          };
-
-        case "ORD":
-          return {
-            id: question.id,
-            type: question.type,
-            answer: userAnswer.map((opt: string) =>
-              question.options ? question.options.indexOf(opt) : -1
-            ),
-          };
-
-        case "EMQ":
-          const filteredAnswers = userAnswer
-            .map((ans: string, index: number) => {
-              return ans ? (question.options ? question.options.indexOf(ans) + 1 : null) : null;
-            })
-            .filter((ans) => ans !== null);
-          return {
-            id: question.id,
-            type: question.type,
-            answer: filteredAnswers.length > 0 ? filteredAnswers : [],
-          };
-
-        default:
-          return null;
-      }
-    });
+    );
 
     const payload = {
       examId: uuid,
@@ -340,6 +397,10 @@ export default function PlayExamPage({
     }
   };
 
+  const handleFinishClick = () => {
+    setShowModal(true);
+  };
+
   const formatTimeLeft = (time: number) => {
     const minutes = Math.floor(time / 60);
     const seconds = time % 60;
@@ -356,11 +417,7 @@ export default function PlayExamPage({
       : 0;
   };
 
-  const moveItem = (
-    questionId: number,
-    fromIndex: number,
-    toIndex: number
-  ) => {
+  const moveItem = (questionId: number, fromIndex: number, toIndex: number) => {
     const currentAnswers = answers[questionId] || [];
 
     if (toIndex < 0 || toIndex >= currentAnswers.length) {
@@ -402,94 +459,209 @@ export default function PlayExamPage({
         {(() => {
           switch (question.type) {
             case "MSA":
-              return question.options?.map((option, index) => (
-                <label
-                  key={index}
-                  className={`flex items-center space-x-3 p-4 rounded-lg cursor-pointer transition-all mb-3 ${
-                    answers[question.id]?.includes(option)
-                      ? "bg-green-200"
-                      : "bg-white"
-                  } hover:bg-yellow-100`}
-                >
-                  <input
-                    type="radio"
-                    name={`question-${question.id}`}
-                    value={option}
-                    onChange={() => handleAnswerChange(question.id, [option])}
-                    checked={answers[question.id]?.includes(option) || false}
-                    className="cursor-pointer"
-                  />
-                  <div dangerouslySetInnerHTML={{ __html: option }}></div>
-                </label>
-              ));
+              return question.options?.map((option, index) => {
+                const isChecked = answers[question.id]?.includes(option);
+
+                return (
+                  <label
+                    key={index}
+                    className={`flex items-center justify-between space-x-3 p-3 bg-white border rounded-lg cursor-pointer transition-all mb-3 ${
+                      isChecked ? "border-defaultcolor" : "border-white"
+                    } hover:bg-yellow-100`}
+                  >
+                    {/* Circle for A, B, C, D */}
+                    <div className="flex items-center space-x-3">
+                      <div
+                        className={`flex items-center justify-center w-8 h-8 rounded-full text-black transition-all ${
+                          isChecked
+                            ? "bg-defaultcolor text-white"
+                            : "bg-gray-200"
+                        }`}
+                      >
+                        {String.fromCharCode(65 + index)}{" "}
+                        {/* Converts index 0,1,2,3 to A,B,C,D */}
+                      </div>
+                      <div
+                        className={`transition-all ${
+                          isChecked ? "text-defaultcolor" : "text-black"
+                        }`}
+                        dangerouslySetInnerHTML={{ __html: option }}
+                      ></div>
+                    </div>
+
+                    {/* Input on the right */}
+                    <input
+                      type="radio"
+                      name={`question-${question.id}`}
+                      value={option}
+                      onChange={() => handleAnswerChange(question.id, [option])}
+                      checked={isChecked || false}
+                      className={`cursor-pointer focus:ring-1 focus:ring-defaultcolor ${
+                        isChecked ? "checked:bg-defaultcolor" : ""
+                      }`}
+                    />
+                  </label>
+                );
+              });
 
             case "MMA":
-              return question.options?.map((option, index) => (
-                <label
-                  key={index}
-                  className={`flex items-center space-x-3 p-4 rounded-lg cursor-pointer transition-all mb-3 ${
-                    answers[question.id]?.includes(option)
-                      ? "bg-green-200"
-                      : "bg-white"
-                  } hover:bg-yellow-100`}
-                >
-                  <input
-                    type="checkbox"
-                    name={`question-${question.id}`}
-                    value={option}
-                    onChange={() => {
-                      const currentAnswers = answers[question.id] || [];
-                      const newAnswers = currentAnswers.includes(option)
-                        ? currentAnswers.filter((a) => a !== option)
-                        : [...currentAnswers, option];
-                      handleAnswerChange(question.id, newAnswers);
-                    }}
-                    checked={answers[question.id]?.includes(option) || false}
-                    className="cursor-pointer"
-                  />
-                  <div dangerouslySetInnerHTML={{ __html: option }}></div>
-                </label>
-              ));
+              return question.options?.map((option, index) => {
+                const isChecked = answers[question.id]?.includes(option);
+
+                return (
+                  <label
+                    key={index}
+                    className={`flex items-center justify-between space-x-3 p-3 bg-white border rounded-lg cursor-pointer transition-all mb-3 ${
+                      isChecked ? "border-defaultcolor" : "border-white"
+                    } hover:bg-yellow-100`}
+                  >
+                    {/* Circle for A, B, C, D */}
+                    <div className="flex items-center space-x-3">
+                      <div
+                        className={`flex items-center justify-center w-8 h-8 rounded-full text-black transition-all ${
+                          isChecked
+                            ? "bg-defaultcolor text-white"
+                            : "bg-gray-200"
+                        }`}
+                      >
+                        {String.fromCharCode(65 + index)}{" "}
+                        {/* Converts index 0,1,2,3 to A,B,C,D */}
+                      </div>
+                      <div
+                        className={`transition-all ${
+                          isChecked ? "text-defaultcolor" : "text-black"
+                        }`}
+                        dangerouslySetInnerHTML={{ __html: option }}
+                      ></div>
+                    </div>
+
+                    {/* Checkbox on the right */}
+                    <input
+                      type="checkbox"
+                      name={`question-${question.id}`}
+                      value={option}
+                      onChange={() => {
+                        const currentAnswers = answers[question.id] || [];
+                        const newAnswers = currentAnswers.includes(option)
+                          ? currentAnswers.filter((a) => a !== option)
+                          : [...currentAnswers, option];
+                        handleAnswerChange(question.id, newAnswers);
+                      }}
+                      checked={isChecked || false}
+                      className={`cursor-pointer focus:ring-1 focus:ring-defaultcolor ${
+                        isChecked ? "checked:bg-defaultcolor" : ""
+                      }`}
+                    />
+                  </label>
+                );
+              });
 
             case "TOF":
               return (
                 <div className="space-y-4">
-                  <label className="flex items-center space-x-3 p-4 rounded-lg cursor-pointer transition-all bg-white hover:bg-yellow-100">
+                  <label
+                    className={`flex items-center justify-between border p-3 rounded-lg cursor-pointer transition-all bg-white hover:bg-yellow-100 ${
+                      answers[question.id]?.includes("true")
+                        ? "border-defaultcolor"
+                        : "border-white"
+                    }`}
+                  >
+                    <div className="flex items-center space-x-3">
+                      {/* Circle for T (True) */}
+                      <div
+                        className={`flex items-center justify-center w-8 h-8 rounded-full text-black transition-all ${
+                          answers[question.id]?.includes("true")
+                            ? "bg-defaultcolor text-white"
+                            : "bg-gray-200"
+                        }`}
+                      >
+                        T
+                      </div>
+                      <span
+                        className={`transition-all ${
+                          answers[question.id]?.includes("true")
+                            ? "text-defaultcolor"
+                            : "text-black"
+                        }`}
+                      >
+                        True
+                      </span>
+                    </div>
+
+                    {/* Radio input for True */}
                     <input
                       type="radio"
                       name={`question-${question.id}`}
                       value="true"
                       onChange={() => handleAnswerChange(question.id, ["true"])}
                       checked={answers[question.id]?.includes("true") || false}
-                      className="cursor-pointer"
+                      className={`cursor-pointer focus:ring-1 focus:ring-defaultcolor ${
+                        answers[question.id]?.includes("true")
+                          ? "checked:bg-defaultcolor"
+                          : ""
+                      }`}
                     />
-                    <span>True</span>
                   </label>
-                  <label className="flex items-center space-x-3 p-4 rounded-lg cursor-pointer transition-all bg-white hover:bg-yellow-100">
+
+                  <label
+                    className={`flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-all bg-white hover:bg-yellow-100 ${
+                      answers[question.id]?.includes("false")
+                        ? "border-defaultcolor"
+                        : "border-white"
+                    }`}
+                  >
+                    <div className="flex items-center space-x-3">
+                      {/* Circle for F (False) */}
+                      <div
+                        className={`flex items-center justify-center w-8 h-8 rounded-full text-black transition-all ${
+                          answers[question.id]?.includes("false")
+                            ? "bg-defaultcolor text-white"
+                            : "bg-gray-200"
+                        }`}
+                      >
+                        F
+                      </div>
+                      <span
+                        className={`transition-all ${
+                          answers[question.id]?.includes("false")
+                            ? "text-defaultcolor"
+                            : "text-black"
+                        }`}
+                      >
+                        False
+                      </span>
+                    </div>
+
+                    {/* Radio input for False */}
                     <input
                       type="radio"
                       name={`question-${question.id}`}
                       value="false"
-                      onChange={() => handleAnswerChange(question.id, ["false"])}
+                      onChange={() =>
+                        handleAnswerChange(question.id, ["false"])
+                      }
                       checked={answers[question.id]?.includes("false") || false}
-                      className="cursor-pointer"
+                      className={`cursor-pointer focus:ring-1 focus:ring-defaultcolor ${
+                        answers[question.id]?.includes("false")
+                          ? "checked:bg-defaultcolor"
+                          : ""
+                      }`}
                     />
-                    <span>False</span>
                   </label>
                 </div>
               );
 
             case "SAQ":
               return (
-                <input
-                  type="text"
-                  className="w-full p-4 rounded-lg border border-gray-300"
+                <textarea
+                  className="w-full p-4 rounded-lg border border-gray-300 focus:ring-1 focus:ring-defaultcolor focus:border-defaultcolor"
                   placeholder="Type your answer here..."
                   value={answers[question.id]?.[0] || ""}
                   onChange={(e) =>
                     handleAnswerChange(question.id, [e.target.value])
                   }
-                />
+                  rows={4} // Adjust the number of rows as needed
+                ></textarea>
               );
 
             case "MTF":
@@ -505,12 +677,17 @@ export default function PlayExamPage({
                           dangerouslySetInnerHTML={{ __html: opt }}
                         ></p>
                         <select
-                          className="flex-1 p-2 rounded border border-gray-300"
+                          className="flex-1 p-2 rounded border border-gray-300 focus:ring-1 focus:ring-defaultcolor focus:border-defaultcolor"
                           onChange={(e) =>
-                            handleAnswerChange(question.id, [opt, e.target.value])
+                            handleAnswerChange(question.id, [
+                              opt,
+                              e.target.value,
+                            ])
                           }
                           value={
-                            answers[question.id]?.find((pair) => pair[0] === opt)?.[1] || ""
+                            answers[question.id]?.find(
+                              (pair) => pair[0] === opt
+                            )?.[1] || ""
                           }
                         >
                           <option value="">Select match</option>
@@ -539,21 +716,27 @@ export default function PlayExamPage({
                     {answers[question.id]?.map((option, index) => (
                       <li
                         key={index}
-                        className="p-4 bg-white rounded-lg mb-2 flex items-center justify-between"
+                        className="p-3 bg-white rounded-lg mb-2 flex items-center justify-between"
                       >
                         <div dangerouslySetInnerHTML={{ __html: option }}></div>
                         <div className="flex items-center space-x-2">
                           <button
                             className="p-2 bg-gray-300 rounded hover:bg-gray-400"
-                            onClick={() => moveItem(question.id, index, index - 1)}
+                            onClick={() =>
+                              moveItem(question.id, index, index - 1)
+                            }
                             disabled={index === 0}
                           >
                             ↑
                           </button>
                           <button
                             className="p-2 bg-gray-300 rounded hover:bg-gray-400"
-                            onClick={() => moveItem(question.id, index, index + 1)}
-                            disabled={index === (answers[question.id]?.length || 0) - 1}
+                            onClick={() =>
+                              moveItem(question.id, index, index + 1)
+                            }
+                            disabled={
+                              index === (answers[question.id]?.length || 0) - 1
+                            }
                           >
                             ↓
                           </button>
@@ -566,7 +749,7 @@ export default function PlayExamPage({
 
             case "FIB":
               // Assuming question.options[0] contains the number of blanks
-              const numberOfBlanks = parseInt(question.options?.[0] ?? "0", 10); // Fallback to "0" if undefined
+              const numberOfBlanks = parseInt(question.options?.[0] ?? "0", 10);
 
               return (
                 <div>
@@ -574,17 +757,17 @@ export default function PlayExamPage({
                     <input
                       key={index}
                       type="text"
-                      className="p-4 rounded-lg border border-gray-300 w-full mb-2"
-                      placeholder={`Answer ${index + 1}`} // Placeholder to label each input
-                      value={answers[question.id]?.[index] || ""} // Bind value to the corresponding answer in the array
+                      className="p-3 w-full rounded-lg border border-gray-300 focus:ring-1 focus:ring-defaultcolor focus:border-defaultcolor mb-2"
+                      placeholder={`Answer ${index + 1}`}
+                      value={answers[question.id]?.[index] || ""}
                       onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                        // Create a new array to store the updated answers
-                        const newAnswers = [...(answers[question.id] || Array(numberOfBlanks).fill(""))];
+                        const newAnswers = [
+                          ...(answers[question.id] ||
+                            Array(numberOfBlanks).fill("")),
+                        ];
 
-                        // Update the specific blank (index) with the new value
                         newAnswers[index] = e.target.value;
 
-                        // Call handleAnswerChange to update the state
                         handleAnswerChange(question.id, newAnswers);
                       }}
                     />
@@ -597,7 +780,7 @@ export default function PlayExamPage({
                 <div>
                   {Array.isArray(question.question) &&
                     question.question.map((subQuestion, questionIndex) => (
-                      <div key={questionIndex} className="mb-4 ">
+                      <div key={questionIndex} className="mb-4">
                         {questionIndex > 0 && (
                           <div>
                             <b>{"Question " + questionIndex}</b>
@@ -607,29 +790,66 @@ export default function PlayExamPage({
                                 __html: subQuestion,
                               }}
                             ></p>
-                            {question.options?.map((option, index) => (
-                              <label
-                                key={index}
-                                className={`flex items-center space-x-3 p-4 rounded-lg cursor-pointer transition-all mb-3 ${
-                                  answers[question.id]?.includes(option)
-                                    ? "bg-green-200"
-                                    : "bg-white"
-                                } hover:bg-yellow-100`}
-                              >
-                                <input
-                                  type="radio"
-                                  name={`question-${question.id}-${questionIndex}`}
-                                  value={option}
-                                  onChange={() =>
-                                    handleAnswerChange(question.id, [option], questionIndex)
-                                  }
-                                  className="cursor-pointer"
-                                />
-                                <div
-                                  dangerouslySetInnerHTML={{ __html: option }}
-                                ></div>
-                              </label>
-                            ))}
+
+                            {question.options?.map((option, index) => {
+                              const isChecked =
+                                answers[question.id]?.[questionIndex]?.includes(
+                                  option
+                                );
+
+                              return (
+                                <label
+                                  key={index}
+                                  className={`flex items-center justify-between p-3 border rounded-lg cursor-pointer transition-all mb-3 ${
+                                    isChecked
+                                      ? "border-defaultcolor bg-white"
+                                      : "border-white bg-white"
+                                  } hover:bg-yellow-100`}
+                                >
+                                  {/* Circle for A, B, C, D */}
+                                  <div className="flex items-center space-x-3">
+                                    <div
+                                      className={`flex items-center justify-center w-8 h-8 rounded-full text-black transition-all ${
+                                        isChecked
+                                          ? "bg-defaultcolor text-white"
+                                          : "bg-gray-200"
+                                      }`}
+                                    >
+                                      {String.fromCharCode(65 + index)}{" "}
+                                      {/* Converts index 0,1,2,3 to A,B,C,D */}
+                                    </div>
+                                    <div
+                                      className={`transition-all ${
+                                        isChecked
+                                          ? "text-defaultcolor"
+                                          : "text-black"
+                                      }`}
+                                      dangerouslySetInnerHTML={{
+                                        __html: option,
+                                      }}
+                                    ></div>
+                                  </div>
+
+                                  {/* Radio input on the right */}
+                                  <input
+                                    type="radio"
+                                    name={`question-${question.id}-${questionIndex}`}
+                                    value={option}
+                                    onChange={() =>
+                                      handleAnswerChange(
+                                        question.id,
+                                        [option],
+                                        questionIndex
+                                      )
+                                    }
+                                    checked={isChecked || false}
+                                    className={`cursor-pointer focus:ring-1 focus:ring-defaultcolor ${
+                                      isChecked ? "checked:bg-defaultcolor" : ""
+                                    }`}
+                                  />
+                                </label>
+                              );
+                            })}
                           </div>
                         )}
                       </div>
@@ -654,14 +874,16 @@ export default function PlayExamPage({
     <div className="dashboard-page flex flex-col md:flex-row gap-6">
       {/* Main Exam Content */}
       <div className="flex-1 lg:p-6 bg-white rounded-lg shadow-sm p-4">
-       
         {!submitted ? (
           <>
-
+            <h1 className="text-2xl font-semibold mb-5 flex items-center gap-2">
+              <FaBook className="text-defaultcolor" /> {examData.title}
+            </h1>
             <div className="border-s-4 border-defaultcolor bg-[#f6f7f9] p-4">
               <div className="flex justify-between mb-4">
                 <h3 className="text-2xl font-semibold text-defaultcolor">
-                  Question {currentQuestionIndex + 1}/{examData.questions.length}
+                  Question {currentQuestionIndex + 1}/
+                  {examData.questions.length}
                 </h3>
                 <FaClock className="text-defaultcolor" size={24} />
               </div>
@@ -670,7 +892,6 @@ export default function PlayExamPage({
                 {renderQuestion(examData.questions[currentQuestionIndex])}
               </div>
             </div>
-         
 
             <div className="flex justify-between mt-6">
               <button
@@ -691,12 +912,12 @@ export default function PlayExamPage({
               ) : examData?.finish_button === "enable" ? ( // Check if finish_button is enabled
                 <button
                   className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors"
-                  onClick={handleSubmit}
+                  onClick={handleFinishClick} // Trigger modal on click
                 >
                   Submit Exam
                 </button>
               ) : (
-               <></>
+                <></>
               )}
             </div>
           </>
@@ -725,40 +946,58 @@ export default function PlayExamPage({
           </div>
         )}
       </div>
-
-      {/* Sidebar for Timer and Progress */}
       {!submitted && timeLeft > 0 && (
-        <div className="w-full md:w-1/3 bg-white shadow-sm p-4 lg:p-6 rounded-lg">
-          {/* Time Remaining */}
-          <div className="mb-6 text-center">
-            <h3 className="text-gray-600 font-semibold">Time Remaining</h3>
-            <p className="text-3xl text-orange-600 font-semibold">
-              {formatTimeLeft(timeLeft)}
+        <div className="w-full md:w-1/3 bg-white shadow-lg rounded-lg p-6 space-y-5">
+          {/* Exam Name and Total Time */}
+          <div className="flex justify-between items-center  bg-indigo-100 p-3 rounded-md">
+            <div className="flex items-center space-x-2">
+              <AiOutlineClockCircle className="text-indigo-600" size={22} />
+              <h3 className="text-lg font-semibold text-indigo-700">
+                Total Time
+              </h3>
+            </div>
+            <p className="text-lg font-bold text-indigo-800">
+              {parseFloat(examData.duration).toFixed(0)} mins
             </p>
           </div>
 
+          {/* Time Remaining */}
+          <div className="text-center flex justify-between items-center  bg-orange-100 p-4 rounded-md space-x-2">
+            <AiOutlineClockCircle className="text-orange-500" size={36} />
+            <p className="text-5xl font-bold text-orange-600">
+              {formatTimeLeft(timeLeft)}
+            </p>
+            <AiOutlineClockCircle className="text-orange-500" size={36} />
+          </div>
+
           {/* Answered and Skipped Count */}
-          <div className="mb-6 text-center">
-            <div className="flex justify-around">
-              <div className="flex items-center space-x-2">
-                <FaRegSmile className="text-green-500" size={20} />
-                <span className="text-gray-700">
-                  Attempted: {getAnsweredCount()}
+          <div className="flex justify-around items-center space-x-2 text-center mb-6">
+            <div className="w-1/2 flex items-center justify-center space-x-2 px-5 py-1 rounded-md bg-green-100 shadow-inner">
+              <FaRegSmile className="text-green-600" size={20} />
+              <span className="text-md font-medium text-green-700">
+                Attempted:{" "}
+                <span className="text-lg font-semibold">
+                  {getAnsweredCount()}
                 </span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <FaRegFrown className="text-yellow-500" size={20} />
-                <span className="text-gray-700">Skipped: {getSkippedCount()}</span>
-              </div>
+              </span>
+            </div>
+            <div className="w-1/2  flex items-center justify-center space-x-2 px-5 py-1 rounded-md bg-yellow-100 shadow-inner">
+              <FaRegFrown className="text-yellow-600" size={20} />
+              <span className="text-md font-medium text-yellow-700">
+                Skipped:{" "}
+                <span className="text-lg font-semibold">
+                  {getSkippedCount()}
+                </span>
+              </span>
             </div>
           </div>
 
           {/* Progress Bar */}
           <div className="mb-6">
-            <p className="font-semibold text-gray-700 mb-2">Progress</p>
-            <div className="h-2 w-full bg-gray-200 rounded-lg overflow-hidden mt-2">
+            <p className="text-lg font-medium text-gray-700 mb-2">Progress</p>
+            <div className="h-2 w-full bg-gray-200 rounded-full overflow-hidden">
               <div
-                className="h-full bg-defaultcolor"
+                className="h-full bg-defaultcolor rounded-full"
                 style={{
                   width: `${
                     (Object.keys(answers).length / examData.questions.length) *
@@ -770,59 +1009,97 @@ export default function PlayExamPage({
           </div>
 
           {/* Question Navigation Grid */}
-          {examData?.question_view === 'enable' ? (
-            <div className="grid grid-cols-5 gap-2 text-center">
-              {examData.questions.map((question, index) => (
-                <div
-                  key={index}
-                  className={`p-2 rounded-lg border transition-colors ${
-                    currentQuestionIndex === index
-                      ? "bg-defaultcolor text-white"
-                      : answers[question.id]
-                      ? "bg-green-200 text-black"
-                      : "bg-yellow-200 text-black"
-                  }`}
-                  onClick={() => examData.question_view === 'enable' && setCurrentQuestionIndex(index)} // Only change question if enabled
-                  style={{
-                    cursor: examData.question_view === 'enable' ? 'pointer' : 'not-allowed', // Disable cursor if question view is disabled
-                  }}
-                >
-                  {index + 1}
-                </div>
-              ))}
+          {examData.question_view === "enable" ? (
+            <div className="flex items-center justify-center flex-wrap gap-3 text-center">
+              {examData.questions.map((question, index) => {
+                const isActive = currentQuestionIndex === index;
+                const isAnswered = !!answers[question.id];
+
+                return (
+                  <div
+                    key={index}
+                    className={`relative flex items-center justify-center text-lg w-12 h-12 border transition duration-200  bg-white ${
+                      isActive
+                        ? "border-defaultcolor text-defaultcolor shadow-lg"
+                        : isAnswered
+                        ? "border-green-500 text-green-500"
+                        : "border-yellow-300 text-yellow-600"
+                    }`}
+                    onClick={() => setCurrentQuestionIndex(index)}
+                    style={{
+                      cursor:
+                        examData.question_view === "enable"
+                          ? "pointer"
+                          : "not-allowed",
+                    }}
+                  >
+                    {index + 1}
+                    <div
+                      className={`absolute inset-x-0 bottom-0 h-2  ${
+                        isActive
+                          ? "bg-defaultcolor"
+                          : isAnswered
+                          ? "bg-green-500"
+                          : "bg-yellow-300"
+                      }`}
+                    ></div>
+                  </div>
+                );
+              })}
             </div>
           ) : (
-            <div className="grid grid-cols-5 gap-2 text-center">
-              {examData.questions.map((question, index) => (
-                <div
-                  key={index}
-                  className={`p-2 rounded-lg border ${
-                    currentQuestionIndex === index
-                      ? "bg-defaultcolor text-white"
-                      : answers[question.id]
-                      ? "bg-green-200 text-black"
-                      : "bg-yellow-200 text-black"
-                  } cursor-not-allowed`}
-                >
-                  {index + 1}
-                </div>
-              ))}
+            <div className="flex items-center justify-center flex-wrap text-lg gap-3 text-center">
+              {examData.questions.map((question, index) => {
+                const isActive = currentQuestionIndex === index;
+                const isAnswered = !!answers[question.id];
+
+                return (
+                  <div
+                    key={index}
+                    className={`relative flex items-center justify-center w-12 h-12 border transition-colors duration-200 bg-white cursor-not-allowed  ${
+                      isActive
+                        ? "border-defaultcolor text-gray-900 shadow"
+                        : isAnswered
+                        ? "border-green-500 text-gray-900"
+                        : "border-yellow-300 text-gray-900"
+                    }`}
+                  >
+                    {index + 1}
+                    <div
+                      className={`absolute inset-x-0 bottom-0 h-2  ${
+                        isActive
+                          ? "bg-defaultcolor"
+                          : isAnswered
+                          ? "bg-green-500"
+                          : "bg-yellow-300"
+                      }`}
+                    ></div>
+                  </div>
+                );
+              })}
             </div>
           )}
 
           {/* Exam Instructions */}
-          <div className="mt-3 ">
-            <h3 className="text-lg text-gray-700 font-semibold">Exam Guide</h3>
-            <p className="text-sm text-gray-500">
+          <div className="mt-3 text-center">
+            <h3 className="text-lg font-semibold text-gray-700">Exam Guide</h3>
+            <p className="text-sm text-gray-600 leading-relaxed">
               - Answer all questions to the best of your ability.
               <br />
               - You can navigate between questions.
-              <br />
-              - Make sure to submit your exam before time runs out.
+              <br />- Make sure to submit your exam before time runs out.
             </p>
           </div>
+
+          <button
+            className="bg-red-500 block text-white w-full px-4 py-2 rounded-lg hover:bg-green-600 transition-colors"
+            onClick={handleFinishClick} // Trigger modal on click
+          >
+            Finish Exam
+          </button>
         </div>
       )}
+      {showModal && <ConfirmationModal />}{" "}
     </div>
   );
 }

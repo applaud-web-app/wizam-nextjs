@@ -8,17 +8,14 @@ import {
   FaTimes,
   FaRegCircle,
   FaRibbon,
-  FaQuestionCircle,
-  FaMinusCircle,
-  FaClock,
 } from "react-icons/fa";
 import { toast } from "react-toastify";
 import Cookies from "js-cookie";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 import Loader from "@/components/Common/Loader";
+import Link from "next/link";
 import ExamReportGenerator from "@/components/ReportCardGenerator";
-import { FaArrowLeftLong } from "react-icons/fa6";
 
 // TypeScript interfaces
 interface Option {
@@ -44,7 +41,6 @@ interface QuizData {
 }
 
 interface UserExamResult {
-  title: string;
   correctCount: number;
   wrongCount: number;
   skippedCount: number;
@@ -53,6 +49,7 @@ interface UserExamResult {
   timeTaken?: number;
   uuid: string;
   download_report: number;
+
 }
 
 interface LeaderboardEntry {
@@ -74,10 +71,7 @@ const ExamResult = ({ params }: ExamResultProps) => {
   );
   const [leaderBoard, setLeaderBoard] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
-  const [activeTab, setActiveTab] = useState<string>("A"); // New state for tabs
   const router = useRouter();
-
-  const handleTabClick = (tab: string) => setActiveTab(tab);
 
   useEffect(() => {
     const { slug } = params;
@@ -118,8 +112,8 @@ const ExamResult = ({ params }: ExamResultProps) => {
             status: resultData.result.status,
             timeTaken: resultData.result.timeTaken,
             uuid: resultData.result.uuid,
-            download_report: resultData.exam.download_report,
-            title: resultData.exam.title,
+            download_report: resultData.exam.download_report, 
+
           });
 
           setLeaderBoard(resultData.leaderBoard || []);
@@ -180,35 +174,28 @@ const ExamResult = ({ params }: ExamResultProps) => {
             {question.options?.map((option, index) => (
               <div
                 key={index}
-                className={`flex justify-between border items-center p-3 rounded-md mb-2 ${
+                className={`flex items-center p-3 rounded-md mb-2 ${
                   typeof question.correctAnswer === "string" &&
                   parseInt(question.correctAnswer) - 1 === index
-                    ? "bg-green-500 text-white"
+                    ? "bg-green-100"
                     : typeof question.userAnswer === "number" &&
                       question.userAnswer - 1 === index
-                    ? "bg-red-500 text-white"
-                    : "bg-white"
+                    ? "bg-red-100"
+                    : "bg-gray-100"
                 }`}
               >
-                {/* Left Circle Icon with letter */}
-                <span
-                  className={`flex items-center justify-center w-6 h-6 rounded-full  mr-2 font-bold ${
-                    typeof question.correctAnswer === "string" &&
-                    parseInt(question.correctAnswer) - 1 === index
-                      ? "bg-white text-green-500"
-                      : typeof question.userAnswer === "number" &&
-                        question.userAnswer - 1 === index
-                      ? "bg-white text-red-500"
-                      : " bg-gray-200 text-gray-700"
-                  }`}
-                >
-                  {String.fromCharCode(65 + index)}{" "}
-                  {/* Renders A, B, C, D, etc. */}
+                <span className="mr-2">
+                  {typeof question.correctAnswer === "string" &&
+                  parseInt(question.correctAnswer) - 1 === index ? (
+                    <FaCheck className="text-green-500" />
+                  ) : typeof question.userAnswer === "number" &&
+                    question.userAnswer - 1 === index ? (
+                    <FaTimes className="text-red-500" />
+                  ) : (
+                    <FaRegCircle className="text-gray-400" />
+                  )}
                 </span>
-
-                {/* Option text */}
                 <div
-                  className="flex-grow"
                   dangerouslySetInnerHTML={{
                     __html:
                       typeof option === "string"
@@ -216,19 +203,6 @@ const ExamResult = ({ params }: ExamResultProps) => {
                         : (option as Option).text,
                   }}
                 />
-
-                {/* Right Icon for correct or incorrect indication */}
-                <span className="ml-2">
-                  {typeof question.correctAnswer === "string" &&
-                  parseInt(question.correctAnswer) - 1 === index ? (
-                    <FaCheck className="text-white" />
-                  ) : typeof question.userAnswer === "number" &&
-                    question.userAnswer - 1 === index ? (
-                    <FaTimes className="text-white" />
-                  ) : (
-                    <FaRegCircle className="text-gray-400" />
-                  )}
-                </span>
               </div>
             ))}
             <p className="font-semibold text-red-500">
@@ -255,7 +229,7 @@ const ExamResult = ({ params }: ExamResultProps) => {
         return (
           <div>
             {Array.from({ length: blanks }).map((_, index) => (
-              <div key={index} className="p-4 bg-white rounded-lg mb-2">
+              <div key={index} className="p-4 bg-gray-100 rounded-lg mb-2">
                 <p className="font-semibold">
                   {Array.isArray(question.userAnswer)
                     ? `Your Answer: ${question.userAnswer[index] || "Skipped"}`
@@ -272,24 +246,24 @@ const ExamResult = ({ params }: ExamResultProps) => {
           </div>
         );
 
-      case "MTF": // Match the Following
+        case "MTF": // Match the Following
         const correctAnswerPairs = Object.entries(
           question.correctAnswer as Record<string, string>
         );
         const userAnswerPairs = Object.entries(
           (question.userAnswer as Record<string, string>) || {}
         );
-
+      
         return (
           <div>
             <p className="mb-4 font-medium">Match the following:</p>
             {correctAnswerPairs.map(([key, correctValue], index) => (
               <div key={index} className="flex space-x-4 mb-4">
-                <div className="flex-1 p-2 rounded bg-white">
+                <div className="flex-1 p-2 rounded bg-gray-100">
                   <div dangerouslySetInnerHTML={{ __html: key }} />
                 </div>
-
-                <div className="flex-1 p-2 rounded bg-yellow-50">
+      
+                <div className="flex-1 p-2 rounded bg-gray-200">
                   {userAnswerPairs[index] ? (
                     <div
                       dangerouslySetInnerHTML={{
@@ -300,14 +274,13 @@ const ExamResult = ({ params }: ExamResultProps) => {
                     <p className="text-red-500">No answer</p>
                   )}
                 </div>
-
-                <div className="flex-1 p-2 rounded bg-green-50">
-                  <span className="text-green-500">Correct:</span>{" "}
-                  <div dangerouslySetInnerHTML={{ __html: correctValue }} />
+      
+                <div className="flex-1 p-2 rounded bg-gray-300">
+                  Correct: <div dangerouslySetInnerHTML={{ __html: correctValue }} />
                 </div>
               </div>
             ))}
-
+            
             {/* Your Answer Section */}
             <div className="mt-4">
               <h4 className="font-semibold">Your Answers:</h4>
@@ -320,7 +293,7 @@ const ExamResult = ({ params }: ExamResultProps) => {
                 ))}
               </ul>
             </div>
-
+      
             {/* Correct Answer Section */}
             <div className="mt-4">
               <h4 className="font-semibold">Correct Answers:</h4>
@@ -335,10 +308,10 @@ const ExamResult = ({ params }: ExamResultProps) => {
             </div>
           </div>
         );
-
+      
       case "SAQ": // Short Answer Question
         return (
-          <div className="p-4 bg-white rounded-lg">
+          <div className="p-4 bg-gray-100 rounded-lg">
             <p className="font-semibold">
               Your Answer:{" "}
               <span
@@ -358,71 +331,66 @@ const ExamResult = ({ params }: ExamResultProps) => {
           </div>
         );
 
-      case "ORD": // Ordering
+        case "ORD": // Ordering
         return (
           <div>
             <ul>
               {Array.isArray(question.userAnswer) ? (
-                question.userAnswer.map((answerIndex: any, index) => (
+                question.userAnswer.map((answerIndex:any, index) => (
                   <li
                     key={index}
-                    className="p-4 bg-white rounded-lg mb-2 flex items-center justify-between"
+                    className="p-4 bg-gray-100 rounded-lg mb-2 flex items-center justify-between"
                   >
                     {/* Display the text corresponding to user answer using dangerouslySetInnerHTML */}
                     <span
                       dangerouslySetInnerHTML={{
                         __html:
-                          question.options &&
-                          typeof question.options[answerIndex] === "string"
+                          question.options && typeof question.options[answerIndex] === "string"
                             ? question.options[answerIndex] // Show text from options if available
                             : "No answer provided",
                       }}
                     />
-
+      
                     {/* Show correct answer if available using dangerouslySetInnerHTML */}
-                    {Array.isArray(question.correctAnswer) &&
-                    index < question.correctAnswer.length ? (
-                      <span
-                        className="text-green-600"
-                        dangerouslySetInnerHTML={{
-                          __html:
-                            question.options &&
-                            // Ensure the index is a number before accessing options
-                            typeof question.correctAnswer[index] === "number" &&
-                            typeof question.options[
-                              question.correctAnswer[index] as number
-                            ] === "string"
-                              ? (question.options[
-                                  question.correctAnswer[index] as number
-                                ] as string) // Cast to string
-                              : "No correct answer available",
-                        }}
-                      />
-                    ) : null}
+                    {Array.isArray(question.correctAnswer) && index < question.correctAnswer.length ? (
+                        <span
+                          className="text-green-600"
+                          dangerouslySetInnerHTML={{
+                            __html:
+                              question.options &&
+                              // Ensure the index is a number before accessing options
+                              typeof question.correctAnswer[index] === "number" &&
+                              typeof question.options[question.correctAnswer[index] as number] === "string"
+                                ? (question.options[question.correctAnswer[index] as number] as string) // Cast to string
+                                : "No correct answer available",
+                          }}
+                        />
+                      ) : null}
+
+
                   </li>
                 ))
               ) : (
-                <li className="p-4 bg-white rounded-lg mb-2 flex items-center justify-between">
+                <li className="p-4 bg-gray-100 rounded-lg mb-2 flex items-center justify-between">
                   {typeof question.userAnswer === "string"
                     ? question.userAnswer
                     : "No answer provided"}
                 </li>
               )}
             </ul>
-
+      
             {/* Display User's and Correct Answers */}
             <div className="mt-4">
               <div className="flex">
                 <p className="font-semibold mr-3">Your Answers:</p>
                 <ul className="flex space-x-3">
                   {Array.isArray(question.userAnswer) ? (
-                    question.userAnswer.map((answerIndex: any, index) => (
+                    question.userAnswer.map((answerIndex:any, index) => (
                       <li key={index} className="text-red-600 flex space-x-3">
                         <span
                           dangerouslySetInnerHTML={{
                             __html:
-                              question.options &&
-                              typeof question.options[answerIndex] === "string"
+                              question.options && typeof question.options[answerIndex] === "string"
                                 ? question.options[answerIndex]
                                 : "No answer available",
                           }}
@@ -431,26 +399,21 @@ const ExamResult = ({ params }: ExamResultProps) => {
                       </li>
                     ))
                   ) : (
-                    <li>
-                      {typeof question.userAnswer === "string"
-                        ? question.userAnswer
-                        : "No answer provided"}
-                    </li>
+                    <li>{typeof question.userAnswer === "string" ? question.userAnswer : "No answer provided"}</li>
                   )}
                 </ul>
               </div>
-
+      
               <div className="flex">
                 <p className="font-semibold mr-3">Correct Answers:</p>
                 <ul className="flex space-x-3">
                   {Array.isArray(question.correctAnswer) ? (
-                    question.correctAnswer.map((correctIndex: any, index) => (
+                    question.correctAnswer.map((correctIndex:any, index) => (
                       <li key={index} className="text-green-600 flex space-x-3">
                         <span
                           dangerouslySetInnerHTML={{
                             __html:
-                              question.options &&
-                              typeof question.options[correctIndex] === "string"
+                              question.options && typeof question.options[correctIndex] === "string"
                                 ? question.options[correctIndex]
                                 : "No correct answer available",
                           }}
@@ -459,19 +422,19 @@ const ExamResult = ({ params }: ExamResultProps) => {
                       </li>
                     ))
                   ) : (
-                    <li>
-                      {typeof question.correctAnswer === "string"
-                        ? question.correctAnswer
-                        : "No correct answer available"}
-                    </li>
+                    <li>{typeof question.correctAnswer === "string" ? question.correctAnswer : "No correct answer available"}</li>
                   )}
                 </ul>
               </div>
             </div>
           </div>
         );
+      
+      
+      
+      
 
-      case "EMQ": // Extended Matching Questions
+        case "EMQ": // Extended Matching Questions
         return (
           <div>
             {Array.isArray(question.question) &&
@@ -483,43 +446,39 @@ const ExamResult = ({ params }: ExamResultProps) => {
                       className="font-medium"
                       dangerouslySetInnerHTML={{ __html: subQuestion }}
                     />
-
+      
                     {/* Render options for the current sub-question */}
                     {question.options?.map((option, index) => {
                       // Initialize userAnswerIndex and correctAnswerIndex
                       let userAnswerIndex: number | null = null; // Explicitly define as number | null
                       let correctAnswerIndex: number | null = null; // Explicitly define as number | null
-
+      
                       // Check if userAnswer is an array and get the relevant index
                       if (Array.isArray(question.userAnswer)) {
                         const userAnswer = question.userAnswer[questionIndex]; // Get user answer
-
+      
                         // Convert userAnswer to a number if it's a string
-                        userAnswerIndex =
-                          typeof userAnswer === "string"
-                            ? Number(userAnswer)
-                            : userAnswer;
-                      } else if (typeof question.userAnswer === "number") {
+                        userAnswerIndex = typeof userAnswer === 'string' ? Number(userAnswer) : userAnswer;
+                      } else if (typeof question.userAnswer === 'number') {
                         userAnswerIndex = question.userAnswer; // If it's a single number
                       }
-
+      
                       // Check if correctAnswer is an array and get the relevant index
                       if (Array.isArray(question.correctAnswer)) {
                         const answer = question.correctAnswer[questionIndex]; // Get the correct answer
-
+      
                         // Convert correct answer to number if it's a string
-                        correctAnswerIndex =
-                          typeof answer === "string" ? Number(answer) : answer;
-                      } else if (typeof question.correctAnswer === "number") {
+                        correctAnswerIndex = typeof answer === 'string' ? Number(answer) : answer;
+                      } else if (typeof question.correctAnswer === 'number') {
                         correctAnswerIndex = question.correctAnswer; // If it's a single number
                       }
-
+      
                       // Check if this option is the user's answer
                       const isUserAnswer = userAnswerIndex === index + 1; // Convert index to 1-based
-
+      
                       // Ensure correctAnswerIndex is a number before comparison
                       const isCorrectAnswer = correctAnswerIndex === index + 1; // Convert index to 1-based
-
+      
                       return (
                         <div
                           key={index}
@@ -528,12 +487,10 @@ const ExamResult = ({ params }: ExamResultProps) => {
                               ? "bg-green-200" // Highlight correct answers
                               : isUserAnswer
                               ? "bg-red-200" // Highlight user answers
-                              : "bg-white"
+                              : "bg-gray-100"
                           }`}
                         >
-                          <div
-                            dangerouslySetInnerHTML={{ __html: String(option) }}
-                          />
+                          <div dangerouslySetInnerHTML={{ __html: String(option) }} />
                           {isUserAnswer && (
                             <p className="text-red-600">
                               <strong>Your Answer</strong>
@@ -550,7 +507,7 @@ const ExamResult = ({ params }: ExamResultProps) => {
                   </div>
                 ))}
           </div>
-        );
+        );   
 
       default:
         return <p>Unknown question type</p>;
@@ -560,245 +517,176 @@ const ExamResult = ({ params }: ExamResultProps) => {
   const renderQuestionResult = (question: Question, index: number) => {
     return (
       <div
-        key={question.id}
-        className={`p-4 border-l-[12px] bg-[#f6f7f9] ${
-          !question.userAnswer ||
-          (Array.isArray(question.userAnswer) &&
-            question.userAnswer.length === 0)
-            ? "border-yellow-500"
-            : "border-green-500"
-        }`}
-      >
-        <h3 className="text-base font-semibold mb-2">
-          <span className="underline">Question {index + 1}:</span>{" "}
-          <div
-            className="bg-white p-2 rounded-lg"
-            dangerouslySetInnerHTML={{
-              __html: Array.isArray(question.question)
-                ? question.question[0]
-                : question.question,
-            }}
-          />
-        </h3>
-        {renderOptions(question)}
-      </div>
+      key={question.id}
+      className={`p-4 border rounded-lg bg-white shadow-sm ${
+        !question.userAnswer || 
+        (Array.isArray(question.userAnswer) && question.userAnswer.length === 0)
+          ? "bg-yellow-50"
+          : ""
+      }`}
+    >
+      <h3 className="text-lg font-semibold mb-2">
+        <span className="underline">Question {index + 1}:</span>{" "}
+        <div
+          dangerouslySetInnerHTML={{
+            __html: Array.isArray(question.question)
+              ? question.question[0]
+              : question.question,
+          }}
+        />
+      </h3>
+      {renderOptions(question)}
+    </div>
     );
   };
 
   // Render Leaderboard and Question Results
   return (
     <div className="dashboard-page">
-      {/* START  */}
-
-      <div className="flex items-center space-x-3 mb-6">
-        <button
-          onClick={() => router.back()}
-          className="text-gray-500 hover:text-defaultcolor flex items-center"
-        >
-          <FaArrowLeftLong className="text-gray-900" size={24} />
-        </button>
-        <h1 className="text-3xl font-bold">{userExamResult.title}</h1>
-      </div>
-
-    
-
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-        <button
-          className={`px-4 py-2 text-lg border-b-4  bg-white text-gray-900 ${
-            activeTab === "A" ? "border-defaultcolor" : "border-gray-200"
-          }`}
-          onClick={() => handleTabClick("A")}
-        >
-          Analysis
-        </button>
-        <button
-          className={`px-4 py-2 text-lg border-b-4  bg-white text-gray-900 ${
-            activeTab === "B" ? "border-defaultcolor" : "border-gray-200"
-          }`}
-          onClick={() => handleTabClick("B")}
-        >
-          Solution
-        </button>
-        <button
-          className={`px-4 py-2 text-lg border-b-4  bg-white text-gray-900 ${
-            activeTab === "C" ? "border-defaultcolor" : "border-gray-200"
-          }`}
-          onClick={() => handleTabClick("C")}
-        >
-          Top Scores
-        </button>
-        {/* Check if download_report is enabled */}
-        {userExamResult?.download_report === 1 && (
-          <ExamReportGenerator uuid={userExamResult.uuid} />
-        )}
-      </div>
-
-      {activeTab === "A" && (
-        <div>
-          {/* Tab A Content */}
-          <div className="text-center mb-8">
-            {passed ? (
-              <div className="bg-white p-6 rounded-lg shadow-sm">
-                <FaCheckCircle
-                  className="text-green-500 mx-auto mb-3"
-                  size={60}
-                />
-                <h1 className="text-4xl font-bold text-green-500">
-                  Congratulations! You Passed!
-                </h1>
-                <p className="text-gray-600 mt-2">
-                  You have successfully passed the exam.
-                </p>
-              </div>
-            ) : (
-              <div className="bg-white p-6 rounded-lg shadow-sm">
-                <FaTimesCircle
-                  className="text-red-500 mx-auto mb-3"
-                  size={60}
-                />
-                <h1 className="text-4xl font-bold text-red-500">
-                  Sorry, You Failed
-                </h1>
-                <p className="text-gray-600 mt-2">
-                  You did not reach the required score to pass the exam.
-                </p>
-              </div>
-            )}
-          </div>
-          {/* Tab B Content - Exam Result Breakdown */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-5 mb-5">
-            <ResultCard
-              title="Total Questions"
-              value={totalQuestions}
-              icon={<FaQuestionCircle className="text-blue-700" size={32} />}
-            />
-            <ResultCard
-              title="Correct Answers"
-              value={userExamResult.correctCount}
-              icon={<FaCheckCircle className="text-green-700" size={32} />}
-            />
-            <ResultCard
-              title="Wrong Answers"
-              value={userExamResult.wrongCount}
-              icon={<FaTimesCircle className="text-red-700" size={32} />}
-            />
-            <ResultCard
-              title="Skipped"
-              value={userExamResult.skippedCount}
-              icon={<FaMinusCircle className="text-orange-700" size={32} />}
-            />
-            <ResultCard
-              title="Marks"
-              value={userExamResult.marks}
-              icon={<FaRibbon className="text-purple-700" size={32} />}
-            />
-            <ResultCard
-              title="Time Taken"
-              value={formatTimeTaken(userExamResult.timeTaken)}
-              icon={<FaClock className="text-teal-700" size={32} />}
-            />
-          </div>
-        </div>
-      )}
-
-      {activeTab === "B" && (
-        <div>
-          {/* Render Questions */}
-          <div className="mb-8 bg-white p-5 rounded-lg shadow-sm">
-
-            <div className="grid gap-6">
-              {quizData.questions.map((question, index) =>
-                renderQuestionResult(question, index)
-              )}
+      <div className="w-full">
+        {/* Pass/Fail Message */}
+        <div className="text-center mb-8">
+          {passed ? (
+            <div className="bg-white p-6 rounded-lg shadow-sm">
+              <FaCheckCircle className="text-green-500 mx-auto mb-3" size={60} />
+              <h1 className="text-4xl font-bold text-green-500">
+                Congratulations! You Passed!
+              </h1>
+              <p className="text-gray-600 mt-2">
+                You have successfully passed the exam.
+              </p>
             </div>
-          </div>
+          ) : (
+            <div className="bg-white p-6 rounded-lg shadow-sm">
+              <FaTimesCircle className="text-red-500 mx-auto mb-3" size={60} />
+              <h1 className="text-4xl font-bold text-red-500">
+                Sorry, You Failed
+              </h1>
+              <p className="text-gray-600 mt-2">
+                You did not reach the required score to pass the exam.
+              </p>
+            </div>
+          )}
         </div>
-      )}
 
-      {activeTab === "C" && (
-        <div>
-          {/* Tab C Content - Leaderboard */}
-          <div className="mb-8 bg-white shadow-sm p-1 rounded-lg">
+        {/* User's exam Result Breakdown */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-5 mb-5">
+          <ResultCard title="Total Questions" value={totalQuestions} />
+          <ResultCard
+            title="Correct Answers"
+            value={userExamResult.correctCount}
+            color="green"
+          />
+          <ResultCard
+            title="Wrong Answers"
+            value={userExamResult.wrongCount}
+            color="red"
+          />
+          <ResultCard
+            title="Skipped"
+            value={userExamResult.skippedCount}
+            color="gray"
+          />
+          <ResultCard title="Marks" value={userExamResult.marks} />
+          <ResultCard
+            title="Time Taken"
+            value={formatTimeTaken(userExamResult.timeTaken)}
+          />
+        </div>
+
+        {/* Render Questions */}
+        <div className="mb-8">
+          <div className="flex justify-between">
+              <h2 className="text-3xl font-semibold mb-4">Exam Review</h2>
+             
+              {/* Check if download_report is enabled */}
+                {userExamResult?.download_report === 1 && (
+                  <ExamReportGenerator uuid={userExamResult.uuid} />
+                )}
+          </div>
           
-            {leaderBoard.length > 0 ? (
-              <LeaderboardTable entries={leaderBoard} />
-            ) : (
-              <p>No leaderboard data available.</p>
+          <div className="grid gap-6">
+            {quizData.questions.map((question, index) =>
+              renderQuestionResult(question, index)
             )}
           </div>
         </div>
-      )}
-      {/* ENDING */}
+
+        {/* Leaderboard */}
+        <div className="mb-8 bg-white shadow-sm p-3 rounded-lg">
+          <h2 className="text-2xl font-semibold mb-4">Leaderboard</h2>
+          {leaderBoard.length > 0 ? (
+            <LeaderboardTable entries={leaderBoard} />
+          ) : (
+            <p>No leaderboard data available.</p>
+          )}
+        </div>
+      </div>
     </div>
   );
 };
 
+// Helper Components
 const ResultCard = ({
   title,
   value,
-  icon,
+  color = "default",
 }: {
   title: string;
   value: string | number;
-  icon?: React.ReactNode;
+  color?: string;
 }) => {
+  const textColorClass =
+    color === "green" ? "text-green-500" : color === "red" ? "text-red-500" : "text-gray-500";
   return (
-    <div className="flex items-center p-5 border border-gray-200 rounded-lg bg-white shadow-sm">
-      {/* Icon Section */}
-      <div className="mr-4 flex items-center justify-center w-14 h-14 rounded-full bg-gray-100">
-        {icon}
-      </div>
-
-      {/* Text Section */}
-      <div>
-        <h3 className="text-base font-medium text-gray-600">{title}</h3>
-        <p className="text-2xl lg:text-3xl font-semibold text-gray-800">
-          {value}
-        </p>
-      </div>
+    <div className="p-6 border rounded-lg bg-white text-center shadow-sm">
+      <h3 className="text-xl font-semibold mb-2">{title}</h3>
+      <p className={`text-2xl ${textColorClass}`}>{value}</p>
     </div>
   );
 };
 
 const LeaderboardTable = ({ entries }: { entries: LeaderboardEntry[] }) => {
   return (
-    <div className="overflow-x-auto rounded-lg ">
-      <table className="min-w-full table-auto rounded-lg overflow-hidden">
-        <thead className="bg-defaultcolor text-white">
-          <tr>
-            <th className="py-3 px-6 text-left">S.No</th>
-            <th className="py-3 px-6 text-left">Username</th>
-            <th className="py-3 px-6 text-left">Score</th>
-            <th className="py-3 px-6 text-left">Status</th>
+    <div className="overflow-x-auto">
+    <table className="min-w-full table-auto whitespace-nowrap">
+      <thead className="bg-defaultcolor text-white">
+        <tr>
+          <th className="py-3 px-6 text-left">S.No</th>
+          <th className="py-3 px-6 text-left">Username</th>
+          <th className="py-3 px-6 text-left">Score</th>
+          <th className="py-3 px-6 text-left">Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        {entries.map((entry, index) => (
+          <tr
+            key={index}
+            className={`border-b transition duration-300 ${
+              index % 2 === 0 ? "bg-gray-100" : "bg-white"
+            } hover:bg-gray-200`}
+          >
+            <td className="py-3 px-6">{index + 1}</td>
+            <td className="py-3 px-6">{entry.username}</td>
+            <td className="py-3 px-6">{entry.score}</td>
+            <td className="py-3 px-6">
+              {entry.status === "PASS" ? (
+                <span className="inline-block px-3 py-1 text-sm font-semibold text-green-700 bg-green-200 rounded-full">
+                  Passed
+                </span> // Badge for Passed status
+              ) : (
+                <span className="inline-block px-3 py-1 text-sm font-semibold text-red-700 bg-red-200 rounded-full">
+                  Failed
+                </span> // Badge for Failed status
+              )}
+            </td>
           </tr>
-        </thead>
-        <tbody>
-          {entries.map((entry, index) => (
-            <tr
-              key={index}
-              className={`border-b transition duration-300 ${
-                index % 2 === 0 ? "bg-white" : "bg-white"
-              } hover:bg-gray-200`}
-            >
-              <td className="py-3 px-6">{index + 1}</td>
-              <td className="py-3 px-6">{entry.username}</td>
-              <td className="py-3 px-6">{entry.score}</td>
-              <td className="py-3 px-6">
-                {entry.status === "PASS" ? (
-                  <span className="inline-block px-3 py-1 text-sm font-semibold text-green-700 bg-green-200 rounded-full">
-                    Passed
-                  </span> // Badge for Passed status
-                ) : (
-                  <span className="inline-block px-3 py-1 text-sm font-semibold text-red-700 bg-red-200 rounded-full">
-                    Failed
-                  </span> // Badge for Failed status
-                )}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+        ))}
+      </tbody>
+    </table>
+  </div>
+    
+
   );
 };
 

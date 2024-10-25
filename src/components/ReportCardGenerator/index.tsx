@@ -424,7 +424,7 @@ const ExamReportGenerator: React.FC<{ uuid: string }> = ({ uuid }) => {
               <Link
                 href={url || "#"}
                 download="exam-report.pdf"
-                className="px-5 py-2 inline-block cursor-pointer bg-secondary rounded-full text-white hover:bg-secondary-dark"
+                className="px-5 py-2 text-center block cursor-pointer bg-defaultcolor w-full text-white hover:bg-defaultcolor-dark"
               >
                 <span style={{ marginTop: "10px" }}>Download PDF</span>
               </Link>
