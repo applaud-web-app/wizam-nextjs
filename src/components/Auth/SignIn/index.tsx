@@ -16,7 +16,6 @@ import { useSiteSettings } from "@/context/SiteContext"; // Import the hook to u
 
 const SignIn = () => {
   const { siteSettings, error } = useSiteSettings(); // Access site settings from the context
-
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const router = useRouter(); // For redirecting to other pages
