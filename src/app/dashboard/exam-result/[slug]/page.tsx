@@ -402,51 +402,52 @@ const ExamResult = ({ params }: ExamResultProps) => {
       case "ORD": // Ordering
         return (
           <div>
-            <ul>
-              {Array.isArray(question.userAnswer) ? (
-                question.userAnswer.map((answerIndex: any, index) => (
-                  <li
-                    key={index}
-                    className=" mb-2 flex items-center justify-between gap-3"
-                  >
-                    {/* User's Answer */}
-                    <div className="flex-1 p-4 bg-white rounded-lg">
-                      <p className="font-semibold text-red-500">Your Answer:</p>
-                      <span
-                        dangerouslySetInnerHTML={{
-                          __html:
-                            question.options && question.options[answerIndex]
-                              ? question.options[answerIndex]
-                              : "No answer provided",
-                        }}
-                      />
-                    </div>
-          
-                    {/* Correct Answer */}
-                    <div className="flex-1 p-4 bg-white rounded-lg">
-                      <p className="font-semibold text-green-500">Correct Answer:</p>
-                      <span
-                        dangerouslySetInnerHTML={{
-                          __html:
-                            Array.isArray(question.correctAnswer) &&
-                            index < question.correctAnswer.length &&
-                            question.options &&
-                            question.options[question.correctAnswer[index] as unknown as number]
-                              ? question.options[question.correctAnswer[index] as unknown as number]
-                              : "No correct answer available",
-                        }}
-                      />
-                    </div>
-                  </li>
-                ))
-              ) : (
-                <li className="p-4 bg-white rounded-lg mb-2 flex items-center justify-between">
-                  {typeof question.userAnswer === "string"
-                    ? question.userAnswer
-                    : "No answer provided"}
+          <ul>
+            {Array.isArray(question.userAnswer) ? (
+              question.userAnswer.map((answerIndex: any, index) => (
+                <li
+                  key={index}
+                  className="mb-2 flex items-center justify-between gap-3"
+                >
+                  {/* User's Answer with red background and green text */}
+                  <div className="flex-1 p-4 bg-red-100 rounded-lg">
+                    <p className="font-semibold text-green-500">Your Answer:</p>
+                    <span
+                      className="text-green-600"
+                      dangerouslySetInnerHTML={{
+                        __html:
+                          question.options && question.options[answerIndex]
+                            ? question.options[answerIndex]
+                            : "No answer provided",
+                      }}
+                    />
+                  </div>
+        
+                  {/* Correct Answer */}
+                  <div className="flex-1 p-4 bg-white rounded-lg">
+                    <p className="font-semibold text-green-500">Correct Answer:</p>
+                    <span
+                      dangerouslySetInnerHTML={{
+                        __html:
+                          Array.isArray(question.correctAnswer) &&
+                          index < question.correctAnswer.length &&
+                          question.options &&
+                          question.options[question.correctAnswer[index] as unknown as number]
+                            ? question.options[question.correctAnswer[index] as unknown as number]
+                            : "No correct answer available",
+                      }}
+                    />
+                  </div>
                 </li>
-              )}
-            </ul>
+              ))
+            ) : (
+              <li className="p-4 bg-white rounded-lg mb-2 flex items-center justify-between">
+                {typeof question.userAnswer === "string"
+                  ? question.userAnswer
+                  : "No answer provided"}
+              </li>
+            )}
+          </ul>
         </div>
         
         );
