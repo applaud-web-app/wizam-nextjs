@@ -24,7 +24,7 @@ const Success: FC = () => {
         <div className="mb-10 md:mb-12 mx-auto max-w-2xl text-center px-4 md:px-6 lg:px-12 relative z-10">
           <FaCheckCircle className="text-green-500 text-5xl md:text-6xl lg:text-7xl mx-auto mb-4 md:mb-6 animate-bounce" />
           <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-800 mb-3 md:mb-4">
-            Thank You for Your Purchase!
+            Thank You for Your Purchase!!!!!!!!!!!!!!!!
           </h1>
           <p className="text-md md:text-lg lg:text-xl text-gray-600 mb-6 md:mb-8">
             Your transaction was successful, and we truly appreciate your business. Keep an eye out for a confirmation email.
