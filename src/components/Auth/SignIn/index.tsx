@@ -64,7 +64,7 @@ const SignIn = () => {
         const destination = redirectUrl ? redirectUrl : "/";
   
         // Clear the redirect_url cookie after redirection
-        Cookies.remove('redirect_url');
+        // Cookies.remove('redirect_url');
   
         // Redirect to the destination
         setTimeout(() => {
