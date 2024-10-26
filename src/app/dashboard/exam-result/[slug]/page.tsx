@@ -173,7 +173,7 @@ const ExamResult = ({ params }: ExamResultProps) => {
 
     switch (question.type) {
       case "MSA": // Multiple Single Answer
-      case "MMA": // Multiple Match Answer
+     
       case "TOF": // True or False
         return (
           <div className="mb-4">
@@ -231,24 +231,70 @@ const ExamResult = ({ params }: ExamResultProps) => {
                 </span>
               </div>
             ))}
-            <p className="font-semibold text-red-500">
-              Your answer:{" "}
-              <span
-                dangerouslySetInnerHTML={{
-                  __html: userAnswerDisplay,
-                }}
-              />
-            </p>
-            <p className="font-semibold text-green-600">
-              Correct answer:{" "}
-              <span
-                dangerouslySetInnerHTML={{
-                  __html: correctAnswerDisplay,
-                }}
-              />
-            </p>
+           
           </div>
         );
+
+        case "MMA": // Multiple Match Answer
+        return (
+          <div className="mb-4">
+          {question.options?.map((option, index:any) => {
+            const isCorrectAnswer =
+              Array.isArray(question.correctAnswer) &&
+              question.correctAnswer.includes((index + 1).toString()); // Checking if (index + 1) is in correctAnswer array as string
+            const isUserAnswer =
+              Array.isArray(question.userAnswer) && question.userAnswer.includes(index); // Checking if index is in userAnswer array
+        
+            return (
+              <div
+                key={index}
+                className={`flex justify-between border items-center p-3 rounded-md mb-2 ${
+                  isCorrectAnswer
+                    ? "bg-green-500 text-white"
+                    : isUserAnswer
+                    ? "bg-red-500 text-white"
+                    : "bg-white"
+                }`}
+              >
+                {/* Left Circle Icon with letter */}
+                <span
+                  className={`flex items-center justify-center w-6 h-6 rounded-full mr-2 font-bold ${
+                    isCorrectAnswer
+                      ? "bg-white text-green-500"
+                      : isUserAnswer
+                      ? "bg-white text-red-500"
+                      : "bg-gray-200 text-gray-700"
+                  }`}
+                >
+                  {String.fromCharCode(65 + index)}
+                </span>
+        
+                {/* Option text */}
+                <div
+                  className="flex-grow"
+                  dangerouslySetInnerHTML={{
+                    __html: typeof option === "string" ? option : (option as Option).text,
+                  }}
+                />
+        
+                {/* Right Icon for correct or incorrect indication */}
+                <span className="ml-2">
+                  {isCorrectAnswer ? (
+                    <FaCheck className="text-white" />
+                  ) : isUserAnswer ? (
+                    <FaTimes className="text-white" />
+                  ) : (
+                    <FaRegCircle className="text-gray-400" />
+                  )}
+                </span>
+              </div>
+            );
+          })}
+        
+        </div>
+        
+        );
+
 
       case "FIB": // Fill in the Blanks
         const blanks = Number(question.options?.[0]) || 0;
@@ -282,64 +328,59 @@ const ExamResult = ({ params }: ExamResultProps) => {
 
         return (
           <div>
-            <p className="mb-4 font-medium">Match the following:</p>
+          <p className="mb-4 font-medium">Match the following:</p>
+          <div className="space-y-4">
             {correctAnswerPairs.map(([key, correctValue], index) => (
-              <div key={index} className="flex space-x-4 mb-4">
-                <div className="flex-1 p-2 rounded bg-white">
-                  <div dangerouslySetInnerHTML={{ __html: key }} />
+              <div
+                key={index}
+                className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center"
+              >
+                {/* Display the option label from question.options based on key */}
+                <div className="p-2 rounded bg-white">
+                <span className="text-gray-500 font-semibold">Your Answer:</span>{" "}
+                  <div
+                    dangerouslySetInnerHTML={{
+                      __html: question.options?.[parseInt(key) - 1] || key, // Adjusts to zero-based index
+                    }}
+                  />
                 </div>
 
-                <div className="flex-1 p-2 rounded bg-yellow-50">
+                {/* Display user's selected answer */}
+                <div className="p-2 rounded bg-yellow-50">
+                <span className="text-yellow-500 font-semibold">Your Answer:</span>{" "}
                   {userAnswerPairs[index] ? (
-                    <div
+                    <>
+                      
+                      <div
                       dangerouslySetInnerHTML={{
                         __html: userAnswerPairs[index][1],
                       }}
                     />
+                    </>
+                  
                   ) : (
                     <p className="text-red-500">No answer</p>
                   )}
                 </div>
 
-                <div className="flex-1 p-2 rounded bg-green-50">
-                  <span className="text-green-500">Correct:</span>{" "}
+                {/* Display correct answer */}
+                <div className="p-2 rounded bg-green-50">
+                  <span className="text-green-500 font-semibold">Correct:</span>{" "}
                   <div dangerouslySetInnerHTML={{ __html: correctValue }} />
                 </div>
               </div>
             ))}
-
-            {/* Your Answer Section */}
-            <div className="mt-4">
-              <h4 className="font-semibold">Your Answers:</h4>
-              <ul>
-                {userAnswerPairs.map(([key, userAnswer]) => (
-                  <li key={key} className="text-red-600 flex space-x-3">
-                    {`${key}: `}
-                    <span dangerouslySetInnerHTML={{ __html: userAnswer }} />
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            {/* Correct Answer Section */}
-            <div className="mt-4">
-              <h4 className="font-semibold">Correct Answers:</h4>
-              <ul>
-                {correctAnswerPairs.map(([key, correctAnswer]) => (
-                  <li key={key} className="text-green-600 flex space-x-3">
-                    {`${key}: `}
-                    <span dangerouslySetInnerHTML={{ __html: correctAnswer }} />
-                  </li>
-                ))}
-              </ul>
-            </div>
           </div>
+
+
+        </div>
+
         );
 
       case "SAQ": // Short Answer Question
         return (
           <div className="p-4 bg-white rounded-lg">
-            <p className="font-semibold">
+            <p className="font-medium">
               Your Answer:{" "}
               <span
                 dangerouslySetInnerHTML={{
@@ -366,39 +407,36 @@ const ExamResult = ({ params }: ExamResultProps) => {
                 question.userAnswer.map((answerIndex: any, index) => (
                   <li
                     key={index}
-                    className="p-4 bg-white rounded-lg mb-2 flex items-center justify-between"
+                    className=" mb-2 flex items-center justify-between gap-3"
                   >
-                    {/* Display the text corresponding to user answer using dangerouslySetInnerHTML */}
-                    <span
-                      dangerouslySetInnerHTML={{
-                        __html:
-                          question.options &&
-                          typeof question.options[answerIndex] === "string"
-                            ? question.options[answerIndex] // Show text from options if available
-                            : "No answer provided",
-                      }}
-                    />
-
-                    {/* Show correct answer if available using dangerouslySetInnerHTML */}
-                    {Array.isArray(question.correctAnswer) &&
-                    index < question.correctAnswer.length ? (
+                    {/* User's Answer */}
+                    <div className="flex-1 p-4 bg-white rounded-lg">
+                      <p className="font-semibold text-red-500">Your Answer:</p>
                       <span
-                        className="text-green-600"
                         dangerouslySetInnerHTML={{
                           __html:
+                            question.options && question.options[answerIndex]
+                              ? question.options[answerIndex]
+                              : "No answer provided",
+                        }}
+                      />
+                    </div>
+          
+                    {/* Correct Answer */}
+                    <div className="flex-1 p-4 bg-white rounded-lg">
+                      <p className="font-semibold text-green-500">Correct Answer:</p>
+                      <span
+                        dangerouslySetInnerHTML={{
+                          __html:
+                            Array.isArray(question.correctAnswer) &&
+                            index < question.correctAnswer.length &&
                             question.options &&
-                            // Ensure the index is a number before accessing options
-                            typeof question.correctAnswer[index] === "number" &&
-                            typeof question.options[
-                              question.correctAnswer[index] as number
-                            ] === "string"
-                              ? (question.options[
-                                  question.correctAnswer[index] as number
-                                ] as string) // Cast to string
+                            question.options[question.correctAnswer[index] as unknown as number]
+                              ? question.options[question.correctAnswer[index] as unknown as number]
                               : "No correct answer available",
                         }}
                       />
-                    ) : null}
+                    </div>
                   </li>
                 ))
               ) : (
@@ -409,66 +447,8 @@ const ExamResult = ({ params }: ExamResultProps) => {
                 </li>
               )}
             </ul>
-
-            {/* Display User's and Correct Answers */}
-            <div className="mt-4">
-              <div className="flex">
-                <p className="font-semibold mr-3">Your Answers:</p>
-                <ul className="flex space-x-3">
-                  {Array.isArray(question.userAnswer) ? (
-                    question.userAnswer.map((answerIndex: any, index) => (
-                      <li key={index} className="text-red-600 flex space-x-3">
-                        <span
-                          dangerouslySetInnerHTML={{
-                            __html:
-                              question.options &&
-                              typeof question.options[answerIndex] === "string"
-                                ? question.options[answerIndex]
-                                : "No answer available",
-                          }}
-                        />
-                        ,
-                      </li>
-                    ))
-                  ) : (
-                    <li>
-                      {typeof question.userAnswer === "string"
-                        ? question.userAnswer
-                        : "No answer provided"}
-                    </li>
-                  )}
-                </ul>
-              </div>
-
-              <div className="flex">
-                <p className="font-semibold mr-3">Correct Answers:</p>
-                <ul className="flex space-x-3">
-                  {Array.isArray(question.correctAnswer) ? (
-                    question.correctAnswer.map((correctIndex: any, index) => (
-                      <li key={index} className="text-green-600 flex space-x-3">
-                        <span
-                          dangerouslySetInnerHTML={{
-                            __html:
-                              question.options &&
-                              typeof question.options[correctIndex] === "string"
-                                ? question.options[correctIndex]
-                                : "No correct answer available",
-                          }}
-                        />
-                        ,
-                      </li>
-                    ))
-                  ) : (
-                    <li>
-                      {typeof question.correctAnswer === "string"
-                        ? question.correctAnswer
-                        : "No correct answer available"}
-                    </li>
-                  )}
-                </ul>
-              </div>
-            </div>
-          </div>
+        </div>
+        
         );
 
       case "EMQ": // Extended Matching Questions
@@ -561,7 +541,7 @@ const ExamResult = ({ params }: ExamResultProps) => {
     return (
       <div
         key={question.id}
-        className={`p-4 border-l-[12px] bg-[#f6f7f9] ${
+        className={`p-2 lg:p-4 border-l-[6px] lg:border-l-[12px] bg-[#f6f7f9] ${
           !question.userAnswer ||
           (Array.isArray(question.userAnswer) &&
             question.userAnswer.length === 0)
@@ -706,7 +686,7 @@ const ExamResult = ({ params }: ExamResultProps) => {
           {/* Render Questions */}
           <div className="mb-8 bg-white p-5 rounded-lg shadow-sm">
 
-            <div className="grid gap-6">
+            <div className="space-y-6">
               {quizData.questions.map((question, index) =>
                 renderQuestionResult(question, index)
               )}
