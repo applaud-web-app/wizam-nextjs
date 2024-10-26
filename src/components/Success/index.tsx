@@ -36,7 +36,7 @@ const Success: FC = () => {
         <div className="flex justify-center space-x-3 md:space-x-4 mt-6 md:mt-8">
           <button onClick={handleClick} >
             <span className="inline-flex items-center bg-primary hover:bg-secondary text-secondary hover:text-white py-2 md:py-3 px-6  rounded-full text-sm md:text-base lg:text-lg font-semibold transition duration-300 transform hover:scale-105 text-center">
-              <FaHome className="mr-2 text-center" /> Back to Home
+              <FaHome className="mr-2 text-center" /> Continue
             </span>
           </button>
           <Link href="/invoice" passHref>
