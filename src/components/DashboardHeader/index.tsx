@@ -2,8 +2,8 @@ import { FiMenu, FiChevronDown, FiLogOut, FiSettings, FiGlobe, FiUser, FiBook, F
 import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import axios from "axios"; // Axios for API calls
-import { toast } from "react-toastify"; // Import toast from react-toastify
+import axios from "axios";
+import { toast } from "react-toastify";
 import Cookies from "js-cookie";
 import { useRouter } from "next/navigation";
 
@@ -30,7 +30,6 @@ export default function Header({ toggleSidebar }: HeaderProps) {
     setIsDropdownOpen(!isDropdownOpen);
   };
 
-  // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -65,7 +64,6 @@ export default function Header({ toggleSidebar }: HeaderProps) {
           pauseOnHover: true,
           draggable: true,
         });
-        // Redirect to signin immediately after logout
         router.push("/signin");
       } else if (response.data.status === false && response.data.message === "Unauthorized") {
         Cookies.remove("jwt");
@@ -75,11 +73,9 @@ export default function Header({ toggleSidebar }: HeaderProps) {
     }
   };
 
-  // Function to fetch profile data
   const fetchProfileData = async () => {
     const jwt = Cookies.get("jwt");
     if (!jwt) {
-      // If there is no JWT, redirect to signin immediately
       router.push("/signin");
       return;
     }
@@ -111,13 +107,13 @@ export default function Header({ toggleSidebar }: HeaderProps) {
     fetchProfileData();
   }, []);
 
-  // Function to get the first name from the full name
   const getFirstName = (name: string) => {
-    return name.split(" ")[0]; // Split by space and return the first part (first name)
+    return name.split(" ")[0];
   };
 
   return (
-    <header className="bg-white dark:bg-gray-800 shadow-md p-4 fixed top-0 left-0 w-full lg-50 lg:z-[64] z-10 flex justify-between items-center h-[70px]">
+    <header className="bg-white dark:bg-gray-800 shadow-md p-4 fixed top-0 left-0 w-full lg:z-[64] z-10 flex justify-between items-center h-[70px]">
+      {/* Left Section: Logo */}
       <div className="flex items-center space-x-4">
         <button
           onClick={toggleSidebar}
@@ -137,8 +133,24 @@ export default function Header({ toggleSidebar }: HeaderProps) {
         </div>
       </div>
 
+      {/* Center Section: Navigation */}
+      <nav className="hidden lg:flex space-x-8">
+        <Link href="/" className="text-gray-800 dark:text-gray-300 hover:text-defaultcolor">
+          Home
+        </Link>
+        <Link href="/about" className="text-gray-800 dark:text-gray-300 hover:text-defaultcolor">
+          About Us
+        </Link>
+        <Link href="/pricing" className="text-gray-800 dark:text-gray-300 hover:text-defaultcolor">
+          Pricing
+        </Link>
+      </nav>
+
+      {/* Right Section: Website Icon and Profile Dropdown */}
       <div className="flex items-center space-x-6">
-        <Link href="/"><FiGlobe size={24} className="text-defaultcolor dark:text-gray-300" aria-label="Website" /></Link>
+        <Link href="/">
+          <FiGlobe size={24} className="text-defaultcolor dark:text-gray-300" aria-label="Website" />
+        </Link>
 
         <div className="relative" ref={dropdownRef}>
           <button
@@ -147,13 +159,13 @@ export default function Header({ toggleSidebar }: HeaderProps) {
             aria-expanded={isDropdownOpen}
             aria-label="Profile options"
           >
-                <Image
-                  src={userProfile?.image ? userProfile.image : '/images/user.png'} 
-                  width={32}
-                  height={32}
-                  alt="Profile"
-                  className="rounded-full w-8 h-8"
-                />
+            <Image
+              src={userProfile?.image ? userProfile.image : '/images/user.png'}
+              width={32}
+              height={32}
+              alt="Profile"
+              className="rounded-full w-8 h-8"
+            />
             <span className="text-gray-900 dark:text-gray-200 font-semibold">
               {userProfile ? getFirstName(userProfile.name) : 'Guest'}
             </span>
@@ -172,8 +184,9 @@ export default function Header({ toggleSidebar }: HeaderProps) {
                 <FiCreditCard className="inline-block mr-2" />My Payments
               </Link>
 
-             
-              <button onClick={handleLogout} type="button" className="block text-start px-4 py-2 w-full text-red-500 hover:bg-gray-100 dark:hover:bg-gray-600"><FiLogOut className="inline-block mr-2" />Logout</button>
+              <button onClick={handleLogout} type="button" className="block text-start px-4 py-2 w-full text-red-500 hover:bg-gray-100 dark:hover:bg-gray-600">
+                <FiLogOut className="inline-block mr-2" />Logout
+              </button>
             </div>
           )}
         </div>
