@@ -8,12 +8,12 @@ import {
   Font,
   StyleSheet,
   Image,
-  BlobProvider,
+  pdf,
 } from "@react-pdf/renderer";
-import Link from "next/link";
 import Cookies from "js-cookie";
 import axios from "axios";
 
+// Define colors for styling
 const colors = {
   primary: "#2A3B61",
   secondary: "#A6DCEF",
@@ -218,7 +218,7 @@ const styles = StyleSheet.create({
 
 });
 
-// Create the PDF document structure
+// Exam Report PDF Component
 const ExamReportPDF: React.FC<{ examData: any }> = ({ examData }) => {
   if (!examData) {
     return <Text>No Data</Text>;
@@ -228,146 +228,146 @@ const ExamReportPDF: React.FC<{ examData: any }> = ({ examData }) => {
 
   return (
     <Document>
-      <Page style={styles.page}>
-         {/* Watermark image with absolute positioning */}
-         <Image
-          src="/images/logo/wizam-logo.png"
-          style={styles.watermark}
-        />
-        <View style={styles.contentWrapper}>
+    <Page style={styles.page}>
+       {/* Watermark image with absolute positioning */}
+       <Image
+        src="/images/logo/wizam-logo.png"
+        style={styles.watermark}
+      />
+      <View style={styles.contentWrapper}>
 
-       
-            <View style={styles.header}>
-              <Image style={styles.logo} src="/images/logo/wizam-logo.png" />
-              <Image style={{ width: 160, height: "auto" }} src="/images/logo/school-of-dental-nursing-logo.png" />
-            </View>
-
-            <View style={styles.divider}></View>
-
-            <View style={styles.row}>
-              <View>
-                <Text style={[styles.title, { fontSize: 20 }]}>Exam Report: </Text>
-                <Text style={{fontSize: 16}}>Dental Nursing </Text>
-              </View>
-              <View>
-              <Text style={{fontSize: 16}}>Final Result </Text>
-                  <Text style={styles.finalResult}>
-                    {result_info.final_score === "PASS" ? (
-                      <Text style={styles.resultPass}>Pass</Text>
-                    ) : (
-                      <Text style={styles.resultFail}>Fail</Text>
-                    )}
-                  </Text>
-                </View>
-              
-             
-            </View>
-
-            <View style={styles.divider}></View>
-
-           
-            <View style={styles.infoSection}>
-              
-              <View style={styles.infoBlock}>
-
-                <Text style={styles.sectionTitle}>Exams Details</Text>
-
-      
-                <Text style={styles.label}>
-                  Exam Name
-                </Text>
-                <Text style={styles.infoText}>{exam_info.name}</Text>
-                <Text style={styles.label}>
-                  Completed on
-                </Text>
-                <Text style={styles.infoText}>{exam_info.completed_on}</Text>
-                <Text style={styles.label}>
-                  Session ID
-                </Text>
-                <Text style={styles.infoText}>{exam_info.session_id}</Text>
-              </View>
-              <View style={{borderRight: "1px solid #d2d2d2", width: "1px", height: "100%"}}><Text></Text></View>
-              <View style={styles.infoBlock}>
-
-                <Text style={styles.sectionTitle}>Exams Details</Text>
-
-                <Text style={styles.label}>
-                  Test Taker
-                </Text>
-                <Text style={styles.infoText}>{user_info.name}</Text>
-                <Text style={styles.label}>
-                  Email
-                </Text>
-                <Text style={styles.infoText}>{user_info.email}</Text>
-                <Text style={styles.label}>
-                  Mobile Number
-                </Text>
-                <Text style={styles.infoText}>{user_info.number}</Text>
-              </View>
-            </View>
-
-            <Text style={styles.resultsectionTitle}>Test Results</Text>
-            <View style={styles.resultSection}>
-              <View style={styles.resultRow}>
-                <Text style={styles.resultlabel}>Total Questions</Text>
-                 <Text style={styles.colon}>:</Text>
-                <Text style={styles.resultText}>{result_info.total_question}</Text>
-              </View>
-              <View style={styles.resultRow}>
-                <Text style={styles.resultlabel}>Answered</Text>
-                 <Text style={styles.colon}>:</Text>
-                <Text style={styles.resultText}>{result_info.answered}</Text>
-              </View>
-              <View style={styles.resultRow}>
-                <Text style={styles.resultlabel}>Correct</Text>
-                 <Text style={styles.colon}>:</Text>
-                <Text style={styles.resultText}>{result_info.correct}</Text>
-              </View>
-              <View style={styles.resultRow}>
-                <Text style={styles.resultlabel}>Wrong</Text>
-                 <Text style={styles.colon}>:</Text>
-                <Text style={styles.resultText}>{result_info.wrong}</Text>
-              </View>
-              <View style={styles.resultRow}>
-                <Text style={styles.resultlabel}>Pass Percentage</Text>
-                 <Text style={styles.colon}>:</Text>
-                <Text style={styles.resultText}>{result_info.pass_percentage}%</Text>
-              </View>
-              <View style={styles.resultRow}>
-                <Text style={styles.resultlabel}>Final Percentage</Text>
-                 <Text style={styles.colon}>:</Text>
-                <Text style={styles.resultText}>{result_info.final_percentage}%</Text>
-              </View>
-              <View style={styles.resultRow}>
-                <Text style={styles.resultlabel}>Time Taken</Text>
-                 <Text style={styles.colon}>:</Text>
-                <Text style={styles.resultText}>{Math.round(result_info.time_taken)} mins</Text>
-              </View>
-            </View>
-
-            <View style={styles.divider}></View>
-
-            {/* Authorized by section */}
-            <View style={styles.authorizedSection}>
-              <Text style={styles.authorizedByText}>Authorized by</Text>
-              <Image src="/images/sign.png" style={{ width: "auto", height: 20 }} />
-            </View>
-
-          
+     
+          <View style={styles.header}>
+            <Image style={styles.logo} src="/images/logo/wizam-logo.png" />
+            <Image style={{ width: 160, height: "auto" }} src="/images/logo/school-of-dental-nursing-logo.png" />
           </View>
-            <View style={styles.footer}>
-              <Text>The Knowledge Academy | Empowering learners worldwide</Text>
+
+          <View style={styles.divider}></View>
+
+          <View style={styles.row}>
+            <View>
+              <Text style={[styles.title, { fontSize: 20 }]}>Exam Report: </Text>
+              <Text style={{fontSize: 16}}>Dental Nursing </Text>
             </View>
-      </Page>
-    </Document>
+            <View>
+            <Text style={{fontSize: 16}}>Final Result </Text>
+                <Text style={styles.finalResult}>
+                  {result_info.final_score === "PASS" ? (
+                    <Text style={styles.resultPass}>Pass</Text>
+                  ) : (
+                    <Text style={styles.resultFail}>Fail</Text>
+                  )}
+                </Text>
+              </View>
+            
+           
+          </View>
+
+          <View style={styles.divider}></View>
+
+         
+          <View style={styles.infoSection}>
+            
+            <View style={styles.infoBlock}>
+
+              <Text style={styles.sectionTitle}>Exams Details</Text>
+
+    
+              <Text style={styles.label}>
+                Exam Name
+              </Text>
+              <Text style={styles.infoText}>{exam_info.name}</Text>
+              <Text style={styles.label}>
+                Completed on
+              </Text>
+              <Text style={styles.infoText}>{exam_info.completed_on}</Text>
+              <Text style={styles.label}>
+                Session ID
+              </Text>
+              <Text style={styles.infoText}>{exam_info.session_id}</Text>
+            </View>
+            <View style={{borderRight: "1px solid #d2d2d2", width: "1px", height: "100%"}}><Text></Text></View>
+            <View style={styles.infoBlock}>
+
+              <Text style={styles.sectionTitle}>Exams Details</Text>
+
+              <Text style={styles.label}>
+                Test Taker
+              </Text>
+              <Text style={styles.infoText}>{user_info.name}</Text>
+              <Text style={styles.label}>
+                Email
+              </Text>
+              <Text style={styles.infoText}>{user_info.email}</Text>
+              <Text style={styles.label}>
+                Mobile Number
+              </Text>
+              <Text style={styles.infoText}>{user_info.number}</Text>
+            </View>
+          </View>
+
+          <Text style={styles.resultsectionTitle}>Test Results</Text>
+          <View style={styles.resultSection}>
+            <View style={styles.resultRow}>
+              <Text style={styles.resultlabel}>Total Questions</Text>
+               <Text style={styles.colon}>:</Text>
+              <Text style={styles.resultText}>{result_info.total_question}</Text>
+            </View>
+            <View style={styles.resultRow}>
+              <Text style={styles.resultlabel}>Answered</Text>
+               <Text style={styles.colon}>:</Text>
+              <Text style={styles.resultText}>{result_info.answered}</Text>
+            </View>
+            <View style={styles.resultRow}>
+              <Text style={styles.resultlabel}>Correct</Text>
+               <Text style={styles.colon}>:</Text>
+              <Text style={styles.resultText}>{result_info.correct}</Text>
+            </View>
+            <View style={styles.resultRow}>
+              <Text style={styles.resultlabel}>Wrong</Text>
+               <Text style={styles.colon}>:</Text>
+              <Text style={styles.resultText}>{result_info.wrong}</Text>
+            </View>
+            <View style={styles.resultRow}>
+              <Text style={styles.resultlabel}>Pass Percentage</Text>
+               <Text style={styles.colon}>:</Text>
+              <Text style={styles.resultText}>{result_info.pass_percentage}%</Text>
+            </View>
+            <View style={styles.resultRow}>
+              <Text style={styles.resultlabel}>Final Percentage</Text>
+               <Text style={styles.colon}>:</Text>
+              <Text style={styles.resultText}>{result_info.final_percentage}%</Text>
+            </View>
+            <View style={styles.resultRow}>
+              <Text style={styles.resultlabel}>Time Taken</Text>
+               <Text style={styles.colon}>:</Text>
+              <Text style={styles.resultText}>{Math.round(result_info.time_taken)} mins</Text>
+            </View>
+          </View>
+
+          <View style={styles.divider}></View>
+
+          {/* Authorized by section */}
+          <View style={styles.authorizedSection}>
+            <Text style={styles.authorizedByText}>Authorized by</Text>
+            <Image src="/images/sign.png" style={{ width: "auto", height: 20 }} />
+          </View>
+
+        
+        </View>
+          <View style={styles.footer}>
+            <Text>The Knowledge Academy | Empowering learners worldwide</Text>
+          </View>
+    </Page>
+  </Document>
   );
 };
 
+// Exam Report Generator Component
 const ExamReportGenerator: React.FC<{ uuid: string }> = ({ uuid }) => {
   const [examData, setExamData] = useState<any>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  // const [pdfUrl, setPdfUrl] = useState<string | null>(null); 
 
   useEffect(() => {
     const fetchExamData = async () => {
@@ -396,6 +396,23 @@ const ExamReportGenerator: React.FC<{ uuid: string }> = ({ uuid }) => {
     fetchExamData();
   }, [uuid]);
 
+  const downloadPdf = async () => {
+    if (examData) {
+      const doc = <ExamReportPDF examData={examData} />;
+      const blob = await pdf(doc).toBlob();
+      const url = URL.createObjectURL(blob);
+
+      // Trigger download
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "exam-report.pdf";
+      link.click();
+
+      // Cleanup
+      URL.revokeObjectURL(url);
+    }
+  };
+
   if (loading) {
     return <div>Loading...</div>;
   }
@@ -410,38 +427,13 @@ const ExamReportGenerator: React.FC<{ uuid: string }> = ({ uuid }) => {
 
   return (
     <div>
-      {/* PDF BlobProvider to generate and provide the PDF URL */}
-      <BlobProvider document={<ExamReportPDF examData={examData} />}>
-        {({ url, error }) => {
-          if (error) return <span>Error generating PDF</span>;
-
-          // if (url) {
-          //   setPdfUrl(url); 
-          // }
-
-          return (
-            <div>
-              <Link
-                href={url || "#"}
-                download="exam-report.pdf"
-                className="px-5 py-2 text-center block cursor-pointer bg-defaultcolor w-full text-white hover:bg-defaultcolor-dark"
-              >
-                <span style={{ marginTop: "10px" }}>Download PDF</span>
-              </Link>
-            </div>
-          );
-        }}
-      </BlobProvider>
-
-      {/* Display the PDF in an iframe */}
-      {/* {pdfUrl && (
-        <iframe className="mb-8"
-          src={pdfUrl}
-          width="100%"
-          height="900px"
-          style={{ border: "none", marginTop: "20px" }}
-        ></iframe>
-      )} */}
+      {/* Generate and download PDF on click */}
+      <button
+        onClick={downloadPdf}
+        className="px-5 py-2 text-center bg-defaultcolor text-white w-full hover:bg-defaultcolor-dark cursor-pointer"
+      >
+       Download Report
+      </button>
     </div>
   );
 };

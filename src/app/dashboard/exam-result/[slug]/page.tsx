@@ -19,6 +19,27 @@ import { useRouter } from "next/navigation";
 import Loader from "@/components/Common/Loader";
 import ExamReportGenerator from "@/components/ReportCardGenerator";
 import { FaArrowLeftLong } from "react-icons/fa6";
+import {
+  Chart as ChartJS,
+  ArcElement,
+  Tooltip,
+  Legend,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+} from "chart.js";
+import { Doughnut, Bar } from "react-chartjs-2";
+
+ChartJS.register(
+  ArcElement,
+  Tooltip,
+  Legend,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title
+);
 
 // TypeScript interfaces
 interface Option {
@@ -173,7 +194,7 @@ const ExamResult = ({ params }: ExamResultProps) => {
 
     switch (question.type) {
       case "MSA": // Multiple Single Answer
-     
+
       case "TOF": // True or False
         return (
           <div className="mb-4">
@@ -231,83 +252,89 @@ const ExamResult = ({ params }: ExamResultProps) => {
                 </span>
               </div>
             ))}
-           
           </div>
         );
 
-        case "MMA": // Multiple Match Answer
+      case "MMA": // Multiple Match Answer
         return (
           <div className="mb-4">
-          {question.options?.map((option, index:any) => {
-            const isCorrectAnswer =
-              Array.isArray(question.correctAnswer) &&
-              question.correctAnswer.includes((index + 1).toString()); // Checking if (index + 1) is in correctAnswer array as string
-            const isUserAnswer =
-              Array.isArray(question.userAnswer) && question.userAnswer.includes(index); // Checking if index is in userAnswer array
-        
-            return (
-              <div
-                key={index}
-                className={`flex justify-between border items-center p-3 rounded-md mb-2 ${
-                  isCorrectAnswer
-                    ? "bg-green-500 text-white"
-                    : isUserAnswer
-                    ? "bg-red-500 text-white"
-                    : "bg-white"
-                }`}
-              >
-                {/* Left Circle Icon with letter */}
-                <span
-                  className={`flex items-center justify-center w-6 h-6 rounded-full mr-2 font-bold ${
+            {question.options?.map((option, index: any) => {
+              const isCorrectAnswer =
+                Array.isArray(question.correctAnswer) &&
+                question.correctAnswer.includes((index + 1).toString()); // Checking if (index + 1) is in correctAnswer array as string
+              const isUserAnswer =
+                Array.isArray(question.userAnswer) &&
+                question.userAnswer.includes(index); // Checking if index is in userAnswer array
+
+              return (
+                <div
+                  key={index}
+                  className={`flex justify-between border items-center p-3 rounded-md mb-2 ${
                     isCorrectAnswer
-                      ? "bg-white text-green-500"
+                      ? "bg-green-500 text-white"
                       : isUserAnswer
-                      ? "bg-white text-red-500"
-                      : "bg-gray-200 text-gray-700"
+                      ? "bg-red-500 text-white"
+                      : "bg-white"
                   }`}
                 >
-                  {String.fromCharCode(65 + index)}
-                </span>
-        
-                {/* Option text */}
-                <div
-                  className="flex-grow"
-                  dangerouslySetInnerHTML={{
-                    __html: typeof option === "string" ? option : (option as Option).text,
-                  }}
-                />
-        
-                {/* Right Icon for correct or incorrect indication */}
-                <span className="ml-2">
-                  {isCorrectAnswer ? (
-                    <FaCheck className="text-white" />
-                  ) : isUserAnswer ? (
-                    <FaTimes className="text-white" />
-                  ) : (
-                    <FaRegCircle className="text-gray-400" />
-                  )}
-                </span>
-              </div>
-            );
-          })}
-        
-        </div>
-        
-        );
+                  {/* Left Circle Icon with letter */}
+                  <span
+                    className={`flex items-center justify-center w-6 h-6 rounded-full mr-2 font-bold ${
+                      isCorrectAnswer
+                        ? "bg-white text-green-500"
+                        : isUserAnswer
+                        ? "bg-white text-red-500"
+                        : "bg-gray-200 text-gray-700"
+                    }`}
+                  >
+                    {String.fromCharCode(65 + index)}
+                  </span>
 
+                  {/* Option text */}
+                  <div
+                    className="flex-grow"
+                    dangerouslySetInnerHTML={{
+                      __html:
+                        typeof option === "string"
+                          ? option
+                          : (option as Option).text,
+                    }}
+                  />
+
+                  {/* Right Icon for correct or incorrect indication */}
+                  <span className="ml-2">
+                    {isCorrectAnswer ? (
+                      <FaCheck className="text-white" />
+                    ) : isUserAnswer ? (
+                      <FaTimes className="text-white" />
+                    ) : (
+                      <FaRegCircle className="text-gray-400" />
+                    )}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        );
 
       case "FIB": // Fill in the Blanks
         const blanks = Number(question.options?.[0]) || 0;
+
         return (
           <div>
+            {/* Display User's and Correct Answers for Each Blank */}
             {Array.from({ length: blanks }).map((_, index) => (
               <div key={index} className="p-4 bg-white rounded-lg mb-2">
-                <p className="font-semibold">
+                {/* User's Answer */}
+                <p className="font-semibold text-red-500">
+                  Your Answer:{" "}
                   {Array.isArray(question.userAnswer)
-                    ? `Your Answer: ${question.userAnswer[index] || "Skipped"}`
+                    ? question.userAnswer[index] || "Skipped"
                     : "Skipped"}
                 </p>
-                <p className="text-sm text-green-600">
+
+                {/* Correct Answer */}
+                <p className="font-semibold text-green-600">
                   Correct:{" "}
                   {Array.isArray(question.correctAnswer)
                     ? question.correctAnswer[index] || "N/A"
@@ -328,53 +355,54 @@ const ExamResult = ({ params }: ExamResultProps) => {
 
         return (
           <div>
-          <p className="mb-4 font-medium">Match the following:</p>
-          <div className="space-y-4">
-            {correctAnswerPairs.map(([key, correctValue], index) => (
-              <div
-                key={index}
-                className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center"
-              >
-                {/* Display the option label from question.options based on key */}
-                <div className="p-2 rounded bg-white">
-                <span className="text-gray-500 font-semibold">Your Answer:</span>{" "}
-                  <div
-                    dangerouslySetInnerHTML={{
-                      __html: question.options?.[parseInt(key) - 1] || key, // Adjusts to zero-based index
-                    }}
-                  />
-                </div>
-
-                {/* Display user's selected answer */}
-                <div className="p-2 rounded bg-yellow-50">
-                <span className="text-yellow-500 font-semibold">Your Answer:</span>{" "}
-                  {userAnswerPairs[index] ? (
-                    <>
-                      
-                      <div
+            <p className="mb-4 font-medium">Match the following:</p>
+            <div className="space-y-4">
+              {correctAnswerPairs.map(([key, correctValue], index) => (
+                <div
+                  key={index}
+                  className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center"
+                >
+                  {/* Display the option label from question.options based on key */}
+                  <div className="p-2 rounded bg-white">
+                    <span className="text-gray-500 font-semibold">
+                      Your Answer:
+                    </span>{" "}
+                    <div
                       dangerouslySetInnerHTML={{
-                        __html: userAnswerPairs[index][1],
+                        __html: question.options?.[parseInt(key) - 1] || key, // Adjusts to zero-based index
                       }}
                     />
-                    </>
-                  
-                  ) : (
-                    <p className="text-red-500">No answer</p>
-                  )}
-                </div>
+                  </div>
 
-                {/* Display correct answer */}
-                <div className="p-2 rounded bg-green-50">
-                  <span className="text-green-500 font-semibold">Correct:</span>{" "}
-                  <div dangerouslySetInnerHTML={{ __html: correctValue }} />
+                  {/* Display user's selected answer */}
+                  <div className="p-2 rounded bg-yellow-50">
+                    <span className="text-yellow-500 font-semibold">
+                      Your Answer:
+                    </span>{" "}
+                    {userAnswerPairs[index] ? (
+                      <>
+                        <div
+                          dangerouslySetInnerHTML={{
+                            __html: userAnswerPairs[index][1],
+                          }}
+                        />
+                      </>
+                    ) : (
+                      <p className="text-red-500">No answer</p>
+                    )}
+                  </div>
+
+                  {/* Display correct answer */}
+                  <div className="p-2 rounded bg-green-50">
+                    <span className="text-green-500 font-semibold">
+                      Correct:
+                    </span>{" "}
+                    <div dangerouslySetInnerHTML={{ __html: correctValue }} />
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-
-
-        </div>
-
         );
 
       case "SAQ": // Short Answer Question
@@ -402,54 +430,60 @@ const ExamResult = ({ params }: ExamResultProps) => {
       case "ORD": // Ordering
         return (
           <div>
-          <ul>
-            {Array.isArray(question.userAnswer) ? (
-              question.userAnswer.map((answerIndex: any, index) => (
-                <li
-                  key={index}
-                  className="mb-2 flex items-center justify-between gap-3"
-                >
-                  {/* User's Answer with red background and green text */}
-                  <div className="flex-1 p-4 bg-red-100 rounded-lg">
-                    <p className="font-semibold text-green-500">Your Answer:</p>
-                    <span
-                      className="text-green-600"
-                      dangerouslySetInnerHTML={{
-                        __html:
-                          question.options && question.options[answerIndex]
-                            ? question.options[answerIndex]
-                            : "No answer provided",
-                      }}
-                    />
-                  </div>
-        
-                  {/* Correct Answer */}
-                  <div className="flex-1 p-4 bg-white rounded-lg">
-                    <p className="font-semibold text-green-500">Correct Answer:</p>
-                    <span
-                      dangerouslySetInnerHTML={{
-                        __html:
-                          Array.isArray(question.correctAnswer) &&
-                          index < question.correctAnswer.length &&
-                          question.options &&
-                          question.options[question.correctAnswer[index] as unknown as number]
-                            ? question.options[question.correctAnswer[index] as unknown as number]
-                            : "No correct answer available",
-                      }}
-                    />
-                  </div>
+            <ul>
+              {Array.isArray(question.userAnswer) ? (
+                question.userAnswer.map((answerIndex: any, index) => (
+                  <li
+                    key={index}
+                    className=" mb-2 flex items-center justify-between gap-3"
+                  >
+                    {/* User's Answer */}
+                    <div className="flex-1 p-4 bg-white rounded-lg">
+                      <p className="font-semibold text-red-500">Your Answer:</p>
+                      <span
+                        dangerouslySetInnerHTML={{
+                          __html:
+                            question.options && question.options[answerIndex]
+                              ? question.options[answerIndex]
+                              : "No answer provided",
+                        }}
+                      />
+                    </div>
+
+                    {/* Correct Answer */}
+                    <div className="flex-1 p-4 bg-white rounded-lg">
+                      <p className="font-semibold text-green-500">
+                        Correct Answer:
+                      </p>
+                      <span
+                        dangerouslySetInnerHTML={{
+                          __html:
+                            Array.isArray(question.correctAnswer) &&
+                            index < question.correctAnswer.length &&
+                            question.options &&
+                            question.options[
+                              question.correctAnswer[index] as unknown as number
+                            ]
+                              ? question.options[
+                                  question.correctAnswer[
+                                    index
+                                  ] as unknown as number
+                                ]
+                              : "No correct answer available",
+                        }}
+                      />
+                    </div>
+                  </li>
+                ))
+              ) : (
+                <li className="p-4 bg-white rounded-lg mb-2 flex items-center justify-between">
+                  {typeof question.userAnswer === "string"
+                    ? question.userAnswer
+                    : "No answer provided"}
                 </li>
-              ))
-            ) : (
-              <li className="p-4 bg-white rounded-lg mb-2 flex items-center justify-between">
-                {typeof question.userAnswer === "string"
-                  ? question.userAnswer
-                  : "No answer provided"}
-              </li>
-            )}
-          </ul>
-        </div>
-        
+              )}
+            </ul>
+          </div>
         );
 
       case "EMQ": // Extended Matching Questions
@@ -467,64 +501,76 @@ const ExamResult = ({ params }: ExamResultProps) => {
 
                     {/* Render options for the current sub-question */}
                     {question.options?.map((option, index) => {
-                      // Initialize userAnswerIndex and correctAnswerIndex
-                      let userAnswerIndex: number | null = null; // Explicitly define as number | null
-                      let correctAnswerIndex: number | null = null; // Explicitly define as number | null
+                      // Determine user and correct answer indices for comparison
+                      let userAnswerIndex: number | null = null;
+                      let correctAnswerIndex: number | null = null;
 
-                      // Check if userAnswer is an array and get the relevant index
                       if (Array.isArray(question.userAnswer)) {
-                        const userAnswer = question.userAnswer[questionIndex]; // Get user answer
-
-                        // Convert userAnswer to a number if it's a string
+                        const userAnswer = question.userAnswer[questionIndex];
                         userAnswerIndex =
                           typeof userAnswer === "string"
                             ? Number(userAnswer)
                             : userAnswer;
                       } else if (typeof question.userAnswer === "number") {
-                        userAnswerIndex = question.userAnswer; // If it's a single number
+                        userAnswerIndex = question.userAnswer;
                       }
 
-                      // Check if correctAnswer is an array and get the relevant index
                       if (Array.isArray(question.correctAnswer)) {
-                        const answer = question.correctAnswer[questionIndex]; // Get the correct answer
-
-                        // Convert correct answer to number if it's a string
+                        const answer = question.correctAnswer[questionIndex];
                         correctAnswerIndex =
                           typeof answer === "string" ? Number(answer) : answer;
                       } else if (typeof question.correctAnswer === "number") {
-                        correctAnswerIndex = question.correctAnswer; // If it's a single number
+                        correctAnswerIndex = question.correctAnswer;
                       }
 
-                      // Check if this option is the user's answer
-                      const isUserAnswer = userAnswerIndex === index + 1; // Convert index to 1-based
-
-                      // Ensure correctAnswerIndex is a number before comparison
-                      const isCorrectAnswer = correctAnswerIndex === index + 1; // Convert index to 1-based
+                      const isUserAnswer = userAnswerIndex === index + 1; // 1-based index
+                      const isCorrectAnswer = correctAnswerIndex === index + 1;
 
                       return (
                         <div
                           key={index}
-                          className={`p-4 rounded-lg mb-3 ${
+                          className={`flex justify-between items-center p-3 rounded-md mb-2 ${
                             isCorrectAnswer
-                              ? "bg-green-200" // Highlight correct answers
+                              ? "bg-green-500 text-white" // Correct answer
                               : isUserAnswer
-                              ? "bg-red-200" // Highlight user answers
+                              ? "bg-red-500 text-white" // User's incorrect answer
                               : "bg-white"
                           }`}
                         >
+                          {/* Left Circle Icon with letter */}
+                          <span
+                            className={`flex items-center justify-center w-6 h-6 rounded-full mr-2 font-bold ${
+                              isCorrectAnswer
+                                ? "bg-white text-green-500"
+                                : isUserAnswer
+                                ? "bg-white text-red-500"
+                                : "bg-gray-200 text-gray-700"
+                            }`}
+                          >
+                            {String.fromCharCode(65 + index)}
+                          </span>
+
+                          {/* Option text */}
                           <div
-                            dangerouslySetInnerHTML={{ __html: String(option) }}
+                            className="flex-grow"
+                            dangerouslySetInnerHTML={{
+                              __html:
+                                typeof option === "string"
+                                  ? option
+                                  : String(option),
+                            }}
                           />
-                          {isUserAnswer && (
-                            <p className="text-red-600">
-                              <strong>Your Answer</strong>
-                            </p>
-                          )}
-                          {isCorrectAnswer && (
-                            <p className="text-green-600">
-                              <strong>Correct Answer</strong>
-                            </p>
-                          )}
+
+                          {/* Right Icon for correct or incorrect indication */}
+                          <span className="ml-2">
+                            {isCorrectAnswer ? (
+                              <FaCheck className="text-white" />
+                            ) : isUserAnswer ? (
+                              <FaTimes className="text-white" />
+                            ) : (
+                              <FaRegCircle className="text-gray-400" />
+                            )}
+                          </span>
                         </div>
                       );
                     })}
@@ -581,9 +627,7 @@ const ExamResult = ({ params }: ExamResultProps) => {
         <h1 className="text-3xl font-bold">{userExamResult.title}</h1>
       </div>
 
-    
-
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
         <button
           className={`px-4 py-2 text-lg border-b-4  bg-white text-gray-900 ${
             activeTab === "A" ? "border-defaultcolor" : "border-gray-200"
@@ -615,78 +659,155 @@ const ExamResult = ({ params }: ExamResultProps) => {
       </div>
 
       {activeTab === "A" && (
-        <div>
-          {/* Tab A Content */}
-          <div className="text-center mb-8">
-            {passed ? (
-              <div className="bg-white p-6 rounded-lg shadow-sm">
-                <FaCheckCircle
-                  className="text-green-500 mx-auto mb-3"
-                  size={60}
-                />
-                <h1 className="text-4xl font-bold text-green-500">
-                  Congratulations! You Passed!
-                </h1>
-                <p className="text-gray-600 mt-2">
-                  You have successfully passed the exam.
-                </p>
-              </div>
-            ) : (
-              <div className="bg-white p-6 rounded-lg shadow-sm">
-                <FaTimesCircle
-                  className="text-red-500 mx-auto mb-3"
-                  size={60}
-                />
-                <h1 className="text-4xl font-bold text-red-500">
-                  Sorry, You Failed
-                </h1>
-                <p className="text-gray-600 mt-2">
-                  You did not reach the required score to pass the exam.
-                </p>
-              </div>
-            )}
-          </div>
-          {/* Tab B Content - Exam Result Breakdown */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-5 mb-5">
-            <ResultCard
-              title="Total Questions"
-              value={totalQuestions}
-              icon={<FaQuestionCircle className="text-blue-700" size={32} />}
-            />
-            <ResultCard
-              title="Correct Answers"
-              value={userExamResult.correctCount}
-              icon={<FaCheckCircle className="text-green-700" size={32} />}
-            />
-            <ResultCard
-              title="Wrong Answers"
-              value={userExamResult.wrongCount}
-              icon={<FaTimesCircle className="text-red-700" size={32} />}
-            />
-            <ResultCard
-              title="Skipped"
-              value={userExamResult.skippedCount}
-              icon={<FaMinusCircle className="text-orange-700" size={32} />}
-            />
-            <ResultCard
-              title="Marks"
-              value={userExamResult.marks}
-              icon={<FaRibbon className="text-purple-700" size={32} />}
-            />
-            <ResultCard
-              title="Time Taken"
-              value={formatTimeTaken(userExamResult.timeTaken)}
-              icon={<FaClock className="text-teal-700" size={32} />}
-            />
-          </div>
+  <div>
+    {/* Pass or Fail Message */}
+    <div className="text-center mb-8">
+      {passed ? (
+        <div className="bg-white p-8 rounded-lg shadow-sm">
+          <FaCheckCircle className="text-green-500 mx-auto mb-3" size={60} />
+          <h1 className="text-3xl font-bold text-green-600 uppercase">
+            Congratulations! You Passed!
+          </h1>
+          <p className="text-gray-700 mt-2">
+            You successfully met the passing criteria for this exam.
+          </p>
+        </div>
+      ) : (
+        <div className="bg-white p-8 rounded-lg shadow-sm">
+          <FaTimesCircle className="text-red-500 mx-auto mb-3" size={60} />
+          <h1 className="text-3xl font-bold text-red-600 uppercase">
+            Sorry, You Failed
+          </h1>
+          <p className="text-gray-700 mt-2">
+            Review your performance below to understand areas for improvement.
+          </p>
         </div>
       )}
+    </div>
+
+    {/* Summary Cards */}
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+      <ResultCard
+        title="Total Questions"
+        value={totalQuestions}
+        icon={<FaQuestionCircle className="text-blue-700" size={32} />}
+      />
+      <ResultCard
+        title="Correct Answers"
+        value={userExamResult.correctCount}
+        icon={<FaCheckCircle className="text-green-700" size={32} />}
+      />
+      <ResultCard
+        title="Wrong Answers"
+        value={userExamResult.wrongCount}
+        icon={<FaTimesCircle className="text-red-700" size={32} />}
+      />
+      <ResultCard
+        title="Skipped"
+        value={userExamResult.skippedCount}
+        icon={<FaMinusCircle className="text-orange-700" size={32} />}
+      />
+      <ResultCard
+        title="Marks"
+        value={userExamResult.marks}
+        icon={<FaRibbon className="text-purple-700" size={32} />}
+      />
+      <ResultCard
+        title="Time Taken"
+        value={formatTimeTaken(userExamResult.timeTaken)}
+        icon={<FaClock className="text-teal-700" size={32} />}
+      />
+    </div>
+
+    {/* Chart Section */}
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+      {/* Answer Distribution Chart */}
+      <div className="bg-white p-6 rounded-lg shadow-sm ">
+        <h2 className="text-lg font-semibold text-gray-800 mb-2">
+          Answer Distribution
+        </h2>
+        <p className="text-sm text-gray-600 mb-4">
+          A breakdown of your answers, showing correct, incorrect, and skipped responses.
+        </p>
+        <div className="mx-auto" style={{ width: '100%', maxWidth: '300px', height: 'auto' }}>
+          <Doughnut
+            data={{
+              labels: ["Correct", "Incorrect", "Skipped"],
+              datasets: [
+                {
+                  data: [
+                    userExamResult.correctCount,
+                    userExamResult.wrongCount,
+                    userExamResult.skippedCount,
+                  ],
+                  backgroundColor: ["#4CAF50", "#F44336", "#FF9800"],
+                },
+              ],
+            }}
+            options={{
+              responsive: true,
+              plugins: {
+                legend: { position: "bottom" },
+                tooltip: {
+                  callbacks: {
+                    label: (context) => `${context.label}: ${context.raw}`,
+                  },
+                },
+              },
+            }}
+          />
+        </div>
+      </div>
+
+      {/* Score Comparison Chart */}
+      <div className="bg-white p-6 rounded-lg shadow-sm ">
+        <h2 className="text-lg font-semibold text-gray-800 mb-2">
+          Score Comparison
+        </h2>
+        <p className="text-sm text-gray-600 mb-4">
+          See how your score compares to the passing score.
+        </p>
+        <div className="mx-auto" >
+          <Bar
+            data={{
+              labels: ["Your Score", "Passing Score"],
+              datasets: [
+                {
+                  label: "Score",
+                  data: [
+                    userExamResult.correctCount,
+                    Math.ceil(totalQuestions * passingScore),
+                  ],
+                  backgroundColor: ["#4CAF50", "#FFC107"],
+                },
+              ],
+            }}
+            options={{
+              responsive: true,
+              plugins: {
+                legend: { display: false },
+                tooltip: {
+                  callbacks: {
+                    label: (context) => `Score: ${context.raw}`,
+                  },
+                },
+              },
+              scales: {
+                y: { beginAtZero: true, max: totalQuestions },
+              },
+            }}
+          />
+        </div>
+      </div>
+    </div>
+  </div>
+)}
+
 
       {activeTab === "B" && (
         <div>
           {/* Render Questions */}
           <div className="mb-8 bg-white p-5 rounded-lg shadow-sm">
-
             <div className="space-y-6">
               {quizData.questions.map((question, index) =>
                 renderQuestionResult(question, index)
@@ -700,7 +821,6 @@ const ExamResult = ({ params }: ExamResultProps) => {
         <div>
           {/* Tab C Content - Leaderboard */}
           <div className="mb-8 bg-white shadow-sm p-1 rounded-lg">
-          
             {leaderBoard.length > 0 ? (
               <LeaderboardTable entries={leaderBoard} />
             ) : (

@@ -1,21 +1,20 @@
-"use client"; // Indicate this is a client component
-
+"use client";
 import { useState, useEffect } from 'react';
-import Link from 'next/link';
 import axios from 'axios';
-import Cookies from 'js-cookie'; // For handling cookies
+import Cookies from 'js-cookie';
 import Loader from '@/components/Common/Loader';
 import NoData from '@/components/Common/NoData';
-import { useRouter } from "next/navigation"; // Use router to redirect
-import { toast } from 'react-toastify'; // Optional: For notifications
+import { useRouter } from "next/navigation";
+import { toast } from 'react-toastify';
+import { FaFolder, FaSignal, FaClock, FaBookOpen, FaLock } from "react-icons/fa";
 
-// Define interfaces for lessons
 interface Lesson {
   title: string;
   slug: string;
   category: string;
   difficulty: string;
   readTime: string;
+  isFree: boolean;
 }
 
 interface Skill {
@@ -27,56 +26,35 @@ export default function LessonsPage() {
   const [skillsData, setSkillsData] = useState<Skill[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const router = useRouter(); // For redirecting to other pages
+  const router = useRouter();
 
-  // Function to handle payment logic
   const handlePayment = async (slug: string) => {
     try {
-      // Get JWT token from cookies
       const jwt = Cookies.get("jwt");
-      const type = "lessons"; // assuming "quizzes" is the type
-
       if (!jwt) {
         toast.error("User is not authenticated. Please log in.");
         return;
       }
 
-      // Make the API request to check the user's subscription
       const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/user-subscription`, {
-        headers: {
-          Authorization: `Bearer ${jwt}`,
-        },
-        params: {
-          type: type, // Pass the type as a parameter
-        },
+        headers: { Authorization: `Bearer ${jwt}` },
+        params: { type: "lessons" },
       });
 
-      // Handle the response
       if (response.data.status === true) {
-        // toast.success(`Subscription is active. Access granted for ${slug}.`);
-        router.push(`${slug}`);
+        router.push(slug);
       } else {
         toast.error('Please buy a subscription to access this course.');
         router.push("/pricing");
       }
     } catch (error: any) {
-      console.log(error);
-      // Handle errors such as network issues or API errors
       if (error.response) {
-        // API responded with an error status
-        const { status, data } = error.response;
-
+        const { status } = error.response;
         if (status === 401) {
-          toast.error('User is not authenticated. Please log in.');
+          toast.error('Please log in.');
           router.push("/signin");
-        } else if (status === 404) {
-          toast.error('Please buy a subscription to access this course.');
-          router.push("/pricing");
-        } else if (status === 403) {
-          toast.error('Feature not available in your plan. Please upgrade your subscription.');
-          router.push("/pricing");
         } else {
-          toast.error(`An error occurred: ${data.error || 'Unknown error'}`);
+          toast.error("An error occurred. Please try again.");
         }
       } else {
         toast.error("An error occurred. Please try again.");
@@ -85,12 +63,9 @@ export default function LessonsPage() {
   };
 
   useEffect(() => {
-    const controller = new AbortController();
-
     const fetchLessons = async () => {
-      const token = Cookies.get('jwt'); // Get JWT token from cookies
-      const categoryId = Cookies.get('category_id'); // Get category_id from cookies
-      console.log(token, categoryId);
+      const token = Cookies.get('jwt');
+      const categoryId = Cookies.get('category_id');
 
       if (!token || !categoryId) {
         setError('Missing token or category ID');
@@ -100,24 +75,20 @@ export default function LessonsPage() {
 
       try {
         const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/all-lesson`, {
-          headers: {
-            Authorization: `Bearer ${token}`, // Pass JWT token in Authorization header
-          },
-          params: {
-            category: categoryId, // Pass category_id as a query parameter
-          },
-          signal: controller.signal, // Attach the abort signal here
+          headers: { Authorization: `Bearer ${token}` },
+          params: { category: categoryId },
         });
 
         if (response.data && response.data.status) {
           const transformedData = Object.keys(response.data.data).map((key: string) => ({
-            name: key, // This will dynamically set the name to 'Learning', 'Music', etc.
+            name: key,
             lessons: response.data.data[key].map((lesson: any) => ({
               title: lesson.lesson_title,
               slug: lesson.lesson_slug,
               category: lesson.lesson_syllabus,
               difficulty: lesson.lesson_level,
               readTime: `${lesson.lesson_read_time} min`,
+              isFree: lesson.isFree, // Capture isFree property
             })),
           }));
 
@@ -126,22 +97,13 @@ export default function LessonsPage() {
           setError('Failed to fetch data');
         }
       } catch (err) {
-        if (axios.isCancel(err)) {
-          console.log('Fetch cancelled');
-        } else {
-          console.error('Error fetching lessons:', err);
-          setError('An error occurred while fetching lessons');
-        }
+        setError('An error occurred while fetching lessons');
       }
 
       setLoading(false);
     };
 
     fetchLessons();
-
-    return () => {
-      controller.abort(); // Cleanup the fetch call on component unmount
-    };
   }, []);
 
   if (loading) {
@@ -153,28 +115,51 @@ export default function LessonsPage() {
   }
 
   return (
-    <div className="dashboard-page">
-      <div className="mb-3">
-        {/* Loop through the skills */}
-        {skillsData.map((skill) => (
-          <div key={skill.name} className="mb-5">
-            <h2 className="text-xl font-semibold text-gray-800 mb-4">{skill.name}</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-              {/* Loop through the lessons */}
-              {skill.lessons.map((lesson) => (
-                <div key={lesson.slug} onClick={() => handlePayment(`/dashboard/lessons/${lesson.slug}`)}>
-                  <div className="card bg-white rounded-lg shadow-sm p-4 cursor-pointer transition-shadow border border-white hover:border-defaultcolor">
-                    <h3 className="text-lg font-semibold">{lesson.title}</h3>
-                    <p className="text-gray-600">Category: {lesson.category}</p>
-                    <p className="text-gray-600">Difficulty: {lesson.difficulty.replace(/_/g, ' ').replace(/\b\w/g, char => char.toUpperCase())}</p>
-                    <p className="text-gray-600">Read time: {lesson.readTime}</p>
-                  </div>
+    <div className="mb-3">
+      {/* Loop through the skills */}
+      {skillsData.map((skill) => (
+        <div key={skill.name} className="mb-6">
+          <h2 className="text-2xl font-semibold text-gray-800 mb-4">{skill.name}</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {/* Loop through the lessons */}
+            {skill.lessons.map((lesson) => (
+              <div
+                key={lesson.slug}
+                onClick={() => lesson.isFree ? router.push(`/dashboard/lessons/${lesson.slug}`) : handlePayment(`/dashboard/lessons/${lesson.slug}`)}
+                className="card bg-white rounded-lg p-5 cursor-pointer transition-all border border-gray-200 hover:border-defaultcolor "
+              >
+                <h3 className="text-lg font-semibold text-gray-800 mb-2">{lesson.title}</h3>
+                <div className="flex items-center text-gray-600 mb-1">
+                  <FaFolder className="mr-2 text-gray-500" />
+                  <span>Category: {lesson.category}</span>
                 </div>
-              ))}
-            </div>
+                <div className="flex items-center text-gray-600 mb-1">
+                  <FaSignal className="mr-2 text-gray-500" />
+                  <span>Difficulty: {lesson.difficulty.replace(/_/g, ' ').replace(/\b\w/g, char => char.toUpperCase())}</span>
+                </div>
+                <div className="flex items-center text-gray-600 mb-4">
+                  <FaClock className="mr-2 text-gray-500" />
+                  <span>Read time: {lesson.readTime}</span>
+                </div>
+
+                {/* Button */}
+                <button 
+                  className={`w-full py-2 rounded-md font-semibold flex items-center justify-center gap-2 transition ${
+                    lesson.isFree ? "bg-green-500 text-white hover:bg-green-600" : "bg-defaultcolor text-white hover:bg-opacity-90"
+                  }`}
+                  onClick={(e) => { 
+                    e.stopPropagation(); 
+                    lesson.isFree ? router.push(`/dashboard/lessons/${lesson.slug}`) : handlePayment(`/dashboard/lessons/${lesson.slug}`);
+                  }}
+                >
+                  {lesson.isFree ? <FaBookOpen /> : <FaLock />}
+                  {lesson.isFree ? "View Lesson" : "Subscribe to Access"}
+                </button>
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
+        </div>
+      ))}
     </div>
   );
 }

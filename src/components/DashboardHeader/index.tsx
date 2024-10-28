@@ -1,4 +1,4 @@
-import { FiMenu, FiChevronDown, FiLogOut, FiSettings, FiGlobe, FiUser } from "react-icons/fi";
+import { FiMenu, FiChevronDown, FiLogOut, FiSettings, FiGlobe, FiUser, FiBook, FiCreditCard } from "react-icons/fi";
 import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
@@ -163,8 +163,15 @@ export default function Header({ toggleSidebar }: HeaderProps) {
           {isDropdownOpen && (
             <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-700 rounded-md shadow-lg py-2 z-50 transition-opacity duration-300 ease-in-out">
               <Link href="/dashboard/profile" className="block px-4 py-2 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600">
-                <FiUser className="inline-block mr-2" /> Profile
+                <FiUser className="inline-block mr-2" />My Profile
               </Link>
+              <Link href="/dashboard/my-subscription" className="block px-4 py-2 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600">
+                <FiBook className="inline-block mr-2" />My Subscription
+              </Link>
+              <Link href="/dashboard/my-payments" className="block px-4 py-2 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600">
+                <FiCreditCard className="inline-block mr-2" />My Payments
+              </Link>
+
              
               <button onClick={handleLogout} type="button" className="block text-start px-4 py-2 w-full text-red-500 hover:bg-gray-100 dark:hover:bg-gray-600"><FiLogOut className="inline-block mr-2" />Logout</button>
             </div>
