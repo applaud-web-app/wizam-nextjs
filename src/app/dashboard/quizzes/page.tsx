@@ -11,6 +11,9 @@ import QuizPacks from '@/components/Dashboard/QuizPacks';
 interface QuizType {
   title: string;
   slug: string;
+  totalQuizzes: number;
+  totalFreeQuizzes: number;
+  totalPaidQuizzes: number;
 }
 
 export default function AllQuizPage() {
@@ -18,7 +21,7 @@ export default function AllQuizPage() {
   const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
-    const fetchSyllabuses = async () => {
+    const fetchQuizTypes = async () => {
       try {
         const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/quiz-type`, {
           headers: {
@@ -27,22 +30,25 @@ export default function AllQuizPage() {
         });
 
         if (response.data.status) {
-          const fetchedSyllabuses = response.data.data.map((type: any) => ({
+          const fetchedQuizTypes = response.data.data.map((type: any) => ({
             title: type.name,
             slug: type.slug,
+            totalQuizzes: type.total_quizzes || 0,
+            totalFreeQuizzes: type.unpaid_quizzes || 0,
+            totalPaidQuizzes: type.paid_quizzes || 0,
           }));
-          setQuizType(fetchedSyllabuses);
+          setQuizType(fetchedQuizTypes);
         } else {
-          console.error('Failed to fetch syllabus data');
+          console.error('Failed to fetch quiz data');
         }
       } catch (error) {
-        console.error('Error fetching syllabus data:', error);
+        console.error('Error fetching quiz data:', error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchSyllabuses();
+    fetchQuizTypes();
   }, []);
 
   if (loading) {
@@ -51,23 +57,24 @@ export default function AllQuizPage() {
 
   return (
     <div className="dashboard-page">
-      <h1 className="text-3xl lg:text-4xl font-bold mb-6">
-        Quizzes
-      </h1>
+      <h1 className="text-3xl lg:text-4xl font-bold mb-6">Quizzes</h1>
 
-      <h2 className="text-lg lg:text-2xl font-bold mb-3">Browse Quiz Pack</h2>
+      <h2 className="text-lg lg:text-2xl font-bold mb-3">Browse Quiz Packs</h2>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5 mb-8">
         {quizType.length > 0 ? (
           quizType.map((type, index) => (
             <QuizPacks
-              key={index}
+              key={type.slug}
               title={type.title}
               slug={type.slug}
               imagePath="/images/teeth.png" // Replace with the correct image path
+              totalQuizzes={type.totalQuizzes}
+              totalFreeQuizzes={type.totalFreeQuizzes}
+              totalPaidQuizzes={type.totalPaidQuizzes}
             />
           ))
         ) : (
-          <NoData message="No syllabuses available." />
+          <NoData message="No quiz packs available." />
         )}
       </div>
       <QuizList />

@@ -18,6 +18,7 @@ import axios from "axios";
 import { toast } from "react-toastify";
 import Link from "next/link";
 import NoData from "@/components/Common/NoData";
+import { FaHourglass } from "react-icons/fa6";
 
 // Option interface
 interface Option {
@@ -29,7 +30,7 @@ interface Question {
   id: number;
   type: string; // Question type (MSA, MMA, TOF, etc.)
   question: string | string[]; // The question text
-  options?: string[]; // The answer options, if applicable (for multiple-choice, matching, etc.)
+  options?: string[]; 
 }
 
 // ExamData interface
@@ -946,27 +947,26 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
         )}
       </div>
       {!submitted && timeLeft > 0 && (
-        <div className="w-full md:w-1/3 bg-white shadow-lg rounded-lg p-6 space-y-5">
+        <div className="w-full md:w-1/3 bg-white shadow-sm rounded-lg p-6 space-y-5">
           {/* Exam Name and Total Time */}
           <div className="flex justify-between items-center  bg-indigo-100 p-3 rounded-md">
             <div className="flex items-center space-x-2">
-              <AiOutlineClockCircle className="text-indigo-600" size={22} />
-              <h3 className="text-lg font-semibold text-indigo-700">
-                Total Time
+              <AiOutlineClockCircle className="text-indigo-600" size={24} />
+              <h3 className="text-3xl font-semibold text-indigo-700">
+                  {parseFloat(examData.duration).toFixed(0)}
               </h3>
+              <p className="text-lg font-medium text-indigo-500">Minutes</p>
             </div>
-            <p className="text-lg font-bold text-indigo-800">
-              {parseFloat(examData.duration).toFixed(0)} mins
-            </p>
+          
           </div>
 
           {/* Time Remaining */}
-          <div className="text-center flex justify-between items-center  bg-orange-100 p-4 rounded-md space-x-2">
-            <AiOutlineClockCircle className="text-orange-500" size={36} />
-            <p className="text-5xl font-bold text-orange-600">
+          <div className="text-center flex space-x-3 items-center bg-[#ffc300] p-4 rounded-md">
+            <FaHourglass  className="text-black" size={24} />
+            <p className="text-3xl font-bold text-black">
               {formatTimeLeft(timeLeft)}
             </p>
-            <AiOutlineClockCircle className="text-orange-500" size={36} />
+           
           </div>
 
           {/* Answered and Skipped Count */}
@@ -994,18 +994,25 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
           {/* Progress Bar */}
           <div className="mb-6">
             <p className="text-lg font-medium text-gray-700 mb-2">Progress</p>
-            <div className="h-2 w-full bg-gray-200 rounded-full overflow-hidden">
-              <div
-                className="h-full bg-defaultcolor rounded-full"
-                style={{
-                  width: `${
-                    (Object.keys(answers).length / examData.questions.length) *
-                    100
-                  }%`,
-                }}
-              ></div>
+            <div className="flex items-center">
+              {/* Progress Bar */}
+              <div className="h-2 w-full bg-gray-200 rounded-full overflow-hidden mr-2">
+                <div
+                  className="h-full bg-defaultcolor rounded-full"
+                  style={{
+                    width: `${
+                      (Object.keys(answers).length / examData.questions.length) * 100
+                    }%`,
+                  }}
+                ></div>
+              </div>
+              {/* Percentage Display */}
+              <span className="text-gray-700 font-medium">
+                {Math.round((Object.keys(answers).length / examData.questions.length) * 100)}%
+              </span>
             </div>
           </div>
+
 
           {/* Question Navigation Grid */}
           {examData.question_view === "enable" ? (

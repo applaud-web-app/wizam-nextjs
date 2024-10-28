@@ -1,10 +1,9 @@
-"use client";
-
 import Link from "next/link";
-import { FiArrowRight } from "react-icons/fi";
+import { useRouter } from "next/navigation";
+import { FiArrowRight, FiPlay } from "react-icons/fi";
 
-interface Exam {
-  id: string; // Unique identifier for each exam
+interface ResumeExam {
+  slug: string; // Unique identifier for each exam
   title: string;
   duration_mode: string;
   total_questions: number;
@@ -15,29 +14,30 @@ interface Exam {
   point: number;
 }
 
-interface ExamTableProps {
-  exams: Exam[];
+interface ResumeExamTableProps {
+  resumedExam: ResumeExam[];
 }
 
-export default function ExamTable({ exams }: ExamTableProps) {
-  if (!exams || exams.length === 0) return <p>No exams available</p>;
+export default function ResumeExamTable({ resumedExam }: ResumeExamTableProps) {
+  const router = useRouter();
+
+  if (!resumedExam || resumedExam.length === 0) return <p>No resumed exams available</p>;
+
+  // Function to handle resume action
+  const handleResumeExam = (examSlug: string) => {
+    router.push(`/dashboard/exam-play/${examSlug}`);
+  };
 
   return (
     <div className="mb-8">
       <div className="flex justify-between items-center flex-wrap">
-        <h2 className="text-lg lg:text-2xl font-bold mb-3">All Exams</h2>
-        <Link
-          href="/dashboard/all-exams"
-          className="text-defaultcolor font-semibold flex items-center space-x-2 hover:underline transition duration-200 mb-3"
-        >
-          <span>See All</span>
-          <FiArrowRight />
-        </Link>
+        <h2 className="text-lg lg:text-2xl font-bold mb-3">Resumed Exams</h2>
+       
       </div>
 
       <div className="overflow-x-auto rounded-lg shadow-sm">
         <table className="min-w-full table-auto rounded-lg overflow-hidden">
-          <thead className="bg-defaultcolor text-white">
+          <thead className="bg-[#C9BC0F] text-white">
             <tr>
               <th className="p-3 text-left">S.No</th>
               <th className="p-3 text-left">Exam Title</th>
@@ -48,8 +48,8 @@ export default function ExamTable({ exams }: ExamTableProps) {
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {exams.map((exam, index) => (
-              <tr key={exam.id} className="hover:bg-gray-50">
+            {resumedExam.map((exam, index) => (
+              <tr key={index} className="hover:bg-gray-50">
                 <td className="p-4">{index + 1}</td>
                 <td className="p-4">{exam.title}</td>
                 <td className="p-4">
@@ -61,16 +61,17 @@ export default function ExamTable({ exams }: ExamTableProps) {
                 <td className="p-4">{exam.total_questions}</td>
                 <td className="p-4">
                   {exam.point_mode === "manual"
-                    ? exam.total_questions * exam.point
+                    ? exam.total_questions * (exam.point || 0)
                     : exam.total_marks}
                 </td>
                 <td className="p-4">
-                  <Link
-                    href={`/dashboard/exam/${exam.id}`}
-                    className="text-defaultcolor font-semibold hover:underline transition duration-200"
+                  <button
+                    onClick={() => handleResumeExam(exam.slug)}
+                    className="text-white bg-[#C9BC0F] px-3 py-1 rounded-md hover:bg-[#928c38] transition duration-200 flex items-center space-x-1"
                   >
-                    View Details
-                  </Link>
+                    <FiPlay />
+                    <span>Resume</span>
+                  </button>
                 </td>
               </tr>
             ))}

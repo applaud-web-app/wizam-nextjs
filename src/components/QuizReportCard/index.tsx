@@ -246,7 +246,7 @@ const QuizReportPDF: React.FC<{ quizData: any }> = ({ quizData }) => {
 
           <View style={styles.row}>
             <View>
-              <Text style={[styles.title, { fontSize: 20 }]}>quiz Report: </Text>
+              <Text style={[styles.title, { fontSize: 20 }]}>Quiz Report: </Text>
               <Text style={{fontSize: 16}}>Dental Nursing </Text>
             </View>
             <View>
@@ -364,7 +364,7 @@ const QuizReportPDF: React.FC<{ quizData: any }> = ({ quizData }) => {
 };
 
 // quiz Report Generator Component
-const quizReportGenerator: React.FC<{ uuid: string }> = ({ uuid }) => {
+const QuizReportCard: React.FC<{ uuid: string }> = ({ uuid }) => {
   const [quizData, setquizData] = useState<any>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -438,4 +438,4 @@ const quizReportGenerator: React.FC<{ uuid: string }> = ({ uuid }) => {
   );
 };
 
-export default quizReportGenerator;
+export default QuizReportCard;
