@@ -80,6 +80,7 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
     const category = Cookies.get("category_id");
 
     const fetchExamSet = async () => {
+      Cookies.set("redirect_url", `/dashboard/exam-play/${slug}`, { expires: 1,})
       try {
         const response = await axios.get(
           `${process.env.NEXT_PUBLIC_API_URL}/play-exam/${slug}`,
@@ -119,9 +120,7 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
             router.push("/signin"); // Redirect to sign-in page
           } else if (status === 404) {
             toast.error("Please buy a subscription to access this course.");
-            Cookies.set("redirect_url", `/dashboard/exam-play/${slug}`, {
-              expires: 1,
-            });
+            Cookies.set("redirect_url", `/dashboard/exam-play/${slug}`, { expires: 1,});
             console.log("exam-play");
             router.push("/pricing"); // Redirect to pricing page
           } else if (status === 403) {
