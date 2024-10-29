@@ -149,7 +149,6 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
 
-
   resultSection: {
     backgroundColor: '#f0f0f0',
     padding: 10,
@@ -246,7 +245,7 @@ const PracticeReportPDF: React.FC<{ practiceData: any }> = ({ practiceData }) =>
 
           <View style={styles.row}>
             <View>
-              <Text style={[styles.title, { fontSize: 20 }]}>practice Report: </Text>
+              <Text style={[styles.title, { fontSize: 20 }]}>Test Report: </Text>
               <Text style={{fontSize: 16}}>Dental Nursing </Text>
             </View>
             <View>
@@ -274,7 +273,7 @@ const PracticeReportPDF: React.FC<{ practiceData: any }> = ({ practiceData }) =>
 
     
               <Text style={styles.label}>
-                practice Name
+                Test Name
               </Text>
               <Text style={styles.infoText}>{practice_info.name}</Text>
               <Text style={styles.label}>
@@ -373,7 +372,7 @@ const PracticeReportCard: React.FC<{ uuid: string }> = ({ uuid }) => {
     const fetchpracticeData = async () => {
       try {
         const response = await axios.get(
-          `${process.env.NEXT_PUBLIC_API_URL}/download-practice-report/${uuid}`,
+          `${process.env.NEXT_PUBLIC_API_URL}/download-practice-set-report/${uuid}`,
           {
             headers: {
               Authorization: `Bearer ${Cookies.get("jwt")}`,

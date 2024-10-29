@@ -22,7 +22,7 @@ const QuizPacks: React.FC<QuizPacksProps> = ({
 }) => {
 
   return (
-    <Link href={`/dashboard/all-quizzes/${slug}`}>
+    <Link href={`/dashboard/quizzes/${slug}`}>
       <div className="bg-white p-5 rounded-xl border border-white shadow-sm hover:border-quaternary transform transition-all duration-300 cursor-pointer">
         {/* Display image */}
         <Image

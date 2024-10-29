@@ -176,7 +176,7 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
         <div className="bg-white p-6 rounded-lg shadow-lg w-96">
           <h2 className="font-bold text-lg mb-2">Are you sure?</h2>
           <p className="text-gray-600 mb-4">
-            Your exam will be terminated and you will not be graded if you exit!
+          Are you sure you want to submit the test? Once submitted, you will not be able to make further changes.
           </p>
           <div className="mt-6 flex justify-between">
             <button
@@ -1003,7 +1003,7 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
                     width: `${
                       (Object.keys(answers).length / examData.questions.length) * 100
                     }%`,
-                  }}
+                  }} 
                 ></div>
               </div>
               {/* Percentage Display */}
