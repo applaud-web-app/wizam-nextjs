@@ -1,23 +1,24 @@
 "use client";
 
 import Loader from "@/components/Common/Loader";
-import { useState, useEffect } from "react";
+import { AiOutlineArrowRight, AiOutlineClockCircle } from "react-icons/ai"; // For icons
+import { useState, useEffect, useRef } from "react";
 import {
   FaCheckCircle,
   FaArrowRight,
   FaArrowLeft,
+  FaBook,
   FaClock,
   FaRegSmile,
   FaRegFrown,
 } from "react-icons/fa";
-import { AiOutlineArrowRight } from 'react-icons/ai'; // For icons
-
 import Cookies from "js-cookie";
 import { useRouter } from "next/navigation";
 import axios from "axios";
 import { toast } from "react-toastify";
 import Link from "next/link";
 import NoData from "@/components/Common/NoData";
+import { FaHourglass } from "react-icons/fa6";
 
 // Option interface
 interface Option {
@@ -29,7 +30,7 @@ interface Question {
   id: number;
   type: string; // Question type (MSA, MMA, TOF, etc.)
   question: string | string[]; // The question text
-  options?: string[]; // The answer options, if applicable (for multiple-choice, matching, etc.)
+  options?: string[];
 }
 
 // PracticeData interface
@@ -40,29 +41,47 @@ interface PracticeData {
   points: number;
 }
 
-export default function PracticeTestDetailPage({
-  params,
-}: {
-  params: { slug: string };
-}) {
+export default function PlayQuizPage({ params }: { params: { slug: string } }) {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState<number>(0);
-  const [answers, setAnswers] = useState<{ [key: number]: string[] | null }>({});
+  const [answers, setAnswers] = useState<{ [key: number]: string[] | null }>(
+    {}
+  );
   const [timeLeft, setTimeLeft] = useState<number>(1800); // Timer (in seconds)
-  const [submitted, setSubmitted] = useState<boolean>(false);
+  const [submitted, setSubmitted] = useState<boolean>(false); // Controls whether Practice Test is submitted
   const [slug, setSlug] = useState<string | null>(null);
   const [practiceData, setPracticeData] = useState<PracticeData | null>(null);
   const router = useRouter();
   const [loading, setLoading] = useState<boolean>(true);
   const [uuid, setUuid] = useState<string | null>(null);
+  const [showModal, setShowModal] = useState<boolean>(false); // State to control modal visibility
+  let timerId: NodeJS.Timeout | null = null;
 
-  let timerId: NodeJS.Timeout | null = null; // Variable to store the timer reference
+  // Refs to hold the latest state values
+  const answersRef = useRef<{ [key: number]: string[] | null }>({});
+  const practiceDataRef = useRef<PracticeData | null>(null);
+  const submittedRef = useRef<boolean>(false); // Added ref for submitted flag
+  const hasFetchedData = useRef(false); // New ref to track if API call has been made
 
+  // Synchronize refs with state
   useEffect(() => {
+    answersRef.current = answers;
+    practiceDataRef.current = practiceData;
+    submittedRef.current = submitted; // Keep ref updated with submitted state
+  }, [answers, practiceData, submitted]);
+
+  // Fetch Practice Test data on component mount
+  useEffect(() => {
+    if (hasFetchedData.current) return; // Skip if API call already made
+    hasFetchedData.current = true; // Set to true after first API call
+
     const { slug } = params;
     setSlug(slug);
     const category = Cookies.get("category_id");
 
-    const fetchPracticeSet = async () => {
+    const fetchPracticeTestSet = async () => {
+      Cookies.set("redirect_url", `/dashboard/practice-set-play/${slug}`, {
+        expires: 1,
+      });
       try {
         const response = await axios.get(
           `${process.env.NEXT_PUBLIC_API_URL}/play-practice-set/${slug}`,
@@ -76,36 +95,46 @@ export default function PracticeTestDetailPage({
         if (response.data.status) {
           const fetchPracticeData = response.data.data;
           setUuid(fetchPracticeData.uuid);
+          Cookies.remove("redirect_url");
           setPracticeData({
             title: fetchPracticeData.title,
             questions: fetchPracticeData.questions,
             duration: fetchPracticeData.duration,
             points: fetchPracticeData.points,
           });
-          // Convert duration to seconds
           setTimeLeft(Math.round(parseFloat(fetchPracticeData.duration) * 60));
         } else {
-          toast.error("No practice set found for this category");
+          toast.error("No Practice Test found for this category");
         }
-      } catch (error:any) {
+      } catch (error: any) {
         console.error("Error fetching practice set:", error);
-    
+
         // Handle errors during the API request
         if (error.response) {
           const { status, data } = error.response;
-    
+
           // Handle specific error statuses
           if (status === 401) {
             toast.error("User is not authenticated. Please log in.");
             router.push("/signin"); // Redirect to sign-in page
           } else if (status === 404) {
             toast.error("Please buy a subscription to access this course.");
+            Cookies.set("redirect_url", `/dashboard/practice-set-play/${slug}`, {
+              expires: 1,
+            });
+            console.log("practice-test-play");
             router.push("/pricing"); // Redirect to pricing page
           } else if (status === 403) {
-            toast.error("Feature not available in your plan. Please upgrade your subscription.");
+            toast.error(
+              "Feature not available in your plan. Please upgrade your subscription."
+            );
+            Cookies.set("redirect_url", `/dashboard/practice-test-play/${slug}`, {
+              expires: 1,
+            });
+            console.log("practice-test-play");
             router.push("/pricing"); // Redirect to pricing page
           } else {
-            toast.error(`An error occurred: ${data.error || 'Unknown error'}`);
+            toast.error(`An error occurred: ${data.error || "Unknown error"}`);
           }
         } else {
           toast.error("An error occurred. Please try again.");
@@ -115,19 +144,20 @@ export default function PracticeTestDetailPage({
       }
     };
 
-    fetchPracticeSet();
+    fetchPracticeTestSet();
   }, [params, router]);
 
-  // Countdown timer logic
+  // Countdown timer for Practice Test
   useEffect(() => {
     if (!practiceData || submitted) return;
 
+    // Set the interval for countdown timer
     timerId = setInterval(() => {
       setTimeLeft((prev) => {
         if (prev <= 0) {
-          if (!submitted) {
-            clearInterval(timerId!); // Clear the timer first
-            handleSubmit(); // Auto-submit when time is up
+          clearInterval(timerId!);
+          if (!submittedRef.current) {
+            handleSubmit(); // Auto-submit when time runs out
           }
           return 0;
         }
@@ -135,8 +165,40 @@ export default function PracticeTestDetailPage({
       });
     }, 1000);
 
-    return () => clearInterval(timerId!); // Clean up the timer when the component unmounts
-  }, [practiceData, submitted]);
+    // Clean up the interval on component unmount
+    return () => clearInterval(timerId!);
+  }, [practiceData]);
+
+  // Modal Dialog for Confirming Submission
+  const ConfirmationModal = ({}) => {
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-[1001]">
+        <div className="bg-white p-6 rounded-lg shadow-lg w-96">
+          <h2 className="font-bold text-lg mb-2">Are you sure?</h2>
+          <p className="text-gray-600 mb-4">
+          Are you sure you want to submit the test? Once submitted, you will not be able to make further changes.
+          </p>
+          <div className="mt-6 flex justify-between">
+            <button
+              className="border border-gray-400 text-gray-700 px-4 py-2 rounded hover:bg-gray-100"
+              onClick={() => setShowModal(false)}
+            >
+              Cancel
+            </button>
+            <button
+              className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+              onClick={() => {
+                setShowModal(false);
+                handleSubmit();
+              }}
+            >
+              Finish Test
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   const handleAnswerChange = (
     questionId: number,
@@ -144,35 +206,33 @@ export default function PracticeTestDetailPage({
     subQuestionIndex?: number // for handling sub-questions like in EMQ
   ) => {
     setAnswers((prev: any) => {
-      const existingAnswers = { ...prev }; // Clone previous answers state
-  
+      const existingAnswers = { ...prev };
+
       // Handle sub-questions (like in EMQ)
       if (typeof subQuestionIndex === "number") {
         const updatedSubAnswers = existingAnswers[questionId] || [];
-        updatedSubAnswers[subQuestionIndex] = answer[0]; // Update only the sub-question's answer
+        updatedSubAnswers[subQuestionIndex] = answer[0];
         existingAnswers[questionId] = updatedSubAnswers;
       } else if (answer.length === 2) {
         // For MTF, handle pairs of answers
         const updatedPairs = [...(existingAnswers[questionId] || [])];
         const existingIndex = updatedPairs.findIndex(
-          (pair) => pair[0] === answer[0] // Find the left-side option match
+          (pair) => pair[0] === answer[0]
         );
-  
+
         if (existingIndex > -1) {
-          updatedPairs[existingIndex] = answer; // Update the right-side match
+          updatedPairs[existingIndex] = answer;
         } else {
-          updatedPairs.push(answer); // Add new pair
+          updatedPairs.push(answer);
         }
         existingAnswers[questionId] = updatedPairs;
       } else {
-        existingAnswers[questionId] = answer; // For other types, just update the answer
+        existingAnswers[questionId] = answer;
       }
-  
+
       return existingAnswers;
     });
   };
-  
-
 
   const handleNextQuestion = () => {
     if (
@@ -189,125 +249,132 @@ export default function PracticeTestDetailPage({
     }
   };
 
-  
   const handleSubmit = async () => {
-    if (submitted) return;
-    setSubmitted(true); // Mark as submitted
-    if (timerId) clearInterval(timerId); // Stop the timer when submitting manually
-  
-    // Structure answers based on question type for submission
-    const formattedAnswers = practiceData?.questions.map((question: Question) => {
-      const userAnswer = answers[question.id];
-  
-      // Handle unanswered questions: Include them with an empty or null answer
-      if (!userAnswer || userAnswer.length === 0) {
-        return {
-          id: question.id,
-          type: question.type,
-          answer: [], // Mark skipped questions with an empty array
-        };
-      }
-  
-      switch (question.type) {
-        case "MSA": // Multiple Single Answer
+    // Prevent submission if it has already been submitted
+    if (submittedRef.current) return; // Use ref to guard against duplicate submissions
+
+    setSubmitted(true);
+    submittedRef.current = true; // Set ref to prevent future calls
+    if (timerId) clearInterval(timerId); // Stop the timer when submitting
+
+    const formattedAnswers = practiceDataRef.current?.questions.map(
+      (question: Question) => {
+        const userAnswer = answersRef.current[question.id];
+
+        // Ensure that blank answers are submitted if no answer is provided
+        if (!userAnswer || userAnswer.length === 0) {
           return {
             id: question.id,
             type: question.type,
-            answer: question.options
-              ? question.options.indexOf(userAnswer[0]) + 1 // 1-based index if options are found
-              : 0, // Fallback to 0 if no options are defined
+            answer: [],
           };
-  
-        case "MMA": // Multiple Match Answer
-          return {
-            id: question.id,
-            type: question.type,
-            answer: userAnswer.map((ans: string) =>
-              question.options ? question.options.indexOf(ans) + 1 : 0
-            ), // Array of 1-based indices
-          };
-  
-        case "TOF": // True or False
-          return {
-            id: question.id,
-            type: question.type,
-            answer: userAnswer[0] === "true" ? 1 : 2, // 1 for True, 2 for False
-          };
-  
-        case "SAQ": // Short Answer Question
-          return {
-            id: question.id,
-            type: question.type,
-            answer: userAnswer[0], // User's text input
-          };
-  
+        }
+
+        switch (question.type) {
+          case "MSA":
+            return {
+              id: question.id,
+              type: question.type,
+              answer: question.options
+                ? question.options.indexOf(userAnswer[0]) + 1
+                : 0,
+            };
+
+          case "MMA":
+            return {
+              id: question.id,
+              type: question.type,
+              answer: userAnswer.map((ans: string) =>
+                question.options ? question.options.indexOf(ans) + 1 : 0
+              ),
+            };
+
+          case "TOF":
+            return {
+              id: question.id,
+              type: question.type,
+              answer: userAnswer[0] === "true" ? 1 : 2,
+            };
+
+          case "SAQ":
+            return {
+              id: question.id,
+              type: question.type,
+              answer: userAnswer[0],
+            };
+
           case "FIB":
             return {
               id: question.id,
               type: question.type,
               answer: Array.isArray(userAnswer)
-                ? userAnswer.map((ans) => (typeof ans === "string" ? ans : String(ans)))
+                ? userAnswer.map((ans) =>
+                    typeof ans === "string" ? ans : String(ans)
+                  )
                 : [],
-          };
-  
-        case "MTF": // Match the Following
-          const matches: { [key: number]: string } = {};
-  
-          // Check if the userAnswer is indeed an array of pairs
-          if (Array.isArray(userAnswer) && userAnswer.every(pair => Array.isArray(pair) && pair.length === 2)) {
-            (userAnswer as unknown as [string, string][]).forEach((pair: [string, string]) => {
-              if (question.options) {
-                const termIndex = question.options.indexOf(pair[0]) + 1;
-                matches[termIndex] = pair[1];
-              }
-            });
-          } else {
-            console.error(`Invalid format for MTF answers in question ${question.id}`, userAnswer);
-          }
-  
-          return {
-            id: question.id,
-            type: question.type,
-            answer: matches,
-          };
-  
-        case "ORD": // Ordering
-          return {
-            id: question.id,
-            type: question.type,
-            answer: userAnswer.map((opt: string) =>
-              question.options ? question.options.indexOf(opt) : -1
-            ), // Array of 0-based indices
-          };
-  
-        case "EMQ": // Extended Matching Questions
-          const filteredAnswers = userAnswer
-            .map((ans: string, index: number) => {
-              return ans ? (question.options ? question.options.indexOf(ans) + 1 : null) : null;
-            })
-            .filter((ans) => ans !== null); // Exclude any unanswered sub-questions
-  
-          // If no answers were provided for EMQ, return an empty array
-          return {
-            id: question.id,
-            type: question.type,
-            answer: filteredAnswers.length > 0 ? filteredAnswers : [], // Return empty array if nothing answered
-          };
-  
-        default:
-          return null; // Handle unknown types
+            };
+
+          case "MTF":
+            const matches: { [key: number]: string } = {};
+            if (
+              Array.isArray(userAnswer) &&
+              userAnswer.every(
+                (pair) => Array.isArray(pair) && pair.length === 2
+              )
+            ) {
+              (userAnswer as unknown as [string, string][]).forEach(
+                (pair: [string, string]) => {
+                  if (question.options) {
+                    const termIndex = question.options.indexOf(pair[0]) + 1;
+                    matches[termIndex] = pair[1];
+                  }
+                }
+              );
+            }
+            return {
+              id: question.id,
+              type: question.type,
+              answer: matches,
+            };
+
+          case "ORD":
+            return {
+              id: question.id,
+              type: question.type,
+              answer: userAnswer.map((opt: string) =>
+                question.options ? question.options.indexOf(opt) : -1
+              ),
+            };
+
+          case "EMQ":
+            const filteredAnswers = userAnswer
+              .map((ans: string, index: number) => {
+                return ans
+                  ? question.options
+                    ? question.options.indexOf(ans) + 1
+                    : null
+                  : null;
+              })
+              .filter((ans) => ans !== null);
+            return {
+              id: question.id,
+              type: question.type,
+              answer: filteredAnswers.length > 0 ? filteredAnswers : [],
+            };
+
+          default:
+            return null;
+        }
       }
-    });
-  
-    // Prepare the payload for submission
+    );
+
     const payload = {
-      practiceSetId: uuid,
-      answers: formattedAnswers?.filter((answer:any) => answer !== null), // Keep all questions, even skipped ones with empty answers
+      practiceId: uuid,
+      answers: formattedAnswers?.filter((answer: any) => answer !== null),
     };
-  
+
     console.log("Submitting answers:", payload);
-    // Here, you would make an API call to submit the answers
-     // API call to submit the answers
+
     try {
       const response = await axios.post(
         `${process.env.NEXT_PUBLIC_API_URL}/finish-practice-set/${uuid}`,
@@ -320,15 +387,18 @@ export default function PracticeTestDetailPage({
       );
 
       if (response.data.status) {
-        toast.success("Practice Set submitted successfully!");
-        // Optionally redirect or display a success message here
+        toast.success("Practice Test submitted successfully!");
       } else {
-        toast.error("Error submitting Practice Set");
+        toast.error("Error submitting practice test");
       }
     } catch (error) {
-      console.error("Error submitting Practice Set: ", error);
+      console.error("Error Submitting Practice Test:", error);
       toast.error("An error occurred during submission");
     }
+  };
+
+  const handleFinishClick = () => {
+    setShowModal(true);
   };
 
   const formatTimeLeft = (time: number) => {
@@ -347,15 +417,11 @@ export default function PracticeTestDetailPage({
       : 0;
   };
 
-  const moveItem = (
-    questionId: number,
-    fromIndex: number,
-    toIndex: number
-  ) => {
+  const moveItem = (questionId: number, fromIndex: number, toIndex: number) => {
     const currentAnswers = answers[questionId] || [];
 
     if (toIndex < 0 || toIndex >= currentAnswers.length) {
-      return; // Prevent moving out of bounds
+      return;
     }
 
     const reorderedAnswers = [...currentAnswers];
@@ -365,12 +431,10 @@ export default function PracticeTestDetailPage({
     handleAnswerChange(questionId, reorderedAnswers);
   };
 
-  // Move useEffect for initializing answers for "ORD" outside of the switch statement
   useEffect(() => {
     if (practiceData?.questions) {
       practiceData.questions.forEach((question) => {
         if (!answers[question.id] && question.type === "ORD") {
-          // Initialize answers for ordering questions if not already set
           setAnswers((prev) => ({
             ...prev,
             [question.id]: question.options || [],
@@ -384,7 +448,7 @@ export default function PracticeTestDetailPage({
     return (
       <div>
         <p
-          className="mb-4"
+          className="mb-4 bg-white p-3 rounded-lg"
           dangerouslySetInnerHTML={{
             __html: Array.isArray(question.question)
               ? question.question[0]
@@ -394,96 +458,210 @@ export default function PracticeTestDetailPage({
 
         {(() => {
           switch (question.type) {
-            case "MSA": // Multiple Single Answer
-            return question.options?.map((option, index) => (
-              <label
-                key={index}
-                className={`flex items-center space-x-3 p-4 rounded-lg cursor-pointer transition-all mb-3 ${
-                  answers[question.id]?.includes(option)
-                    ? "bg-green-200"
-                    : "bg-gray-100"
-                } hover:bg-yellow-100`}
-              >
-                <input
-                  type="radio"
-                  name={`question-${question.id}`}
-                  value={option}
-                  onChange={() => handleAnswerChange(question.id, [option])}
-                  checked={answers[question.id]?.includes(option) || false} // Default to false if undefined
-                  className="cursor-pointer"
-                />
-                <div dangerouslySetInnerHTML={{ __html: option }}></div>
-              </label>
-            ));
+            case "MSA":
+              return question.options?.map((option, index) => {
+                const isChecked = answers[question.id]?.includes(option);
 
-            case "MMA": // Multiple Match Answer
-  return question.options?.map((option, index) => (
-    <label
-      key={index}
-      className={`flex items-center space-x-3 p-4 rounded-lg cursor-pointer transition-all mb-3 ${
-        answers[question.id]?.includes(option)
-          ? "bg-green-200"
-          : "bg-gray-100"
-      } hover:bg-yellow-100`}
-    >
-      <input
-        type="checkbox"
-        name={`question-${question.id}`}
-        value={option}
-        onChange={() => {
-          const currentAnswers = answers[question.id] || [];
-          const newAnswers = currentAnswers.includes(option)
-            ? currentAnswers.filter((a) => a !== option)
-            : [...currentAnswers, option];
-          handleAnswerChange(question.id, newAnswers);
-        }}
-        checked={answers[question.id]?.includes(option) || false} // Default to false if undefined
-        className="cursor-pointer"
-      />
-      <div dangerouslySetInnerHTML={{ __html: option }}></div>
-    </label>
-  ));
+                return (
+                  <label
+                    key={index}
+                    className={`flex items-center justify-between space-x-3 p-3 bg-white border rounded-lg cursor-pointer transition-all mb-3 ${
+                      isChecked ? "border-defaultcolor" : "border-white"
+                    } hover:bg-yellow-100`}
+                  >
+                    {/* Circle for A, B, C, D */}
+                    <div className="flex items-center space-x-3">
+                      <div
+                        className={`flex items-center justify-center w-8 h-8 rounded-full text-black transition-all ${
+                          isChecked
+                            ? "bg-defaultcolor text-white"
+                            : "bg-gray-200"
+                        }`}
+                      >
+                        {String.fromCharCode(65 + index)}{" "}
+                        {/* Converts index 0,1,2,3 to A,B,C,D */}
+                      </div>
+                      <div
+                        className={`transition-all ${
+                          isChecked ? "text-defaultcolor" : "text-black"
+                        }`}
+                        dangerouslySetInnerHTML={{ __html: option }}
+                      ></div>
+                    </div>
 
+                    {/* Input on the right */}
+                    <input
+                      type="radio"
+                      name={`question-${question.id}`}
+                      value={option}
+                      onChange={() => handleAnswerChange(question.id, [option])}
+                      checked={isChecked || false}
+                      className={`cursor-pointer focus:ring-1 focus:ring-defaultcolor ${
+                        isChecked ? "checked:bg-defaultcolor" : ""
+                      }`}
+                    />
+                  </label>
+                );
+              });
 
-  case "TOF": // True or False
-  return (
-    <div className="space-y-4">
-      <label className="flex items-center space-x-3 p-4 rounded-lg cursor-pointer transition-all bg-gray-100 hover:bg-yellow-100">
-        <input
-          type="radio"
-          name={`question-${question.id}`}
-          value="true"
-          onChange={() => handleAnswerChange(question.id, ["true"])}
-          checked={answers[question.id]?.includes("true") || false} // Default to false if undefined
-          className="cursor-pointer"
-        />
-        <span>True</span>
-      </label>
-      <label className="flex items-center space-x-3 p-4 rounded-lg cursor-pointer transition-all bg-gray-100 hover:bg-yellow-100">
-        <input
-          type="radio"
-          name={`question-${question.id}`}
-          value="false"
-          onChange={() => handleAnswerChange(question.id, ["false"])}
-          checked={answers[question.id]?.includes("false") || false} // Default to false if undefined
-          className="cursor-pointer"
-        />
-        <span>False</span>
-      </label>
-    </div>
-  );
+            case "MMA":
+              return question.options?.map((option, index) => {
+                const isChecked = answers[question.id]?.includes(option);
+
+                return (
+                  <label
+                    key={index}
+                    className={`flex items-center justify-between space-x-3 p-3 bg-white border rounded-lg cursor-pointer transition-all mb-3 ${
+                      isChecked ? "border-defaultcolor" : "border-white"
+                    } hover:bg-yellow-100`}
+                  >
+                    {/* Circle for A, B, C, D */}
+                    <div className="flex items-center space-x-3">
+                      <div
+                        className={`flex items-center justify-center w-8 h-8 rounded-full text-black transition-all ${
+                          isChecked
+                            ? "bg-defaultcolor text-white"
+                            : "bg-gray-200"
+                        }`}
+                      >
+                        {String.fromCharCode(65 + index)}{" "}
+                        {/* Converts index 0,1,2,3 to A,B,C,D */}
+                      </div>
+                      <div
+                        className={`transition-all ${
+                          isChecked ? "text-defaultcolor" : "text-black"
+                        }`}
+                        dangerouslySetInnerHTML={{ __html: option }}
+                      ></div>
+                    </div>
+
+                    {/* Checkbox on the right */}
+                    <input
+                      type="checkbox"
+                      name={`question-${question.id}`}
+                      value={option}
+                      onChange={() => {
+                        const currentAnswers = answers[question.id] || [];
+                        const newAnswers = currentAnswers.includes(option)
+                          ? currentAnswers.filter((a) => a !== option)
+                          : [...currentAnswers, option];
+                        handleAnswerChange(question.id, newAnswers);
+                      }}
+                      checked={isChecked || false}
+                      className={`cursor-pointer focus:ring-1 focus:ring-defaultcolor ${
+                        isChecked ? "checked:bg-defaultcolor" : ""
+                      }`}
+                    />
+                  </label>
+                );
+              });
+
+            case "TOF":
+              return (
+                <div className="space-y-4">
+                  <label
+                    className={`flex items-center justify-between border p-3 rounded-lg cursor-pointer transition-all bg-white hover:bg-yellow-100 ${
+                      answers[question.id]?.includes("true")
+                        ? "border-defaultcolor"
+                        : "border-white"
+                    }`}
+                  >
+                    <div className="flex items-center space-x-3">
+                      {/* Circle for T (True) */}
+                      <div
+                        className={`flex items-center justify-center w-8 h-8 rounded-full text-black transition-all ${
+                          answers[question.id]?.includes("true")
+                            ? "bg-defaultcolor text-white"
+                            : "bg-gray-200"
+                        }`}
+                      >
+                        T
+                      </div>
+                      <span
+                        className={`transition-all ${
+                          answers[question.id]?.includes("true")
+                            ? "text-defaultcolor"
+                            : "text-black"
+                        }`}
+                      >
+                        True
+                      </span>
+                    </div>
+
+                    {/* Radio input for True */}
+                    <input
+                      type="radio"
+                      name={`question-${question.id}`}
+                      value="true"
+                      onChange={() => handleAnswerChange(question.id, ["true"])}
+                      checked={answers[question.id]?.includes("true") || false}
+                      className={`cursor-pointer focus:ring-1 focus:ring-defaultcolor ${
+                        answers[question.id]?.includes("true")
+                          ? "checked:bg-defaultcolor"
+                          : ""
+                      }`}
+                    />
+                  </label>
+
+                  <label
+                    className={`flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-all bg-white hover:bg-yellow-100 ${
+                      answers[question.id]?.includes("false")
+                        ? "border-defaultcolor"
+                        : "border-white"
+                    }`}
+                  >
+                    <div className="flex items-center space-x-3">
+                      {/* Circle for F (False) */}
+                      <div
+                        className={`flex items-center justify-center w-8 h-8 rounded-full text-black transition-all ${
+                          answers[question.id]?.includes("false")
+                            ? "bg-defaultcolor text-white"
+                            : "bg-gray-200"
+                        }`}
+                      >
+                        F
+                      </div>
+                      <span
+                        className={`transition-all ${
+                          answers[question.id]?.includes("false")
+                            ? "text-defaultcolor"
+                            : "text-black"
+                        }`}
+                      >
+                        False
+                      </span>
+                    </div>
+
+                    {/* Radio input for False */}
+                    <input
+                      type="radio"
+                      name={`question-${question.id}`}
+                      value="false"
+                      onChange={() =>
+                        handleAnswerChange(question.id, ["false"])
+                      }
+                      checked={answers[question.id]?.includes("false") || false}
+                      className={`cursor-pointer focus:ring-1 focus:ring-defaultcolor ${
+                        answers[question.id]?.includes("false")
+                          ? "checked:bg-defaultcolor"
+                          : ""
+                      }`}
+                    />
+                  </label>
+                </div>
+              );
 
             case "SAQ":
               return (
-                <input
-                  type="text"
-                  className="w-full p-4 rounded-lg border border-gray-300"
+                <textarea
+                  className="w-full p-4 rounded-lg border border-gray-300 focus:ring-1 focus:ring-defaultcolor focus:border-defaultcolor"
                   placeholder="Type your answer here..."
                   value={answers[question.id]?.[0] || ""}
                   onChange={(e) =>
                     handleAnswerChange(question.id, [e.target.value])
                   }
-                />
+                  rows={4} // Adjust the number of rows as needed
+                ></textarea>
               );
 
             case "MTF":
@@ -495,17 +673,22 @@ export default function PracticeTestDetailPage({
                     .map((opt, i) => (
                       <div key={i} className="flex space-x-4 mb-4">
                         <p
-                          className="flex-1 p-2 rounded bg-gray-100"
+                          className="flex-1 p-2 rounded bg-white"
                           dangerouslySetInnerHTML={{ __html: opt }}
                         ></p>
                         <select
-                          className="flex-1 p-2 rounded border border-gray-300"
+                          className="flex-1 p-2 rounded border border-gray-300 focus:ring-1 focus:ring-defaultcolor focus:border-defaultcolor"
                           onChange={(e) =>
-                            handleAnswerChange(question.id, [opt, e.target.value])
+                            handleAnswerChange(question.id, [
+                              opt,
+                              e.target.value,
+                            ])
                           }
                           value={
-                            answers[question.id]?.find((pair) => pair[0] === opt)?.[1] || ""
-                          } // Display the selected match
+                            answers[question.id]?.find(
+                              (pair) => pair[0] === opt
+                            )?.[1] || ""
+                          }
                         >
                           <option value="">Select match</option>
                           {question.options
@@ -533,21 +716,27 @@ export default function PracticeTestDetailPage({
                     {answers[question.id]?.map((option, index) => (
                       <li
                         key={index}
-                        className="p-4 bg-gray-100 rounded-lg mb-2 flex items-center justify-between"
+                        className="p-3 bg-white rounded-lg mb-2 flex items-center justify-between"
                       >
                         <div dangerouslySetInnerHTML={{ __html: option }}></div>
                         <div className="flex items-center space-x-2">
                           <button
                             className="p-2 bg-gray-300 rounded hover:bg-gray-400"
-                            onClick={() => moveItem(question.id, index, index - 1)}
-                            disabled={index === 0} // Disable if it's the first item
+                            onClick={() =>
+                              moveItem(question.id, index, index - 1)
+                            }
+                            disabled={index === 0}
                           >
                             ↑
                           </button>
                           <button
                             className="p-2 bg-gray-300 rounded hover:bg-gray-400"
-                            onClick={() => moveItem(question.id, index, index + 1)}
-                            disabled={index === (answers[question.id]?.length || 0) - 1} // Disable if it's the last item
+                            onClick={() =>
+                              moveItem(question.id, index, index + 1)
+                            }
+                            disabled={
+                              index === (answers[question.id]?.length || 0) - 1
+                            }
                           >
                             ↓
                           </button>
@@ -558,35 +747,33 @@ export default function PracticeTestDetailPage({
                 </div>
               );
 
-              case "FIB":
-                // Assuming question.options[0] contains the number of blanks
-                const numberOfBlanks = parseInt(question.options?.[0] ?? "0", 10); // Fallback to "0" if undefined
+            case "FIB":
+              // Assuming question.options[0] contains the number of blanks
+              const numberOfBlanks = parseInt(question.options?.[0] ?? "0", 10);
 
-              
-                return (
-                  <div>
-                    {Array.from({ length: numberOfBlanks }).map((_, index) => (
-                      <input
-                        key={index}
-                        type="text"
-                        className="p-4 rounded-lg border border-gray-300 w-full mb-2"
-                        placeholder={`Answer ${index + 1}`} // Placeholder to label each input
-                        value={answers[question.id]?.[index] || ""} // Bind value to the corresponding answer in the array
-                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                          // Create a new array to store the updated answers
-                          const newAnswers = [...(answers[question.id] || Array(numberOfBlanks).fill(""))];
-              
-                          // Update the specific blank (index) with the new value
-                          newAnswers[index] = e.target.value;
-              
-                          // Call handleAnswerChange to update the state
-                          handleAnswerChange(question.id, newAnswers);
-                        }}
-                      />
-                    ))}
-                  </div>
-                );
-              
+              return (
+                <div>
+                  {Array.from({ length: numberOfBlanks }).map((_, index) => (
+                    <input
+                      key={index}
+                      type="text"
+                      className="p-3 w-full rounded-lg border border-gray-300 focus:ring-1 focus:ring-defaultcolor focus:border-defaultcolor mb-2"
+                      placeholder={`Answer ${index + 1}`}
+                      value={answers[question.id]?.[index] || ""}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                        const newAnswers = [
+                          ...(answers[question.id] ||
+                            Array(numberOfBlanks).fill("")),
+                        ];
+
+                        newAnswers[index] = e.target.value;
+
+                        handleAnswerChange(question.id, newAnswers);
+                      }}
+                    />
+                  ))}
+                </div>
+              );
 
             case "EMQ":
               return (
@@ -598,40 +785,77 @@ export default function PracticeTestDetailPage({
                           <div>
                             <b>{"Question " + questionIndex}</b>
                             <p
-                              className="mb-4 font-medium"
+                              className="mb-4 font-medium bg-white p-3 rounded-lg"
                               dangerouslySetInnerHTML={{
                                 __html: subQuestion,
                               }}
                             ></p>
-                            {question.options?.map((option, index) => (
-                              <label
-                                key={index}
-                                className={`flex items-center space-x-3 p-4 rounded-lg cursor-pointer transition-all mb-3 ${
-                                  answers[question.id]?.[questionIndex] === option
-                                    ? "bg-green-200"
-                                    : "bg-gray-100"
-                                } hover:bg-yellow-100`}
-                              >
-                                <input
-                                  type="radio"
-                                  name={`question-${question.id}-${questionIndex}`}
-                                  value={option}
-                                  onChange={() =>
-                                    handleAnswerChange(question.id, [option], questionIndex)
-                                  }
-                                  checked={answers[question.id]?.[questionIndex] === option} // Make sure the selected option is checked
-                                  className="cursor-pointer"
-                                />
-                                <div dangerouslySetInnerHTML={{ __html: option }}></div>
-                              </label>
-                            ))}
+
+                            {question.options?.map((option, index) => {
+                              const isChecked =
+                                answers[question.id]?.[questionIndex]?.includes(
+                                  option
+                                );
+
+                              return (
+                                <label
+                                  key={index}
+                                  className={`flex items-center justify-between p-3 border rounded-lg cursor-pointer transition-all mb-3 ${
+                                    isChecked
+                                      ? "border-defaultcolor bg-white"
+                                      : "border-white bg-white"
+                                  } hover:bg-yellow-100`}
+                                >
+                                  {/* Circle for A, B, C, D */}
+                                  <div className="flex items-center space-x-3">
+                                    <div
+                                      className={`flex items-center justify-center w-8 h-8 rounded-full text-black transition-all ${
+                                        isChecked
+                                          ? "bg-defaultcolor text-white"
+                                          : "bg-gray-200"
+                                      }`}
+                                    >
+                                      {String.fromCharCode(65 + index)}{" "}
+                                      {/* Converts index 0,1,2,3 to A,B,C,D */}
+                                    </div>
+                                    <div
+                                      className={`transition-all ${
+                                        isChecked
+                                          ? "text-defaultcolor"
+                                          : "text-black"
+                                      }`}
+                                      dangerouslySetInnerHTML={{
+                                        __html: option,
+                                      }}
+                                    ></div>
+                                  </div>
+
+                                  {/* Radio input on the right */}
+                                  <input
+                                    type="radio"
+                                    name={`question-${question.id}-${questionIndex}`}
+                                    value={option}
+                                    onChange={() =>
+                                      handleAnswerChange(
+                                        question.id,
+                                        [option],
+                                        questionIndex
+                                      )
+                                    }
+                                    checked={isChecked || false}
+                                    className={`cursor-pointer focus:ring-1 focus:ring-defaultcolor ${
+                                      isChecked ? "checked:bg-defaultcolor" : ""
+                                    }`}
+                                  />
+                                </label>
+                              );
+                            })}
                           </div>
                         )}
                       </div>
                     ))}
                 </div>
               );
-            
 
             default:
               return <div>Unknown question type</div>;
@@ -644,7 +868,7 @@ export default function PracticeTestDetailPage({
   if (loading) return <Loader />;
 
   if (!practiceData || !practiceData.questions)
-    return <NoData message="No Practice Test data available"/>;
+    return <NoData message="No Practice Test data available" />;
 
   return (
     <div className="dashboard-page flex flex-col md:flex-row gap-6">
@@ -652,16 +876,21 @@ export default function PracticeTestDetailPage({
       <div className="flex-1 lg:p-6 bg-white rounded-lg shadow-sm p-4">
         {!submitted ? (
           <>
-            <div className="flex justify-between mb-4">
-              <h3 className="text-2xl font-semibold text-defaultcolor">
-                Question {currentQuestionIndex + 1}/
-                {practiceData.questions.length}
-              </h3>
-              <FaClock className="text-defaultcolor" size={24} />
-            </div>
+            <h1 className="text-2xl font-semibold mb-5 flex items-center gap-2">
+              <FaBook className="text-defaultcolor" /> {practiceData.title}
+            </h1>
+            <div className="border-s-4 border-defaultcolor bg-[#f6f7f9] p-4">
+              <div className="flex justify-between mb-4">
+                <h3 className="text-2xl font-semibold text-defaultcolor">
+                  Question {currentQuestionIndex + 1}/
+                  {practiceData.questions.length}
+                </h3>
+                <FaClock className="text-defaultcolor" size={24} />
+              </div>
 
-            <div className="space-y-4">
-              {renderQuestion(practiceData.questions[currentQuestionIndex])}
+              <div className="space-y-4">
+                {renderQuestion(practiceData.questions[currentQuestionIndex])}
+              </div>
             </div>
 
             <div className="flex justify-between mt-6">
@@ -683,9 +912,9 @@ export default function PracticeTestDetailPage({
               ) : (
                 <button
                   className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors"
-                  onClick={handleSubmit}
+                  onClick={handleFinishClick} // Trigger modal on click
                 >
-                  Submit Practice Test
+                  Submit Test
                 </button>
               )}
             </div>
@@ -697,101 +926,150 @@ export default function PracticeTestDetailPage({
               size={42}
             />
             <h1 className="text-3xl font-bold mb-4 text-green-600">
-              Practice Test Submitted
+            Practice Test Submitted
             </h1>
             <p className="text-lg text-gray-600">
-              Thank you for completing the practice test. Your answers have been
+              Thank you for completing the test. Your answers have been
               submitted successfully!
             </p>
             <div>
-            <Link
+              <Link
                 href={`/dashboard/practice-test-result/${uuid}`}
-                className="mt-4  text-center w-full bg-defaultcolor text-white font-semibold py-2 px-4 rounded hover:bg-defaultcolor-dark transition-colors flex justify-center items-center"
+                className="mt-4 text-center w-full bg-defaultcolor text-white font-semibold py-2 px-4 rounded hover:bg-defaultcolor-dark transition-colors flex justify-center items-center"
               >
                 Go to Result
-                <AiOutlineArrowRight className="ml-2" /> {/* Add the icon here */}
+                <AiOutlineArrowRight className="ml-2" />
               </Link>
             </div>
           </div>
         )}
       </div>
-
-      {/* Sidebar for Timer and Progress */}
       {!submitted && timeLeft > 0 && (
-        <div className="w-full md:w-1/3 bg-white shadow-sm p-4 lg:p-6 rounded-lg">
+        <div className="w-full md:w-1/3 bg-white shadow-sm rounded-lg p-6 space-y-5">
+          {/* Practice Test Name and Total Time */}
+          <div className="flex justify-between items-center  bg-indigo-100 p-3 rounded-md">
+            <div className="flex items-center space-x-2">
+              <AiOutlineClockCircle className="text-indigo-600" size={24} />
+              <h3 className="text-3xl font-semibold text-indigo-700">
+                {parseFloat(practiceData.duration).toFixed(0)}
+              </h3>
+              <p className="text-lg font-medium text-indigo-500">Minutes</p>
+            </div>
+          </div>
+
           {/* Time Remaining */}
-          <div className="mb-6 text-center">
-            <h3 className="text-gray-600 font-semibold">Time Remaining</h3>
-            <p className="text-3xl text-orange-600 font-semibold">
+          <div className="text-center flex space-x-3 items-center bg-[#ffc300] p-4 rounded-md">
+            <FaHourglass className="text-black" size={24} />
+            <p className="text-3xl font-bold text-black">
               {formatTimeLeft(timeLeft)}
             </p>
           </div>
 
           {/* Answered and Skipped Count */}
-          <div className="mb-6 text-center">
-            <div className="flex justify-around">
-              <div className="flex items-center space-x-2">
-                <FaRegSmile className="text-green-500" size={20} />
-                <span className="text-gray-700">
-                  Attempted: {getAnsweredCount()}
+          <div className="flex justify-around items-center space-x-2 text-center mb-6">
+            <div className="w-1/2 flex items-center justify-center space-x-2 px-5 py-1 rounded-md bg-green-100 shadow-inner">
+              <FaRegSmile className="text-green-600" size={20} />
+              <span className="text-md font-medium text-green-700">
+                Attempted:{" "}
+                <span className="text-lg font-semibold">
+                  {getAnsweredCount()}
                 </span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <FaRegFrown className="text-yellow-500" size={20} />
-                <span className="text-gray-700">Skipped: {getSkippedCount()}</span>
-              </div>
+              </span>
+            </div>
+            <div className="w-1/2  flex items-center justify-center space-x-2 px-5 py-1 rounded-md bg-yellow-100 shadow-inner">
+              <FaRegFrown className="text-yellow-600" size={20} />
+              <span className="text-md font-medium text-yellow-700">
+                Skipped:{" "}
+                <span className="text-lg font-semibold">
+                  {getSkippedCount()}
+                </span>
+              </span>
             </div>
           </div>
 
           {/* Progress Bar */}
           <div className="mb-6">
-            <p className="font-semibold text-gray-700 mb-2">Progress</p>
-            <div className="h-2 w-full bg-gray-200 rounded-lg overflow-hidden mt-2">
-              <div
-                className="h-full bg-defaultcolor"
-                style={{
-                  width: `${
-                    (Object.keys(answers).length /
-                      practiceData.questions.length) *
+            <p className="text-lg font-medium text-gray-700 mb-2">Progress</p>
+            <div className="flex items-center">
+              {/* Progress Bar */}
+              <div className="h-2 w-full bg-gray-200 rounded-full overflow-hidden mr-2">
+                <div
+                  className="h-full bg-defaultcolor rounded-full"
+                  style={{
+                    width: `${
+                      (Object.keys(answers).length /
+                        practiceData.questions.length) *
+                      100
+                    }%`,
+                  }}
+                ></div>
+              </div>
+              {/* Percentage Display */}
+              <span className="text-gray-700 font-medium">
+                {Math.round(
+                  (Object.keys(answers).length /
+                    practiceData.questions.length) *
                     100
-                  }%`,
-                }}
-              ></div>
+                )}
+                %
+              </span>
             </div>
           </div>
 
           {/* Question Navigation Grid */}
-          <div className="grid grid-cols-5 gap-2 text-center">
-            {practiceData.questions.map((question, index) => (
-              <div
-                key={index}
-                className={`p-2 rounded-lg border ${
-                  currentQuestionIndex === index
-                    ? "bg-defaultcolor text-white"
-                    : answers[question.id]
-                    ? "bg-green-200 text-black"
-                    : "bg-yellow-200 text-black"
-                }`}
-                onClick={() => setCurrentQuestionIndex(index)}
-              >
-                {index + 1}
-              </div>
-            ))}
+          <div className="flex items-center justify-center flex-wrap gap-3 text-center">
+            {practiceData.questions.map((question, index) => {
+              const isActive = currentQuestionIndex === index;
+              const isAnswered = !!answers[question.id];
+
+              return (
+                <div
+                  key={index}
+                  className={`relative flex items-center justify-center text-lg w-12 h-12 border transition duration-200 bg-white ${
+                    isActive
+                      ? "border-defaultcolor text-defaultcolor shadow-lg"
+                      : isAnswered
+                      ? "border-green-500 text-green-500"
+                      : "border-yellow-300 text-yellow-600"
+                  }`}
+                  onClick={() => setCurrentQuestionIndex(index)}
+                  style={{ cursor: "pointer" }}
+                >
+                  {index + 1}
+                  <div
+                    className={`absolute inset-x-0 bottom-0 h-2 ${
+                      isActive
+                        ? "bg-defaultcolor"
+                        : isAnswered
+                        ? "bg-green-500"
+                        : "bg-yellow-300"
+                    }`}
+                  ></div>
+                </div>
+              );
+            })}
           </div>
 
           {/* Practice Test Instructions */}
-          <div className="mt-3 ">
-            <h3 className="text-lg text-gray-700 font-semibold">Test Guide</h3>
-            <p className="text-sm text-gray-500">
+          <div className="mt-3 text-center">
+            <h3 className="text-lg font-semibold text-gray-700">Practice Test Guide</h3>
+            <p className="text-sm text-gray-600 leading-relaxed">
               - Answer all questions to the best of your ability.
               <br />
               - You can navigate between questions.
-              <br />
-              - Make sure to submit your test before time runs out.
+              <br />- Make sure to submit your Practice Test before time runs out.
             </p>
           </div>
+
+          <button
+            className="bg-red-500 block text-white w-full px-4 py-2 rounded-lg hover:bg-green-600 transition-colors"
+            onClick={handleFinishClick} // Trigger modal on click
+          >
+            Finish TEst
+          </button>
         </div>
       )}
+      {showModal && <ConfirmationModal />}{" "}
     </div>
   );
 }
