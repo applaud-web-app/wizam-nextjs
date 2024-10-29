@@ -209,7 +209,7 @@ const SignUp = () => {
                 password: "",
                 confirmPassword: "",
                 termsAccepted: false,
-                country: "",
+                country: "GB",
               }}
               validationSchema={validationSchema}
               onSubmit={handleSignup}
