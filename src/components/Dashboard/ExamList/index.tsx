@@ -17,6 +17,8 @@ interface Exam {
   point: number | null;
   slug: string | null;
   point_mode: string | null;
+  duration_mode: string;
+  exam_duration: number;
   schedules: {
     schedule_type: string;
     start_date: string;
@@ -212,7 +214,9 @@ export default function ExamList() {
                         : exam.total_marks}
                     </td>
                     <td className="p-4">
-                      {Math.floor(exam.total_time / 60)} min
+                      {exam.duration_mode === "manual"
+                      ? exam.exam_duration
+                      : Math.floor(exam.total_time / 60)} min
                     </td>
                     <td className="p-4">
                       {isUpcoming ? (
