@@ -3,8 +3,7 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import Cookies from "js-cookie";
-import ExamTable from "@/components/ExamTable";
-import QuizTable from "@/components/QuizTable";
+
 import { FiCheckCircle, FiPercent, FiThumbsUp, FiThumbsDown } from "react-icons/fi";
 import DashboardCard from "@/components/DashboardCards";
 import NoData from "@/components/Common/NoData";
@@ -15,6 +14,7 @@ import dayGridPlugin from "@fullcalendar/daygrid";
 import { Tooltip } from "flowbite-react";
 import ResumeExamTable from "@/components/ResumeExamTable";
 import UpcomingExamsTable from "@/components/UpcomingExamsTable";
+
 
 
 interface Exam {
@@ -179,35 +179,43 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 my-8">
         {/* Exam Calendar */}
         <div className="bg-white p-3 shadow-sm rounded-lg">
-          <h2 className="text-2xl font-semibold mb-4">Upcoming Exams</h2>
+          <h2 className="text-xl font-semibold mb-3">Exams</h2>
+          
           <FullCalendar
-            eventClassNames="text-center"
+            eventClassNames="text-center text-blue-500 cursor-pointer"
             plugins={[dayGridPlugin]}
             initialView="dayGridMonth"
-            events={examEvents}
+            events={examEvents} // Use same for quizEvents FullCalendar instance
             eventContent={renderEventContent}
             headerToolbar={{
               left: "today",
               center: "title",
               right: "prev next",
             }}
+            height="auto"
+            contentHeight="auto"
+          
           />
         </div>
 
         {/* Quiz Calendar */}
         <div className="bg-white p-3 shadow-sm rounded-lg">
-          <h2 className="text-2xl font-semibold mb-4">Upcoming Quizzes</h2>
+          <h2 className="text-xl font-semibold mb-3">Quizzes</h2>
+          
           <FullCalendar
-            eventClassNames="text-center"
+            eventClassNames="text-center text-blue-500 cursor-pointer"
             plugins={[dayGridPlugin]}
             initialView="dayGridMonth"
-            events={quizEvents}
+            events={quizEvents} // Use same for quizEvents FullCalendar instance
             eventContent={renderEventContent}
             headerToolbar={{
               left: "today",
               center: "title",
               right: "prev next",
             }}
+            height="auto"
+            contentHeight="auto"
+           
           />
         </div>
       </div>

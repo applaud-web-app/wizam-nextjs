@@ -141,3 +141,38 @@ a,button{
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
 }
+
+/* Calendar */
+
+.fc .fc-event {
+  @apply bg-defaultcolor text-white rounded-md px-1.5 py-0.5;
+}
+
+.fc .fc-toolbar-title {
+  @apply text-base font-semibold text-defaultcolor;
+}
+
+.fc .fc-toolbar {
+  margin-bottom: 1rem;
+}
+
+.fc .fc-toolbar-chunk {
+  @apply flex justify-between;
+}
+
+.fc .fc-button-primary {
+  @apply bg-defaultcolor text-white border-none text-sm py-1 px-2 rounded-sm; /* Smaller button size */
+}
+
+.fc .fc-button-primary:hover {
+  @apply bg-blue-700;
+}
+
+.fc .fc-daygrid-day {
+  @apply border-gray-200;
+}
+
+.fc .fc-day-today {
+  @apply bg-blue-100;
+}
+

@@ -136,7 +136,7 @@ export default function ExamTypeDetailPage({
   return (
     <div className="dashboard-page">
       {/* Back arrow button and title */}
-      <div className="flex items-center mb-6">
+      <div className="flex items-center mb-5">
         <button
           onClick={() => router.back()}
           className="text-gray-500 hover:text-defaultcolor flex items-center"
@@ -153,33 +153,33 @@ export default function ExamTypeDetailPage({
         <table className="min-w-full bg-white rounded-lg">
           <thead className="bg-defaultcolor text-white">
             <tr>
-              <th className="p-4 text-left font-semibold">S.No</th>
-              <th className="p-4 text-left font-semibold">Title</th>
-              <th className="p-4 text-left font-semibold">Questions</th>
-              <th className="p-4 text-left font-semibold">Time</th>
-              <th className="p-4 text-left font-semibold">Marks</th>
-              <th className="p-4 text-left font-semibold">Action</th>
+              <th className="p-3 text-left font-semibold">S.No</th>
+              <th className="p-3 text-left font-semibold">Title</th>
+              <th className="p-3 text-left font-semibold">Questions</th>
+              <th className="p-3 text-left font-semibold">Time</th>
+              <th className="p-3 text-left font-semibold">Marks</th>
+              <th className="p-3 text-left font-semibold">Action</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
             {exams.map((exam, index) => (
               <tr key={index} className="hover:bg-gray-50">
-                <td className="p-4">{index + 1}</td>
-                <td className="p-4 font-bold">{exam.title}</td>
-                <td className="p-4">{exam.questions}</td>
-                <td className="p-4">{exam.time}</td>
-                <td className="p-4">{exam.marks}</td>
-                <td className="p-4">
+                <td className="p-3">{index + 1}</td>
+                <td className="p-3 font-bold">{exam.title}</td>
+                <td className="p-3">{exam.questions}</td>
+                <td className="p-3">{exam.time}</td>
+                <td className="p-3">{exam.marks}</td>
+                <td className="p-3">
                   {exam.is_free === 1 ? (
                     <Link
                       href={`/dashboard/exam-detail/${exam.slug}`}
-                      className="bg-green-600 text-white px-4 py-1 rounded-full hover:bg-green-700 transition-all duration-200"
+                      className="bg-green-600 text-white px-4 py-1 text-md rounded-full hover:bg-green-700 transition-all duration-200"
                     >
                       Start Exam
                     </Link>
                   ) : (
                     <button
-                      className="bg-yellow-500 text-white py-1 px-4 rounded-full hover:bg-yellow-600 transition-all duration-200"
+                      className="bg-yellow-500 text-white py-1 px-4 text-md rounded-full hover:bg-yellow-600 transition-all duration-200"
                       onClick={() =>
                         handlePayment(`/dashboard/exam-detail/${exam.slug}`)
                       }
@@ -195,7 +195,7 @@ export default function ExamTypeDetailPage({
       </div>
 
       {/* Mobile Grid Cards */}
-      <div className="grid grid-cols-1 gap-4 md:hidden">
+      <div className="grid grid-cols-1 gap-3 md:hidden">
         {exams.map((exam, index) => (
           <div
             key={index}

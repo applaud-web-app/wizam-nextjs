@@ -153,14 +153,7 @@ export default function ExamList() {
 
   return (
     <div className="mb-5">
-      <div className="flex justify-between items-center flex-wrap">
-        <h2 className="text-lg lg:text-2xl font-bold mb-3">All Exams</h2>
-        {/* {serverTime && (
-          <p className="text-gray-600">
-            Server Time: {serverTime.toLocaleDateString()} {serverTime.toLocaleTimeString()}
-          </p>
-        )} */}
-      </div>
+      <h2 className="text-lg lg:text-2xl font-bold mb-3">All Exams</h2>
 
       <div className="overflow-x-auto rounded-lg shadow-sm">
         <table className="min-w-full table-auto rounded-lg overflow-hidden">

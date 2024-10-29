@@ -58,7 +58,7 @@ interface Question {
   options?: (Option | string)[];
 }
 
-interface QuizData {
+interface ExamData {
   title: string;
   duration: string;
   questions: Question[];
@@ -89,7 +89,7 @@ interface ExamResultProps {
 }
 
 const ExamResult = ({ params }: ExamResultProps) => {
-  const [quizData, setQuizData] = useState<QuizData | null>(null);
+  const [examData, setExamData] = useState<ExamData | null>(null);
   const [userExamResult, setUserExamResult] = useState<UserExamResult | null>(
     null
   );
@@ -117,7 +117,7 @@ const ExamResult = ({ params }: ExamResultProps) => {
         if (response.data.status) {
           const resultData = response.data;
 
-          setQuizData({
+          setExamData({
             title: resultData.exam.title,
             duration: resultData.exam.duration,
             questions: resultData.exam_preview.map((q: any) => ({
@@ -157,12 +157,12 @@ const ExamResult = ({ params }: ExamResultProps) => {
     fetchExamResults();
   }, [params, router]);
 
-  if (loading || !quizData || !userExamResult) {
+  if (loading || !examData || !userExamResult) {
     return <Loader />;
   }
 
   const passingScore = 0.6;
-  const totalQuestions = quizData.questions.length;
+  const totalQuestions = examData.questions.length;
   const percentageCorrect = userExamResult.correctCount / totalQuestions;
   const passed = percentageCorrect >= passingScore;
 
@@ -809,7 +809,7 @@ const ExamResult = ({ params }: ExamResultProps) => {
           {/* Render Questions */}
           <div className="mb-8 bg-white p-5 rounded-lg shadow-sm">
             <div className="space-y-6">
-              {quizData.questions.map((question, index) =>
+              {examData.questions.map((question, index) =>
                 renderQuestionResult(question, index)
               )}
             </div>
