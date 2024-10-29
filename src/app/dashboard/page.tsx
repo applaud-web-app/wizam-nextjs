@@ -177,8 +177,11 @@ export default function DashboardPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 my-8">
         {/* Exam Calendar */}
-        <div className="bg-white p-3 shadow-sm rounded-lg">
-          <h2 className="text-xl font-semibold mb-3">Exams</h2>
+        <div>
+        <h2 className="text-lg lg:text-2xl font-bold mb-3">Exams</h2>
+     
+        <div className="bg-white p-2 shadow-sm rounded-lg">
+         
           
           <FullCalendar
             eventClassNames="text-center text-blue-500 cursor-pointer"
@@ -196,10 +199,13 @@ export default function DashboardPage() {
           
           />
         </div>
+        </div>
 
         {/* Quiz Calendar */}
-        <div className="bg-white p-3 shadow-sm rounded-lg">
-          <h2 className="text-xl font-semibold mb-3">Quizzes</h2>
+        <div>
+        <h2 className="text-lg lg:text-2xl font-bold mb-3">Quizzes</h2>
+        <div className="bg-white p-2 shadow-sm rounded-lg">
+         
           
           <FullCalendar
             eventClassNames="text-center text-blue-500 cursor-pointer"
@@ -217,6 +223,7 @@ export default function DashboardPage() {
            
           />
         </div>
+      </div>
       </div>
     </div>
   );

@@ -59,22 +59,21 @@ const Header = () => {
 
       // Check if the clicked element has the class or identifier of the dropdown or button
       if (
-        !targetElement.closest('.login-dropdown') && // Ensure the click is outside dropdown
-        !targetElement.closest('.login-dropdown-toggle') // Ensure the click is outside toggle button
+        !targetElement.closest(".login-dropdown") && // Ensure the click is outside dropdown
+        !targetElement.closest(".login-dropdown-toggle") // Ensure the click is outside toggle button
       ) {
         setLoginDropdownOpen(false); // Close the dropdown
       }
     };
 
     if (loginDropdownOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener("mousedown", handleClickOutside);
     }
 
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [loginDropdownOpen]);
-  
 
   // Close search with escape key
   useEffect(() => {
@@ -88,7 +87,10 @@ const Header = () => {
   // Close search box when clicking outside of it
   useEffect(() => {
     const handleClickOutsideSearch = (event: MouseEvent) => {
-      if (searchBoxRef.current && !searchBoxRef.current.contains(event.target as Node)) {
+      if (
+        searchBoxRef.current &&
+        !searchBoxRef.current.contains(event.target as Node)
+      ) {
         setSearchOpen(false); // Close search if clicking outside the search box
       }
     };
@@ -149,45 +151,44 @@ const Header = () => {
   const handleNavbarToggle = () => setNavbarOpen(!navbarOpen);
 
   // Fetch exam and resource suggestions based on search query
- // Fetch exam and resource suggestions based on search query
-useEffect(() => {
-  const fetchExamsAndResources = async () => {
-    if (searchQuery) {
-      try {
-        const [examResponse, resourceResponse] = await Promise.all([
-          axios.get(`${process.env.NEXT_PUBLIC_API_URL}/exams`),
-          axios.get(`${process.env.NEXT_PUBLIC_API_URL}/resource`),
-        ]);
+  // Fetch exam and resource suggestions based on search query
+  useEffect(() => {
+    const fetchExamsAndResources = async () => {
+      if (searchQuery) {
+        try {
+          const [examResponse, resourceResponse] = await Promise.all([
+            axios.get(`${process.env.NEXT_PUBLIC_API_URL}/exams`),
+            axios.get(`${process.env.NEXT_PUBLIC_API_URL}/resource`),
+          ]);
 
-        const filteredExams = examResponse.data.data.filter((exam: any) =>
-          exam.title.toLowerCase().includes(searchQuery.toLowerCase())
-        );
+          const filteredExams = examResponse.data.data.filter((exam: any) =>
+            exam.title.toLowerCase().includes(searchQuery.toLowerCase())
+          );
 
-        const filteredResources = resourceResponse.data.data.filter(
-          (resource: any) =>
-            resource.title.toLowerCase().includes(searchQuery.toLowerCase())
-        );
+          const filteredResources = resourceResponse.data.data.filter(
+            (resource: any) =>
+              resource.title.toLowerCase().includes(searchQuery.toLowerCase())
+          );
 
-        const combinedSuggestions = [
-          ...filteredExams.map((exam: any) => ({ ...exam, type: "exam" })),
-          ...filteredResources.map((resource: any) => ({
-            ...resource,
-            type: "resource",
-          })),
-        ];
+          const combinedSuggestions = [
+            ...filteredExams.map((exam: any) => ({ ...exam, type: "exam" })),
+            ...filteredResources.map((resource: any) => ({
+              ...resource,
+              type: "resource",
+            })),
+          ];
 
-        setSuggestions(combinedSuggestions);
-      } catch (error) {
-        console.error("Error fetching suggestions:", error);
+          setSuggestions(combinedSuggestions);
+        } catch (error) {
+          console.error("Error fetching suggestions:", error);
+        }
+      } else {
+        setSuggestions([]);
       }
-    } else {
-      setSuggestions([]);
-    }
-  };
+    };
 
-  fetchExamsAndResources();
-}, [searchQuery]);
-
+    fetchExamsAndResources();
+  }, [searchQuery]);
 
   const handleSearchSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -200,7 +201,7 @@ useEffect(() => {
   // Handle clicking a suggestion and navigating to the page
   const handleSuggestionClick = (suggestion: any) => {
     setSearchQuery(suggestion.title);
-    
+
     if (suggestion.type === "exam") {
       router.push(`/exams/${suggestion.slug}`);
     } else if (suggestion.type === "resource") {
@@ -262,7 +263,9 @@ useEffect(() => {
                     <Link
                       href={menuItem.path || "#"}
                       className={`block text-base text-dark dark:text-white hover:text-primary dark:hover:text-secondary px-5 py-2 rounded-full ${
-                        pathUrl === menuItem.path ? "bg-primary/15 text-dark" : ""
+                        pathUrl === menuItem.path
+                          ? "bg-primary/15 text-dark"
+                          : ""
                       }`}
                     >
                       {menuItem.title}
@@ -303,7 +306,7 @@ useEffect(() => {
                 >
                   Register <MdOutlineArrowForwardIos className="ms-1" />
                 </Link>
-                <div className="relative" >
+                <div className="relative">
                   <button
                     onClick={handleLoginDropdownToggle}
                     className="flex items-center login-dropdown-toggle border border-primary font-semibold text-secondary py-2 px-6 rounded-full hover:bg-primary hover:text-secondary transition"
@@ -312,8 +315,11 @@ useEffect(() => {
                   </button>
 
                   {loginDropdownOpen && (
-                    <div className="login-dropdown absolute right-0 mt-2 w-48 bg-white dark:bg-dark shadow-lg border rounded-lg py-2 z-50" tabIndex={-1}>
-                        <Link
+                    <div
+                      className="login-dropdown absolute right-0 mt-2 w-48 bg-white dark:bg-dark shadow-lg border rounded-lg py-2 z-50"
+                      tabIndex={-1}
+                    >
+                      <Link
                         href="/signin"
                         className="block px-4 py-2 text-gray-800 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-600"
                         onClick={() => setLoginDropdownOpen(false)}
@@ -328,7 +334,6 @@ useEffect(() => {
                       >
                         Teacher Login
                       </Link>
-                    
                     </div>
                   )}
                 </div>
@@ -336,10 +341,12 @@ useEffect(() => {
             )}
 
             {searchOpen && (
-              <div ref={searchBoxRef} className="absolute left-0 z-40 bg-white/70 w-full" style={{ marginLeft: "0 " }}>
-
+              <div
+                ref={searchBoxRef}
+                className="absolute left-0 z-40 bg-white/70 w-full"
+                style={{ marginLeft: "0 " }}
+              >
                 <div className="relative bg-white rounded-lg p-3 w-full">
-
                   <form onSubmit={handleSearchSubmit} className="relative">
                     <div className="relative flex items-center border border-gray-300 rounded-lg overflow-hidden">
                       <div className="p-3 text-gray-400 absolute left-0 flex items-center">
@@ -381,7 +388,6 @@ useEffect(() => {
                         </p>
                       )
                     )}
-
                   </form>
                 </div>
               </div>
@@ -424,7 +430,9 @@ useEffect(() => {
                   <Link
                     href={menuItem.path || "#"}
                     className={`block w-full text-base text-dark dark:text-white py-2 px-6 hover:bg-primary hover:text-white transition rounded-md ${
-                      pathUrl === menuItem.path ? "bg-primary text-white" : ""
+                      pathUrl === menuItem.path
+                        ? "bg-primary text-secondary"
+                        : ""
                     }`}
                     onClick={() => setNavbarOpen(false)}
                   >
@@ -452,11 +460,26 @@ useEffect(() => {
                 <>
                   <Link
                     href="/signup"
-                    className="flex items-center justify-center border border-primary bg-primary font-semibold text-secondary py-2 px-6 rounded-full hover:bg-secondary hover:border-secondary hover:text-primary transition w-full"
+                    className="flex items-center justify-center border border-primary bg-primary font-semibold text-secondary py-2 px-6 rounded-full hover:bg-primary-dark  transition w-full"
                   >
                     Register <MdOutlineArrowForwardIos className="ms-1" />
                   </Link>
-                  <div className="relative w-full" ref={dropdownRef}>
+
+                  <Link
+                    href="/signin"
+                    className="flex items-center justify-center border border-secondary bg-secondary font-semibold text-white py-2 px-6 rounded-full hover:bg-white hover:text-secondary transition w-full"
+                  >
+                    Student Login
+                  </Link>
+
+                  <Link
+                    href={`${process.env.NEXT_PUBLIC_BACKEND_URL}`}
+                    className="flex items-center justify-center border border-gray-500 bg-transparent font-semibold text-gray-600 py-2 px-6 rounded-full hover:bg-gray-100 hover:border-gray-600 transition w-full"
+                  >
+                    Teacher Login
+                  </Link>
+
+                  {/* <div className="relative w-full" ref={dropdownRef}>
                     <button
                       onClick={handleLoginDropdownToggle}
                       className="flex items-center justify-center border border-primary font-semibold text-secondary py-2 px-6 rounded-full hover:bg-primary hover:text-secondary transition w-full"
@@ -484,7 +507,7 @@ useEffect(() => {
                        
                       </div>
                     )}
-                  </div>
+                  </div> */}
                 </>
               )}
             </ul>

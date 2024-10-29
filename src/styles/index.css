@@ -148,6 +148,14 @@ a,button{
   @apply bg-defaultcolor text-white rounded-md px-1.5 py-0.5;
 }
 
+.fc-direction-ltr .fc-toolbar > * > :not(:first-child) {
+  margin-left: 0.4em;
+}
+
+.fc .fc-toolbar.fc-header-toolbar {
+  margin-bottom: 1rem;
+}
+
 .fc .fc-toolbar-title {
   @apply text-base font-semibold text-defaultcolor;
 }

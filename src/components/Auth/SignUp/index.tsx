@@ -147,7 +147,7 @@ const SignUp = () => {
       {/* Main Container */}
       <div className="container mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8 py-10 px-4 lg:px-0 lg:gap-16 z-10">
         {/* Left Section */}
-        <div className="flex flex-col justify-between h-full col-span-1">
+        <div className="flex flex-col justify-between order-2 md:order-1 lg:order-1 h-full col-span-1">
           <div>
             <h3 className="text-xl font-semibold mb-6 text-gray-800">
               Get Started Quickly
@@ -194,8 +194,8 @@ const SignUp = () => {
         </div>
 
         {/* Signup Form */}
-        <div className="w-full bg-white shadow-lg rounded-lg col-span-2">
-          <div className="p-10">
+        <div className="w-full bg-white shadow-sm lg:shadow-lg rounded-lg order-1 md:order-2 lg:order-2 col-span-2">
+          <div className="p-5 lg:p-10">
             <h2 className="text-2xl font-semibold text-left text-gray-800 mb-6">
               Create your Wizam account
             </h2>
