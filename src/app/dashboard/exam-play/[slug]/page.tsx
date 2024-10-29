@@ -198,7 +198,7 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
         </div>
       </div>
     );
-  };
+  }; 
 
   const handleAnswerChange = (
     questionId: number,

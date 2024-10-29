@@ -154,10 +154,10 @@ export default function PracticeSetPage() {
       <div className="mb-3">
         {pracitceData.map((skill) => (
           <div key={skill.name} className="mb-5">
-            <h2 className="text-xl font-semibold text-gray-800 mb-4">{skill.name}</h2> {/* Skill Name */}
+            <h2 className="text-xl font-semibold text-gray-800 mb-3">{skill.name}</h2> {/* Skill Name */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
               {skill.practiceSets.map((practiceSet) => (
-                <div key={practiceSet.slug} className="card bg-white rounded-lg shadow-sm p-6 border border-gray-200">
+                <div key={practiceSet.slug} className="card bg-white rounded-lg shadow-sm p-5 border border-gray-200">
                   {/* Title */}
                   <h3 className="text-lg font-semibold mb-2">{practiceSet.title}</h3>
 
