@@ -57,21 +57,20 @@ interface ResumeExam {
 
 interface UpcomingExams {
   id: number;
+  exam_slug: string;
+  exam_name: string;
+  duration_mode: string;
+  exam_duration: number | null;
+  total_questions: number;
+  total_marks: string;
+  total_time: number;
+  point_mode: string;
+  point: number | null;
+  schedule_type: string;
   start_date: string;
   start_time: string;
   end_date: string | null;
   end_time: string | null;
-  exam: {
-    exam_slug: string;
-    exam_name: string;
-    duration_mode: string;
-    exam_duration: number | null;
-    total_questions: number;
-    total_marks: string;
-    total_time: number;
-    point_mode: string;
-    point: number | null;
-  };
 }
 
 interface DashboardData {
