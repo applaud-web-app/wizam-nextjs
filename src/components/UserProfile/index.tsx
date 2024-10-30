@@ -116,46 +116,49 @@ export default function UserProfile() {
   const handleProfileSubmit = async (values: ProfileFormValues): Promise<void> => {
     const jwt = Cookies.get("jwt");
     if (!jwt) {
-      router.push("/signin");
-      return;
+       router.push("/signin");
+       return;
     }
-
+ 
     const formData = new FormData();
     formData.append("title", values.title);
     formData.append("full_name", values.fullname);
     formData.append("phone_number", values.mobile);
     formData.append("email", values.email);
-    formData.append("dob", values.dob); // Send the formatted date
+    formData.append("dob", values.dob);
     if (values.image) {
-      formData.append("image", values.image);
+       formData.append("image", values.image);
     }
-
+ 
     try {
-      const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/update-profile`,
-        formData,
-        {
-          headers: {
-            Authorization: `Bearer ${jwt}`,
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
-
-      if (response.data.status === true) {
-        toast.success("Profile updated successfully");
-        fetchProfileData(); // Optionally re-fetch the updated profile data
-      } else {
-        toast.error(`Profile update failed: ${response.data.message}`);
-      }
+       const response = await axios.post(
+          `${process.env.NEXT_PUBLIC_API_URL}/update-profile`,
+          formData,
+          {
+             headers: {
+                Authorization: `Bearer ${jwt}`,
+                "Content-Type": "multipart/form-data",
+             },
+          }
+       );
+ 
+       // Confirm response data
+       console.log("Response Data:", response.data);
+ 
+       if (response.data.status == true) {
+        
+          toast.success("Profile updated successfully");
+          
+          fetchProfileData(); // Optionally re-fetch the updated profile data
+       } else {
+          toast.error(`Profile update failed: ${response.data.message}`);
+       }
     } catch (error: any) {
-      const errorMessage =
-        error.response?.data?.message || "Error updating profile";
-      toast.error(`Profile update failed: ${errorMessage}`);
-      console.error("Error updating profile:", errorMessage);
+       const errorMessage = error.response?.data?.message || "Error updating profile";
+       toast.error(`Profile update failed: ${errorMessage}`);
+       console.error("Error updating profile:", errorMessage);
     }
-  };
-
+ };
   // Handle form submission to update password
   const handlePasswordSubmit = async (values: PasswordFormValues): Promise<void> => {
     const jwt = Cookies.get("jwt");
@@ -229,24 +232,25 @@ export default function UserProfile() {
 
   return (
     <div>
-      <ToastContainer /> {/* Toast container for notifications */}
+      <ToastContainer /> 
 
      
       <UpdateProfile
-        profileInitialValues={profileInitialValues}
-        profileImage={profileImage}
-        handleImageChange={(event) => {
-          const file = event.target.files?.[0];
-          if (file) {
-            const reader = new FileReader();
-            reader.onloadend = () => {
-              setProfileImage(reader.result as string);
-            };
-            reader.readAsDataURL(file);
-          }
-        }}
-        onSubmit={handleProfileSubmit}
-      />
+   profileInitialValues={profileInitialValues}
+   profileImage={profileImage}
+   handleImageChange={(event) => {
+      const file = event.target.files?.[0];
+      if (file) {
+         const reader = new FileReader();
+         reader.onloadend = () => {
+            setProfileImage(reader.result as string);
+         };
+         reader.readAsDataURL(file);
+      }
+   }}
+   onSubmit={handleProfileSubmit}  // Ensure this function is triggered
+/>
+
 
       {/* Update Password Form */}
       <UpdatePassword

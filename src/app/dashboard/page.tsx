@@ -1,5 +1,4 @@
 "use client";
-
 import { useState, useEffect } from "react";
 import axios from "axios";
 import Cookies from "js-cookie";
@@ -10,10 +9,13 @@ import NoData from "@/components/Common/NoData";
 import Loader from "@/components/Common/Loader";
 import { useRouter } from "next/navigation";
 import FullCalendar from "@fullcalendar/react";
+
 import dayGridPlugin from "@fullcalendar/daygrid";
 import { Tooltip } from "flowbite-react";
 import ResumeExamTable from "@/components/ResumeExamTable";
 import UpcomingExamsTable from "@/components/UpcomingExamsTable";
+
+
 
 
 
@@ -73,6 +75,23 @@ interface UpcomingExams {
   end_time: string | null;
 }
 
+interface CalendarExam {
+  slug: string;
+  title: string;
+  schedule_type: string;
+  start_date: string;
+  start_time: string;
+  end_date: string | null;
+  end_time: string | null;
+  grace_period: string;
+}
+
+interface CalendarQuiz {
+  slug: string;
+  title: string;
+  start_date: string;
+}
+
 interface DashboardData {
   resumedExam: ResumeExam[];
   upcomingExams: UpcomingExams[];
@@ -82,6 +101,8 @@ interface DashboardData {
   exams: Exam[];
   quizzes: Quiz[];
   completed_exam: number;
+  calenderExam: CalendarExam[];
+  calenderQuiz: CalendarQuiz[];
 }
 
 export default function DashboardPage() {
@@ -135,21 +156,23 @@ export default function DashboardPage() {
 
   const roundedAverageScore = Math.round(data.average_exam);
 
-  const examEvents = [
-    { title: "Math Exam", date: "2024-01-10" },
-    { title: "Physics Exam", date: "2024-02-15" },
-    // Additional exam events can go here
-  ];
+  // Generate events dynamically from API response
+  const examEvents = data.calenderExam?.map((exam) => ({
+    title: exam.title,
+    date: exam.start_date,
+  })) || [];
 
-  const quizEvents = [
-    { title: "Math Quiz", date: "2024-01-05" },
-    { title: "Physics Quiz", date: "2024-02-10" },
-    // Additional quiz events can go here
-  ];
+  const quizEvents = data.calenderQuiz?.map((quiz) => ({
+    title: quiz.title,
+    date: quiz.start_date,
+  })) || [];
 
-  const renderEventContent = (eventInfo: any) => (
-    <Tooltip content={`Event: ${eventInfo.event.title} on ${eventInfo.event.startStr}`}>
-      <div className="text-center cursor-pointer">{eventInfo.event.title}</div>
+  const renderEventContent = (eventInfo: { event: { title: string; startStr: string } }) => (
+    <Tooltip  placement="bottom"
+      content={`Event: ${eventInfo.event.title || "N/A"} on ${eventInfo.event.startStr || "N/A"}`}
+      className="tooltip-content z-50"
+    >
+      <div className="text-center cursor-pointer">{eventInfo.event.title || "Untitled Event"}</div>
     </Tooltip>
   );
 
@@ -183,21 +206,20 @@ export default function DashboardPage() {
         <div className="bg-white p-2 shadow-sm rounded-lg">
          
           
-          <FullCalendar
-            eventClassNames="text-center text-blue-500 cursor-pointer"
-            plugins={[dayGridPlugin]}
-            initialView="dayGridMonth"
-            events={examEvents} // Use same for quizEvents FullCalendar instance
-            eventContent={renderEventContent}
-            headerToolbar={{
-              left: "today",
-              center: "title",
-              right: "prev next",
-            }}
-            height="auto"
-            contentHeight="auto"
-          
-          />
+        <FullCalendar
+              eventClassNames="text-center text-blue-500 cursor-pointer"
+              plugins={[dayGridPlugin]}
+              initialView="dayGridMonth"
+              events={examEvents}
+              eventContent={renderEventContent}
+              headerToolbar={{
+                left: "today",
+                center: "title",
+                right: "prev next",
+              }}
+              height="auto"
+              contentHeight="auto"
+            />
         </div>
         </div>
 
@@ -207,21 +229,20 @@ export default function DashboardPage() {
         <div className="bg-white p-2 shadow-sm rounded-lg">
          
           
-          <FullCalendar
-            eventClassNames="text-center text-blue-500 cursor-pointer"
-            plugins={[dayGridPlugin]}
-            initialView="dayGridMonth"
-            events={quizEvents} // Use same for quizEvents FullCalendar instance
-            eventContent={renderEventContent}
-            headerToolbar={{
-              left: "today",
-              center: "title",
-              right: "prev next",
-            }}
-            height="auto"
-            contentHeight="auto"
-           
-          />
+        <FullCalendar
+              eventClassNames="text-center text-blue-500 cursor-pointer"
+              plugins={[dayGridPlugin]}
+              initialView="dayGridMonth"
+              events={quizEvents}
+              eventContent={renderEventContent}
+              headerToolbar={{
+                left: "today",
+                center: "title",
+                right: "prev next",
+              }}
+              height="auto"
+              contentHeight="auto"
+            />
         </div>
       </div>
       </div>
