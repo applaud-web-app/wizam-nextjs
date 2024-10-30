@@ -158,7 +158,7 @@ export default function ExamList() {
       <h2 className="text-lg lg:text-2xl font-bold mb-3">All Exams</h2>
 
       <div className="overflow-x-auto rounded-lg shadow-sm">
-        <table className="min-w-full table-auto rounded-lg overflow-hidden">
+        <table className="min-w-full table-auto rounded-lg overflow-hidden text-nowrap">
           <thead className="bg-defaultcolor text-white">
             <tr>
               <th className="p-3 text-left rounded-tl-lg">S.No</th>

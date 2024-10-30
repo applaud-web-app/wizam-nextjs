@@ -135,7 +135,7 @@ export default function QuizList() {
 
       {/* Table container with horizontal scrolling on small screens */}
       <div className="overflow-x-auto rounded-lg shadow-sm">
-        <table className="min-w-full table-auto rounded-lg overflow-hidden">
+        <table className="min-w-full table-auto rounded-lg overflow-hidden text-nowrap">
           <thead className="bg-quaternary text-white">
             <tr> 
               <th className="p-3 text-left rounded-tl-lg">S.No</th>

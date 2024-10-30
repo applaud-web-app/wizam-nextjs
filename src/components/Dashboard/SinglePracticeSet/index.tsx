@@ -1,12 +1,12 @@
 import { useState, useEffect } from "react";
 import Loader from "@/components/Common/Loader";
 import { FaClock, FaQuestionCircle, FaStar, FaCheckCircle, FaInfoCircle } from "react-icons/fa";
-import Cookies from "js-cookie"; // Ensure js-cookie is installed
-import axios from "axios"; // Make sure axios is installed
-import NoData from '@/components/Common/NoData'; // Import NoData component
+import Cookies from "js-cookie";
+import axios from "axios";
+import NoData from "@/components/Common/NoData";
 import Link from "next/link";
-import { toast } from 'react-toastify'; // Optional: For notifications
-import { useRouter } from "next/navigation"; // Use router to redirect
+import { toast } from "react-toastify";
+import { useRouter } from "next/navigation";
 
 interface TestDetails {
   title: string;
@@ -16,7 +16,7 @@ interface TestDetails {
   duration: string;
   marks: number;
   description: string;
-  is_free:number;
+  is_free: number;
 }
 
 interface SinglePracticeSetProps {
@@ -26,56 +26,45 @@ interface SinglePracticeSetProps {
 export default function SinglePracticeSet({ slug }: SinglePracticeSetProps) {
   const [testDetails, setTestDetails] = useState<TestDetails | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
-  const router = useRouter(); // For redirecting to other pages
+  const router = useRouter();
 
-  // Function to handle payment logic
-  const handlePayment = async (slug: string) =>  {
+  const handlePayment = async (slug: string) => {
     try {
-      // Get JWT token from cookies
       const jwt = Cookies.get("jwt");
-      const type = "practice"; // assuming "practice" is the type
+      const type = "practice";
 
       if (!jwt) {
         toast.error("User is not authenticated. Please log in.");
         return;
       }
 
-      // Make the API request to check the user's subscription
       const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/user-subscription`, {
         headers: {
           Authorization: `Bearer ${jwt}`,
         },
-        params: {
-          type: type, // Pass the type as a parameter
-        },
+        params: { type },
       });
 
-      // Handle the response
       if (response.data.status === true) {
-        // toast.success(`Subscription is active. Access granted for ${slug}.`);
-        router.push(`${slug}`);
+        router.push(slug);
       } else {
-        toast.error('Please buy a subscription to access this course.');
+        toast.error("Please buy a subscription to access this course.");
         router.push("/pricing");
       }
-    } catch (error:any) {
-      console.log(error);
-      // Handle errors such as network issues or API errors
+    } catch (error: any) {
       if (error.response) {
-        // API responded with an error status
         const { status, data } = error.response;
-        
         if (status === 401) {
-          toast.error('User is not authenticated. Please log in.');
+          toast.error("User is not authenticated. Please log in.");
           router.push("/signin");
         } else if (status === 404) {
-          toast.error('Please buy a subscription to access this course.');
+          toast.error("Please buy a subscription to access this course.");
           router.push("/pricing");
         } else if (status === 403) {
-          toast.error('Feature not available in your plan. Please upgrade your subscription.');
+          toast.error("Feature not available in your plan. Please upgrade your subscription.");
           router.push("/pricing");
         } else {
-          toast.error(`An error occurred: ${data.error || 'Unknown error'}`);
+          toast.error(`An error occurred: ${data.error || "Unknown error"}`);
         }
       } else {
         toast.error("An error occurred. Please try again.");
@@ -85,110 +74,137 @@ export default function SinglePracticeSet({ slug }: SinglePracticeSetProps) {
 
   useEffect(() => {
     const fetchTestDetails = async () => {
-      const category = Cookies.get("category_id"); // Fetch category ID from cookies
+      const category = Cookies.get("category_id");
 
       if (!category) {
         console.error("Category ID is missing");
-        setLoading(false); // Stop loading if no category is found
+        setLoading(false);
         return;
       }
 
-      setLoading(true); // Start loading state
+      setLoading(true);
 
       try {
-        // Use axios to fetch test details from the backend API
         const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/practice-set-detail/${slug}`, {
-          params: { category }, // Send slug and category as query params
+          params: { category },
           headers: {
-            Authorization: `Bearer ${Cookies.get("jwt")}`, // JWT token from cookies
+            Authorization: `Bearer ${Cookies.get("jwt")}`,
           },
         });
 
         const data = response.data;
 
         if (data.status) {
-          setTestDetails(data.data); // Set test details if found
+          setTestDetails(data.data);
         } else {
-          setTestDetails(null); // Clear test details if not found
+          setTestDetails(null);
         }
       } catch (error) {
         console.error("Error fetching test details:", error);
-        setTestDetails(null); // Clear test details on error
+        setTestDetails(null);
       } finally {
-        setLoading(false); // Stop loading state
+        setLoading(false);
       }
     };
 
     fetchTestDetails();
-  }, [slug]); // Fetch new test details when slug changes
+  }, [slug]);
 
-  // Loading state
   if (loading) {
     return <Loader />;
   }
 
-  // No test details found
   if (!testDetails) {
     return <NoData />;
   }
 
   return (
-    <div className="mx-auto p-5 shadow-sm bg-white rounded-lg">
-      {/* Display test details */}
-      <div className="mb-8">
-        <p className="bg-cyan-100 text-cyan-700 px-4 py-2 text-sm rounded-full inline-block mb-4">
-          {testDetails.syllabus}
-        </p>
-        <h1 className="text-3xl font-bold text-defaultcolor mb-2">{testDetails.title}</h1>
-        <h2 className="text-lg font-medium text-defaultcolor-600">{testDetails.testType}</h2>
-      </div>
+    <div>
+      {/* Practice Test Header */}
+      <div className="bg-white p-5 rounded-lg shadow-sm mb-5">
+        <div className="mb-5 text-center">
+          <h1 className="text-4xl font-bold text-gray-900">{testDetails.title}</h1>
+          <p className="text-lg font-medium text-gray-600">{testDetails.testType}</p>
+          <span className="inline-block bg-blue-100 text-blue-600 text-sm font-semibold px-4 py-1 rounded-full mt-2">
+            {testDetails.syllabus}
+          </span>
+        </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 py-3 border-y border-gray-300 mb-8">
-        <div className="flex items-center space-x-2 text-gray-700">
-          <FaQuestionCircle className="text-defaultcolor" />
-          <span className="text-base font-semibold">Questions: {testDetails.totalQuestions}</span>
-        </div>
-        <div className="flex items-center space-x-2 text-gray-700">
-          <FaClock className="text-defaultcolor" />
-          <span className="text-base font-semibold">Duration: {testDetails.duration} min</span>
-        </div>
-        <div className="flex items-center space-x-2 text-gray-700">
-          <FaStar className="text-defaultcolor" />
-          <span className="text-base font-semibold">Marks: {testDetails.marks}</span>
+        {/* Card with Test Details */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+          <div className="border border-gray-300 bg-gray-50 p-5 rounded-lg flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <FaQuestionCircle className="text-indigo-500" size={24} />
+              <span className="text-lg font-semibold text-gray-700">Questions</span>
+            </div>
+            <span className="bg-indigo-100 text-indigo-600 text-sm font-bold px-3 py-1 rounded-full">
+              {testDetails.totalQuestions}
+            </span>
+          </div>
+
+          <div className="border border-gray-300 bg-gray-50 p-5 rounded-lg flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <FaClock className="text-green-500" size={24} />
+              <span className="text-lg font-semibold text-gray-700">Duration</span>
+            </div>
+            <span className="bg-green-100 text-green-600 text-sm font-bold px-3 py-1 rounded-full">
+              {testDetails.duration} min
+            </span>
+          </div>
+
+          <div className="border border-gray-300 bg-gray-50 p-5 rounded-lg flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <FaStar className="text-yellow-500" size={24} />
+              <span className="text-lg font-semibold text-gray-700">Marks</span>
+            </div>
+            <span className="bg-yellow-100 text-yellow-600 text-sm font-bold px-3 py-1 rounded-full">
+              {testDetails.marks}
+            </span>
+          </div>
         </div>
       </div>
 
       {/* Instructions */}
-      <div className="mb-8">
-        <h3 className="text-xl font-semibold text-defaultcolor mb-4 flex items-center">
+      <div className="bg-white p-5 rounded-lg shadow-sm mb-5">
+        <h3 className="text-2xl font-semibold text-defaultcolor mb-4 flex items-center">
           <FaCheckCircle className="text-defaultcolor mr-2" /> Instructions
         </h3>
-        <div className="text-gray-600 bg-gray-50 p-5 rounded-lg border border-gray-300">
-          <ol className="list-decimal list-inside">
-            <li>The clock will be set at the server. The countdown timer in the top right corner of screen will display the remaining time available for you to complete the test. When the timer reaches zero, the test will end by itself.</li>
-            <li>Click on the question number in the Question Palette at the right of your screen to go to that numbered question directly. Note that using this option does NOT save your answer to the current question.</li>
-            <li>Click on Save & Next to save your answer for the current question and then go to the next question.</li>
-            <li>The Question Palette displayed on the right side of screen will show the status of each question.</li>
-          </ol>
+        <div className="text-gray-600">
+          <ul className="list-disc ml-6 space-y-2">
+            <li>The clock is server-set. The countdown will display remaining time.</li>
+            <li>Use the question palette to navigate between questions.</li>
+            <li>Click "Save & Next" to save the current question and move to the next.</li>
+            <li>The question palette indicates the status of each question.</li>
+          </ul>
         </div>
       </div>
 
-      {/* test Description */}
-      <div className="mb-8">
-        <h3 className="text-xl font-semibold text-defaultcolor mb-4 flex items-center">
+      {/* Test Description */}
+      <div className="bg-white p-5 rounded-lg shadow-sm mb-5">
+        <h3 className="text-2xl font-semibold text-defaultcolor mb-4 flex items-center">
           <FaInfoCircle className="text-defaultcolor mr-2" /> Test Description
         </h3>
         <div
           dangerouslySetInnerHTML={{ __html: testDetails.description || "" }}
-          className="text-gray-600 bg-gray-50 p-5 rounded-lg border border-gray-300"
+          className="text-gray-600"
         />
       </div>
 
-      {/* Start test Button */}
+      {/* Start/Pay Button */}
       {testDetails.is_free === 1 ? (
-        <Link href={`/dashboard/practice-test-play/${slug}`} className="w-full bg-defaultcolor block text-center text-white font-semibold py-2 rounded-lg hover:bg-defaultcolor-dark transition-all duration-200">Start Test</Link>
+        <Link
+          href={`/dashboard/practice-test-play/${slug}`}
+          className="block w-full bg-green-500 text-white text-center font-semibold py-3 rounded-lg hover:bg-green-600 transition-colors"
+        >
+          Start Test
+        </Link>
       ) : (
-        <button onClick={() => handlePayment(`/dashboard/practice-test-play/${slug}`)} className="bg-defaultcolor block text-center text-white px-4 py-2 rounded hover:bg-defaultcolor-dark transition duration-200 w-full">Paid Exam</button>
+        <button
+          className="block w-full bg-yellow-500 text-white text-center font-semibold py-3 rounded-lg hover:bg-yellow-600 transition-colors"
+          onClick={() => handlePayment(`/dashboard/practice-test-play/${slug}`)}
+        >
+          Pay Now
+        </button>
       )}
     </div>
   );

@@ -11,6 +11,7 @@ import {
   FaClock,
   FaRegSmile,
   FaRegFrown,
+  FaCircle,
 } from "react-icons/fa";
 import Cookies from "js-cookie";
 import { useRouter } from "next/navigation";
@@ -30,7 +31,7 @@ interface Question {
   id: number;
   type: string; // Question type (MSA, MMA, TOF, etc.)
   question: string | string[]; // The question text
-  options?: string[]; 
+  options?: string[];
 }
 
 // ExamData interface
@@ -81,7 +82,9 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
     const category = Cookies.get("category_id");
 
     const fetchExamSet = async () => {
-      Cookies.set("redirect_url", `/dashboard/exam-play/${slug}`, { expires: 1,})
+      Cookies.set("redirect_url", `/dashboard/exam-play/${slug}`, {
+        expires: 1,
+      });
       try {
         const response = await axios.get(
           `${process.env.NEXT_PUBLIC_API_URL}/play-exam/${slug}`,
@@ -121,7 +124,9 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
             router.push("/signin"); // Redirect to sign-in page
           } else if (status === 404) {
             toast.error("Please buy a subscription to access this course.");
-            Cookies.set("redirect_url", `/dashboard/exam-play/${slug}`, { expires: 1,});
+            Cookies.set("redirect_url", `/dashboard/exam-play/${slug}`, {
+              expires: 1,
+            });
             console.log("exam-play");
             router.push("/pricing"); // Redirect to pricing page
           } else if (status === 403) {
@@ -176,7 +181,8 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
         <div className="bg-white p-6 rounded-lg shadow-lg w-96">
           <h2 className="font-bold text-lg mb-2">Are you sure?</h2>
           <p className="text-gray-600 mb-4">
-          Are you sure you want to submit the test? Once submitted, you will not be able to make further changes.
+            Are you sure you want to submit the test? Once submitted, you will
+            not be able to make further changes.
           </p>
           <div className="mt-6 flex justify-between">
             <button
@@ -198,7 +204,7 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
         </div>
       </div>
     );
-  }; 
+  };
 
   const handleAnswerChange = (
     questionId: number,
@@ -947,30 +953,140 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
         )}
       </div>
       {!submitted && timeLeft > 0 && (
-        <div className="w-full md:w-1/3 bg-white shadow-sm rounded-lg p-6 space-y-5">
-          {/* Exam Name and Total Time */}
-          <div className="flex justify-between items-center  bg-indigo-100 p-3 rounded-md">
-            <div className="flex items-center space-x-2">
-              <AiOutlineClockCircle className="text-indigo-600" size={24} />
-              <h3 className="text-3xl font-semibold text-indigo-700">
-                  {parseFloat(examData.duration).toFixed(0)}
-              </h3>
-              <p className="text-lg font-medium text-indigo-500">Minutes</p>
+        <div className="w-full md:w-1/3 bg-white shadow-sm rounded-lg">
+          <div className="p-4 flex items-center space-x-3">
+            <FaCircle className="text-green-400" />
+            <p>
+              {currentQuestionIndex + 1}/{examData.questions.length} answered
+            </p>
+          </div>
+
+          <div className="px-4 py-6  bg-gray-100  border-y  border-gray-200">
+            <div className="h-3 w-full bg-gray-200 rounded-full relative">
+              <div
+                className="h-full bg-quaternary rounded-full"
+                style={{
+                  width: `${
+                    (Object.keys(answers).length / examData.questions.length) *
+                    100
+                  }%`,
+                }}
+              ></div>
+              <span
+                className="absolute top-[-8px] text-white text-sm bg-quaternary border border-white px-3 py-0.5 rounded-full"
+                style={{
+                  left: `${
+                    ((Object.keys(answers).length / examData.questions.length) * 100) - 2
+                  }%`,
+                }}
+              >
+                {Math.round(
+                  (Object.keys(answers).length / examData.questions.length) * 100
+                )}
+                %
+              </span>
             </div>
-          
+          </div>
+
+          {/* Exam Name and Total Time */}
+          <div className="flex justify-between items-center  bg-white p-4 ">
+            <div className="flex items-center space-x-2">
+              <AiOutlineClockCircle className="text-gray-600" size={30} />
+              <h3 className="text-3xl font-semibold text-gray-600">
+                {parseFloat(examData.duration).toFixed(0)}
+              </h3>
+              <p className="text-lg font-semibold text-gray-500">Minutes</p>
+            </div>
           </div>
 
           {/* Time Remaining */}
-          <div className="text-center flex space-x-3 items-center bg-[#ffc300] p-4 rounded-md">
-            <FaHourglass  className="text-black" size={24} />
+          <div className="text-center flex space-x-3 items-center bg-[#ffc300] p-4 ">
+            <FaHourglass className="text-black" size={24} />
             <p className="text-3xl font-bold text-black">
               {formatTimeLeft(timeLeft)}
             </p>
-           
           </div>
 
+          <div className="h-6 bg-gray-100  border-y  border-gray-200"></div>
+
+          <div className="p-4">
+            {/* Question Navigation Grid */}
+            {examData.question_view === "enable" ? (
+              <div className="flex items-center justify-center flex-wrap gap-3 text-center">
+                {examData.questions.map((question, index) => {
+                  const isActive = currentQuestionIndex === index;
+                  const isAnswered = !!answers[question.id];
+
+                  return (
+                    <div
+                      key={index}
+                      className={`relative flex items-center justify-center text-lg w-12 h-12 border transition duration-200  bg-white ${
+                        isActive
+                          ? "border-defaultcolor text-defaultcolor shadow-lg"
+                          : isAnswered
+                          ? "border-green-500 text-green-500"
+                          : "border-yellow-300 text-yellow-600"
+                      }`}
+                      onClick={() => setCurrentQuestionIndex(index)}
+                      style={{
+                        cursor:
+                          examData.question_view === "enable"
+                            ? "pointer"
+                            : "not-allowed",
+                      }}
+                    >
+                      {index + 1}
+                      <div
+                        className={`absolute inset-x-0 bottom-0 h-2  ${
+                          isActive
+                            ? "bg-defaultcolor"
+                            : isAnswered
+                            ? "bg-green-500"
+                            : "bg-yellow-300"
+                        }`}
+                      ></div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="flex items-center justify-center flex-wrap text-lg gap-3 text-center">
+                {examData.questions.map((question, index) => {
+                  const isActive = currentQuestionIndex === index;
+                  const isAnswered = !!answers[question.id];
+
+                  return (
+                    <div
+                      key={index}
+                      className={`relative flex items-center justify-center w-12 h-12 border transition-colors duration-200 bg-white cursor-not-allowed  ${
+                        isActive
+                          ? "border-defaultcolor text-gray-900 shadow"
+                          : isAnswered
+                          ? "border-green-500 text-gray-900"
+                          : "border-yellow-300 text-gray-900"
+                      }`}
+                    >
+                      {index + 1}
+                      <div
+                        className={`absolute inset-x-0 bottom-0 h-2  ${
+                          isActive
+                            ? "bg-defaultcolor"
+                            : isAnswered
+                            ? "bg-green-500"
+                            : "bg-yellow-300"
+                        }`}
+                      ></div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          <div className="h-6 bg-gray-100  border-y  border-gray-200"></div>
+
           {/* Answered and Skipped Count */}
-          <div className="flex justify-around items-center space-x-2 text-center mb-6">
+          <div className="flex justify-around items-center space-x-2 text-center p-4">
             <div className="w-1/2 flex items-center justify-center space-x-2 px-5 py-1 rounded-md bg-green-100 shadow-inner">
               <FaRegSmile className="text-green-600" size={20} />
               <span className="text-md font-medium text-green-700">
@@ -991,118 +1107,17 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
             </div>
           </div>
 
-          {/* Progress Bar */}
-          <div className="mb-6">
-            <p className="text-lg font-medium text-gray-700 mb-2">Progress</p>
-            <div className="flex items-center">
-              {/* Progress Bar */}
-              <div className="h-2 w-full bg-gray-200 rounded-full overflow-hidden mr-2">
-                <div
-                  className="h-full bg-defaultcolor rounded-full"
-                  style={{
-                    width: `${
-                      (Object.keys(answers).length / examData.questions.length) * 100
-                    }%`,
-                  }} 
-                ></div>
-              </div>
-              {/* Percentage Display */}
-              <span className="text-gray-700 font-medium">
-                {Math.round((Object.keys(answers).length / examData.questions.length) * 100)}%
-              </span>
-            </div>
-          </div>
-
-
-          {/* Question Navigation Grid */}
-          {examData.question_view === "enable" ? (
-            <div className="flex items-center justify-center flex-wrap gap-3 text-center">
-              {examData.questions.map((question, index) => {
-                const isActive = currentQuestionIndex === index;
-                const isAnswered = !!answers[question.id];
-
-                return (
-                  <div
-                    key={index}
-                    className={`relative flex items-center justify-center text-lg w-12 h-12 border transition duration-200  bg-white ${
-                      isActive
-                        ? "border-defaultcolor text-defaultcolor shadow-lg"
-                        : isAnswered
-                        ? "border-green-500 text-green-500"
-                        : "border-yellow-300 text-yellow-600"
-                    }`}
-                    onClick={() => setCurrentQuestionIndex(index)}
-                    style={{
-                      cursor:
-                        examData.question_view === "enable"
-                          ? "pointer"
-                          : "not-allowed",
-                    }}
-                  >
-                    {index + 1}
-                    <div
-                      className={`absolute inset-x-0 bottom-0 h-2  ${
-                        isActive
-                          ? "bg-defaultcolor"
-                          : isAnswered
-                          ? "bg-green-500"
-                          : "bg-yellow-300"
-                      }`}
-                    ></div>
-                  </div>
-                );
-              })}
-            </div>
-          ) : (
-            <div className="flex items-center justify-center flex-wrap text-lg gap-3 text-center">
-              {examData.questions.map((question, index) => {
-                const isActive = currentQuestionIndex === index;
-                const isAnswered = !!answers[question.id];
-
-                return (
-                  <div
-                    key={index}
-                    className={`relative flex items-center justify-center w-12 h-12 border transition-colors duration-200 bg-white cursor-not-allowed  ${
-                      isActive
-                        ? "border-defaultcolor text-gray-900 shadow"
-                        : isAnswered
-                        ? "border-green-500 text-gray-900"
-                        : "border-yellow-300 text-gray-900"
-                    }`}
-                  >
-                    {index + 1}
-                    <div
-                      className={`absolute inset-x-0 bottom-0 h-2  ${
-                        isActive
-                          ? "bg-defaultcolor"
-                          : isAnswered
-                          ? "bg-green-500"
-                          : "bg-yellow-300"
-                      }`}
-                    ></div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
+          <div className="h-6 bg-gray-100  border-y  border-gray-200"></div>
 
           {/* Exam Instructions */}
-          <div className="mt-3 text-center">
-            <h3 className="text-lg font-semibold text-gray-700">Exam Guide</h3>
-            <p className="text-sm text-gray-600 leading-relaxed">
-              - Answer all questions to the best of your ability.
-              <br />
-              - You can navigate between questions.
-              <br />- Make sure to submit your exam before time runs out.
-            </p>
+          <div className="p-4 text-center">
+            <button
+              className="bg-red-500 block text-white w-full px-4 py-2 rounded-lg hover:bg-green-600 transition-colors"
+              onClick={handleFinishClick}
+            >
+              Finish Exam
+            </button>
           </div>
-
-          <button
-            className="bg-red-500 block text-white w-full px-4 py-2 rounded-lg hover:bg-green-600 transition-colors"
-            onClick={handleFinishClick} // Trigger modal on click
-          >
-            Finish Exam
-          </button>
         </div>
       )}
       {showModal && <ConfirmationModal />}{" "}
