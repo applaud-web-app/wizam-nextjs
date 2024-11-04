@@ -15,10 +15,10 @@ interface QuizData {
   uuid: string;
 }
 
-// Helper function to format dates using native JavaScript
+// Helper function to format dates
 const formatDate = (dateString: string) => {
   const date = new Date(dateString);
-  return date.toLocaleString(); // You can customize the format further if needed
+  return date.toLocaleString();
 };
 
 const QuizzesTable: React.FC = () => {
@@ -29,7 +29,6 @@ const QuizzesTable: React.FC = () => {
   useEffect(() => {
     const fetchQuizData = async () => {
       try {
-        // Get JWT and category_id from cookies
         const jwt = Cookies.get("jwt");
         const category_id = Cookies.get("category_id");
 
@@ -38,19 +37,17 @@ const QuizzesTable: React.FC = () => {
           return;
         }
 
-        // Make the API request to fetch quiz progress data
         const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/quiz-progress`, {
           headers: {
-            Authorization: `Bearer ${jwt}`, // Pass the JWT token in headers
+            Authorization: `Bearer ${jwt}`,
           },
           params: {
-            category: category_id, // Pass the category_id as a parameter
+            category: category_id,
           },
         });
 
-        // Assuming the response contains the data in the expected format
         if (response.data && response.data.data) {
-          setData(response.data.data); // Set the quiz progress data in state
+          setData(response.data.data);
         } else {
           setError("Invalid data format received from the server.");
         }
@@ -82,37 +79,38 @@ const QuizzesTable: React.FC = () => {
         </thead>
         <tbody className="bg-white divide-y divide-gray-200">
           {data.length > 0 ? (
-            data.map((quiz, index) => (
-              <tr key={index} className="hover:bg-gray-50">
-                <td className="p-4">{index + 1}</td> {/* S.No */}
-                <td className="p-4">{quiz.quiz_title}</td>
-                <td className="p-4">{formatDate(quiz.updated_at)}</td> {/* Date formatting */}
-                <td className="p-4">
-                  {quiz.student_percentage !== null ? `${quiz.student_percentage}%` : "-"}
-                </td> {/* Student Percentage */}
-                <td className="p-4">{quiz.pass_percentage}%</td> {/* Pass Percentage */}
-                <td className="p-4">
-                  <span
-                    className={`px-2 py-1 rounded-lg text-sm font-medium ${
-                      quiz.status === "complete"
-                        ? "bg-green-100 text-green-800"
-                        : "bg-yellow-100 text-yellow-800"
-                    }`}
-                  >
-                    {quiz.status.charAt(0).toUpperCase() + quiz.status.slice(1)}
-                  </span>
-                </td> {/* Status Badge */}
-                <td className="p-4">
-                  <Link href={`/dashboard/quiz-result/${quiz.uuid}`} className="bg-quaternary text-white px-3 py-1 text-sm rounded-lg hover:bg-quaternary-dark transition">
-                  Result
-                  </Link>
-                </td> {/* Action Button */}
-              </tr>
-            ))
+            data.map((quiz, index) => {
+              const isPassed = quiz.student_percentage !== null &&
+                               parseFloat(quiz.student_percentage) >= parseFloat(quiz.pass_percentage);
+
+              return (
+                <tr key={index} className="hover:bg-gray-50">
+                  <td className="p-4">{index + 1}</td>
+                  <td className="p-4">{quiz.quiz_title}</td>
+                  <td className="p-4">{formatDate(quiz.updated_at)}</td>
+                  <td className="p-4">{quiz.student_percentage ? `${quiz.student_percentage}%` : "0%"}</td>
+                  <td className="p-4">{quiz.pass_percentage}%</td>
+                  <td className="p-4">
+                    <span
+                      className={`px-3 py-1 rounded-full text-sm font-medium ${
+                        isPassed ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
+                      }`}
+                    >
+                      {isPassed ? "Passed" : "Failed"}
+                    </span>
+                  </td>
+                  <td className="p-4">
+                    <Link href={`/dashboard/quiz-result/${quiz.uuid}`} className="bg-defaultcolor text-white px-5 py-1 text-sm rounded-full hover:bg-defaultcolor-dark transition">
+                      Result
+                    </Link>
+                  </td>
+                </tr>
+              );
+            })
           ) : (
             <tr>
               <td className="p-4" colSpan={7}>
-              <p className="text-center"> No Quiz data found.</p>
+                <p className="text-center">No Quiz data found.</p>
               </td>
             </tr>
           )}

@@ -1,12 +1,12 @@
 import { useState, useEffect } from "react";
 import Loader from "@/components/Common/Loader";
 import { FaClock, FaQuestionCircle, FaStar, FaCheckCircle, FaInfoCircle } from "react-icons/fa";
-import Cookies from "js-cookie"; // Ensure js-cookie is installed
-import axios from "axios"; // Make sure axios is installed
-import NoData from "@/components/Common/NoData"; // Import NoData component
+import Cookies from "js-cookie";
+import axios from "axios";
+import NoData from "@/components/Common/NoData";
 import Link from "next/link";
-import { toast } from "react-toastify"; // Optional: For notifications
-import { useRouter } from "next/navigation"; // Use router to redirect
+import { toast } from "react-toastify";
+import { useRouter } from "next/navigation";
 
 interface QuizDetails {
   title: string;
@@ -26,9 +26,9 @@ interface SingleQuizProps {
 export default function SingleQuiz({ slug }: SingleQuizProps) {
   const [quizDetails, setQuizDetails] = useState<QuizDetails | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
-  const router = useRouter(); // For redirecting to other pages
+  const [isChecked, setIsChecked] = useState<boolean>(false); // For checkbox state
+  const router = useRouter();
 
-  // Function to handle payment logic
   const handlePayment = async (slug: string) => {
     try {
       const jwt = Cookies.get("jwt");
@@ -40,9 +40,7 @@ export default function SingleQuiz({ slug }: SingleQuizProps) {
       }
 
       const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/user-subscription`, {
-        headers: {
-          Authorization: `Bearer ${jwt}`,
-        },
+        headers: { Authorization: `Bearer ${jwt}` },
         params: { type },
       });
 
@@ -120,52 +118,49 @@ export default function SingleQuiz({ slug }: SingleQuizProps) {
   }
 
   return (
-    <div >
-
-    <div className="bg-white p-5 rounded-lg shadow-sm mb-5">
-      <div className="mb-5 text-center">
-        <h1 className="text-4xl font-bold text-gray-900">{quizDetails.title}</h1>
-        <p className="text-lg font-medium text-gray-600">{quizDetails.quizType}</p>
-        <span className="inline-block bg-blue-100 text-blue-600 text-sm font-semibold px-4 py-1 rounded-full mt-2">
-          {quizDetails.syllabus}
-        </span>
-      </div>
-
-      {/* Card with Quiz Details */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
-      <div className="border border-gray-300 bg-gray-50  p-5 rounded-lg  flex items-center justify-between">
-      <div className="flex items-center space-x-3">
-            <FaQuestionCircle className="text-indigo-500" size={24} />
-            <span className="text-lg font-semibold text-gray-700">Questions</span>
-          </div>
-          <span className="bg-indigo-100 text-indigo-600 text-sm font-bold px-3 py-1 rounded-full">
-            {quizDetails.totalQuestions}
+    <div>
+      <div className="bg-white p-5 rounded-lg shadow-sm mb-5">
+        <div className="mb-5 text-center">
+          <h1 className="text-4xl font-bold text-gray-900">{quizDetails.title}</h1>
+          <p className="text-lg font-medium text-gray-600">{quizDetails.quizType}</p>
+          <span className="inline-block bg-blue-100 text-blue-600 text-sm font-semibold px-4 py-1 rounded-full mt-2">
+            {quizDetails.syllabus}
           </span>
         </div>
 
-        <div className="border border-gray-300 bg-gray-50  p-5 rounded-lg  flex items-center justify-between">
-        <div className="flex items-center space-x-3">
-            <FaClock className="text-green-500" size={24} />
-            <span className="text-lg font-semibold text-gray-700">Duration</span>
+        {/* Card with Quiz Details */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+          <div className="border border-gray-300 bg-gray-50 p-3 rounded-lg flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <FaQuestionCircle className="text-indigo-500" size={24} />
+              <span className="text-lg font-semibold text-gray-700">Questions</span>
+            </div>
+            <span className="bg-indigo-100 text-indigo-600 text-sm font-bold px-3 py-1 rounded-full">
+              {quizDetails.totalQuestions}
+            </span>
           </div>
-          <span className="bg-green-100 text-green-600 text-sm font-bold px-3 py-1 rounded-full">
-            {quizDetails.duration}
-          </span>
-        </div>
 
-        <div className="border border-gray-300 bg-gray-50  p-5 rounded-lg  flex items-center justify-between">
-        <div className="flex items-center space-x-3">
-            <FaStar className="text-yellow-500" size={24} />
-            <span className="text-lg font-semibold text-gray-700">Marks</span>
+          <div className="border border-gray-300 bg-gray-50 p-3 rounded-lg flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <FaClock className="text-green-500" size={24} />
+              <span className="text-lg font-semibold text-gray-700">Duration</span>
+            </div>
+            <span className="bg-green-100 text-green-600 text-sm font-bold px-3 py-1 rounded-full">
+              {quizDetails.duration}
+            </span>
           </div>
-          <span className="bg-yellow-100 text-yellow-600 text-sm font-bold px-3 py-1 rounded-full">
-            {quizDetails.marks}
-          </span>
+
+          <div className="border border-gray-300 bg-gray-50 p-3 rounded-lg flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <FaStar className="text-yellow-500" size={24} />
+              <span className="text-lg font-semibold text-gray-700">Marks</span>
+            </div>
+            <span className="bg-yellow-100 text-yellow-600 text-sm font-bold px-3 py-1 rounded-full">
+              {quizDetails.marks}
+            </span>
+          </div>
         </div>
       </div>
-      </div>
-      {/* Header Section */}
-     
 
       {/* Instructions Section */}
       <div className="bg-white p-5 rounded-lg shadow-sm mb-5">
@@ -187,24 +182,43 @@ export default function SingleQuiz({ slug }: SingleQuizProps) {
         <h3 className="text-2xl font-semibold text-quaternary mb-4 flex items-center">
           <FaInfoCircle className="text-quaternary mr-2" /> Quiz Description
         </h3>
-        <div
-          dangerouslySetInnerHTML={{ __html: quizDetails.description || "" }}
-          
+        <div dangerouslySetInnerHTML={{ __html: quizDetails.description || "" }} />
+      </div>
+
+      {/* Terms and Conditions Checkbox */}
+      <div className="flex items-center mb-4">
+        <input
+          type="checkbox"
+          id="terms"
+          checked={isChecked}
+          onChange={(e) => setIsChecked(e.target.checked)}
+          className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
         />
+        <label htmlFor="terms" className="ml-2  text-gray-600">
+          I have read all the instructions.
+        </label>
       </div>
 
       {/* Start/Pay Button */}
       {quizDetails.is_free ? (
         <Link
           href={`/dashboard/quiz-play/${slug}`}
-          className="block w-full bg-green-500 text-white text-center font-semibold py-3 rounded-lg hover:bg-green-600 transition-colors"
+          className={`block w-full ${
+            isChecked ? "bg-green-500 hover:bg-green-600" : "bg-gray-300 cursor-not-allowed"
+          } text-white text-center font-semibold py-3 rounded-lg transition-colors`}
+          onClick={(e) => {
+            if (!isChecked) e.preventDefault();
+          }}
         >
           Start Quiz
         </Link>
       ) : (
         <button
-          className="block w-full bg-yellow-500 text-white text-center font-semibold py-3 rounded-lg hover:bg-yellow-600 transition-colors"
+          className={`block w-full ${
+            isChecked ? "bg-yellow-500 hover:bg-yellow-600" : "bg-gray-300 cursor-not-allowed"
+          } text-white text-center font-semibold py-3 rounded-lg transition-colors`}
           onClick={() => handlePayment(`/dashboard/quiz-play/${slug}`)}
+          disabled={!isChecked}
         >
           Pay Now
         </button>

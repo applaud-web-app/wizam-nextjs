@@ -11,6 +11,7 @@ import {
   FaQuestionCircle,
   FaMinusCircle,
   FaClock,
+  FaRegCalendarAlt,
 } from "react-icons/fa";
 import { toast } from "react-toastify";
 import Cookies from "js-cookie";
@@ -59,6 +60,9 @@ interface Question {
 
 interface QuizData {
   title: string;
+  exam_result_time: string;
+  exam_result_date: string;
+  exam_result_type: string;
   duration: string;
   questions: Question[];
 }
@@ -117,6 +121,9 @@ const QuizResult = ({ params }: QuizResultProps) => {
 
           setQuizData({
             title: resultData.quiz.title,
+            exam_result_type: resultData.quiz.exam_result_type,
+            exam_result_date: resultData.quiz.exam_result_date,
+            exam_result_time: resultData.quiz.exam_result_time,
             duration: resultData.quiz.duration,
             questions: resultData.exam_preview.map((q: any) => ({
               id: q.question_id,
@@ -612,7 +619,7 @@ const QuizResult = ({ params }: QuizResultProps) => {
 
   return (
     <div className="dashboard-page">
-      <div className="flex items-center space-x-3 mb-6">
+      <div className="flex items-center space-x-3 mb-3">
         <button
           onClick={() => router.back()}
           className="text-gray-500 hover:text-defaultcolor flex items-center"
@@ -621,6 +628,22 @@ const QuizResult = ({ params }: QuizResultProps) => {
         </button>
         <h1 className="text-3xl font-bold">{userQuizResult.title}</h1>
       </div>
+
+      <div className="flex items-center space-x-3 flex-wrap mb-3">
+          <div className="mb-1">
+            <p className="text-lg">Quiz Packs: {quizData.exam_result_type}</p>
+          </div>
+          
+          <div className="flex items-center mb-1">
+            <FaRegCalendarAlt  className=" mr-2" />
+            <p className="text-lg">{quizData.exam_result_date}</p>
+          </div>
+
+          <div className="flex items-center mb-1">
+            <FaClock className="mr-2" />
+            <p className="text-lg">{quizData.exam_result_time}</p>
+          </div>
+        </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
         <button
@@ -670,7 +693,8 @@ const QuizResult = ({ params }: QuizResultProps) => {
             )}
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+        <div className="bg-white lg:p-6 p-3 rounded-lg shadow-sm">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mb-6 ">
             <ResultCard
               title="Total Questions"
               value={totalQuestions}
@@ -703,8 +727,8 @@ const QuizResult = ({ params }: QuizResultProps) => {
             />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-            <div className="bg-white p-6 rounded-lg shadow-sm">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className=" p-3 rounded-lg border border-gray-200">
               <h2 className="text-lg font-semibold mb-2">Answer Distribution</h2>
               <div className="mx-auto" style={{ width: '100%', maxWidth: '300px', height: 'auto' }}>
 
@@ -733,7 +757,7 @@ const QuizResult = ({ params }: QuizResultProps) => {
               </div>
             </div>
 
-            <div className="bg-white p-6 rounded-lg shadow-sm">
+            <div className=" p-3 rounded-lg border border-gray-200">
               <h2 className="text-lg font-semibold mb-2">Score Comparison</h2>
               <Bar
                 data={{
@@ -756,6 +780,7 @@ const QuizResult = ({ params }: QuizResultProps) => {
               />
             </div>
           </div>
+        </div>
         </div>
       )}
 
@@ -795,7 +820,7 @@ const ResultCard = ({
   icon?: React.ReactNode;
 }) => {
   return (
-    <div className="flex items-center p-5 border border-gray-200 rounded-lg bg-white shadow-sm">
+    <div className="flex items-center p-5 border border-gray-200 rounded-lg bg-white ">
       <div className="mr-4 flex items-center justify-center w-14 h-14 rounded-full bg-gray-100">
         {icon}
       </div>

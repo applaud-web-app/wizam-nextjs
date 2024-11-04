@@ -9,6 +9,7 @@ import Link from "next/link";
 import { FaClock, FaQuestionCircle, FaStar } from "react-icons/fa";
 import { FaArrowLeftLong } from "react-icons/fa6";
 import Loader from "@/components/Common/Loader";
+import NoData from "@/components/Common/NoData";
 
 interface ExamDetail {
   title: string;
@@ -136,7 +137,7 @@ export default function ExamDetailPage({ params }: { params: { slug: string } })
   }
 
   if (exams.length === 0) {
-    return <div className="text-center text-gray-500 p-5">No exams available at this time.</div>;
+    return <NoData message="No exams available right now. Please check back later"/>;
   }
 
   return (

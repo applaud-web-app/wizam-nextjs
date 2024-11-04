@@ -9,7 +9,7 @@ interface DashboardCardProps {
 
 const DashboardCard: React.FC<DashboardCardProps> = ({ title, content, icon, iconColor }) => {
   return (
-    <div className="bg-white p-6 rounded-lg shadow-sm hover:shadow transform hover:-translate-y-1 transition-all duration-300">
+    <div className="bg-white p-6 rounded-lg shadow-sm hover:shadow-sm transform hover:-translate-y-1 transition-all duration-300">
       <div className="flex items-center space-x-4">
         {/* Icon with dynamic color in a rounded container */}
         <div className={`w-16 h-16 flex items-center justify-center rounded-full bg-gray-100 ${iconColor} text-3xl`}>

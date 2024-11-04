@@ -6,6 +6,8 @@ import axios from "axios";
 import { toast } from "react-toastify";
 import Cookies from "js-cookie";
 import { useRouter } from "next/navigation";
+import { useSiteSettings } from "@/context/SiteContext"; 
+
 
 interface HeaderProps {
   toggleSidebar: () => void;
@@ -25,6 +27,8 @@ export default function Header({ toggleSidebar }: HeaderProps) {
   const dropdownRef = useRef<HTMLDivElement>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const router = useRouter();
+    const { siteSettings, loading, error } = useSiteSettings(); // Access site settings using the context
+
 
   const toggleDropdown = () => {
     setIsDropdownOpen(!isDropdownOpen);
@@ -123,13 +127,17 @@ export default function Header({ toggleSidebar }: HeaderProps) {
           <FiMenu size={24} />
         </button>
         <div className="flex items-center">
-          <Image
-            src="/images/logo/wizam-logo.png"
-            width={120}
-            height={40}
-            alt="Logo"
-            className="object-contain"
-          />
+          {loading ? (
+            <></>
+          ) : (
+            <Image
+              src={siteSettings?.site_logo || "/images/logo/default-logo.png"} // Fallback to default logo if not available
+              width={120}
+              height={40}
+              alt={siteSettings?.site_name || "Logo"}
+              className="object-contain"
+            />
+          )}
         </div>
       </div>
 
@@ -173,7 +181,7 @@ export default function Header({ toggleSidebar }: HeaderProps) {
           </button>
 
           {isDropdownOpen && (
-            <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-700 rounded-md shadow-lg py-2 z-50 transition-opacity duration-300 ease-in-out">
+            <div className="absolute right-0 divide-y mt-2 w-48 bg-white dark:bg-gray-700 rounded-md shadow-lg py-2 z-50 transition-opacity duration-300 ease-in-out">
               <Link href="/dashboard/profile" className="block px-4 py-2 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600">
                 <FiUser className="inline-block mr-2" />My Profile
               </Link>

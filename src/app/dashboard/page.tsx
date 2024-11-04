@@ -184,9 +184,10 @@ export default function DashboardPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <DashboardCard title="Completed Exams" content={`${data.completed_exam}`} icon={<FiThumbsUp />} iconColor="text-green-500" />
-        <DashboardCard title="Passed Exams" content={`${data.pass_exam}`} icon={<FiCheckCircle />} iconColor="text-defaultcolor" />
-        <DashboardCard title="Failed Exams" content={`${data.failed_exam}`} icon={<FiThumbsDown />} iconColor="text-red-500" />
         <DashboardCard title="Average Score" content={`${roundedAverageScore}%`} icon={<FiPercent />} iconColor="text-indigo-500" />
+        <DashboardCard title="Passed" content={`${data.pass_exam}`} icon={<FiCheckCircle />} iconColor="text-defaultcolor" />
+        <DashboardCard title="Failed" content={`${data.failed_exam}`} icon={<FiThumbsDown />} iconColor="text-red-500" />
+        
       </div>
 
       {/* Render ResumeExamTable with dynamic data */}

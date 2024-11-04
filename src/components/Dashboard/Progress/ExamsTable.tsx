@@ -8,8 +8,8 @@ import Link from "next/link";
 // Define the structure of the exam data
 interface ExamData {
   updated_at: string;
-  student_percentage: string | null;
-  pass_percentage: string;
+  student_percentage: number;
+  pass_percentage: number;
   status: string;
   uuid: string;
   exam_title: string;
@@ -23,13 +23,11 @@ const formatDate = (dateString: string) => {
 const ExamsTable: React.FC = () => {
   const [data, setData] = useState<ExamData[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState<boolean>(true); // Add loading state
+  const [loading, setLoading] = useState<boolean>(true);
 
-  // Fetch exam progress data from the API when the component mounts
   useEffect(() => {
     const fetchExamData = async () => {
       try {
-        // Get JWT and category_id from cookies
         const jwt = Cookies.get("jwt");
         const category_id = Cookies.get("category_id");
 
@@ -38,20 +36,18 @@ const ExamsTable: React.FC = () => {
           return;
         }
 
-        // Make the API request to fetch exam progress data
         const response = await axios.get(
           `${process.env.NEXT_PUBLIC_API_URL}/exam-progress`,
           {
             headers: {
-              Authorization: `Bearer ${jwt}`, // Pass the JWT token in headers
+              Authorization: `Bearer ${jwt}`,
             },
             params: {
-              category: category_id, // Pass the category_id as a parameter
+              category: category_id,
             },
           }
         );
 
-        // Assuming the response contains the data in the expected format
         if (response.data && response.data.data) {
           const examData = response.data.data;
           setData(examData);
@@ -61,7 +57,7 @@ const ExamsTable: React.FC = () => {
       } catch (error) {
         setError("Failed to fetch exam progress data.");
       } finally {
-        setLoading(false); // Set loading to false once data is fetched
+        setLoading(false);
       }
     };
 
@@ -73,7 +69,7 @@ const ExamsTable: React.FC = () => {
   }
 
   if (loading) {
-    return <div className="text-center text-gray-500 py-5">Loading data...</div>; // Show loading state
+    return <div className="text-center text-gray-500 py-5">Loading data...</div>;
   }
 
   return (
@@ -94,31 +90,30 @@ const ExamsTable: React.FC = () => {
           {data.length > 0 ? (
             data.map((exam, index) => (
               <tr key={index} className="hover:bg-gray-50">
-                <td className="p-4">{index + 1}</td> {/* Serial Number */}
+                <td className="p-4">{index + 1}</td>
                 <td className="p-4">{exam.exam_title}</td>
                 <td className="p-4">{formatDate(exam.updated_at)}</td>
                 <td className="p-4">
                   {exam.student_percentage !== null
                     ? `${exam.student_percentage}%`
-                    : "-"}
+                    : "0%"}
                 </td>
                 <td className="p-4">{exam.pass_percentage}%</td>
                 <td className="p-4">
                   <span
-                    className={`px-2 py-1 rounded-lg text-sm font-medium ${
-                      exam.status === "complete"
+                    className={`px-3 py-1 rounded-lg text-sm font-medium ${
+                      exam.student_percentage >= exam.pass_percentage
                         ? "bg-green-100 text-green-800"
-                        : "bg-yellow-100 text-yellow-800"
+                        : "bg-red-100 text-red-800"
                     }`}
                   >
-                    {exam.status.charAt(0).toUpperCase() +
-                      exam.status.slice(1)}
+                    {exam.student_percentage >= exam.pass_percentage ? "Passed" : "Failed"}
                   </span>
                 </td>
                 <td className="p-4">
                   <Link
                     href={`/dashboard/exam-result/${exam.uuid}`}
-                    className="bg-defaultcolor text-white px-3 py-1 text-sm rounded-lg hover:bg-defaultcolor-dark transition"
+                    className="bg-defaultcolor text-white px-5 py-1 text-sm rounded-full hover:bg-defaultcolor-dark transition"
                   >
                     Result
                   </Link>
@@ -128,7 +123,7 @@ const ExamsTable: React.FC = () => {
           ) : (
             <tr>
               <td className="p-4" colSpan={7}>
-              <p className="text-center"> No Exam data found.</p>
+                <p className="text-center">No exam data found.</p>
               </td>
             </tr>
           )}

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import {
   FaCheckCircle,
-  FaTimesCircle,
+  FaTimesCircle,FaRegCalendarAlt,
   FaCheck,
   FaTimes,
   FaRegCircle,
@@ -61,6 +61,9 @@ interface Question {
 interface ExamData {
   title: string;
   duration: string;
+  exam_result_type: string;
+  exam_result_date: string;
+  exam_result_time: string;
   questions: Question[];
 }
 
@@ -120,6 +123,9 @@ const ExamResult = ({ params }: ExamResultProps) => {
           setExamData({
             title: resultData.exam.title,
             duration: resultData.exam.duration,
+            exam_result_date: resultData.exam.exam_result_date,
+            exam_result_time: resultData.exam.exam_result_time,
+            exam_result_type: resultData.exam.exam_result_type,
             questions: resultData.exam_preview.map((q: any) => ({
               id: q.question_id,
               type: q.question_type,
@@ -617,7 +623,7 @@ const ExamResult = ({ params }: ExamResultProps) => {
     <div className="dashboard-page">
       {/* START  */}
 
-      <div className="flex items-center space-x-3 mb-6">
+      <div className="flex items-center space-x-3 mb-3">
         <button
           onClick={() => router.back()}
           className="text-gray-500 hover:text-defaultcolor flex items-center"
@@ -626,6 +632,22 @@ const ExamResult = ({ params }: ExamResultProps) => {
         </button>
         <h1 className="text-3xl font-bold">{userExamResult.title}</h1>
       </div>
+
+        <div className="flex items-center space-x-3 flex-wrap mb-3">
+          <div className="mb-1">
+            <p className="text-lg">Exam Packs: {examData.exam_result_type}</p>
+          </div>
+          
+          <div className="flex items-center mb-1">
+            <FaRegCalendarAlt  className=" mr-2" />
+            <p className="text-lg">{examData.exam_result_date}</p>
+          </div>
+
+          <div className="flex items-center mb-1">
+            <FaClock className="mr-2" />
+            <p className="text-lg">{examData.exam_result_time}</p>
+          </div>
+        </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
         <button
@@ -685,8 +707,9 @@ const ExamResult = ({ params }: ExamResultProps) => {
       )}
     </div>
 
+    <div className="bg-white lg:p-6 p-3 rounded-lg shadow-sm">
     {/* Summary Cards */}
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mb-6">
       <ResultCard
         title="Total Questions"
         value={totalQuestions}
@@ -720,13 +743,13 @@ const ExamResult = ({ params }: ExamResultProps) => {
     </div>
 
     {/* Chart Section */}
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-8">
       {/* Answer Distribution Chart */}
-      <div className="bg-white p-6 rounded-lg shadow-sm ">
+      <div className="border border-gray-200 p-3 rounded-lg  ">
         <h2 className="text-lg font-semibold text-gray-800 mb-2">
           Answer Distribution
         </h2>
-        <p className="text-sm text-gray-600 mb-4">
+        <p className="text-sm text-gray-600">
           A breakdown of your answers, showing correct, incorrect, and skipped responses.
         </p>
         <div className="mx-auto" style={{ width: '100%', maxWidth: '300px', height: 'auto' }}>
@@ -760,11 +783,11 @@ const ExamResult = ({ params }: ExamResultProps) => {
       </div>
 
       {/* Score Comparison Chart */}
-      <div className="bg-white p-6 rounded-lg shadow-sm ">
+      <div className="border border-gray-200 p-3 rounded-lg ">
         <h2 className="text-lg font-semibold text-gray-800 mb-2">
           Score Comparison
         </h2>
-        <p className="text-sm text-gray-600 mb-4">
+        <p className="text-sm text-gray-600 ">
           See how your score compares to the passing score.
         </p>
         <div className="mx-auto" >
@@ -800,6 +823,9 @@ const ExamResult = ({ params }: ExamResultProps) => {
         </div>
       </div>
     </div>
+    </div>
+
+
   </div>
 )}
 
@@ -844,7 +870,7 @@ const ResultCard = ({
   icon?: React.ReactNode;
 }) => {
   return (
-    <div className="flex items-center p-5 border border-gray-200 rounded-lg bg-white shadow-sm">
+    <div className="flex items-center p-5 border border-gray-200 rounded-lg ">
       {/* Icon Section */}
       <div className="mr-4 flex items-center justify-center w-14 h-14 rounded-full bg-gray-100">
         {icon}

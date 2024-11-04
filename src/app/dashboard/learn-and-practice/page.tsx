@@ -57,24 +57,9 @@ export default function LearnAndPractice() {
       <h1 className="text-2xl sm:text-3xl font-bold mb-4">Learn and Practice</h1>
       <div className="bg-white rounded-lg p-5 shadow-sm">
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-6 lg:gap-8">
-          
-          {/* Practice Set Card */}
-          <Link href="/dashboard/practice-test">
-            <div className="card flex flex-col items-center justify-center rounded-lg p-4 cursor-pointer transition-transform border border-gray-300 hover:border-defaultcolor">
-              <Image
-                className="w-12 h-12 sm:w-16 sm:h-16"
-                src="/images/live_help.svg"
-                width={62}
-                height={62}
-                alt="Practice Set"
-              />
-              <h3 className="text-lg sm:text-xl font-semibold text-gray-800 mt-2 sm:mt-3"> {practiceSetCount} Practice Set</h3>
-             
-            </div>
-          </Link>
 
-          {/* Videos Card */}
-          <Link href="/dashboard/videos">
+            {/* Videos Card */}
+            <Link href="/dashboard/videos">
             <div className="card flex flex-col items-center justify-center rounded-lg p-4 cursor-pointer transition-transform border border-gray-300 hover:border-defaultcolor">
               <Image
                 className="w-12 h-12 sm:w-16 sm:h-16"
@@ -88,6 +73,10 @@ export default function LearnAndPractice() {
             </div>
           </Link>
 
+          
+       
+        
+
           {/* Lesson Card */}
           <Link href="/dashboard/lessons">
             <div className="card flex flex-col items-center justify-center rounded-lg p-4 cursor-pointer transition-transform border border-gray-300 hover:border-defaultcolor">
@@ -98,10 +87,26 @@ export default function LearnAndPractice() {
                 height={62}
                 alt="Lesson"
               />
-              <h3 className="text-lg sm:text-xl font-semibold text-gray-800 mt-2 sm:mt-3">{lessonCount} Lesson</h3>
+              <h3 className="text-lg sm:text-xl font-semibold text-gray-800 mt-2 sm:mt-3">{lessonCount} Lessons</h3>
             
             </div>
           </Link>
+
+             {/* Practice Set Card */}
+             <Link href="/dashboard/practice-test">
+            <div className="card flex flex-col items-center justify-center rounded-lg p-4 cursor-pointer transition-transform border border-gray-300 hover:border-defaultcolor">
+              <Image
+                className="w-12 h-12 sm:w-16 sm:h-16"
+                src="/images/live_help.svg"
+                width={62}
+                height={62}
+                alt="Practice Set"
+              />
+              <h3 className="text-lg sm:text-xl font-semibold text-gray-800 mt-2 sm:mt-3"> {practiceSetCount} Practice Set</h3>
+             
+            </div>
+          </Link>
+
 
         </div>
       </div>
