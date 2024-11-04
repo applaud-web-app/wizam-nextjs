@@ -118,7 +118,7 @@ const ExamsTable: React.FC = () => {
                 <td className="p-4">
                   <Link
                     href={`/dashboard/exam-result/${exam.uuid}`}
-                    className="bg-blue-500 text-white px-3 py-1 text-sm rounded-lg hover:bg-blue-600 transition"
+                    className="bg-defaultcolor text-white px-3 py-1 text-sm rounded-lg hover:bg-defaultcolor-dark transition"
                   >
                     Result
                   </Link>
@@ -128,7 +128,7 @@ const ExamsTable: React.FC = () => {
           ) : (
             <tr>
               <td className="p-4" colSpan={7}>
-                No exams found.
+              <p className="text-center"> No Exam data found.</p>
               </td>
             </tr>
           )}

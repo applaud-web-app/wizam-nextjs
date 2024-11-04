@@ -109,7 +109,8 @@ const PracticeTestsTable: React.FC = () => {
           ) : (
             <tr>
               <td className="p-4" colSpan={6}>
-                No practice sets found.
+                <p className="text-center"> No Practice Set data found.</p>
+               
               </td>
             </tr>
           )}

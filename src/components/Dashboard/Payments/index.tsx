@@ -7,6 +7,7 @@ import Loader from "@/components/Common/Loader";
 import NoData from "@/components/Common/NoData";
 
 interface PaymentData {
+  payment_id: string;
   amount: string;
   currency: string;
   status: string;
@@ -82,7 +83,8 @@ const Payment: React.FC = () => {
           <table className="min-w-full table-auto whitespace-nowrap">
             <thead className="bg-defaultcolor text-white">
               <tr>
-                <th className="p-3 text-left rounded-tl-lg">S.No</th>
+                
+                <th className="p-3 text-left">Payment ID</th>
                 <th className="p-3 text-left">Amount</th>
                 <th className="p-3 text-left">Currency</th>
                 <th className="p-3 text-left">Payment Date</th>
@@ -93,7 +95,8 @@ const Payment: React.FC = () => {
               {payments.length > 0 ? (
                 payments.map((payment, index) => (
                   <tr key={index} className="hover:bg-gray-50">
-                    <td className="p-4">{index + 1}</td> {/* S.No */}
+                  
+                    <td className="p-4">{payment.payment_id}</td> {/* Amount */}
                     <td className="p-4">{payment.amount}</td> {/* Amount */}
                     <td className="p-4">{payment.currency.toUpperCase()}</td> {/* Currency */}
                     <td className="p-4">{new Date(payment.created_at).toLocaleString()}</td> {/* Payment Date */}

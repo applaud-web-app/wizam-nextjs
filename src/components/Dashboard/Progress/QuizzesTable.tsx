@@ -69,7 +69,7 @@ const QuizzesTable: React.FC = () => {
   return (
     <div className="overflow-x-auto">
       <table className="min-w-full table-auto whitespace-nowrap">
-        <thead className="bg-defaultcolor text-white">
+        <thead className="bg-quaternary text-white">
           <tr>
             <th className="p-3 text-left rounded-tl-lg">S.No</th>
             <th className="p-3 text-left">Quiz Title</th>
@@ -103,7 +103,7 @@ const QuizzesTable: React.FC = () => {
                   </span>
                 </td> {/* Status Badge */}
                 <td className="p-4">
-                  <Link href={`/dashboard/quiz-result/${quiz.uuid}`} className="bg-green-500 text-white px-3 py-1 text-sm rounded-lg hover:bg-green-600 transition">
+                  <Link href={`/dashboard/quiz-result/${quiz.uuid}`} className="bg-quaternary text-white px-3 py-1 text-sm rounded-lg hover:bg-quaternary-dark transition">
                   Result
                   </Link>
                 </td> {/* Action Button */}
@@ -112,7 +112,7 @@ const QuizzesTable: React.FC = () => {
           ) : (
             <tr>
               <td className="p-4" colSpan={7}>
-                Result
+              <p className="text-center"> No Quiz data found.</p>
               </td>
             </tr>
           )}

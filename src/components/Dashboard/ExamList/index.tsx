@@ -6,6 +6,8 @@ import axios from "axios";
 import Cookies from "js-cookie";
 import { toast } from "react-toastify";
 import { useRouter } from "next/navigation";
+import Loader from "@/components/Common/Loader";
+import NoData from "@/components/Common/NoData";
 
 interface Exam {
   title: string | null;
@@ -144,7 +146,7 @@ export default function ExamList() {
   };
 
   if (loading) {
-    return <div className="text-center p-5">Loading data...</div>;
+    return <Loader />;
   }
 
   if (error) {
@@ -152,7 +154,7 @@ export default function ExamList() {
   }
 
   if (exams.length === 0) {
-    return <div className="text-center text-gray-500 p-5">No exams available at this time.</div>;
+    return <NoData message="No exams available at the moment" />;
   }
 
   return (

@@ -26,8 +26,8 @@ const Progress: React.FC = () => {
             className={`w-full sm:w-1/3 px-6 py-2 text-lg font-semibold bg-white transition-colors border-b-2 duration-300 flex items-center justify-center
               ${
                 activeTab === tab.name
-                  ? "border-defaultcolor text-defaultcolor "
-                  : "text-gray-600 border-transparent hover:bg-defaultcolor hover:text-white"
+                  ? "border-quaternary text-quaternary "
+                  : "text-gray-600 border-transparent hover:bg-quaternary hover:text-white"
               }
             `}
           >

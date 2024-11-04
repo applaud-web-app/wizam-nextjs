@@ -1,9 +1,9 @@
-"use client"; // This makes the component run on the client side for fetching data
+"use client";
 
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import Cookies from "js-cookie";
-import Loader from "@/components/Common/Loader"; // Ensure this path is correct
+import Loader from "@/components/Common/Loader"; // Adjust path if necessary
 import NoData from "@/components/Common/NoData";
 
 interface SubscriptionData {
@@ -12,6 +12,7 @@ interface SubscriptionData {
   purchase_date: string;
   ends_date: string;
   status: string;
+  features: string[]; 
 }
 
 const Subscription: React.FC = () => {
@@ -62,17 +63,11 @@ const Subscription: React.FC = () => {
     return <span className={`px-2 py-1 rounded-full text-xs font-semibold ${badgeClass}`}>{status}</span>;
   };
 
-  if (loading) {
-    return <Loader />;
-  }
+  if (loading) return <Loader />;
 
-  if (error) {
-    return <p className="text-red-500">Error: {error}</p>;
-  }
+  if (error) return <p className="text-red-500">Error: {error}</p>;
 
-  if (subscriptions.length === 0) {
-    return <NoData message="No subscriptions found." />;
-  }
+  if (subscriptions.length === 0) return <NoData message="No subscriptions found." />;
 
   return (
     <div className="w-full">
@@ -84,8 +79,8 @@ const Subscription: React.FC = () => {
                 <th className="p-3 text-left rounded-tl-lg">S.No</th>
                 <th className="p-3 text-left">Plan Name</th>
                 <th className="p-3 text-left">Plan Price</th>
-                <th className="p-3 text-left">Purchase Date</th>
-                <th className="p-3 text-left">Ends Date</th>
+                <th className="p-3 text-left">Duration</th> {/* Combined Purchase and Ends Date */}
+                <th className="p-3 text-left">Features</th>
                 <th className="p-3 text-left rounded-tr-lg">Status</th>
               </tr>
             </thead>
@@ -94,9 +89,16 @@ const Subscription: React.FC = () => {
                 <tr key={index} className="hover:bg-gray-50">
                   <td className="p-4">{index + 1}</td> {/* S.No */}
                   <td className="p-4">{subscription.plan_name}</td> {/* Plan Name */}
-                  <td className="p-4">{subscription.plan_price}</td> {/* Plan Price */}
-                  <td className="p-4">{subscription.purchase_date}</td> {/* Purchase Date */}
-                  <td className="p-4">{subscription.ends_date}</td> {/* Ends Date */}
+                  <td className="p-4">${subscription.plan_price}</td> {/* Plan Price */}
+                  <td className="p-4">{`${subscription.purchase_date} to ${subscription.ends_date}`}</td> {/* Combined Duration */}
+                  <td className="p-4">
+                    {subscription.features.map((feature, idx) => (
+                      <span key={idx} className="text-gray-600 pr-3">
+                        {feature}
+                        {idx < subscription.features.length - 1 && ", "}
+                      </span>
+                    ))}
+                  </td> {/* Features */}
                   <td className="p-4">{getStatusBadge(subscription.status)}</td> {/* Status */}
                 </tr>
               ))}
