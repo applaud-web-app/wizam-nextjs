@@ -16,7 +16,7 @@ const DashboardCard: React.FC<DashboardCardProps> = ({ title, content, icon, ico
           {icon}
         </div>
         <div>
-          <h2 className="text-lg font-bold text-gray-700 mb-1">{title}</h2>
+          <h2 className="text-lg  text-gray-700 mb-1">{title}</h2>
           <p className="text-defaultcolor text-4xl font-semibold">{content}</p>
         </div>
       </div>

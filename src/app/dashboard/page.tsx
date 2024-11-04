@@ -178,7 +178,7 @@ export default function DashboardPage() {
 
   return (
     <div className="dashboard-page">
-      <h1 className="text-3xl lg:text-4xl font-bold mb-6">
+      <h1 className="text-3xl lg:text-4xl font-bold mb-6 capitalize">
         Welcome <span className="text-defaultcolor">{userName ? userName : "Student"}</span>
       </h1>
 

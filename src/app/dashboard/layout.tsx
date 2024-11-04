@@ -28,7 +28,7 @@ export default function DashboardLayout({ children }: LayoutProps): JSX.Element 
   return (
     <div className={jost.className}>
       {/* Outer container with overflow-hidden to prevent unintended overflow */}
-      <div className="bg-slate-100 text-gray-900 dark:bg-gray-900 dark:text-gray-100 transition-colors duration-500 min-h-screen flex flex-col overflow-hidden">
+      <div className="bg-[#f3f4f6] text-gray-900 dark:bg-gray-900 dark:text-gray-100 transition-colors duration-500 min-h-screen flex flex-col overflow-hidden">
         
         {/* Fixed Header */}
         <Header toggleSidebar={toggleSidebar} />
