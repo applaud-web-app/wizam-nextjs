@@ -3,15 +3,9 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import {
-  FaFacebookF,
-  FaLinkedinIn,
-  FaInstagram,
-  FaYoutube,
-  FaTwitter,
-} from "react-icons/fa"; // Import React Icons
+import { FaFacebookF, FaLinkedinIn, FaInstagram, FaYoutube, FaTwitter } from "react-icons/fa";
 import { MdOutlineArrowOutward } from "react-icons/md";
-import { useSiteSettings } from "@/context/SiteContext"; // Import the useSiteSettings hook
+import { useSiteSettings } from "@/context/SiteContext";
 
 // Type for Dynamic Pages fetched from the API
 interface Page {
@@ -20,17 +14,19 @@ interface Page {
 }
 
 const Footer = () => {
-  const { siteSettings, loading, error } = useSiteSettings(); // Access site settings from context
-  const [pages, setPages] = useState<Page[]>([]); // State to store dynamic pages
+  const { siteSettings, loading, error } = useSiteSettings();
+  const [pages, setPages] = useState<Page[]>([]);
+  const [email, setEmail] = useState<string>("");
+  const [subscribed, setSubscribed] = useState<boolean>(false);
+  const [subscriptionError, setSubscriptionError] = useState<string | null>(null);
 
-  // Fetch dynamic pages from the API
   useEffect(() => {
     const fetchPages = async () => {
       try {
         const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/pages`);
         const data = await response.json();
         if (data.status) {
-          setPages(data.data); // Set the fetched pages in state
+          setPages(data.data);
         }
       } catch (error) {
         console.error("Error fetching dynamic pages:", error);
@@ -39,6 +35,23 @@ const Footer = () => {
 
     fetchPages();
   }, []);
+
+  // Mock subscription function
+  const handleSubscribe = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!email) return;
+
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 1000)); // Simulate delay
+
+      setSubscribed(true);
+      setSubscriptionError(null);
+      setEmail(""); // Clear the input field
+    } catch (error) {
+      setSubscriptionError("Subscription error. Please try again later.");
+    }
+  };
 
   if (loading) {
     return <p>Loading footer...</p>;
@@ -70,36 +83,12 @@ const Footer = () => {
           <div className="col-span-1 lg:col-span-1">
             <h4 className="mb-4 font-semibold text-xl leading-snug">Content</h4>
             <ul>
-              <li className="mb-2">
-                <Link href="/" className="hover:text-green-400">
-                  Home
-                </Link>
-              </li>
-              <li className="mb-2">
-                <Link href="/about" className="hover:text-green-400">
-                  About Us
-                </Link>
-              </li>
-              <li className="mb-2">
-                <Link href="/exams" className="hover:text-green-400">
-                  Exams
-                </Link>
-              </li>
-              <li className="mb-2">
-                <Link href="/blogs" className="hover:text-green-400">
-                  Resources
-                </Link>
-              </li>
-              <li className="mb-2">
-                <Link href="/faq" className="hover:text-green-400">
-                  FAQ
-                </Link>
-              </li>
-              <li>
-                <Link href="/contact" className="hover:text-green-400">
-                  Contact Us
-                </Link>
-              </li>
+              <li className="mb-2"><Link href="/" className="hover:text-green-400">Home</Link></li>
+              <li className="mb-2"><Link href="/about" className="hover:text-green-400">About Us</Link></li>
+              <li className="mb-2"><Link href="/exams" className="hover:text-green-400">Exams</Link></li>
+              <li className="mb-2"><Link href="/blogs" className="hover:text-green-400">Resources</Link></li>
+              <li className="mb-2"><Link href="/faq" className="hover:text-green-400">FAQ</Link></li>
+              <li><Link href="/contact" className="hover:text-green-400">Contact Us</Link></li>
             </ul>
           </div>
 
@@ -107,12 +96,9 @@ const Footer = () => {
           <div className="col-span-1 lg:col-span-1">
             <h4 className="mb-4 font-semibold text-xl leading-snug">Company</h4>
             <ul>
-           
               {pages.map((page, index) => (
                 <li key={index} className="mb-2">
-                  <Link href={`/${page.slug}`} className="hover:text-green-400">
-                    {page.title}
-                  </Link>
+                  <Link href={`/${page.slug}`} className="hover:text-green-400">{page.title}</Link>
                 </li>
               ))}
             </ul>
@@ -124,45 +110,44 @@ const Footer = () => {
             <ul className="text-sm text-white">
               <li className="mb-2">{siteSettings.address}</li>
               <li className="mb-2">
-                <Link href={`tel:${siteSettings.number}`} className="hover:text-green-400">
-                  {siteSettings.number}
-                </Link>
+                <Link href={`tel:${siteSettings.number}`} className="hover:text-green-400">{siteSettings.number}</Link>
               </li>
               <li>
-                <Link href={`mailto:${siteSettings.email}`} className="hover:text-green-400">
-                  {siteSettings.email}
-                </Link>
+                <Link href={`mailto:${siteSettings.email}`} className="hover:text-green-400">{siteSettings.email}</Link>
               </li>
             </ul>
           </div>
 
           {/* Newsletter Signup */}
           <div className="lg:col-span-1 col-span-2">
-            <h4 className="mb-4 font-semibold leading-snug">
-              Subscribe to Newsletter
-            </h4>
+            <h4 className="mb-4 font-semibold leading-snug">Subscribe to Newsletter</h4>
             <p className="text-sm text-gray-400 mb-4 leading-relaxed">
-              Get valuable strategy, culture and brand insights straight to your
-              inbox.
+              Get valuable insights straight to your inbox.
             </p>
-            <form className="flex relative overflow-hidden border-b-2 border-[#76B51B]">
-              <input
-                type="email"
-                placeholder="Enter your email here"
-                className="w-full px-4 py-2 text-base bg-[#76B51B]/10 border-none rounded-none focus:outline-none rounded-l-md text-gray-200"
-              />
-              <button className="px-3 py-2 rounded-r-md absolute right-0">
-                <MdOutlineArrowOutward className="text-2xl text-[#76B51B]" />
-              </button>
-            </form>
+            {subscribed ? (
+              <p className="text-green-400">Thank you for subscribing!</p>
+            ) : (
+              <form onSubmit={handleSubscribe} className="flex relative overflow-hidden border-b-2 border-[#76B51B]">
+                <input
+                  type="email"
+                  placeholder="Enter your email here"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full px-4 py-2 text-base bg-[#76B51B]/10 border-none rounded-none focus:outline-none  text-gray-200"
+                  required
+                />
+                <button type="submit" className="px-3 py-2 rounded-r-md absolute right-0">
+                  <MdOutlineArrowOutward className="text-2xl text-[#76B51B]" />
+                </button>
+              </form>
+            )}
+            {subscriptionError && <p className="text-red-400 mt-2">{subscriptionError}</p>}
           </div>
         </div>
 
         {/* Footer Bottom with Social Icons */}
         <div className="mt-12 flex flex-wrap items-center justify-between border-t border-gray-600 pt-4">
-          <p className="text-sm text-gray-400 leading-relaxed">
-            {siteSettings.copyright}
-          </p>
+          <p className="text-sm text-gray-400 leading-relaxed">{siteSettings.copyright}</p>
           <div className="flex space-x-4">
             {siteSettings.facebook && (
               <Link href={siteSettings.facebook} aria-label="Facebook" className="text-gray-400 hover:text-green-400">

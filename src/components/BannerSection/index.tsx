@@ -3,23 +3,17 @@
 import Link from "next/link";
 import Image from "next/image";
 import { FaPlay } from "react-icons/fa";
-import AliceCarousel from "react-alice-carousel"; // Importing Alice Carousel
-import "react-alice-carousel/lib/alice-carousel.css"; // Importing carousel styles
+import AliceCarousel from "react-alice-carousel";
+import "react-alice-carousel/lib/alice-carousel.css";
 import { FC, useState, useEffect } from "react";
 import { MdOutlineKeyboardArrowLeft, MdOutlineKeyboardArrowRight } from "react-icons/md";
 import axios from "axios";
 
-// Define the type for carousel items
 interface CarouselItem {
   title: string;
   description: string;
   button_text: string;
   button_link: string;
-}
-
-// Define the type for YouTube link
-interface YouTubeLink {
-  description: string;
 }
 
 const BannerSection: FC = () => {
@@ -68,12 +62,12 @@ const BannerSection: FC = () => {
             autoPlayInterval={3000}
             disableDotsControls
             renderPrevButton={() => (
-              <button className="absolute left-0 top-1/2 transform -translate-y-1/2  text-white p-2 rounded-full transition">
+              <button className="absolute left-0 top-1/2 transform -translate-y-1/2 text-white p-2 rounded-full transition">
                 <MdOutlineKeyboardArrowLeft size={36} />
               </button>
             )}
             renderNextButton={() => (
-              <button className="absolute right-0 top-1/2 transform -translate-y-1/2  text-white p-2 rounded-full transition">
+              <button className="absolute right-0 top-1/2 transform -translate-y-1/2 text-white p-2 rounded-full transition">
                 <MdOutlineKeyboardArrowRight size={36} />
               </button>
             )}
@@ -81,7 +75,7 @@ const BannerSection: FC = () => {
               <div key={index} className="item">
                 <h2
                   className="mb-6 max-w-4xl mx-auto text-2xl sm:text-3xl lg:text-6xl font-bold text-white leading-snug sm:leading-snug lg:leading-tight"
-                  style={{ textShadow: "2px 2px 4px rgba(0, 0, 0, 0.4)" }} // Custom text shadow
+                  style={{ textShadow: "2px 2px 4px rgba(0, 0, 0, 0.4)" }}
                 >
                   {item.title}
                 </h2>
@@ -101,19 +95,17 @@ const BannerSection: FC = () => {
 
         {/* Banner Image Section */}
         <div className="relative mt-6 bg-white/20 p-2 sm:p-3 lg:p-3 rounded-lg max-w-full sm:max-w-[600px] lg:max-w-[900px] h-[300px] sm:h-[400px] lg:h-[480px] mx-auto">
-          {isVideoPlaying ? (
-            // Render the YouTube video iframe when play button is clicked
+          {isVideoPlaying && youtubeLink ? (
             <iframe
               width="100%"
               height="100%"
-              src={youtubeLink?.replace("youtu.be", "www.youtube.com/embed") || ""}
+              src={`${youtubeLink.replace("youtu.be", "www.youtube.com/embed")}?autoplay=1`}
               title="YouTube video player"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowFullScreen
               className="rounded-lg"
             ></iframe>
           ) : (
-            // Render the image and play button if the video hasn't started
             <>
               <Image
                 src="/images/hero/banner.png"
