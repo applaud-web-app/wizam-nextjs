@@ -78,7 +78,12 @@ export default function ExamDetailPage({ params }: { params: { slug: string } })
         });
 
         if (response.data.status) {
-          setExams(response.data.data[params.slug] || []);
+          const examsData = response.data.data[params.slug] || [];
+          const upcomingExams = examsData.filter((exam: ExamDetail) => {
+            const examEndDate = exam.schedule.end_date ? new Date(`${exam.schedule.end_date}T${exam.schedule.end_time}`) : null;
+            return !examEndDate || examEndDate >= cachedServerTime;
+          });
+          setExams(upcomingExams);
         } else {
           toast.error("No exams found for this category");
           router.push("/dashboard/all-exams");
@@ -128,6 +133,10 @@ export default function ExamDetailPage({ params }: { params: { slug: string } })
 
   if (loading) {
     return <Loader />;
+  }
+
+  if (exams.length === 0) {
+    return <div className="text-center text-gray-500 p-5">No exams available at this time.</div>;
   }
 
   return (

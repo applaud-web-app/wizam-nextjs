@@ -35,7 +35,7 @@ export default function ExamList() {
   const [exams, setExams] = useState<Exam[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [serverTime, setServerTime] = useState<Date | null>(null);
-  const [loading, setLoading] = useState(true); // Track loading state
+  const [loading, setLoading] = useState(true);
   const router = useRouter();
 
   const getCachedServerTime = (): Date | null => {
@@ -83,62 +83,56 @@ export default function ExamList() {
           }
         );
 
-        setExams(examsResponse.data.data || []);
+        // Filter out exams that have already ended
+        const filteredExams = examsResponse.data.data.filter((exam: Exam) => {
+          const endDateTime = exam.schedules.end_date && exam.schedules.end_time
+            ? new Date(`${exam.schedules.end_date}T${exam.schedules.end_time}`)
+            : null;
+          return !endDateTime || endDateTime >= cachedServerTime;
+        });
+
+        setExams(filteredExams);
       } catch (error) {
         setError("Failed to fetch data from the server.");
       } finally {
-        setLoading(false); // Stop loading indicator once data is fetched
+        setLoading(false);
       }
     };
 
     fetchData();
   }, []);
-    
-  // Function to handle payment logic
-  const handlePayment = async (slug: string) =>  {
+
+  const handlePayment = async (slug: string) => {
     try {
-      // Get JWT token from cookies
       const jwt = Cookies.get("jwt");
-      const type = "exams"; // assuming "quizzes" is the type
+      const type = "exams";
 
       if (!jwt) {
         toast.error("User is not authenticated. Please log in.");
         return;
       }
 
-      // Make the API request to check the user's subscription
       const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/user-subscription`, {
         headers: {
           Authorization: `Bearer ${jwt}`,
         },
-        params: {
-          type: type, // Pass the type as a parameter
-        },
+        params: { type },
       });
 
-      // Handle the response
       if (response.data.status === true) {
-        // toast.success(`Subscription is active. Access granted for ${slug}.`);
-        router.push(`${slug}`);
+        router.push(`/dashboard/exam-detail/${slug}`);
       } else {
         toast.error('Please buy a subscription to access this course.');
         router.push("/pricing");
       }
-    } catch (error:any) {
-      console.log(error);
-      // Handle errors such as network issues or API errors
+    } catch (error: any) {
       if (error.response) {
-        // API responded with an error status
         const { status, data } = error.response;
-        
         if (status === 401) {
           toast.error('User is not authenticated. Please log in.');
           router.push("/signin");
-        } else if (status === 404) {
+        } else if (status === 403 || status === 404) {
           toast.error('Please buy a subscription to access this course.');
-          router.push("/pricing");
-        } else if (status === 403) {
-          toast.error('Feature not available in your plan. Please upgrade your subscription.');
           router.push("/pricing");
         } else {
           toast.error(`An error occurred: ${data.error || 'Unknown error'}`);
@@ -149,8 +143,16 @@ export default function ExamList() {
     }
   };
 
+  if (loading) {
+    return <div className="text-center p-5">Loading data...</div>;
+  }
+
   if (error) {
-    return <div className="text-red-500">{error}</div>;
+    return <div className="text-red-500 text-center p-5">{error}</div>;
+  }
+
+  if (exams.length === 0) {
+    return <div className="text-center text-gray-500 p-5">No exams available at this time.</div>;
   }
 
   return (
@@ -172,83 +174,70 @@ export default function ExamList() {
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {loading ? (
-              <tr>
-                <td colSpan={8} className="text-center p-5">
-                  Loading data...
-                </td>
-              </tr>
-            ) : exams.length > 0 ? (
-              exams.map((exam, index) => {
-                const { schedules } = exam;
-                const examStartDateTime = new Date(`${schedules.start_date}T${schedules.start_time}`);
-                const isUpcoming = serverTime && examStartDateTime > serverTime;
+            {exams.map((exam, index) => {
+              const { schedules } = exam;
+              const examStartDateTime = new Date(`${schedules.start_date}T${schedules.start_time}`);
+              const isUpcoming = serverTime && examStartDateTime > serverTime;
 
-                let scheduleInfo;
-                if (schedules.schedule_type === "flexible") {
-                  scheduleInfo = `${schedules.start_date} ${schedules.start_time} - ${schedules.end_date ?? "N/A"} ${schedules.end_time ?? "N/A"}`;
-                } else {
-                  scheduleInfo = `${schedules.start_date} ${schedules.start_time}`;
-                }
+              let scheduleInfo;
+              if (schedules.schedule_type === "flexible") {
+                scheduleInfo = `${schedules.start_date} ${schedules.start_time} - ${schedules.end_date ?? "N/A"} ${schedules.end_time ?? "N/A"}`;
+              } else {
+                scheduleInfo = `${schedules.start_date} ${schedules.start_time}`;
+              }
 
-                return (
-                  <tr key={index} className="hover:bg-gray-50">
-                    <td className="p-4">{index + 1}</td>
-                    <td className="p-4">{exam.title || "-"}</td>
-                    <td className="p-4">{scheduleInfo}</td>
-                    <td className="p-4">
-                      <span
-                        className={`${
-                          exam.is_free
-                            ? "text-sm rounded-full font-semibold py-1 px-5 bg-green-500 text-white"
-                            : "text-sm rounded-full font-semibold py-1 px-5 bg-secondary text-white"
-                        }`}
-                      >
-                        {exam.is_free ? "Free" : "Paid"}
-                      </span>
-                    </td>
-                    <td className="p-4">{exam.total_questions || "-"}</td>
-                    <td className="p-4">
-                      {exam.point_mode === "manual"
-                        ? exam.point! * exam.total_questions
-                        : exam.total_marks}
-                    </td>
-                    <td className="p-4">
-                      {exam.duration_mode === "manual"
+              return (
+                <tr key={index} className="hover:bg-gray-50">
+                  <td className="p-4">{index + 1}</td>
+                  <td className="p-4">{exam.title || "-"}</td>
+                  <td className="p-4">{scheduleInfo}</td>
+                  <td className="p-4">
+                    <span
+                      className={`${
+                        exam.is_free
+                          ? "text-sm rounded-full font-semibold py-1 px-5 bg-green-500 text-white"
+                          : "text-sm rounded-full font-semibold py-1 px-5 bg-secondary text-white"
+                      }`}
+                    >
+                      {exam.is_free ? "Free" : "Paid"}
+                    </span>
+                  </td>
+                  <td className="p-4">{exam.total_questions || "-"}</td>
+                  <td className="p-4">
+                    {exam.point_mode === "manual"
+                      ? exam.point! * exam.total_questions
+                      : exam.total_marks}
+                  </td>
+                  <td className="p-4">
+                    {exam.duration_mode === "manual"
                       ? exam.exam_duration
-                      : Math.floor(exam.total_time / 60)} min
-                    </td>
-                    <td className="p-4">
-                      {isUpcoming ? (
-                        <span className="bg-gray-300 text-gray-500 py-1 px-5 rounded-full font-semibold text-sm cursor-not-allowed">
-                          Upcoming
-                        </span>
-                      ) : exam.is_free === 1 ? (
-                        <Link
-                          href={`/dashboard/exam-detail/${exam.slug}`}
-                          className="text-defaultcolor font-semibold hover:underline"
-                        >
-                          View Details
-                        </Link>
-                      ) : (
-                        <button
-                          className="bg-defaultcolor text-white py-1 px-5 rounded-full font-semibold hover:bg-defaultcolor-dark text-sm"
-                          onClick={() => handlePayment(`/dashboard/exam-detail/${exam.slug}`)}
-                        >
-                          Pay Now
-                        </button>
-                      )}
-                    </td>
-                  </tr>
-                );
-              })
-            ) : (
-              <tr>
-                <td colSpan={8} className="text-center p-5">
-                  No exams available.
-                </td>
-              </tr>
-            )}
+                      : Math.floor(exam.total_time / 60)}{" "}
+                    min
+                  </td>
+                  <td className="p-4">
+                    {isUpcoming ? (
+                      <span className="bg-gray-300 text-gray-500 py-1 px-5 rounded-full font-semibold text-sm cursor-not-allowed">
+                        Upcoming
+                      </span>
+                    ) : exam.is_free === 1 ? (
+                      <Link
+                        href={`/dashboard/exam-detail/${exam.slug}`}
+                        className="text-defaultcolor font-semibold hover:underline"
+                      >
+                        View Details
+                      </Link>
+                    ) : (
+                      <button
+                        className="bg-defaultcolor text-white py-1 px-5 rounded-full font-semibold hover:bg-defaultcolor-dark text-sm"
+                        onClick={() => handlePayment(`/dashboard/exam-detail/${exam.slug}`)}
+                      >
+                        Pay Now
+                      </button>
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
