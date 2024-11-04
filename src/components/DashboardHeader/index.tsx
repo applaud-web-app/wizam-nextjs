@@ -130,6 +130,7 @@ export default function Header({ toggleSidebar }: HeaderProps) {
           {loading ? (
             <></>
           ) : (
+            <Link  href="/">
             <Image
               src={siteSettings?.site_logo || "/images/logo/default-logo.png"} // Fallback to default logo if not available
               width={120}
@@ -137,6 +138,7 @@ export default function Header({ toggleSidebar }: HeaderProps) {
               alt={siteSettings?.site_name || "Logo"}
               className="object-contain"
             />
+            </Link>
           )}
         </div>
       </div>
