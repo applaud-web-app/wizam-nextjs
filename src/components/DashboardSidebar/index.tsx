@@ -1,11 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { FiHome, FiEdit, FiBookOpen, FiList, FiCheckSquare, FiBook, FiBarChart } from "react-icons/fi";
 import { TfiIdBadge } from "react-icons/tfi";
 import { MdOutlinePayment, MdLogout } from "react-icons/md";
 import Cookies from "js-cookie";
+import axios from "axios";
+import { toast } from "react-toastify";
 
 interface SidebarProps {
   isSyllabusEnabled: boolean;
@@ -15,8 +17,41 @@ interface SidebarProps {
 
 export default function Sidebar({ isSyllabusEnabled, isOpen, toggleSidebar }: SidebarProps) {
   const pathname = usePathname();
+  const router = useRouter();
 
   const isActive = (href: string) => (pathname === href ? "bg-defaultcolor text-white" : "");
+
+  const handleLogout = async () => {
+    try {
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_API_URL}/logout`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${Cookies.get("jwt")}`,
+          },
+        }
+      );
+
+      if (response.status === 200) {
+        Cookies.remove("jwt");
+        toast.success("Logout successful!", {
+          position: "top-right",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        });
+        router.push("/signin");
+      } else if (response.data.status === false && response.data.message === "Unauthorized") {
+        Cookies.remove("jwt");
+      }
+    } catch (error) {
+      console.error("Logout failed:", error);
+      toast.error("Logout failed. Please try again.");
+    }
+  };
 
   return (
     <>
@@ -62,7 +97,7 @@ export default function Sidebar({ isSyllabusEnabled, isOpen, toggleSidebar }: Si
               <Link href="/dashboard/all-exams" onClick={toggleSidebar}>
                 <span
                   className={`flex items-center px-4 py-2 rounded-md transition ${
-                    isSyllabusEnabled ? `${isActive("/dashboard/all-exams")} hover:bg-gray-200 text-gray-700` : "cursor-not-allowed opacity-50"
+                    isSyllabusEnabled ? `${isActive("/dashboard/all-exams")} hover:bg-gray-200` : "cursor-not-allowed opacity-50"
                   }`}
                 >
                   <FiList className="mr-3" /> Exams
@@ -111,11 +146,15 @@ export default function Sidebar({ isSyllabusEnabled, isOpen, toggleSidebar }: Si
                   <MdOutlinePayment className="mr-3" /> My Payments
                 </span>
               </Link>
-              <Link href="/logout" onClick={toggleSidebar}>
-                <span className="flex items-center px-4 py-2 hover:bg-red-500 text-red-500 hover:text-white rounded-md transition">
-                  <MdLogout className="mr-3" /> Logout
-                </span>
-              </Link>
+              <button
+                onClick={() => {
+                  handleLogout();
+                  toggleSidebar();
+                }}
+                className="flex items-center px-4 py-2 hover:bg-red-500 text-red-500 hover:text-white rounded-md transition w-full text-start"
+              >
+                <MdLogout className="mr-3" /> Logout
+              </button>
             </nav>
           </div>
         </div>
