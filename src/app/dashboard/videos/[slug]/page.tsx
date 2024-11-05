@@ -167,70 +167,71 @@ export default function VideoDetailPage({ params }: { params: { slug: string } }
 
   return (
     <div className="dashboard-page">
-      <div className="relative card bg-white rounded-lg shadow-sm lg:p-8 p-3 mb-6 border border-gray-200">
-
-        {/* Countdown Display in the top right corner */}
-        {countdown > 0 && playing && (
-          <div className="absolute top-4 right-4 bg-red-600 text-white font-bold px-3 py-2 rounded-full text-sm shadow-md flex items-center">
-            <FaClock className="inline mr-1" />
-            <span>{Math.floor(countdown / 60)}:{String(countdown % 60).padStart(2, '0')} min</span> {/* Display countdown in mm:ss format */}
-          </div>
-        )}
-
-        {/* Video title */}
-        <h1 className="text-2xl sm:text-3xl font-semibold text-gray-900 mb-3">{videoData.title}</h1>
-
-        {/* Video details badges */}
-        <div className="text-gray-600 mb-6 space-x-2 space-y-2">
-          <div className="inline-flex items-center text-sm px-4 py-2 bg-blue-100 text-blue-800 rounded-full">
-            <FaClock className="inline mr-2" /> <strong>Date: </strong>{currentDate}
-          </div>
-          <div className="inline-flex items-center text-sm px-4 py-2 bg-green-100 text-green-800 rounded-full">
-            <FaBook className="inline mr-2" /> <strong>Syllabus: </strong>{videoData.skill}
-          </div>
-          <div className="inline-flex items-center text-sm px-4 py-2 bg-purple-100 text-purple-800 rounded-full">
-            <FaClock className="inline mr-2" /> <strong>Watch Time: </strong>{videoData.watch_time} min
-          </div>
+    <div className="relative card bg-white rounded-lg shadow-sm lg:p-8 p-4 mb-6 border border-gray-200">
+  
+      {/* Countdown Display in the top right corner */}
+      {countdown > 0 && playing && (
+        <div className="absolute top-4 right-4 bg-red-600 text-white font-bold px-3 py-2 rounded-full text-xs sm:text-sm shadow-md flex items-center">
+          <FaClock className="inline mr-1" />
+          <span>{Math.floor(countdown / 60)}:{String(countdown % 60).padStart(2, '0')} min</span>
         </div>
-
-        {/* Video or Thumbnail */}
-        <div className="mb-6 relative" style={{ height: '500px' }}>
-          {/* If thumbnail is present and playing hasn't started, show the thumbnail. If no thumbnail, show video directly */}
-          {videoData.thumbnail && !playing ? (
-            <div className="relative cursor-pointer" onClick={handlePlayClick} style={{ height: '100%' }}>
-              <img src={videoData.thumbnail} alt="Video Thumbnail" className="w-full h-full object-cover rounded-lg " />
-              <div className="absolute inset-0 flex justify-center items-center">
-                <FaPlayCircle className="text-white bg-black p-1 rounded-full text-6xl opacity-80 animate-pulse hover:scale-110 transition-transform duration-300 ease-in-out" />
-              </div>
+      )}
+  
+      {/* Video title */}
+      <h1 className="text-xl sm:text-2xl md:text-3xl font-semibold text-gray-900 mb-3">{videoData.title}</h1>
+  
+      {/* Video details badges */}
+      <div className="text-gray-600 mb-6 space-y-2 sm:space-y-0 sm:space-x-2 flex flex-wrap gap-2">
+        <div className="inline-flex items-center text-xs sm:text-sm px-3 sm:px-4 py-2 bg-blue-100 text-blue-800 rounded-full">
+          <FaClock className="inline mr-2" /> <strong>Date: </strong>{currentDate}
+        </div>
+        <div className="inline-flex items-center text-xs sm:text-sm px-3 sm:px-4 py-2 bg-green-100 text-green-800 rounded-full">
+          <FaBook className="inline mr-2" /> <strong>Syllabus: </strong>{videoData.skill}
+        </div>
+        <div className="inline-flex items-center text-xs sm:text-sm px-3 sm:px-4 py-2 bg-purple-100 text-purple-800 rounded-full">
+          <FaClock className="inline mr-2" /> <strong>Watch Time: </strong>{videoData.watch_time} min
+        </div>
+      </div>
+  
+      {/* Video or Thumbnail */}
+      <div className="mb-6 relative" style={{ height: '300px', maxHeight: '500px' }}>
+        {/* Responsive thumbnail handling */}
+        {videoData.thumbnail && !playing ? (
+          <div className="relative cursor-pointer h-full" onClick={handlePlayClick}>
+            <img src={videoData.thumbnail} alt="Video Thumbnail" className="w-full h-full object-cover rounded-lg" />
+            <div className="absolute inset-0 flex justify-center items-center">
+              <FaPlayCircle className="text-white bg-black p-1 rounded-full text-5xl sm:text-6xl opacity-80 animate-pulse hover:scale-110 transition-transform duration-300 ease-in-out" />
             </div>
-          ) : (
-            renderVideo() // Render video if thumbnail is not available or when playing
-          )}
-        </div>
-
-        {/* Render description */}
-        {videoData.description && (
-          <div
-            className="text-gray-800 mt-4 space-y-6 leading-relaxed"
-            dangerouslySetInnerHTML={{ __html: videoData.description }}
-          />
-        )}
-
-        {/* Tags Section */}
-        <div className="mt-8">
-          <h3 className="text-lg sm:text-xl font-medium text-gray-800 mb-2">Tags:</h3>
-          <div className="flex flex-wrap gap-2">
-            {videoData.tags && JSON.parse(videoData.tags).map((tag: string, index: number) => (
-              <span
-                key={index}
-                className="bg-yellow-100 text-yellow-800 text-sm px-3 py-1 rounded-full"
-              >
-                {tag}
-              </span>
-            ))}
           </div>
+        ) : (
+          renderVideo() // Render video if thumbnail is not available or when playing
+        )}
+      </div>
+  
+      {/* Render description */}
+      {videoData.description && (
+        <div
+          className="text-gray-800 mt-4 space-y-6 leading-relaxed text-sm sm:text-base"
+          dangerouslySetInnerHTML={{ __html: videoData.description }}
+        />
+      )}
+  
+      {/* Tags Section */}
+      <div className="mt-8">
+        <h3 className="text-lg sm:text-xl font-medium text-gray-800 mb-2">Tags:</h3>
+        <div className="flex flex-wrap gap-2">
+          {videoData.tags && JSON.parse(videoData.tags).map((tag: string, index: number) => (
+            <span
+              key={index}
+              className="bg-yellow-100 text-yellow-800 text-xs sm:text-sm px-3 py-1 rounded-full"
+            >
+              {tag}
+            </span>
+          ))}
         </div>
       </div>
     </div>
+  </div>
+  
   );
 }
