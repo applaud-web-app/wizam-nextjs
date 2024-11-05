@@ -43,7 +43,7 @@ const EmailSent = () => {
       </header>
 
       {/* Email Sent Message */}
-      <div className="relative mt-16 bg-white rounded-lg text-center shadow-2xl max-w-xl w-full mx-auto md:mx-0">
+      <div className="relative mt-16 bg-white rounded-lg text-center  shadow-sm lg:shadow-2xl max-w-xl w-full mx-auto md:mx-0">
       <div className="p-6 sm:p-10 md:p-14 lg:p-20">
         
         {/* Checkmark Image */}

@@ -125,7 +125,7 @@ const ResetPassword = () => {
       </header>
 
       {/* Reset Password Card */}
-      <div className="relative mt-16 bg-white rounded-lg shadow-2xl max-w-xl w-full mx-auto md:mx-0">
+      <div className="relative mt-16 bg-white rounded-lg  shadow-sm lg:shadow-2xl max-w-xl w-full mx-auto md:mx-0">
         <div className="p-6 sm:p-10 md:p-14">
           <h2 className="text-[24px] md:text-[27px] font-semibold text-left text-gray-800">
             Reset your password
