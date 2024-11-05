@@ -167,7 +167,7 @@ export default function VideoDetailPage({ params }: { params: { slug: string } }
 
   return (
     <div className="dashboard-page">
-      <div className="relative card bg-white rounded-lg shadow-sm p-8 mb-6 border border-gray-200">
+      <div className="relative card bg-white rounded-lg shadow-sm lg:p-8 p-3 mb-6 border border-gray-200">
 
         {/* Countdown Display in the top right corner */}
         {countdown > 0 && playing && (
