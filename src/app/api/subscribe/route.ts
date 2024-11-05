@@ -1,22 +1,10 @@
-// pages/api/subscribe.ts
-import type { NextApiRequest, NextApiResponse } from 'next';
+import { NextRequest, NextResponse } from 'next/server';
 
-type Data = {
-  message: string;
-};
-
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse<Data>
-) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ message: 'Method Not Allowed' });
-  }
-
-  const { email } = req.body;
+export async function POST(req: NextRequest) {
+  const { email } = await req.json();
 
   if (!email) {
-    return res.status(400).json({ message: 'Email is required' });
+    return NextResponse.json({ message: 'Email is required' }, { status: 400 });
   }
 
   try {
@@ -40,13 +28,17 @@ export default async function handler(
 
     if (!response.ok) {
       const errorData = await response.json();
-      return res.status(response.status).json({
-        message: errorData.detail || 'There was an error subscribing. Please try again.',
-      });
+      return NextResponse.json(
+        { message: errorData.detail || 'There was an error subscribing. Please try again.' },
+        { status: response.status }
+      );
     }
 
-    return res.status(201).json({ message: 'Subscribed successfully' });
+    return NextResponse.json({ message: 'Subscribed successfully' }, { status: 201 });
   } catch (error: any) {
-    return res.status(500).json({ message: error.message || 'Internal Server Error' });
+    return NextResponse.json(
+      { message: error.message || 'Internal Server Error' },
+      { status: 500 }
+    );
   }
 }
