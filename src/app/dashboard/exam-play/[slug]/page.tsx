@@ -686,7 +686,7 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
                             dangerouslySetInnerHTML={{ __html: opt }}
                           ></p>
                           <select
-                            className="flex-1 p-2 rounded border border-gray-300 focus:ring-1 focus:ring-defaultcolor focus:border-defaultcolor w-full sm:w-auto"
+                            className="flex-1 p-2 rounded border border-gray-300 focus:ring-1 focus:ring-defaultcolor focus:border-defaultcolor w-full sm:w-auto appearance-none"
                             onChange={(e) =>
                               handleAnswerChange(question.id, [opt, e.target.value])
                             }
