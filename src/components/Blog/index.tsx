@@ -20,7 +20,7 @@ const Blog = () => {
   const [loading, setLoading] = useState<boolean>(true); // Loading state
   const [error, setError] = useState<string | null>(null); // Error state
   const [currentPage, setCurrentPage] = useState<number>(1); // Current page state
-  const itemsPerPage = 1; // Number of items per page
+  const itemsPerPage = 12; // Number of items per page
 
   // Fetch blogs from the Laravel API using axios
   useEffect(() => {
