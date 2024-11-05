@@ -1,5 +1,6 @@
 "use client";
 
+import axios from 'axios';
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
@@ -7,7 +8,6 @@ import { FaFacebookF, FaLinkedinIn, FaInstagram, FaYoutube, FaTwitter } from "re
 import { MdOutlineArrowOutward } from "react-icons/md";
 import { useSiteSettings } from "@/context/SiteContext";
 
-// Type for Dynamic Pages fetched from the API
 interface Page {
   title: string;
   slug: string;
@@ -36,20 +36,23 @@ const Footer = () => {
     fetchPages();
   }, []);
 
-  // Mock subscription function
   const handleSubscribe = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!email) return;
 
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1000)); // Simulate delay
+      const response = await axios.post('/api/subscribe', { email });
 
-      setSubscribed(true);
-      setSubscriptionError(null);
-      setEmail(""); // Clear the input field
-    } catch (error) {
-      setSubscriptionError("Subscription error. Please try again later.");
+      if (response.status === 201) {
+        setSubscribed(true);
+        setSubscriptionError(null);
+        setEmail(''); // Clear the input field
+      } else {
+        setSubscriptionError(response.data.message || 'Subscription error. Please try again later.');
+      }
+    } catch (error: any) {
+      setSubscriptionError(error.response?.data?.message || 'Subscription error. Please try again later.');
     }
   };
 
@@ -64,9 +67,7 @@ const Footer = () => {
   return (
     <footer className="bg-tertiary text-white pt-16 pb-12">
       <div className="container mx-auto px-4">
-        {/* Grid Layout for footer */}
         <div className="grid grid-cols-2 gap-8 md:grid-cols-2 lg:grid-cols-5">
-          {/* Logo and Description */}
           <div className="col-span-2 lg:col-span-1">
             <Link href="/">
               <Image
@@ -79,7 +80,6 @@ const Footer = () => {
             <p className="mt-4 text-gray-400">{siteSettings.tag_line}</p>
           </div>
 
-          {/* Content Links */}
           <div className="col-span-1 lg:col-span-1">
             <h4 className="mb-4 font-semibold text-xl leading-snug">Content</h4>
             <ul>
@@ -92,7 +92,6 @@ const Footer = () => {
             </ul>
           </div>
 
-          {/* Dynamic Pages Links */}
           <div className="col-span-1 lg:col-span-1">
             <h4 className="mb-4 font-semibold text-xl leading-snug">Company</h4>
             <ul>
@@ -104,7 +103,6 @@ const Footer = () => {
             </ul>
           </div>
 
-          {/* Contact Information */}
           <div className="col-span-2 lg:col-span-1">
             <h4 className="mb-4 font-semibold text-xl leading-snug">Contact</h4>
             <ul className="text-sm text-white">
@@ -118,7 +116,6 @@ const Footer = () => {
             </ul>
           </div>
 
-          {/* Newsletter Signup */}
           <div className="lg:col-span-1 col-span-2">
             <h4 className="mb-4 font-semibold leading-snug">Subscribe to Newsletter</h4>
             <p className="text-sm text-gray-400 mb-4 leading-relaxed">
@@ -133,7 +130,7 @@ const Footer = () => {
                   placeholder="Enter your email here"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full px-4 py-2 text-base bg-[#76B51B]/10 border-none rounded-none focus:outline-none  text-gray-200"
+                  className="w-full px-4 py-2 text-base bg-[#76B51B]/10 border-none rounded-none focus:outline-none text-gray-200"
                   required
                 />
                 <button type="submit" className="px-3 py-2 rounded-r-md absolute right-0">
@@ -145,7 +142,6 @@ const Footer = () => {
           </div>
         </div>
 
-        {/* Footer Bottom with Social Icons */}
         <div className="mt-12 flex flex-wrap items-center justify-between border-t border-gray-600 pt-4">
           <p className="text-sm text-gray-400 leading-relaxed">{siteSettings.copyright}</p>
           <div className="flex space-x-4">

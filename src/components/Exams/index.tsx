@@ -6,54 +6,94 @@ import { Pagination } from "flowbite-react";
 import Link from "next/link";
 import { FaArrowRight } from "react-icons/fa";
 import axios from "axios";
-import Loader from "../Common/Loader"; // Import Loader component
-import NoData from "../Common/NoData"; // Import NoData component
-import { useSiteSettings } from "@/context/SiteContext"; // Import the SiteContext to use site settings
+import Loader from "../Common/Loader";
+import NoData from "../Common/NoData";
+import { useSiteSettings } from "@/context/SiteContext";
+
+interface Exam {
+  img_url: string;
+  title: string;
+  description: string;
+  price: number | null;
+  is_free: boolean;
+  slug: string;
+  exam_duration: string;
+  exam_type_id: number;
+  subcategory_id: number;
+  start_date?: string;
+  start_time?: string;
+  end_date?: string;
+  end_time?: string;
+  questions_count: number;
+  total_marks: number;
+}
+
+interface Course {
+  id: number;
+  name: string;
+}
+
+interface ExamPack {
+  id: number;
+  name: string;
+}
+
+const cache = new Map<string, any>(); // Global cache for storing API responses
 
 const Exams = () => {
-  const [exams, setExams] = useState([]);
-  const [filteredExams, setFilteredExams] = useState([]);
-  const [courses, setCourses] = useState([]);
-  const [examPacks, setExamPacks] = useState([]);
-  const [selectedCourse, setSelectedCourse] = useState("");
-  const [selectedExamPack, setSelectedExamPack] = useState("");
-  const [loading, setLoading] = useState(true);
+  const [exams, setExams] = useState<Exam[]>([]);
+  const [filteredExams, setFilteredExams] = useState<Exam[]>([]);
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [examPacks, setExamPacks] = useState<ExamPack[]>([]);
+  const [selectedCourse, setSelectedCourse] = useState<string>("");
+  const [selectedExamPack, setSelectedExamPack] = useState<string>("");
+  const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [filtering, setFiltering] = useState(false); // State to manage the button loading state
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [filtering, setFiltering] = useState<boolean>(false);
   const itemsPerPage = 6;
 
-  const { siteSettings } = useSiteSettings(); // Use site settings from SiteContext
+  const { siteSettings } = useSiteSettings();
 
-  // Fetch exams and courses data from the API
+  // Fetch data and cache responses
+  const fetchData = async (url: string, key: string) => {
+    if (cache.has(key)) {
+      return cache.get(key);
+    } else {
+      const response = await axios.get(url);
+      if (response.data.status) {
+        cache.set(key, response.data.data);
+        return response.data.data;
+      } else {
+        throw new Error("Failed to fetch data.");
+      }
+    }
+  };
+
   useEffect(() => {
     const fetchExamsAndCourses = async () => {
       try {
-        // Fetch all exams
-        const examResponse = await axios.get(
-          `${process.env.NEXT_PUBLIC_API_URL}/exams`
-        );
-        // Fetch all courses
-        const courseResponse = await axios.get(
-          `${process.env.NEXT_PUBLIC_API_URL}/course`
-        );
-        // Fetch exam packs
-        const examPackResponse = await axios.get(
-          `${process.env.NEXT_PUBLIC_API_URL}/course-exam-type`
-        );
+        // Fetch server time
+        const timeResponse = await fetchData(`/api/time`, "serverTime");
+        const currentTime = new Date(timeResponse.serverTime);
 
-        if (
-          examResponse.data.status &&
-          courseResponse.data.status &&
-          examPackResponse.data.status
-        ) {
-          setExams(examResponse.data.data);
-          setFilteredExams(examResponse.data.data); // Show all exams by default
-          setCourses(courseResponse.data.data);
-          setExamPacks(examPackResponse.data.data);
-        } else {
-          setError("Failed to fetch data.");
-        }
+        // Fetch all required data with caching
+        const [examsData, coursesData, examPacksData] = await Promise.all([
+          fetchData(`${process.env.NEXT_PUBLIC_API_URL}/exams`, "exams"),
+          fetchData(`${process.env.NEXT_PUBLIC_API_URL}/course`, "courses"),
+          fetchData(`${process.env.NEXT_PUBLIC_API_URL}/course-exam-type`, "examPacks"),
+        ]);
+
+        // Filter exams based on the current time  
+        const validExams = examsData.filter((exam: Exam) => {
+          const examEndDate = exam.end_date ? new Date(`${exam.end_date}T${exam.end_time}`) : null;
+          return !examEndDate || examEndDate >= currentTime;
+        });
+
+        setExams(validExams);
+        setFilteredExams(validExams);
+        setCourses(coursesData);
+        setExamPacks(examPacksData);
       } catch (error) {
         setError("An error occurred while fetching the data.");
       } finally {
@@ -64,51 +104,40 @@ const Exams = () => {
     fetchExamsAndCourses();
   }, []);
 
-  // Handle course change
   const handleCourseChange = (courseId: string) => {
     setSelectedCourse(courseId);
-    setSelectedExamPack(""); // Reset exam pack on course change
+    setSelectedExamPack("");
   };
 
-  // Handle submit to filter exams
   const handleFilterSubmit = () => {
-    setFiltering(true); // Show "Filtering..." and disable the button
+    setFiltering(true);
 
     setTimeout(() => {
       let filtered = exams;
 
       if (selectedCourse) {
         filtered = filtered.filter(
-          (exam: any) => exam.subcategory_id === parseInt(selectedCourse)
+          (exam: Exam) => exam.subcategory_id === parseInt(selectedCourse)
         );
       }
 
       if (selectedExamPack) {
         filtered = filtered.filter(
-          (exam: any) => exam.exam_type_id === parseInt(selectedExamPack)
+          (exam: Exam) => exam.exam_type_id === parseInt(selectedExamPack)
         );
       }
 
       setFilteredExams(filtered);
-      setCurrentPage(1); // Reset pagination to the first page
-
-      // Re-enable the button and remove the "Filtering..." text after filtering
+      setCurrentPage(1);
       setFiltering(false);
-    }, 500); // Simulate a delay to show the filtering process
+    }, 500);
   };
 
-  // Truncate long strings for title or description
   const truncateText = (text: string, maxLength: number) => {
-    if (text.length > maxLength) {
-      return text.substring(0, maxLength) + "...";
-    }
-    return text;
+    return text.length > maxLength ? text.substring(0, maxLength) + "..." : text;
   };
 
-  // Calculate total pages
   const totalPages = Math.ceil(filteredExams.length / itemsPerPage);
-
-  // Get the exams to display on the current page
   const currentExams = filteredExams.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
@@ -117,21 +146,15 @@ const Exams = () => {
   const startItem = (currentPage - 1) * itemsPerPage + 1;
   const endItem = Math.min(currentPage * itemsPerPage, filteredExams.length);
 
-  // Function to calculate the strike price (20% increase)
-  const calculateStrikePrice = (price: number): number => {
-    return price * 1.2; // 20% increase
-  };
+  const calculateStrikePrice = (price: number): number => price * 1.2;
 
   return (
     <section className="pb-12 pt-20 lg:pb-[70px] lg:pt-[120px]">
       <div className="container mx-auto">
         <div className="mb-8 grid grid-cols-1 items-center gap-4 md:grid-cols-4">
-          {/* Title */}
           <h2 className="text-lg font-bold text-gray-700 md:col-span-1 md:text-xl lg:text-2xl">
             Search for Exams
           </h2>
-
-          {/* Select Inputs */}
           <div className="grid grid-cols-2 gap-4 md:col-span-2">
             <select
               id="selectCourse"
@@ -140,13 +163,12 @@ const Exams = () => {
               className="w-full rounded-lg border border-gray-300 bg-gray-50 px-4 py-3 text-gray-700 transition focus:outline-none focus:ring-2 focus:ring-gray-300"
             >
               <option value="">Select Course</option>
-              {courses.map((course: any) => (
+              {courses.map((course) => (
                 <option key={course.id} value={course.id}>
                   {course.name}
                 </option>
               ))}
             </select>
-
             <select
               id="selectExamPack"
               value={selectedExamPack}
@@ -154,22 +176,18 @@ const Exams = () => {
               className="w-full rounded-lg border border-gray-300 bg-gray-50 px-4 py-3 text-gray-700 transition focus:outline-none focus:ring-2 focus:ring-gray-300"
             >
               <option value="">Select Course Plan</option>
-              {examPacks.map((pack: any) => (
+              {examPacks.map((pack) => (
                 <option key={pack.id} value={pack.id}>
                   {pack.name}
                 </option>
               ))}
             </select>
           </div>
-
-          {/* Filter Button */}
           <button
             onClick={handleFilterSubmit}
-            disabled={filtering} // Disable the button while filtering
+            disabled={filtering}
             className={`w-full rounded-lg ${
-              filtering
-                ? "bg-primary cursor-not-allowed" // Change color and cursor when disabled
-                : "bg-primary cursor-pointer"
+              filtering ? "bg-primary cursor-not-allowed" : "bg-primary cursor-pointer"
             } px-6 py-3 font-semibold text-secondary transition duration-300 ease-in-out ${
               filtering ? "" : "hover:bg-secondary hover:text-primary"
             }`}
@@ -177,10 +195,7 @@ const Exams = () => {
             {filtering ? "Filtering..." : "Filter"}
           </button>
         </div>
-
         <hr className="h-px my-8 bg-gray-200 border-0 dark:bg-gray-700" />
-
-        {/* Exam Cards */}
         {loading ? (
           <div className="flex justify-center items-center h-[300px]">
             <Loader />
@@ -189,10 +204,9 @@ const Exams = () => {
           <p className="text-center text-red-600">{error}</p>
         ) : currentExams.length > 0 ? (
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3">
-            {currentExams.map((exam: any) => (
+            {currentExams.map((exam) => (
               <Link href={`/exams/${exam.slug}`} key={exam.slug}>
                 <div className="flex flex-col overflow-hidden rounded-lg bg-white shadow-md transition hover:shadow-lg cursor-pointer h-full">
-                  {/* Image */}
                   <Image
                     src={exam.img_url}
                     width={500}
@@ -201,20 +215,15 @@ const Exams = () => {
                     className="h-[200px] w-full object-cover"
                   />
                   <div className="flex flex-col justify-between flex-grow p-6">
-                    {/* Title */}
                     <h3 className="mb-2 text-xl font-semibold text-gray-900">
-                      {exam.title} {/* Limit to 40 characters */}
+                      {truncateText(exam.title, 40)}
                     </h3>
-
-                    {/* Description */}
                     <p
                       className="mb-4 text-gray-600 flex-grow"
                       dangerouslySetInnerHTML={{
                         __html: truncateText(exam.description, 180),
                       }}
                     />
-
-                    {/* Exam Details */}
                     <div className="mb-4 flex justify-between divide-x-2 text-sm text-gray-700">
                       <div>
                         <span className="block font-bold">Duration</span>
@@ -229,16 +238,11 @@ const Exams = () => {
                         <span>{exam.total_marks || "N/A"}</span>
                       </div>
                     </div>
-
                     <hr className="mb-4 h-px border-0 bg-gray-200" />
-
-                    {/* Price */}
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         {exam.is_free ? (
-                          <span className="text-xl font-bold text-dark">
-                            Free
-                          </span>
+                          <span className="text-xl font-bold text-dark">Free</span>
                         ) : (
                           <>
                             <span className="text-2xl font-semibold text-dark">
@@ -247,9 +251,7 @@ const Exams = () => {
                             </span>
                             <span className="text-base text-gray-500 line-through">
                               {siteSettings?.currency_symbol}
-                              {calculateStrikePrice(Number(exam.price)).toFixed(
-                                2
-                              )}
+                              {calculateStrikePrice(Number(exam.price)).toFixed(2)}
                             </span>
                           </>
                         )}
@@ -268,22 +270,13 @@ const Exams = () => {
             <NoData message="No exams available" />
           </div>
         )}
-
-        {/* Pagination */}
         {filteredExams.length > itemsPerPage && (
           <>
             <hr className="h-px my-8 bg-gray-200 border-0 dark:bg-gray-700" />
-
             <div className="flex justify-between items-center">
-              {/* Showing text */}
               <div className="text-sm text-gray-700">
-                Showing{" "}
-                <span className="font-bold">
-                  {startItem}-{endItem}
-                </span>{" "}
-                of <span className="font-bold">{filteredExams.length}</span>
+                Showing <span className="font-bold">{startItem}-{endItem}</span> of <span className="font-bold">{filteredExams.length}</span>
               </div>
-
               <Pagination
                 currentPage={currentPage}
                 totalPages={totalPages}

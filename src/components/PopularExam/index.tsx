@@ -6,7 +6,6 @@ import Image from "next/image";
 import { FaArrowRight } from "react-icons/fa";
 import Link from "next/link"; // Import Next.js Link component
 import NoData from "../Common/NoData";
-import Loader from "../Common/Loader"; // Import the Loader component
 import { useSiteSettings } from "@/context/SiteContext"; // Import the context
 
 // Define the PopularExam type for the API data
@@ -17,6 +16,11 @@ type PopularExam = {
   price: string | null;
   is_free: number;
   slug: string;
+  schedule_type: string;
+  start_date: string;
+  start_time: string;
+  end_date?: string;
+  end_time?: string;
 };
 
 // Define the SectionData type for the section title and button data
@@ -51,14 +55,36 @@ const PopularExams = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Fetch exams
+        // Fetch server time
+        const timeResponse = await axios.get(`/api/time`);
+        const currentTime = new Date(timeResponse.data.serverTime);
+
+        // Fetch exams and section data concurrently
         const [examsResponse, sectionResponse] = await Promise.all([
           axios.get(`${process.env.NEXT_PUBLIC_API_URL}/popular-exams`),
           axios.get(`${process.env.NEXT_PUBLIC_API_URL}/popular-exam-data`),
         ]);
 
+        // Check for successful responses
         if (examsResponse.data.status && examsResponse.data.data) {
-          setExams(examsResponse.data.data);
+          const allExams = examsResponse.data.data;
+
+          // Filter exams based on their availability
+          const validExams = allExams.filter((exam: PopularExam) => {
+            const startDateTime = new Date(
+              `${exam.start_date}T${exam.start_time}`
+            );
+            const endDateTime = exam.end_date
+              ? new Date(`${exam.end_date}T${exam.end_time}`)
+              : null;
+
+            return (
+              startDateTime <= currentTime &&
+              (!endDateTime || endDateTime >= currentTime)
+            );
+          });
+
+          setExams(validExams);
         } else {
           setError("Failed to fetch popular exams.");
         }
@@ -143,9 +169,7 @@ const PopularExams = () => {
                           {/* Display the strike price with 20% increase */}
                           <span className="text-base text-gray-500 line-through">
                             {siteSettings?.currency_symbol || "£"}
-                            {calculateStrikePrice(Number(exam.price)).toFixed(
-                              2
-                            )}
+                            {calculateStrikePrice(Number(exam.price)).toFixed(2)}
                           </span>
                         </>
                       )}
@@ -169,9 +193,7 @@ const PopularExams = () => {
         {exams.length > 0 && sectionData && (
           <div className="text-center mt-8">
             <Link href={sectionData.button_link}>
-              <span className="primary-button">
-                {sectionData.button_text}
-              </span>
+              <span className="primary-button">{sectionData.button_text}</span>
             </Link>
           </div>
         )}
