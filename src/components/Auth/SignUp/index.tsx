@@ -130,7 +130,7 @@ const SignUp = () => {
           </Link>
           <Link
             href="/"
-            className="flex items-center text-lg text-gray-700 hover:underline"
+            className="flex items-center text-base lg:text-lg text-gray-700 hover:underline"
           >
             <FaHome className="mr-2" />
             Back to Home

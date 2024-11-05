@@ -86,7 +86,7 @@ const ForgetPassword = () => {
   };
 
   if (error || !siteSettings) {
-    return <p>Error loading site settings...</p>; // Handle the case where settings couldn't be fetched
+    return <></>; // Handle the case where settings couldn't be fetched
   }
 
   return (
@@ -107,7 +107,7 @@ const ForgetPassword = () => {
           </Link>
           <Link
             href="/"
-            className="flex items-center text-lg text-gray-700 hover:underline"
+            className="flex items-center text-base lg:text-lg text-gray-700 hover:underline"
           >
             <FaHome className="mr-2" />
             Back to Home
@@ -149,7 +149,7 @@ const ForgetPassword = () => {
                 id="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full bg-transparent rounded-md border border-stroke py-[10px] px-5 text-body-color outline-none transition focus:border-defaultcolor active:border-defaultcolor disabled:cursor-default disabled:bg-gray-2 disabled:border-gray-2"
+                className="w-full bg-transparent rounded-md border border-stroke py-[10px] px-5 text-body-color outline-none transition focus:border-defaultcolor"
                 required
                 placeholder="you@example.com"
               />
@@ -158,7 +158,7 @@ const ForgetPassword = () => {
             <button
               type="submit"
               disabled={loading}
-              className={`w-full px-4 py-2 text-white bg-secondary hover:bg-secondary-dark rounded-lg transition ${
+              className={`w-full px-4 py-2 text-white bg-quaternary hover:bg-quaternary-dark rounded-lg transition ${
                 loading ? "opacity-50 cursor-not-allowed" : ""
               }`}
             >
