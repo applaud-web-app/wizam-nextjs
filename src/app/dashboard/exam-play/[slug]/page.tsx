@@ -682,7 +682,7 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
                           className="flex flex-col sm:flex-row sm:space-x-4 mb-4 space-y-2 sm:space-y-0"
                         >
                           <p
-                            className="flex-1 p-2 rounded bg-white text-center sm:text-left"
+                            className="flex-1 p-2 rounded bg-white text-left"
                             dangerouslySetInnerHTML={{ __html: opt }}
                           ></p>
                           <select

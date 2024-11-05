@@ -665,47 +665,46 @@ export default function PlayQuizPage({ params }: { params: { slug: string } }) {
                 ></textarea>
               );
 
-            case "MTF":
-              return (
-                <div>
-                  <p className="mb-4 font-medium">Match the following:</p>
-                  {question.options
-                    ?.slice(0, question.options.length / 2)
-                    .map((opt, i) => (
-                      <div key={i} className="flex space-x-4 mb-4">
-                        <p
-                          className="flex-1 p-2 rounded bg-white"
-                          dangerouslySetInnerHTML={{ __html: opt }}
-                        ></p>
-                        <select
-                          className="flex-1 p-2 rounded border border-gray-300 focus:ring-1 focus:ring-defaultcolor focus:border-defaultcolor"
-                          onChange={(e) =>
-                            handleAnswerChange(question.id, [
-                              opt,
-                              e.target.value,
-                            ])
-                          }
-                          value={
-                            answers[question.id]?.find(
-                              (pair) => pair[0] === opt
-                            )?.[1] || ""
-                          }
+              case "MTF":
+                return (
+                  <div>
+                    <p className="mb-4 font-medium">Match the following:</p>
+                    {question.options
+                      ?.slice(0, question.options.length / 2)
+                      .map((opt, i) => (
+                        <div
+                          key={i}
+                          className="flex flex-col sm:flex-row sm:space-x-4 mb-4 space-y-2 sm:space-y-0"
                         >
-                          <option value="">Select match</option>
-                          {question.options
-                            ?.slice(question.options.length / 2)
-                            .map((match, j) => (
-                              <option
-                                key={j}
-                                value={match}
-                                dangerouslySetInnerHTML={{ __html: match }}
-                              ></option>
-                            ))}
-                        </select>
-                      </div>
-                    ))}
-                </div>
-              );
+                          <p
+                            className="flex-1 p-2 rounded bg-white text-left"
+                            dangerouslySetInnerHTML={{ __html: opt }}
+                          ></p>
+                          <select
+                            className="flex-1 p-2 rounded border border-gray-300 focus:ring-1 focus:ring-defaultcolor focus:border-defaultcolor w-full sm:w-auto appearance-none"
+                            onChange={(e) =>
+                              handleAnswerChange(question.id, [opt, e.target.value])
+                            }
+                            value={
+                              answers[question.id]?.find((pair) => pair[0] === opt)?.[1] || ""
+                            }
+                          >
+                            <option value="">Select match</option>
+                            {question.options
+                              ?.slice(question.options.length / 2)
+                              .map((match, j) => (
+                                <option
+                                  key={j}
+                                  value={match}
+                                  dangerouslySetInnerHTML={{ __html: match }}
+                                ></option>
+                              ))}
+                          </select>
+                        </div>
+                      ))}
+                  </div>
+                );
+              
 
             case "ORD":
               return (
