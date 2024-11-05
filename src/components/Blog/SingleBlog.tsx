@@ -36,7 +36,7 @@ const SingleBlog = ({ blog }: { blog: Blog }) => {
         <h3>
           <Link
             href={`/blogs/${slug}`}
-            className="mb-3 inline-block text-xl font-semibold text-dark hover:text-primary dark:text-white dark:hover:text-primary sm:text-2xl lg:text-xl"
+            className="mb-3 inline-block text-xl font-semibold text-dark hover:text-primary-dark dark:text-white dark:hover:text-primary sm:text-2xl lg:text-xl"
           >
             {title}
           </Link>
