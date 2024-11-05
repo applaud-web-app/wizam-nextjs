@@ -429,7 +429,7 @@ const Header = () => {
                 <li key={index} className="group relative w-full">
                   <Link
                     href={menuItem.path || "#"}
-                    className={`block w-full text-base text-dark dark:text-white py-2 px-6 hover:bg-primary hover:text-white transition rounded-md ${
+                    className={`block w-full text-base text-dark dark:text-white py-2 px-6 hover:bg-primary hover:text-dark transition rounded-md ${
                       pathUrl === menuItem.path
                         ? "bg-primary text-secondary"
                         : ""
@@ -445,7 +445,7 @@ const Header = () => {
                 <>
                   <Link
                     href="/dashboard"
-                    className="bg-secondary text-white py-2 px-6 rounded-full hover:bg-secondary-dark transition text-center"
+                    className="bg-secondary text-white py-2 px-6 rounded-full hover:bg-secondary-dark transition  w-full text-center"
                   >
                     Dashboard
                   </Link>
