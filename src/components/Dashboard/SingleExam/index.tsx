@@ -109,7 +109,7 @@ export default function SingleExam({ slug }: SingleExamProps) {
             router.push("/signin"); // Redirect to sign-in page
           } else if (status === 404) {
             toast.error("Please buy a subscription to access this course.");
-            Cookies.set("redirect_url", `/dashboard/exam-play/${slug}`, {
+            Cookies.set("redirect_url", `/dashboard/exam-detail/${slug}`, {
               expires: 1,
             });
             console.log("exam-play");
@@ -118,7 +118,7 @@ export default function SingleExam({ slug }: SingleExamProps) {
             toast.error(
               "Feature not available in your plan. Please upgrade your subscription."
             );
-            Cookies.set("redirect_url", `/dashboard/exam-play/${slug}`, {
+            Cookies.set("redirect_url", `/dashboard/exam-detail/${slug}`, {
               expires: 1,
             });
             console.log("exam-play");
