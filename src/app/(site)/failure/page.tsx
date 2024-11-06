@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 const FailurePage = () => {
   return (
     <>
-      <Breadcrumb pageName="Payment Status" />
+      <Breadcrumb pageName="Payment Failed" />
 
       <Failure />
 
