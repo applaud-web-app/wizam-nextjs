@@ -72,6 +72,19 @@ const SignUp = () => {
   
       // Check for 'status' in the response and show appropriate toast
       if (response.data.status) {
+        // toast.success("Registration successful!", {
+        //   position: "top-right",
+        //   autoClose: 3000,
+        //   hideProgressBar: false,
+        //   closeOnClick: true,
+        //   pauseOnHover: true,
+        //   draggable: true,
+        // });
+
+        const token = response.data.token; // Extract token from the response
+        Cookies.set("jwt", token, { expires: 1 });
+
+        // Show success toast notification
         toast.success("Registration successful!", {
           position: "top-right",
           autoClose: 3000,
@@ -80,11 +93,16 @@ const SignUp = () => {
           pauseOnHover: true,
           draggable: true,
         });
-  
-        // Redirect to SignIn page after success
+
+        // Check if the redirect_url cookie exists
+        const redirectUrl = Cookies.get("redirect_url"); // Get the redirect URL from cookies
+        // If redirect URL exists, redirect to that URL, otherwise go to the homepage
+        const destination = redirectUrl ? redirectUrl : "/";
+
+        // Redirect to the destination
         setTimeout(() => {
-          router.push('/signin'); 
-        }, 2000);
+          router.push(destination);
+        }, 1000);
       } else {
         toast.error(response.data.message || "An error occurred. Please try again.", {
           position: "top-right",
