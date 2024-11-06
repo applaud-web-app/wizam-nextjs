@@ -1,5 +1,4 @@
 import Breadcrumb from "@/components/Common/Breadcrumb";
-import Loader from "@/components/Common/Loader";
 import Success from "@/components/Success";
 import { Metadata } from "next";
 
@@ -10,7 +9,10 @@ export const metadata: Metadata = {
 const SuccessPage = () => {
   return (
     <>
-     <Loader/>
+      <Breadcrumb pageName="Payment Status" />
+
+      <Success />
+
     </>
   );
 };
