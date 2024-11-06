@@ -116,8 +116,10 @@ const ExamDetailPage = ({ params }: ExamDetailProps) => {
             <div className="text-center">
               <p className="text-lg text-gray-500">Available Between</p>
               <p className="text-xl font-bold text-blue-500">
-                {exam.availableFrom || "N/A"} - {exam.availableTo || "N/A"}
+                {exam.start_date ? `${exam.start_date} ${exam.start_time || ""}` : "N/A"}
+                {exam.end_date && exam.end_time ? ` to ${exam.end_date} ${exam.end_time}` : ""}
               </p>
+
             </div>
             <div className="hidden h-12 w-px bg-gray-200 sm:block"></div>
             <div className="text-center">
