@@ -325,7 +325,7 @@ const SignUp = () => {
                         id="password"
                         name="password"
                         className="w-full bg-white border border-gray-300 rounded-md py-2 px-4 text-gray-700 focus:outline-none focus:ring-1 focus:ring-defaultcolor focus:border-defaultcolor transition"
-                        placeholder="••••••••"
+                        placeholder="Enter Password"
                       />
                       <button
                         type="button"
@@ -348,7 +348,7 @@ const SignUp = () => {
                       id="confirmPassword"
                       name="confirmPassword"
                       className="w-full bg-white border border-gray-300 rounded-md py-2 px-4 text-gray-700 focus:outline-none focus:ring-1 focus:ring-defaultcolor focus:border-defaultcolor transition"
-                      placeholder="••••••••"
+                      placeholder="Enter Confirm Password"
                     />
                     <ErrorMessage name="confirmPassword" component="div" className="text-red-500 text-sm" />
                   </div>

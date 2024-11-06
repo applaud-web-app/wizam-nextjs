@@ -163,7 +163,7 @@ export default function ExamDetailPage({ params }: { params: { slug: string } })
               <th className="p-3 text-left font-semibold">S.No</th>
               <th className="p-3 text-left font-semibold">Exam Title</th>
               <th className="p-3 text-left font-semibold">Available Between</th>
-              <th className="p-3 text-left font-semibold">Free/Paid</th>
+              {/* <th className="p-3 text-left font-semibold">Free/Paid</th> */}
               <th className="p-3 text-left font-semibold">Questions</th>
               <th className="p-3 text-left font-semibold">Marks</th>
               <th className="p-3 text-left font-semibold">Time</th>
@@ -190,7 +190,7 @@ export default function ExamDetailPage({ params }: { params: { slug: string } })
                   <td className="p-4">{index + 1}</td>
                   <td className="p-4">{exam.title}</td>
                   <td className="p-4">{scheduleInfo}</td>
-                  <td className="p-4">
+                  {/* <td className="p-4">
                     <span
                       className={`${
                         exam.is_free
@@ -200,7 +200,7 @@ export default function ExamDetailPage({ params }: { params: { slug: string } })
                     >
                       {exam.is_free ? "Free" : "Paid"}
                     </span>
-                  </td>
+                  </td> */}
                   <td className="p-4">{exam.questions}</td>
                   <td className="p-4">{exam.marks}</td>
                   <td className="p-4">{exam.time} mins</td>
@@ -211,7 +211,7 @@ export default function ExamDetailPage({ params }: { params: { slug: string } })
                       </span>
                     ) : exam.is_free === 1 ? (
                       <Link href={`/dashboard/exam-detail/${exam.slug}`} className="text-defaultcolor font-semibold">
-                        View Details
+                        Start Exam
                       </Link>
                     ) : (
                       <button
