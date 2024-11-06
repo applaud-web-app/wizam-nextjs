@@ -43,7 +43,7 @@ export default function Sidebar({ isSyllabusEnabled, isOpen, toggleSidebar }: Si
           pauseOnHover: true,
           draggable: true,
         });
-        router.push("/signin");
+        router.push("/");
       } else if (response.data.status === false && response.data.message === "Unauthorized") {
         Cookies.remove("jwt");
       }
