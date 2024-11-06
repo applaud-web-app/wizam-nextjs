@@ -164,7 +164,7 @@ export default function QuizTypeDetailPage({ params }: { params: { slug: string 
               <th className="p-3 text-left font-semibold">S.No</th>
               <th className="p-3 text-left font-semibold">Quiz Title</th>
               <th className="p-3 text-left font-semibold">Available Between</th>
-              <th className="p-3 text-left font-semibold">Free/Paid</th>
+              {/* <th className="p-3 text-left font-semibold">Free/Paid</th> */}
               <th className="p-3 text-left font-semibold">Questions</th>
               <th className="p-3 text-left font-semibold">Marks</th>
               <th className="p-3 text-left font-semibold">Time</th>
@@ -191,7 +191,7 @@ export default function QuizTypeDetailPage({ params }: { params: { slug: string 
                   <td className="p-4">{index + 1}</td>
                   <td className="p-4">{quiz.title}</td>
                   <td className="p-4">{scheduleInfo}</td>
-                  <td className="p-4">
+                  {/* <td className="p-4">
                     <span
                       className={`${
                         quiz.is_free
@@ -201,7 +201,7 @@ export default function QuizTypeDetailPage({ params }: { params: { slug: string 
                     >
                       {quiz.is_free ? "Free" : "Paid"}
                     </span>
-                  </td>
+                  </td> */}
                   <td className="p-4">{quiz.questions}</td>
                   <td className="p-4">{quiz.marks}</td>
                   <td className="p-4">{quiz.time} mins</td>

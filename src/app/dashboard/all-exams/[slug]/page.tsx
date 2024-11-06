@@ -215,7 +215,7 @@ export default function ExamDetailPage({ params }: { params: { slug: string } })
                       </Link>
                     ) : (
                       <button
-                        className="bg-yellow-500 text-white py-1 px-5 rounded-full font-semibold"
+                        className="bg-defaultcolor text-white py-1 px-5 rounded-full font-semibold"
                         onClick={() => handlePayment(exam.slug)}
                       >
                         Pay Now

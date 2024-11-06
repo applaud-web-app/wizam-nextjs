@@ -168,7 +168,7 @@ export default function ExamList() {
               <th className="p-3 text-left rounded-tl-lg">S.No</th>
               <th className="p-3 text-left">Exam Title</th>
               <th className="p-3 text-left">Available Between</th>
-              <th className="p-3 text-left">Free/Paid</th>
+              {/* <th className="p-3 text-left">Free/Paid</th> */}
               <th className="p-3 text-left">Questions</th>
               <th className="p-3 text-left">Marks</th>
               <th className="p-3 text-left">Time</th>
@@ -193,7 +193,7 @@ export default function ExamList() {
                   <td className="p-4">{index + 1}</td>
                   <td className="p-4">{exam.title || "-"}</td>
                   <td className="p-4">{scheduleInfo}</td>
-                  <td className="p-4">
+                  {/* <td className="p-4">
                     <span
                       className={`${
                         exam.is_free
@@ -203,7 +203,7 @@ export default function ExamList() {
                     >
                       {exam.is_free ? "Free" : "Paid"}
                     </span>
-                  </td>
+                  </td> */}
                   <td className="p-4">{exam.total_questions || "-"}</td>
                   <td className="p-4">
                     {exam.point_mode === "manual"
@@ -232,9 +232,7 @@ export default function ExamList() {
                       <button
                         className="bg-defaultcolor text-white py-1 px-5 rounded-full font-semibold hover:bg-defaultcolor-dark text-sm"
                         onClick={() => handlePayment(`/dashboard/exam-detail/${exam.slug}`)}
-                      >
-                        Pay Now
-                      </button>
+                      >Pay Now</button>
                     )}
                   </td>
                 </tr>

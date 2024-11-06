@@ -158,7 +158,7 @@ export default function QuizList() {
               <th className="p-3 text-left rounded-tl-lg">S.No</th>
               <th className="p-3 text-left">Quiz Title</th>
               <th className="p-3 text-left">Available Between</th>
-              <th className="p-3 text-left">Free/Paid</th>
+              {/* <th className="p-3 text-left">Free/Paid</th> */}
               <th className="p-3 text-left">Questions</th>
               <th className="p-3 text-left">Marks</th>
               <th className="p-3 text-left">Time</th>
@@ -190,7 +190,7 @@ export default function QuizList() {
                     <td className="p-4">{index + 1}</td>
                     <td className="p-4">{quiz.title || "-"}</td>
                     <td className="p-4">{scheduleInfo}</td>
-                    <td className="p-4">
+                    {/* <td className="p-4">
                       <span
                         className={`${
                           quiz.is_free
@@ -200,7 +200,7 @@ export default function QuizList() {
                       >
                         {quiz.is_free ? "Free" : "Paid"}
                       </span>
-                    </td>
+                    </td> */}
                     <td className="p-4">{quiz.total_questions || "-"}</td>
                     <td className="p-4">
                       {quiz.point_mode === "manual"
