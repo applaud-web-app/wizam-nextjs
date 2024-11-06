@@ -51,40 +51,23 @@ export default function SingleExam({ slug }: SingleExamProps) {
         router.push("/pricing");
       }
     } catch (error: any) {
-      console.error("Error fetching practice set:", error);
-
-      // Handle errors during the API request
       if (error.response) {
         const { status, data } = error.response;
-
-        // Handle specific error statuses
         if (status === 401) {
           toast.error("User is not authenticated. Please log in.");
-          router.push("/signin"); // Redirect to sign-in page
+          router.push("/signin");
         } else if (status === 404) {
           toast.error("Please buy a subscription to access this course.");
-          Cookies.set("redirect_url", `/dashboard/exam-play/${slug}`, {
-            expires: 1,
-          });
-          console.log("exam-play");
-          router.push("/pricing"); // Redirect to pricing page
+          router.push("/pricing");
         } else if (status === 403) {
-          toast.error(
-            "Feature not available in your plan. Please upgrade your subscription."
-          );
-          Cookies.set("redirect_url", `/dashboard/exam-play/${slug}`, {
-            expires: 1,
-          });
-          console.log("exam-play");
-          router.push("/pricing"); // Redirect to pricing page
+          toast.error("Feature not available in your plan. Please upgrade your subscription.");
+          router.push("/pricing");
         } else {
           toast.error(`An error occurred: ${data.error || "Unknown error"}`);
         }
       } else {
         toast.error("An error occurred. Please try again.");
       }
-    } finally {
-      setLoading(false); // Stop the loading state once the request is complete
     }
   };
 
@@ -113,11 +96,41 @@ export default function SingleExam({ slug }: SingleExamProps) {
         } else {
           setExamDetails(null);
         }
-      } catch (error) {
-        console.error("Error fetching exam details:", error);
-        setExamDetails(null);
+      } catch (error: any) {
+        console.error("Error fetching practice set:", error);
+
+        // Handle errors during the API request
+        if (error.response) {
+          const { status, data } = error.response;
+
+          // Handle specific error statuses
+          if (status === 401) {
+            toast.error("User is not authenticated. Please log in.");
+            router.push("/signin"); // Redirect to sign-in page
+          } else if (status === 404) {
+            toast.error("Please buy a subscription to access this course.");
+            Cookies.set("redirect_url", `/dashboard/exam-play/${slug}`, {
+              expires: 1,
+            });
+            console.log("exam-play");
+            router.push("/pricing"); // Redirect to pricing page
+          } else if (status === 403) {
+            toast.error(
+              "Feature not available in your plan. Please upgrade your subscription."
+            );
+            Cookies.set("redirect_url", `/dashboard/exam-play/${slug}`, {
+              expires: 1,
+            });
+            console.log("exam-play");
+            router.push("/pricing"); // Redirect to pricing page
+          } else {
+            toast.error(`An error occurred: ${data.error || "Unknown error"}`);
+          }
+        } else {
+          toast.error("An error occurred. Please try again.");
+        }
       } finally {
-        setLoading(false);
+        setLoading(false); // Stop the loading state once the request is complete
       }
     };
 
