@@ -87,7 +87,7 @@ const ExamDetailPage = ({ params }: ExamDetailProps) => {
     if (token) {
       Cookies.set('redirect_url', `/dashboard/exam-detail/${slug}`, { expires: 1 }); // Set the redirect URL for 1 day
       // If token exists, navigate to the quiz play page
-      router.push(`/dashboard/exam-detail/${slug}`);
+      router.push(`/dashboard/exam-play/${slug}`);
     } else {
       // Show warning toast notification
       toast.error("Login to continue!", {
