@@ -139,7 +139,7 @@ const Header = () => {
         });
 
         setTimeout(() => {
-          router.push("/signin");
+          router.push("/");
         }, 1000);
       }
     } catch (error) {
