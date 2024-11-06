@@ -9,6 +9,7 @@ import NoData from "@/components/Common/NoData";
 import { useRouter } from "next/navigation";
 import Cookies from 'js-cookie';
 import { toast } from "react-toastify";
+import { Cookie } from "next/font/google";
 
 interface ExamDetailProps {
   params: {
@@ -98,6 +99,8 @@ const ExamDetailPage = ({ params }: ExamDetailProps) => {
         draggable: true,
       });
 
+      Cookies.set('category_id',exam.subcategory_id);
+      Cookies.set('category_name',exam.name);
       // If no token, set a cookie for the current URL and redirect to the sign-in page
       Cookies.set('redirect_url', `/dashboard/exam-play/${slug}`, { expires: 1 }); // Set the redirect URL for 1 day
       router.push('/signin'); // Redirect to sign-in page
