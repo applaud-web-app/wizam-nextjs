@@ -41,12 +41,15 @@ const PricingCard: React.FC<PricingCardProps> = ({
       return;
     }
 
+    const successUrl = Cookies.get("redirect_url") ? Cookies.get("redirect_url") : '/dashboard';
+
     try {
       // Send the POST request to create a checkout session
       const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/create-checkout-session`, {
         priceId,
         priceType,
         customerId,
+        successUrl
       }, {
         headers: {
           Authorization: `Bearer ${Cookies.get("jwt")}`,
