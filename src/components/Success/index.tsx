@@ -1,13 +1,24 @@
 "use client";
 
-import { FC } from 'react';
+import { FC, useEffect } from 'react';
 import Link from 'next/link';
 import { FaCheckCircle, FaEnvelope, FaHome, FaLongArrowAltRight } from 'react-icons/fa';
 import { useRouter } from "next/navigation"; // Use router to redirect
 import Cookies from "js-cookie";
+import Invoice from '../Common/Invoice';
 
 const Success: FC = () => {
   const router = useRouter();
+  
+  useEffect(() => {
+    const returnUrl = Cookies.get("redirect_url");
+    if (returnUrl) {
+      router.push(returnUrl); // Redirect to the return URL if it exists
+    } else {
+      router.push("/"); // Otherwise, redirect to the home page
+    }
+  }, [router]);
+
 
   const handleClick = () => {
     const returnUrl = Cookies.get("redirect_url");
@@ -34,19 +45,17 @@ const Success: FC = () => {
         <div className="flex justify-center space-x-3 md:space-x-4 mt-6 md:mt-8">
           <button onClick={handleClick} >
             <span className="inline-flex items-center bg-primary hover:bg-secondary text-secondary hover:text-white py-2 md:py-3 px-6  rounded-full text-sm md:text-base lg:text-lg font-semibold transition duration-300 transform hover:scale-105 text-center">
-              Continue <FaLongArrowAltRight /> 
+              Continue <FaLongArrowAltRight className='ml-3' /> 
             </span>
           </button>
-          {/* <Link href="/invoice" passHref>
-            <span className="inline-flex items-center bg-secondary hover:bg-secondary-dark text-white py-2 md:py-3 px-6  rounded-full text-sm md:text-base lg:text-lg font-semibold transition duration-300 transform hover:scale-105">
-              <FaEnvelope className="mr-2" /> View Invoice
-            </span>
-          </Link> */}
+         
         </div>
 
       
       
       </div>
+      
+     
 
      
     </div>
