@@ -9,7 +9,7 @@ import NoData from "@/components/Common/NoData";
 import { useRouter } from "next/navigation";
 import Cookies from 'js-cookie';
 import { toast } from "react-toastify";
-import { Cookie } from "next/font/google";
+// import { Cookie } from "next/font/google";
 
 interface ExamDetailProps {
   params: {
