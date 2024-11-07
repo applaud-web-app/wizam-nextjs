@@ -26,7 +26,7 @@ interface SingleExamProps {
 export default function SingleExam({ slug }: SingleExamProps) {
   const [examDetails, setExamDetails] = useState<ExamDetails | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
-  const [isChecked, setIsChecked] = useState<boolean>(true); // For checkbox state
+  const [isChecked, setIsChecked] = useState<boolean>(false); // For checkbox state
   const router = useRouter();
 
   const handlePayment = async (slug: string) => {
