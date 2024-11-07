@@ -42,6 +42,7 @@ interface ExamData {
   duration: string;
   points: number;
   finish_button: string; // "enable" or "disable"
+  total_time:string;
 }
 
 export default function PlayExamPage({ params }: { params: { slug: string } }) {
@@ -106,6 +107,7 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
             points: fetchExamData.points,
             question_view: fetchExamData.question_view,
             finish_button: fetchExamData.finish_button,
+            total_time:fetchExamData.total_time,
           });
           setTimeLeft(Math.round(parseFloat(fetchExamData.duration) * 60));
         } else {
@@ -992,7 +994,7 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
             <div className="flex items-center space-x-2">
               <AiOutlineClockCircle className="text-gray-600" size={30} />
               <h3 className="text-3xl font-semibold text-gray-600">
-                {parseFloat(examData.duration).toFixed(0)}
+                {parseFloat(examData.total_time).toFixed(0)}
               </h3>
               <p className="text-lg font-semibold text-gray-500">Minutes</p>
             </div>

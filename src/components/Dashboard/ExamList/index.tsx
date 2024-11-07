@@ -226,7 +226,7 @@ export default function ExamList() {
                         href={`/dashboard/exam-detail/${exam.slug}`}
                         className="text-defaultcolor font-semibold hover:underline"
                       >
-                        View Details
+                        Start Exam
                       </Link>
                     ) : (
                       <button

@@ -40,6 +40,7 @@ interface PracticeData {
   questions: Question[];
   duration: string;
   points: number;
+  total_time:string;
 }
 
 export default function PlayQuizPage({ params }: { params: { slug: string } }) {
@@ -102,6 +103,7 @@ export default function PlayQuizPage({ params }: { params: { slug: string } }) {
             questions: fetchPracticeData.questions,
             duration: fetchPracticeData.duration,
             points: fetchPracticeData.points,
+            total_time:fetchPracticeData.total_time,
           });
           setTimeLeft(Math.round(parseFloat(fetchPracticeData.duration) * 60));
         } else {
@@ -985,7 +987,7 @@ export default function PlayQuizPage({ params }: { params: { slug: string } }) {
             <div className="flex items-center space-x-2">
               <AiOutlineClockCircle className="text-gray-600" size={30} />
               <h3 className="text-3xl font-semibold text-gray-600">
-                {parseFloat(practiceData.duration).toFixed(0)}
+                {parseFloat(practiceData.total_time).toFixed(0)}
               </h3>
               <p className="text-lg font-semibold text-gray-500">Minutes</p>
             </div>
