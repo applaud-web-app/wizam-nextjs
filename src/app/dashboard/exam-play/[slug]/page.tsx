@@ -238,8 +238,143 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
         existingAnswers[questionId] = answer;
       }
 
-      return existingAnswers;
+     // Build the formatted answers as per submission payload format
+    const formattedAnswers = examData?.questions.map((question) => {
+      const userAnswer = existingAnswers[question.id];
+
+      if (!userAnswer || userAnswer.length === 0) {
+        return {
+          id: question.id,
+          type: question.type,
+          answer: [],
+        };
+      }
+
+      switch (question.type) {
+        case "MSA":
+          return {
+            id: question.id,
+            type: question.type,
+            answer: question.options
+              ? question.options.indexOf(userAnswer[0]) + 1
+              : 0,
+          };
+
+        case "MMA":
+          return {
+            id: question.id,
+            type: question.type,
+            answer: userAnswer.map((ans:any) =>
+              question.options ? question.options.indexOf(ans) + 1 : 0
+            ),
+          };
+
+        case "TOF":
+          return {
+            id: question.id,
+            type: question.type,
+            answer: userAnswer[0] === "true" ? 1 : 2,
+          };
+
+        case "SAQ":
+          return {
+            id: question.id,
+            type: question.type,
+            answer: userAnswer[0],
+          };
+
+        case "FIB":
+          return {
+            id: question.id,
+            type: question.type,
+            answer: Array.isArray(userAnswer)
+              ? userAnswer.map((ans) => (typeof ans === "string" ? ans : String(ans)))
+              : [],
+          };
+
+        case "MTF":
+          const matches: { [key: number]: string } = {};
+          if (
+            Array.isArray(userAnswer) &&
+            userAnswer.every(
+              (pair) => Array.isArray(pair) && pair.length === 2
+            )
+          ) {
+            (userAnswer as unknown as [string, string][]).forEach(
+              (pair: [string, string]) => {
+                if (question.options) {
+                  const termIndex = question.options.indexOf(pair[0]) + 1;
+                  matches[termIndex] = pair[1];
+                }
+              }
+            );
+          }
+          return {
+            id: question.id,
+            type: question.type,
+            answer: matches,
+          };
+
+        case "ORD":
+          return {
+            id: question.id,
+            type: question.type,
+            answer: userAnswer.map((opt: string) =>
+              question.options ? question.options.indexOf(opt) : -1
+            ),
+          };
+
+        case "EMQ":
+          const filteredAnswers = userAnswer
+            .map((ans: string, index: number) => {
+              return ans
+                ? question.options
+                  ? question.options.indexOf(ans) + 1
+                  : null
+                : null;
+            })
+            .filter((ans:any) => ans !== null);
+          return {
+            id: question.id,
+            type: question.type,
+            answer: filteredAnswers.length > 0 ? filteredAnswers : [],
+          };
+
+        default:
+          return null;
+      }
     });
+
+    // Log the formatted answer structure
+    console.log("Current formatted answers:", formattedAnswers?.filter((answer) => answer !== null));
+    saveAnswerProgress(uuid, formattedAnswers?.filter((answer) => answer !== null));
+    return existingAnswers;
+    });
+  };
+
+  const saveAnswerProgress = async (uuid:any, formattedAnswers:any) => {
+    try {
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_API_URL}/save-answer-progress/${uuid}`,
+        { answers: formattedAnswers },
+        {
+          headers: {
+            Authorization: `Bearer ${Cookies.get("jwt")}`,
+          },
+        }
+      );
+  
+      if (response.data.status) {
+        console.log("Answer progress saved successfully:", response.data.message);
+        // toast.success("Answer progress saved successfully!");
+      } else {
+        console.error("Failed to save answer progress:", response.data.message);
+        toast.error("Failed to save answer progress.");
+      }
+    } catch (error) {
+      console.error("Error saving answer progress:", error);
+      toast.error("Failed to save answer progress.");
+    }
   };
 
   const handleNextQuestion = () => {
@@ -438,6 +573,35 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
 
     handleAnswerChange(questionId, reorderedAnswers);
   };
+
+
+const getTotalQuestionCount = (): number => {
+  if (!examData || !examData.questions) {
+    return 0; // Return 0 or a fallback value if examData or questions are undefined
+  }
+
+  return examData.questions.reduce((count, question) => {
+    if (question.type === "EMQ" && Array.isArray(question.question)) {
+      // Exclude the first (common) question and count each sub-question
+      return count + question.question.length - 1;
+    }
+    return count + 1; // Non-EMQ questions count as 1
+  }, 0);
+};
+  
+  const getAdjustedQuestionIndex = () => {
+    let index = 0;
+    for (let i = 0; i < currentQuestionIndex; i++) {
+      const question = examData?.questions[i];
+      if (question?.type === "EMQ" && Array.isArray(question.question)) {
+        index += question.question.length - 1; // Exclude the first (common) question
+      } else {
+        index += 1;
+      }
+    }
+    return index;
+  };
+  
 
   useEffect(() => {
     if (examData?.questions) {
@@ -782,87 +946,45 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
                 </div>
               );
 
-            case "EMQ":
-              return (
-                <div>
-                  {Array.isArray(question.question) &&
-                    question.question.map((subQuestion, questionIndex) => (
-                      <div key={questionIndex} className="mb-4">
-                        {questionIndex > 0 && (
-                          <div>
-                            <b>{"Question " + questionIndex}</b>
-                            <p
-                              className="mb-4 font-medium bg-white p-3 rounded-lg"
-                              dangerouslySetInnerHTML={{
-                                __html: subQuestion,
-                              }}
-                            ></p>
-
-                            {question.options?.map((option, index) => {
-                              const isChecked =
-                                answers[question.id]?.[questionIndex]?.includes(
-                                  option
-                                );
-
-                              return (
-                                <label
-                                  key={index}
-                                  className={`flex items-center justify-between p-3 border rounded-lg cursor-pointer transition-all mb-3 ${
-                                    isChecked
-                                      ? "border-defaultcolor bg-white"
-                                      : "border-white bg-white"
-                                  } hover:bg-yellow-100`}
-                                >
-                                  {/* Circle for A, B, C, D */}
-                                  <div className="flex items-center space-x-3">
-                                    <div
-                                      className={`flex items-center justify-center w-8 h-8 rounded-full text-black transition-all ${
-                                        isChecked
-                                          ? "bg-defaultcolor text-white"
-                                          : "bg-gray-200"
-                                      }`}
-                                    >
-                                      {String.fromCharCode(65 + index)}{" "}
-                                      {/* Converts index 0,1,2,3 to A,B,C,D */}
-                                    </div>
-                                    <div
-                                      className={`transition-all ${
-                                        isChecked
-                                          ? "text-defaultcolor"
-                                          : "text-black"
-                                      }`}
-                                      dangerouslySetInnerHTML={{
-                                        __html: option,
-                                      }}
-                                    ></div>
+              case "EMQ":
+                return (
+                  <div>
+                    {Array.isArray(question.question) &&
+                      question.question.slice(1).map((subQuestion, subIndex) => ( // Skip the first (common) question
+                        <div key={subIndex} className="mb-4">
+                          <h4 className="font-semibold">Question {getAdjustedQuestionIndex() + subIndex + 1}</h4>
+                          <p
+                            className="mb-4 font-medium bg-white p-3 rounded-lg"
+                            dangerouslySetInnerHTML={{ __html: subQuestion }}
+                          ></p>
+                          {question.options?.map((option, optionIndex) => {
+                            const isChecked = answers[question.id]?.[subIndex]?.includes(option);
+                            return (
+                              <label key={optionIndex} className={`flex items-center justify-between p-3 border rounded-lg cursor-pointer transition-all mb-3 ${isChecked ? "border-defaultcolor bg-white" : "border-white bg-white"} hover:bg-yellow-100`}>
+                                <div className="flex items-center space-x-3">
+                                  <div className={`flex items-center justify-center w-8 h-8 rounded-full text-black transition-all ${isChecked ? "bg-defaultcolor text-white" : "bg-gray-200"}`}>
+                                    {String.fromCharCode(65 + optionIndex)}
                                   </div>
-
-                                  {/* Radio input on the right */}
-                                  <input
-                                    type="radio"
-                                    name={`question-${question.id}-${questionIndex}`}
-                                    value={option}
-                                    onChange={() =>
-                                      handleAnswerChange(
-                                        question.id,
-                                        [option],
-                                        questionIndex
-                                      )
-                                    }
-                                    checked={isChecked || false}
-                                    className={`cursor-pointer focus:ring-1 focus:ring-defaultcolor ${
-                                      isChecked ? "checked:bg-defaultcolor" : ""
-                                    }`}
-                                  />
-                                </label>
-                              );
-                            })}
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                </div>
-              );
+                                  <div
+                                    className={`transition-all ${isChecked ? "text-defaultcolor" : "text-black"}`}
+                                    dangerouslySetInnerHTML={{ __html: option }}
+                                  ></div>
+                                </div>
+                                <input
+                                  type="radio"
+                                  name={`question-${question.id}-${subIndex}`}
+                                  value={option}
+                                  onChange={() => handleAnswerChange(question.id, [option], subIndex)}
+                                  checked={isChecked || false}
+                                  className={`cursor-pointer focus:ring-1 focus:ring-defaultcolor ${isChecked ? "checked:bg-defaultcolor" : ""}`}
+                                />
+                              </label>
+                            );
+                          })}
+                        </div>
+                      ))}
+                  </div>
+                );
 
             default:
               return <div>Unknown question type</div>;
@@ -888,9 +1010,12 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
             </h1>
             <div className="border-s-4 border-defaultcolor bg-[#f6f7f9] p-4">
               <div className="flex justify-between mb-4">
-                <h3 className="text-2xl font-semibold text-defaultcolor">
+                {/* <h3 className="text-2xl font-semibold text-defaultcolor">
                   Question {currentQuestionIndex + 1}/
                   {examData.questions.length}
+                </h3> */}
+                <h3 className="text-2xl font-semibold text-defaultcolor">
+                  Question {getAdjustedQuestionIndex() + 1}/{getTotalQuestionCount()}
                 </h3>
                 <FaClock className="text-defaultcolor" size={24} />
               </div>
@@ -958,7 +1083,7 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
           <div className="p-4 flex items-center space-x-3">
             <FaCircle className="text-green-400" />
             <p>
-              {currentQuestionIndex + 1}/{examData.questions.length} answered
+            {getAdjustedQuestionIndex() + 1}/{getTotalQuestionCount()} answered
             </p>
           </div>
 
@@ -968,7 +1093,7 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
                 className="h-full bg-quaternary rounded-full"
                 style={{
                   width: `${
-                    (Object.keys(answers).length / examData.questions.length) *
+                    (Object.keys(answers).length / getTotalQuestionCount()) *
                     100
                   }%`,
                 }}
@@ -977,12 +1102,12 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
                 className="absolute top-[-8px] text-white text-sm bg-quaternary border border-white px-3 py-0.5 rounded-full"
                 style={{
                   left: `${
-                    ((Object.keys(answers).length / examData.questions.length) * 100) - 2
+                    ((Object.keys(answers).length / getTotalQuestionCount()) * 100) - 2
                   }%`,
                 }}
               >
                 {Math.round(
-                  (Object.keys(answers).length / examData.questions.length) * 100
+                  (Object.keys(answers).length / getTotalQuestionCount()) * 100
                 )}
                 %
               </span>
