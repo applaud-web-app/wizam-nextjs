@@ -18,25 +18,18 @@ import { useSiteSettings } from "@/context/SiteContext"; // Import the hook to u
 
 
 const SignUp = () => {
-  const { siteSettings, error } = useSiteSettings(); // Access site settings from the context
-
+  const { siteSettings, error } = useSiteSettings();
   const [showPassword, setShowPassword] = useState<boolean>(false);
-  const [selectedCountry, setSelectedCountry] = useState("GB")
-  const router = useRouter(); // For redirecting to other pages
+  const [selectedCountry, setSelectedCountry] = useState("GB");
+  const router = useRouter();
+  const [isSubmitting, setIsSubmitting] = useState(false); // Add loading state
 
-  // Check if user is already signed in
-  useEffect(() => {
-    const token = Cookies.get('jwt'); 
-    if (token) {
-      router.push('/'); 
-    }
-  }, []);
+ 
 
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
   };
 
-  // Validation Schema using Yup
   const validationSchema = Yup.object().shape({
     firstName: Yup.string().required("First Name is required"),
     lastName: Yup.string().required("Last Name is required"),
@@ -50,7 +43,7 @@ const SignUp = () => {
       .matches(/[0-9]/, "Password must contain at least one number")
       .matches(/[\W_]/, "Password must contain at least one special character"),
     confirmPassword: Yup.string()
-      .oneOf([Yup.ref("password"), undefined], "Passwords must match") // Use undefined instead of null
+      .oneOf([Yup.ref("password"), undefined], "Passwords must match")
       .required("Confirm Password is required"),
     termsAccepted: Yup.boolean()
       .required("You must accept the terms and conditions")
@@ -58,8 +51,8 @@ const SignUp = () => {
     country: Yup.string().required("Country is required"),
   });
 
-  // Handle form submission
-  const handleSignup = async (values: any, { setSubmitting }: any) => {
+  const handleSignup = async (values: any, { setSubmitting, resetForm }: any) => {
+    setIsSubmitting(true); // Start loading
     try {
       const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/register`, {
         name: `${values.firstName} ${values.lastName}`,
@@ -70,21 +63,10 @@ const SignUp = () => {
         country: values.country,
       });
   
-      // Check for 'status' in the response and show appropriate toast
       if (response.data.status) {
-        // toast.success("Registration successful!", {
-        //   position: "top-right",
-        //   autoClose: 3000,
-        //   hideProgressBar: false,
-        //   closeOnClick: true,
-        //   pauseOnHover: true,
-        //   draggable: true,
-        // });
-
-        const token = response.data.token; // Extract token from the response
+        const token = response.data.token;
         Cookies.set("jwt", token, { expires: 1 });
-
-        // Show success toast notification
+  
         toast.success("Registration successful!", {
           position: "top-right",
           autoClose: 3000,
@@ -93,13 +75,12 @@ const SignUp = () => {
           pauseOnHover: true,
           draggable: true,
         });
-
-        // Check if the redirect_url cookie exists
-        const redirectUrl = Cookies.get("redirect_url"); // Get the redirect URL from cookies
-        // If redirect URL exists, redirect to that URL, otherwise go to the homepage
+  
+        resetForm(); // Reset the form after success
+  
+        const redirectUrl = Cookies.get("redirect_url");
         const destination = redirectUrl ? redirectUrl : "/";
-
-        // Redirect to the destination
+  
         setTimeout(() => {
           router.push(destination);
         }, 1000);
@@ -113,20 +94,35 @@ const SignUp = () => {
           draggable: true,
         });
       }
-    } catch (error) {
-      toast.error("An error occurred. Please try again later.", {
-        position: "top-right",
-        autoClose: 5000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-      });
+    } catch (error: any) {
+      if (error.response && error.response.data && error.response.data.errors) {
+        error.response.data.errors.forEach((errorMessage: string) => {
+          toast.error(errorMessage, {
+            position: "top-right",
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+          });
+        });
+      } else {
+        toast.error("An error occurred. Please try again later.", {
+          position: "top-right",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        });
+      }
     } finally {
+      setIsSubmitting(false);
       setSubmitting(false);
     }
   };
-
+  
+  
   if (error || !siteSettings) {
     return <p>Error loading site settings...</p>; // Handle the case where settings couldn't be fetched
   }
