@@ -54,6 +54,8 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
   const [timeLeft, setTimeLeft] = useState<number>(1800); // Timer (in seconds)
   const [submitted, setSubmitted] = useState<boolean>(false); // Controls whether exam is submitted
   const [slug, setSlug] = useState<string | null>(null);
+  const [currentSubIndex, setCurrentSubIndex] = useState<number | null>(null);
+
   const [examData, setExamData] = useState<ExamData | null>(null);
   const router = useRouter();
   const [loading, setLoading] = useState<boolean>(true);
@@ -1327,14 +1329,14 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
 
           {/* Exam Name and Total Time */}
           {/* <div className="flex justify-between items-center  bg-white p-4 ">
-                                                                                                                              <div className="flex items-center space-x-2">
-                                                                                                                                <AiOutlineClockCircle className="text-gray-600" size={30} />
-                                                                                                                                <h3 className="text-3xl font-semibold text-gray-600">
-                                                                                                                                  {parseFloat(examData.total_time).toFixed(0)}
-                                                                                                                                </h3>
-                                                                                                                                <p className="text-lg font-semibold text-gray-500">Minutes</p>
-                                                                                                                              </div>
-                                                                                                                            </div> */}
+               <div className="flex items-center space-x-2">
+                 <AiOutlineClockCircle className="text-gray-600" size={30} />
+                 <h3 className="text-3xl font-semibold text-gray-600">
+                   {parseFloat(examData.total_time).toFixed(0)}
+                 </h3>
+                 <p className="text-lg font-semibold text-gray-500">Minutes</p>
+               </div>
+             </div> */}
 
           {/* Time Remaining */}
           <div className="text-center flex space-x-3 items-center bg-[#ffc300] p-4 ">
@@ -1347,173 +1349,166 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
           <div className="h-6 bg-gray-100  border-y  border-gray-200"></div>
 
           <div className="p-4">
-            {/* Question Navigation Grid */}
-            {examData.question_view === "enable" ? (
-              <div className="flex items-center justify-center flex-wrap gap-3 text-center">
-                {examData.questions.reduce(
-                  (acc: JSX.Element[], question, questionIndex) => {
-                    const questionId = question.id;
+      {/* Question Navigation Grid */}
+      {examData.question_view === "enable" ? (
+        <div className="flex items-center justify-center flex-wrap gap-3 text-center">
+          {examData.questions.reduce((acc: JSX.Element[], question, questionIndex) => {
+            const questionId = question.id;
 
-                    // Handle EMQ questions with sub-questions
-                    if (
-                      question.type === "EMQ" &&
-                      Array.isArray(question.question)
-                    ) {
-                      const subQuestions = question.question.slice(1); // Exclude main question text
+            // Handle EMQ questions with sub-questions
+            if (question.type === "EMQ" && Array.isArray(question.question)) {
+              const subQuestions = question.question.slice(1); // Exclude main question text
 
-                      subQuestions.forEach((_, subIndex) => {
-                        const adjustedIndex = acc.length + 1;
-                        const isActive =
-                          currentQuestionIndex === questionIndex &&
-                          subIndex === 0;
-                        const isAnswered = !!answers[questionId]?.[subIndex];
+              subQuestions.forEach((_, subIndex) => {
+                const adjustedIndex = acc.length + 1;
+                const isActive =
+                  currentQuestionIndex === questionIndex &&
+                  currentSubIndex === subIndex;
+                const isAnswered = !!answers[questionId]?.[subIndex];
 
-                        acc.push(
-                          <div
-                            key={`${questionIndex}-${subIndex}`}
-                            className={`relative flex items-center justify-center text-lg w-12 h-12 border transition duration-200 bg-white ${
-                              isActive
-                                ? "border-defaultcolor text-defaultcolor shadow-lg"
-                                : isAnswered
-                                ? "border-green-500 text-green-500"
-                                : "border-yellow-300 text-yellow-600"
-                            }`}
-                            onClick={() => {
-                              setCurrentQuestionIndex(questionIndex); // Ensure correct navigation to the EMQ question
-                            }}
-                            style={{ cursor: "pointer" }}
-                          >
-                            {adjustedIndex}
-                            <div
-                              className={`absolute inset-x-0 bottom-0 h-2 ${
-                                isActive
-                                  ? "bg-defaultcolor"
-                                  : isAnswered
-                                  ? "bg-green-500"
-                                  : "bg-yellow-300"
-                              }`}
-                            ></div>
-                          </div>
-                        );
-                      });
-                    } else {
-                      // For non-EMQ questions, add a single navigation item
-                      const adjustedIndex = acc.length + 1;
-                      const isActive = currentQuestionIndex === questionIndex;
-                      const isAnswered = !!answers[questionId];
+                acc.push(
+                  <div
+                    key={`${questionIndex}-${subIndex}`}
+                    className={`relative flex items-center justify-center text-lg w-12 h-12 border transition duration-200 bg-white ${
+                      isActive
+                        ? "border-defaultcolor text-defaultcolor shadow-lg"
+                        : isAnswered
+                        ? "border-green-500 text-green-500"
+                        : "border-yellow-300 text-yellow-600"
+                    }`}
+                    onClick={() => {
+                      setCurrentQuestionIndex(questionIndex); // Set the question index
+                      setCurrentSubIndex(subIndex); // Set the sub-question index
+                    }}
+                    style={{ cursor: "pointer" }}
+                  >
+                    {adjustedIndex}
+                    <div
+                      className={`absolute inset-x-0 bottom-0 h-2 ${
+                        isActive
+                          ? "bg-defaultcolor"
+                          : isAnswered
+                          ? "bg-green-500"
+                          : "bg-yellow-300"
+                      }`}
+                    ></div>
+                  </div>
+                );
+              });
+            } else {
+              // For non-EMQ questions, add a single navigation item
+              const adjustedIndex = acc.length + 1;
+              const isActive = currentQuestionIndex === questionIndex;
+              const isAnswered = !!answers[questionId];
 
-                      acc.push(
-                        <div
-                          key={questionIndex}
-                          className={`relative flex items-center justify-center text-lg w-12 h-12 border transition duration-200 bg-white ${
-                            isActive
-                              ? "border-defaultcolor text-defaultcolor shadow-lg"
-                              : isAnswered
-                              ? "border-green-500 text-green-500"
-                              : "border-yellow-300 text-yellow-600"
-                          }`}
-                          onClick={() => setCurrentQuestionIndex(questionIndex)}
-                          style={{ cursor: "pointer" }}
-                        >
-                          {adjustedIndex}
-                          <div
-                            className={`absolute inset-x-0 bottom-0 h-2 ${
-                              isActive
-                                ? "bg-defaultcolor"
-                                : isAnswered
-                                ? "bg-green-500"
-                                : "bg-yellow-300"
-                            }`}
-                          ></div>
-                        </div>
-                      );
-                    }
+              acc.push(
+                <div
+                  key={questionIndex}
+                  className={`relative flex items-center justify-center text-lg w-12 h-12 border transition duration-200 bg-white ${
+                    isActive
+                      ? "border-defaultcolor text-defaultcolor shadow-lg"
+                      : isAnswered
+                      ? "border-green-500 text-green-500"
+                      : "border-yellow-300 text-yellow-600"
+                  }`}
+                  onClick={() => {
+                    setCurrentQuestionIndex(questionIndex);
+                    setCurrentSubIndex(null); // Reset sub-index for non-EMQ questions
+                  }}
+                  style={{ cursor: "pointer" }}
+                >
+                  {adjustedIndex}
+                  <div
+                    className={`absolute inset-x-0 bottom-0 h-2 ${
+                      isActive
+                        ? "bg-defaultcolor"
+                        : isAnswered
+                        ? "bg-green-500"
+                        : "bg-yellow-300"
+                    }`}
+                  ></div>
+                </div>
+              );
+            }
 
-                    return acc;
-                  },
-                  []
-                )}
-              </div>
-            ) : (
-              <div className="flex items-center justify-center flex-wrap gap-3 text-center">
-                {examData.questions.reduce(
-                  (acc: JSX.Element[], question, questionIndex) => {
-                    const questionId = question.id;
+            return acc;
+          }, [])}
+        </div>
+      ) : (
+        <div className="flex items-center justify-center flex-wrap gap-3 text-center">
+          {examData.questions.reduce((acc: JSX.Element[], question, questionIndex) => {
+            const questionId = question.id;
 
-                    if (
-                      question.type === "EMQ" &&
-                      Array.isArray(question.question)
-                    ) {
-                      const subQuestions = question.question.slice(1);
+            if (question.type === "EMQ" && Array.isArray(question.question)) {
+              const subQuestions = question.question.slice(1);
 
-                      subQuestions.forEach((_, subIndex) => {
-                        const adjustedIndex = acc.length + 1;
-                        const isActive =
-                          currentQuestionIndex === questionIndex &&
-                          subIndex === 0;
-                        const isAnswered = !!answers[questionId]?.[subIndex];
+              subQuestions.forEach((_, subIndex) => {
+                const adjustedIndex = acc.length + 1;
+                const isActive =
+                  currentQuestionIndex === questionIndex &&
+                  currentSubIndex === subIndex;
+                const isAnswered = !!answers[questionId]?.[subIndex];
 
-                        acc.push(
-                          <div
-                            key={`${questionIndex}-${subIndex}`}
-                            className={`relative flex items-center justify-center text-lg w-12 h-12 border transition duration-200 bg-white cursor-not-allowed ${
-                              isActive
-                                ? "border-defaultcolor text-gray-900 shadow"
-                                : isAnswered
-                                ? "border-green-500 text-gray-900"
-                                : "border-yellow-300 text-gray-900"
-                            }`}
-                          >
-                            {adjustedIndex}
-                            <div
-                              className={`absolute inset-x-0 bottom-0 h-2 ${
-                                isActive
-                                  ? "bg-defaultcolor"
-                                  : isAnswered
-                                  ? "bg-green-500"
-                                  : "bg-yellow-300"
-                              }`}
-                            ></div>
-                          </div>
-                        );
-                      });
-                    } else {
-                      const adjustedIndex = acc.length + 1;
-                      const isActive = currentQuestionIndex === questionIndex;
-                      const isAnswered = !!answers[questionId];
+                acc.push(
+                  <div
+                    key={`${questionIndex}-${subIndex}`}
+                    className={`relative flex items-center justify-center text-lg w-12 h-12 border transition duration-200 bg-white cursor-not-allowed ${
+                      isActive
+                        ? "border-defaultcolor text-gray-900 shadow"
+                        : isAnswered
+                        ? "border-green-500 text-gray-900"
+                        : "border-yellow-300 text-gray-900"
+                    }`}
+                  >
+                    {adjustedIndex}
+                    <div
+                      className={`absolute inset-x-0 bottom-0 h-2 ${
+                        isActive
+                          ? "bg-defaultcolor"
+                          : isAnswered
+                          ? "bg-green-500"
+                          : "bg-yellow-300"
+                      }`}
+                    ></div>
+                  </div>
+                );
+              });
+            } else {
+              const adjustedIndex = acc.length + 1;
+              const isActive = currentQuestionIndex === questionIndex;
+              const isAnswered = !!answers[questionId];
 
-                      acc.push(
-                        <div
-                          key={questionIndex}
-                          className={`relative flex items-center justify-center text-lg w-12 h-12 border transition duration-200 bg-white cursor-not-allowed ${
-                            isActive
-                              ? "border-defaultcolor text-gray-900 shadow"
-                              : isAnswered
-                              ? "border-green-500 text-gray-900"
-                              : "border-yellow-300 text-gray-900"
-                          }`}
-                        >
-                          {adjustedIndex}
-                          <div
-                            className={`absolute inset-x-0 bottom-0 h-2 ${
-                              isActive
-                                ? "bg-defaultcolor"
-                                : isAnswered
-                                ? "bg-green-500"
-                                : "bg-yellow-300"
-                            }`}
-                          ></div>
-                        </div>
-                      );
-                    }
+              acc.push(
+                <div
+                  key={questionIndex}
+                  className={`relative flex items-center justify-center text-lg w-12 h-12 border transition duration-200 bg-white cursor-not-allowed ${
+                    isActive
+                      ? "border-defaultcolor text-gray-900 shadow"
+                      : isAnswered
+                      ? "border-green-500 text-gray-900"
+                      : "border-yellow-300 text-gray-900"
+                  }`}
+                >
+                  {adjustedIndex}
+                  <div
+                    className={`absolute inset-x-0 bottom-0 h-2 ${
+                      isActive
+                        ? "bg-defaultcolor"
+                        : isAnswered
+                        ? "bg-green-500"
+                        : "bg-yellow-300"
+                    }`}
+                  ></div>
+                </div>
+              );
+            }
 
-                    return acc;
-                  },
-                  []
-                )}
-              </div>
-            )}
-          </div>
+            return acc;
+          }, [])}
+        </div>
+      )}
+    </div>
+
 
           <div className="h-6 bg-gray-100  border-y  border-gray-200"></div>
 
