@@ -51,7 +51,7 @@ const SignUp = () => {
     country: Yup.string().required("Country is required"),
   });
 
-  const handleSignup = async (values: any, { setSubmitting, resetForm }: any) => {
+  const handleSignup = async (values: any, { setSubmitting, resetForm, setFieldError }: any) => {
     setIsSubmitting(true); // Start loading
     try {
       const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/register`, {
@@ -93,10 +93,15 @@ const SignUp = () => {
           pauseOnHover: true,
           draggable: true,
         });
+        router.push("/signup");
       }
     } catch (error: any) {
       if (error.response && error.response.data && error.response.data.errors) {
-        error.response.data.errors.forEach((errorMessage: string) => {
+        const errors = error.response.data.errors;
+        if (errors.email) {
+          setFieldError("email", "Email is already taken");
+        }
+        errors.forEach((errorMessage: string) => {
           toast.error(errorMessage, {
             position: "top-right",
             autoClose: 5000,
@@ -105,6 +110,7 @@ const SignUp = () => {
             pauseOnHover: true,
             draggable: true,
           });
+          router.push("/signup");
         });
       } else {
         toast.error("An error occurred. Please try again later.", {
@@ -115,6 +121,7 @@ const SignUp = () => {
           pauseOnHover: true,
           draggable: true,
         });
+        router.push("/signup");
       }
     } finally {
       setIsSubmitting(false);
