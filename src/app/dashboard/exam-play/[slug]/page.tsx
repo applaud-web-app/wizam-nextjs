@@ -2,11 +2,14 @@
 
 import Loader from "@/components/Common/Loader";
 import { AiOutlineArrowRight, AiOutlineClockCircle } from "react-icons/ai"; // For icons
+import { MdOutlineBookmarks } from "react-icons/md";
+
 import { useSearchParams } from "next/navigation"; // Import useSearchParams
 import { useState, useEffect, useRef } from "react";
 import {
   FaCheckCircle,
   FaArrowRight,
+  FaRegWindowClose,
   FaArrowLeft,
   FaBook,
   FaClock,
@@ -69,7 +72,9 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
   const submittedRef = useRef<boolean>(false);
   const hasFetchedData = useRef(false);
   const searchParams = useSearchParams();
-
+  const [visitedQuestionIndices, setVisitedQuestionIndices] = useState<
+    Set<number>
+  >(new Set());
 
   const sid = searchParams.get("sid");
   if (!sid || Number(sid) < 0) {
@@ -77,12 +82,23 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
     return null;
   }
 
+  const [notReviewedQuestions, setNotReviewedQuestions] = useState<{
+    [key: number]: boolean;
+  }>({});
+
+  useEffect(() => {
+    setVisitedQuestionIndices((prev) => {
+      const newSet = new Set(prev);
+      newSet.add(getAdjustedQuestionIndex() + 1);
+      return newSet;
+    });
+  }, [currentQuestionIndex, currentSubIndex]);
+
   useEffect(() => {
     answersRef.current = answers;
     examDataRef.current = examData;
     submittedRef.current = submitted;
   }, [answers, examData, submitted]);
-
 
   useEffect(() => {
     if (hasFetchedData.current) return;
@@ -93,14 +109,14 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
     const category = Cookies.get("category_id");
 
     const fetchExamSet = async () => {
-      Cookies.set("redirect_url", `/dashboard/exam-detail/${slug}`, {
+      Cookies.set("redirect_url", `/dashboard/exam-detail/${slug}?sid=${sid}`, {
         expires: 1,
       });
       try {
         const response = await axios.get(
           `${process.env.NEXT_PUBLIC_API_URL}/play-exam/${slug}`,
           {
-            params: { category, schedule_id:sid },
+            params: { category, schedule_id: sid },
             headers: {
               Authorization: `Bearer ${Cookies.get("jwt")}`,
             },
@@ -189,7 +205,7 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
         } else {
           toast.error("No exam found for this category");
         }
-      }catch (error: any) {
+      } catch (error: any) {
         console.error("Error fetching practice set:", error);
         if (error.response) {
           const { status, data } = error.response;
@@ -198,7 +214,7 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
             router.push("/signin");
           } else if (status === 404) {
             toast.error("Please buy a subscription to access this course.");
-            Cookies.set("redirect_url", `/dashboard/exam-detail/${slug}`, {
+            Cookies.set("redirect_url", `/dashboard/exam-detail/${slug}?sid=${sid}`, {
               expires: 1,
             });
             router.push("/pricing");
@@ -206,7 +222,7 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
             toast.error(
               "Feature not available in your plan. Please upgrade your subscription."
             );
-            Cookies.set("redirect_url", `/dashboard/exam-detail/${slug}`, {
+            Cookies.set("redirect_url", `/dashboard/exam-detail/${slug}?sid=${sid}`, {
               expires: 1,
             });
             router.push("/pricing");
@@ -259,7 +275,7 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
               Cancel
             </button>
             <button
-              className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+              className="bg-[#E74444] text-white px-4 py-2 rounded hover:bg-red-600"
               onClick={() => {
                 setShowModal(false);
                 handleSubmit();
@@ -273,6 +289,13 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
     );
   };
 
+  // Toggle "Not Reviewed" status
+  const toggleNotReviewed = (questionId: number) => {
+    setNotReviewedQuestions((prev) => ({
+      ...prev,
+      [questionId]: !prev[questionId],
+    }));
+  };
 
   const handleAnswerChange = (
     questionId: number,
@@ -305,7 +328,7 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
       }
 
       // Build the formatted answers as per submission payload format
-       const formattedAnswers = examData?.questions.map((question) => {
+      const formattedAnswers = examData?.questions.map((question) => {
         const userAnswer = existingAnswers[question.id];
 
         if (!userAnswer || userAnswer.length === 0) {
@@ -436,7 +459,7 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
         }
       );
 
-     if (response.data.status) {
+      if (response.data.status) {
         console.log(
           "Answer progress saved successfully:",
           response.data.message
@@ -644,6 +667,12 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
     return examData?.questions
       ? getTotalQuestionCount() - getAnsweredCount()
       : 0;
+  };
+
+  const getNotReviewedCount = () => {
+    return Object.keys(notReviewedQuestions).filter(
+      (questionId) => notReviewedQuestions[parseInt(questionId)]
+    ).length;
   };
 
   const moveItem = (questionId: number, fromIndex: number, toIndex: number) => {
@@ -1181,17 +1210,15 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
                             value={answers[question.id]?.[subIndex] || ""}
                           >
                             <option value="">Select an answer</option>
-                            {question.options?.map(
-                              (option, optionIndex) => (
-                                <option
-                                  key={optionIndex}
-                                  value={option}
-                                  dangerouslySetInnerHTML={{
-                                    __html: option,
-                                  }}
-                                ></option>
-                              )
-                            )}
+                            {question.options?.map((option, optionIndex) => (
+                              <option
+                                key={optionIndex}
+                                value={option}
+                                dangerouslySetInnerHTML={{
+                                  __html: option,
+                                }}
+                              ></option>
+                            ))}
                           </select>
                         </div>
                       </div>
@@ -1228,9 +1255,37 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
               {renderQuestion(examData.questions[currentQuestionIndex])}
             </div>
 
-            <div className="flex justify-between mt-6">
+            {/* Navigation Buttons */}
+            <div className="flex flex-wrap justify-between mt-6 items-center">
+              {/* First set of buttons */}
+              <div className="flex space-x-4">
+                <button className="flex items-center justify-center w-16 h-12 rounded-lg focus:outline-none border border-gray-600 text-gray-600">
+                  <FaRegWindowClose size={20} />
+                </button>
+
+                {/* "Not Reviewed" Button */}
+                <button
+                  className={`flex items-center justify-center w-16 h-12 rounded-lg border  focus:outline-none  ${
+                    notReviewedQuestions[
+                      examData.questions[currentQuestionIndex].id
+                    ]
+                      ? "bg-[#C9BC0F] text-white"
+                      : "bg-gray-400 text-white"
+                  }`}
+                  onClick={() =>
+                    toggleNotReviewed(
+                      examData.questions[currentQuestionIndex].id
+                    )
+                  }
+                >
+                  <MdOutlineBookmarks size={20} />
+                </button>
+              </div>
+
+              {/* Second set of buttons */}
+
               <button
-                className="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg disabled:opacity-50"
+                className="flex items-center justify-center w-32 h-12 bg-white text-defaultcolor border border-defaultcolor rounded-lg disabled:opacity-50"
                 disabled={currentQuestionIndex === 0}
                 onClick={handlePreviousQuestion}
               >
@@ -1239,21 +1294,19 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
 
               {currentQuestionIndex < examData.questions.length - 1 ? (
                 <button
-                  className="bg-defaultcolor text-white px-4 py-2 rounded-lg hover:bg-defaultcolor-dark transition-colors"
+                  className="flex items-center justify-center w-32 h-12 bg-defaultcolor text-white rounded-lg hover:bg-defaultcolor-dark transition-colors"
                   onClick={handleNextQuestion}
                 >
                   Next <FaArrowRight className="inline ml-2" />
                 </button>
-              ) : examData?.finish_button === "enable" ? ( // Check if finish_button is enabled
+              ) : examData?.finish_button === "enable" ? (
                 <button
-                  className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors"
-                  onClick={handleFinishClick} // Trigger modal on click
+                  className="flex items-center justify-center w-32 h-12 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
+                  onClick={handleFinishClick}
                 >
                   Submit Exam
                 </button>
-              ) : (
-                <></>
-              )}
+              ) : null}
             </div>
           </>
         ) : (
@@ -1349,17 +1402,42 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
                         const isAnswered =
                           !!answers[questionId]?.[subIndex] &&
                           answers[questionId][subIndex] !== "";
+                        const isNotReviewed =
+                          !!notReviewedQuestions[questionId];
+                        const isVisited =
+                          visitedQuestionIndices.has(adjustedIndex);
+
+                        // Determine colors based on status
+                        let borderColor = "";
+                        let textColor = "";
+                        let bottomDivColor = "";
+
+                        if (isActive) {
+                          borderColor = "border-defaultcolor";
+                          textColor = "text-defaultcolor";
+                          bottomDivColor = "bg-defaultcolor";
+                        } else if (isNotReviewed) {
+                          borderColor = "border-[#C9BC0F]";
+                          textColor = "text-[#C9BC0F]";
+                          bottomDivColor = "bg-[#C9BC0F]";
+                        } else if (isAnswered) {
+                          borderColor = "border-[#76b51b]";
+                          textColor = "text-[#76b51b]";
+                          bottomDivColor = "bg-[#76b51b]";
+                        } else if (isVisited) {
+                          borderColor = "border-[#E74444]";
+                          textColor = "text-[#E74444]";
+                          bottomDivColor = "bg-[#E74444]";
+                        } else {
+                          borderColor = "border-[#989898]";
+                          textColor = "text-[#989898]";
+                          bottomDivColor = "bg-[#989898]";
+                        }
 
                         acc.push(
                           <div
                             key={`${questionIndex}-${subIndex}`}
-                            className={`relative flex items-center justify-center text-lg w-12 h-12 border transition duration-200 bg-white ${
-                              isActive
-                                ? "border-defaultcolor text-defaultcolor shadow-lg"
-                                : isAnswered
-                                ? "border-green-500 text-green-500"
-                                : "border-yellow-300 text-yellow-600"
-                            }`}
+                            className={`relative flex items-center justify-center text-lg w-12 h-12 border ${borderColor} ${textColor} transition duration-200 bg-white`}
                             onClick={() => {
                               setCurrentQuestionIndex(questionIndex); // Set the question index
                               setCurrentSubIndex(subIndex); // Set the sub-question index
@@ -1368,13 +1446,7 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
                           >
                             {adjustedIndex}
                             <div
-                              className={`absolute inset-x-0 bottom-0 h-2 ${
-                                isActive
-                                  ? "bg-defaultcolor"
-                                  : isAnswered
-                                  ? "bg-green-500"
-                                  : "bg-yellow-300"
-                              }`}
+                              className={`absolute inset-x-0 bottom-0 h-2 ${bottomDivColor}`}
                             ></div>
                           </div>
                         );
@@ -1388,17 +1460,41 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
                         answers[questionId]?.some(
                           (ans) => ans !== null && ans !== ""
                         );
+                      const isNotReviewed = !!notReviewedQuestions[questionId];
+                      const isVisited =
+                        visitedQuestionIndices.has(adjustedIndex);
+
+                      // Determine colors based on status
+                      let borderColor = "";
+                      let textColor = "";
+                      let bottomDivColor = "";
+
+                      if (isActive) {
+                        borderColor = "border-defaultcolor";
+                        textColor = "text-defaultcolor";
+                        bottomDivColor = "bg-defaultcolor";
+                      } else if (isNotReviewed) {
+                        borderColor = "border-[#C9BC0F]";
+                        textColor = "text-[#C9BC0F]";
+                        bottomDivColor = "bg-[#C9BC0F]";
+                      } else if (isAnswered) {
+                        borderColor = "border-[#76b51b]";
+                        textColor = "text-[#76b51b]";
+                        bottomDivColor = "bg-[#76b51b]";
+                      } else if (isVisited) {
+                        borderColor = "border-[#E74444]";
+                        textColor = "text-[#E74444]";
+                        bottomDivColor = "bg-[#E74444]";
+                      } else {
+                        borderColor = "border-[#989898]";
+                        textColor = "text-[#989898]";
+                        bottomDivColor = "bg-[#989898]";
+                      }
 
                       acc.push(
                         <div
                           key={questionIndex}
-                          className={`relative flex items-center justify-center text-lg w-12 h-12 border transition duration-200 bg-white ${
-                            isActive
-                              ? "border-defaultcolor text-defaultcolor shadow-lg"
-                              : isAnswered
-                              ? "border-green-500 text-green-500"
-                              : "border-yellow-300 text-yellow-600"
-                          }`}
+                          className={`relative flex items-center justify-center text-lg w-12 h-12 border ${borderColor} ${textColor} transition duration-200 bg-white`}
                           onClick={() => {
                             setCurrentQuestionIndex(questionIndex);
                             setCurrentSubIndex(null); // Reset sub-index for non-EMQ questions
@@ -1407,13 +1503,7 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
                         >
                           {adjustedIndex}
                           <div
-                            className={`absolute inset-x-0 bottom-0 h-2 ${
-                              isActive
-                                ? "bg-defaultcolor"
-                                : isAnswered
-                                ? "bg-green-500"
-                                : "bg-yellow-300"
-                            }`}
+                            className={`absolute inset-x-0 bottom-0 h-2 ${bottomDivColor}`}
                           ></div>
                         </div>
                       );
@@ -1429,8 +1519,120 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
               <div className="flex items-center justify-center flex-wrap gap-3 text-center">
                 {examData.questions.reduce(
                   (acc: JSX.Element[], question, questionIndex) => {
-                    // ... Similar logic as above but with cursor-not-allowed
-                    // ... Omitted for brevity
+                    const questionId = question.id;
+
+                    // Handle EMQ questions with sub-questions
+                    if (
+                      question.type === "EMQ" &&
+                      Array.isArray(question.question)
+                    ) {
+                      const subQuestions = question.question.slice(1); // Exclude main question text
+
+                      subQuestions.forEach((_, subIndex) => {
+                        const adjustedIndex = acc.length + 1;
+                        const isActive =
+                          currentQuestionIndex === questionIndex &&
+                          currentSubIndex === subIndex;
+                        const isAnswered =
+                          !!answers[questionId]?.[subIndex] &&
+                          answers[questionId][subIndex] !== "";
+                        const isNotReviewed =
+                          !!notReviewedQuestions[questionId];
+                        const isVisited =
+                          visitedQuestionIndices.has(adjustedIndex);
+
+                        // Determine colors based on status
+                        let borderColor = "";
+                        let textColor = "";
+                        let bottomDivColor = "";
+
+                        if (isActive) {
+                          borderColor = "border-defaultcolor";
+                          textColor = "text-defaultcolor";
+                          bottomDivColor = "bg-defaultcolor";
+                        } else if (isNotReviewed) {
+                          borderColor = "border-[#C9BC0F]";
+                          textColor = "text-[#C9BC0F]";
+                          bottomDivColor = "bg-[#C9BC0F]";
+                        } else if (isAnswered) {
+                          borderColor = "border-[#76b51b]";
+                          textColor = "text-[#76b51b]";
+                          bottomDivColor = "bg-[#76b51b]";
+                        } else if (isVisited) {
+                          borderColor = "border-[#E74444]";
+                          textColor = "text-[#E74444]";
+                          bottomDivColor = "bg-[#E74444]";
+                        } else {
+                          borderColor = "border-[#989898]";
+                          textColor = "text-[#989898]";
+                          bottomDivColor = "bg-[#989898]";
+                        }
+
+                        acc.push(
+                          <div
+                            key={`${questionIndex}-${subIndex}`}
+                            className={`relative flex items-center justify-center text-lg w-12 h-12 border ${borderColor} ${textColor} transition duration-200 bg-white cursor-not-allowed`}
+                          >
+                            {adjustedIndex}
+                            <div
+                              className={`absolute inset-x-0 bottom-0 h-2 ${bottomDivColor}`}
+                            ></div>
+                          </div>
+                        );
+                      });
+                    } else {
+                      // For non-EMQ questions, add a single navigation item
+                      const adjustedIndex = acc.length + 1;
+                      const isActive = currentQuestionIndex === questionIndex;
+                      const isAnswered =
+                        Array.isArray(answers[questionId]) &&
+                        answers[questionId]?.some(
+                          (ans) => ans !== null && ans !== ""
+                        );
+                      const isNotReviewed = !!notReviewedQuestions[questionId];
+                      const isVisited =
+                        visitedQuestionIndices.has(adjustedIndex);
+
+                      // Determine colors based on status
+                      let borderColor = "";
+                      let textColor = "";
+                      let bottomDivColor = "";
+
+                      if (isActive) {
+                        borderColor = "border-defaultcolor";
+                        textColor = "text-defaultcolor";
+                        bottomDivColor = "bg-defaultcolor";
+                      } else if (isNotReviewed) {
+                        borderColor = "border-[#C9BC0F]";
+                        textColor = "text-[#C9BC0F]";
+                        bottomDivColor = "bg-[#C9BC0F]";
+                      } else if (isAnswered) {
+                        borderColor = "border-[#76b51b]";
+                        textColor = "text-[#76b51b]";
+                        bottomDivColor = "bg-[#76b51b]";
+                      } else if (isVisited) {
+                        borderColor = "border-[#E74444]";
+                        textColor = "text-[#E74444]";
+                        bottomDivColor = "bg-[#E74444]";
+                      } else {
+                        borderColor = "border-[#989898]";
+                        textColor = "text-[#989898]";
+                        bottomDivColor = "bg-[#989898]";
+                      }
+
+                      acc.push(
+                        <div
+                          key={questionIndex}
+                          className={`relative flex items-center justify-center text-lg w-12 h-12 border ${borderColor} ${textColor} transition duration-200 bg-white cursor-not-allowed`}
+                        >
+                          {adjustedIndex}
+                          <div
+                            className={`absolute inset-x-0 bottom-0 h-2 ${bottomDivColor}`}
+                          ></div>
+                        </div>
+                      );
+                    }
+
                     return acc;
                   },
                   []
@@ -1441,9 +1643,35 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
 
           <div className="h-6 bg-gray-100  border-y  border-gray-200"></div>
 
-          {/* Answered and Skipped Count */}
-          <div className="flex justify-around items-center space-x-2 text-center p-4">
-            <div className="w-1/2 flex items-center justify-center space-x-2 px-5 py-1 rounded-md bg-green-100 shadow-inner">
+          {/* Legend */}
+          <div className="flex justify-between items-center flex-wrap text-center p-4">
+            <div className="flex items-center w-1/2 space-x-2">
+              <div className="w-4 h-4 bg-defaultcolor"></div>
+              <span>Current</span>
+            </div>
+            <div className="flex items-center w-1/2 space-x-2">
+              <div className="w-4 h-4 bg-[#76b51b]"></div>
+              <span>Answered</span>
+            </div>
+            <div className="flex items-center w-1/2 space-x-2">
+              <div className="w-4 h-4 bg-[#C9BC0F]"></div>
+              <span>Under Review</span>
+            </div>
+            <div className="flex items-center w-1/2 space-x-2">
+              <div className="w-4 h-4 bg-[#E74444]"></div>
+              <span>Unanswered</span>
+            </div>
+            <div className="flex items-center w-1/2 space-x-2">
+              <div className="w-4 h-4 bg-[#989898]"></div>
+              <span>Not Visited</span>
+            </div>
+          </div>
+
+          {/* <div className="h-6 bg-gray-100  border-y  border-gray-200"></div> */}
+
+          {/* Answered, Skipped, and Not Reviewed Count */}
+          {/* <div className="flex justify-around items-center space-x-2 text-center p-4">
+            <div className="w-1/3 flex items-center justify-center space-x-2 px-5 py-1 rounded-md bg-green-100 shadow-inner">
               <FaRegSmile className="text-green-600" size={20} />
               <span className="text-md font-medium text-green-700">
                 Attempted:{" "}
@@ -1452,7 +1680,7 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
                 </span>
               </span>
             </div>
-            <div className="w-1/2  flex items-center justify-center space-x-2 px-5 py-1 rounded-md bg-yellow-100 shadow-inner">
+            <div className="w-1/3  flex items-center justify-center space-x-2 px-5 py-1 rounded-md bg-yellow-100 shadow-inner">
               <FaRegFrown className="text-yellow-600" size={20} />
               <span className="text-md font-medium text-yellow-700">
                 Skipped:{" "}
@@ -1461,14 +1689,23 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
                 </span>
               </span>
             </div>
-          </div>
+            <div className="w-1/3  flex items-center justify-center space-x-2 px-5 py-1 rounded-md bg-orange-100 shadow-inner">
+              <FaRegSmile className="text-orange-600" size={20} />
+              <span className="text-md font-medium text-orange-700">
+                Under Review:{" "}
+                <span className="text-lg font-semibold">
+                  {getNotReviewedCount()}
+                </span>
+              </span>
+            </div>
+          </div> */}
 
           <div className="h-6 bg-gray-100  border-y  border-gray-200"></div>
 
           {/* Exam Instructions */}
           <div className="p-4 text-center">
             <button
-              className="bg-red-500 block text-white w-full px-4 py-2 rounded-lg hover:bg-green-600 transition-colors"
+              className="bg-[#E74444] block text-white w-full px-4 py-2 rounded-lg hover:bg-green-600 transition-colors"
               onClick={handleFinishClick}
             >
               Finish Exam
