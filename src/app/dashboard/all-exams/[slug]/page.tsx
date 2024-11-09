@@ -10,6 +10,7 @@ import { FaClock, FaQuestionCircle, FaStar } from "react-icons/fa";
 import { FaArrowLeftLong } from "react-icons/fa6";
 import Loader from "@/components/Common/Loader";
 import NoData from "@/components/Common/NoData";
+import { FiPlay } from "react-icons/fi";
 
 interface ExamDetail {
   title: string;
@@ -18,7 +19,9 @@ interface ExamDetail {
   time: string;
   marks: number | string;
   is_free: number; // 1 for free, 0 for paid
+  is_resume:string;
   schedule: {
+    schedule_id: string;
     start_date: string;
     start_time: string;
     end_date: string | null;
@@ -248,17 +251,25 @@ export default function ExamDetailPage({ params }: { params: { slug: string } })
                   <td className="p-4">{exam.time} mins</td>
                   <td className="p-4">
                     {isUpcoming ? (
-                      <span className="bg-gray-300 text-gray-500 py-1 px-5 rounded-full font-semibold text-sm">
+                      <span className="bg-[#ffc300] hover:bg-yellow-500 text-white py-1 px-5 rounded-full font-semibold text-sm cursor-not-allowed">
                         Upcoming
                       </span>
+                    ) : exam.is_resume ? (
+                      <Link
+                        href={`/dashboard/exam-play/${exam.slug}?sid=${exam.schedule.schedule_id}`}
+                        className="text-white bg-[#C9BC0F] px-3 py-1 rounded-md hover:bg-[#928c38] transition duration-200 flex items-center justify-center space-x-1"
+                      >
+                        <FiPlay />
+                        <span>Resume</span>
+                      </Link>
                     ) : exam.is_free === 1 ? (
-                      <Link href={`/dashboard/exam-detail/${exam.slug}`} className="text-defaultcolor font-semibold">
+                      <Link href={`/dashboard/exam-detail/${exam.slug}?sid=${exam.schedule.schedule_id}`} className="text-defaultcolor font-semibold">
                         Start Exam
                       </Link>
                     ) : (
                       <button
                         className="bg-defaultcolor text-white py-1 px-5 rounded-full font-semibold"
-                        onClick={() => handlePayment(exam.slug)}
+                        onClick={() => handlePayment(exam.slug+"?sid="+exam.schedule.schedule_id)}
                       >
                         Pay Now
                       </button>
@@ -322,7 +333,7 @@ export default function ExamDetailPage({ params }: { params: { slug: string } })
               {isUpcoming ? (
                 <span className="bg-gray-300 text-gray-500 py-2 px-5 rounded-sm text-sm block w-full text-center">Upcoming</span>
               ) : exam.is_free === 1 ? (
-                <Link href={`/dashboard/exam-detail/${exam.slug}`} className="bg-defaultcolor text-white py-2 px-5 block rounded-sm text-center w-full">
+                <Link href={`/dashboard/exam-detail/${exam.slug}?sid=${exam.schedule.schedule_id}`} className="bg-defaultcolor text-white py-2 px-5 block rounded-sm text-center w-full">
                   View Details
                 </Link>
               ) : (

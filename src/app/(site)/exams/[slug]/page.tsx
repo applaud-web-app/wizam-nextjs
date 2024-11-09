@@ -85,9 +85,9 @@ const ExamDetailPage = ({ params }: ExamDetailProps) => {
     // Check if JWT token exists in cookies
     const token = Cookies.get('jwt'); // Replace "jwt" with your actual cookie name
     if (token) {
-      Cookies.set('redirect_url', `/dashboard/exam-detail/${slug}`, { expires: 1 }); // Set the redirect URL for 1 day
+      Cookies.set('redirect_url', `/dashboard/exam-detail/${slug}?sid=${exam.schedule_id}`, { expires: 1 }); // Set the redirect URL for 1 day
       // If token exists, navigate to the quiz play page
-      router.push(`/dashboard/exam-detail/${slug}`);
+      router.push(`/dashboard/exam-detail/${slug}?sid=${exam.schedule_id}`);
     } else {
       // Show warning toast notification
       toast.error("Login to continue!", {
@@ -102,7 +102,7 @@ const ExamDetailPage = ({ params }: ExamDetailProps) => {
       Cookies.set('category_id',exam.subcategory_id);
       Cookies.set('category_name',exam.name);
       // If no token, set a cookie for the current URL and redirect to the sign-in page
-      Cookies.set('redirect_url', `/dashboard/exam-detail/${slug}`, { expires: 1 }); // Set the redirect URL for 1 day
+      Cookies.set('redirect_url', `/dashboard/exam-detail/${slug}?sid=${exam.schedule_id}`, { expires: 1 }); // Set the redirect URL for 1 day
       router.push('/signin'); // Redirect to sign-in page
     }
   };

@@ -240,13 +240,13 @@ export default function ExamList() {
                   </td> */}
                   <td className="p-4">
                       {isUpcoming ? (
-                        <span className="bg-gray-300 text-gray-500 py-1 px-5 rounded-full font-semibold text-sm cursor-not-allowed">
+                        <span className="bg-[#ffc300] hover:bg-yellow-500 text-white py-1 px-5 rounded-full font-semibold text-sm cursor-not-allowed">
                           Upcoming
                         </span>
                       ) : exam.is_resume ? (
                         <Link
                           href={`/dashboard/exam-play/${exam.slug}?sid=${schedules.schedule_id}`}
-                          className="text-white bg-[#C9BC0F] px-3 py-1 rounded-md hover:bg-[#928c38] transition duration-200 flex items-center space-x-1"
+                          className="text-white bg-[#C9BC0F] px-3 py-1 rounded-md hover:bg-[#928c38] transition duration-200 flex items-center justify-center space-x-1"
                         >
                           <FiPlay />
                           <span>Resume</span>

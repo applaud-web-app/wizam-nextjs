@@ -13,6 +13,7 @@ interface UpcomingExam {
   point_mode: string;
   point: number | null;
   schedule_type: string;
+  schedule_id: string;
   start_date: string;
   start_time: string;
   end_date: string | null;
@@ -64,6 +65,7 @@ export default function UpcomingExamsTable({ upcomingExams }: UpcomingExamsTable
               const end_date = examEntry.end_date;
               const end_time = examEntry.end_time;
               const schedule_type = examEntry.schedule_type;
+              const schedule_id = examEntry.schedule_id;
 
               // Get schedule details if available
               // const schedule = examEntry.schedules;
@@ -102,8 +104,8 @@ export default function UpcomingExamsTable({ upcomingExams }: UpcomingExamsTable
                   </td>
                   <td className="p-4">
                     <div>
-                      <Link
-                        href={isDisabled ? "#" : `/dashboard/exam-details/${examSlug}`}
+                      <Link data-id={`/dashboard/exam-detail/${examSlug}?sid=${schedule_id}`}
+                        href={isDisabled ? "#" : `/dashboard/exam-detail/${examSlug}?sid=${schedule_id}`}
                         onClick={(e) => isDisabled && e.preventDefault()}
                         className={`px-3 text-sm py-1 inline-flex items-center justify-center space-x-1 rounded-full transition duration-200 ${
                           isDisabled
