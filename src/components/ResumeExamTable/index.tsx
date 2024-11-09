@@ -12,6 +12,7 @@ interface ResumeExam {
   exam_duration: number;
   point_mode: string;
   point: number;
+  schedule_id:string;
 }
 
 interface ResumeExamTableProps {
@@ -66,7 +67,7 @@ export default function ResumeExamTable({ resumedExam }: ResumeExamTableProps) {
                 </td>
                 <td className="p-4">
                   <button
-                    onClick={() => handleResumeExam(exam.slug)}
+                    onClick={() => handleResumeExam(exam.slug+"?sid="+exam.schedule_id)}
                     className="text-white bg-[#C9BC0F] px-3 py-1 rounded-md hover:bg-[#928c38] transition duration-200 flex items-center space-x-1"
                   >
                     <FiPlay />

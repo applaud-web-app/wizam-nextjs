@@ -55,6 +55,7 @@ interface ResumeExam {
   exam_duration: number;
   point_mode: string;
   point: number;
+  schedule_id:string;
 }
 
 interface UpcomingExams {

@@ -60,7 +60,7 @@ const SignIn = () => {
         // Check if the redirect_url cookie exists
         const redirectUrl = Cookies.get("redirect_url"); // Get the redirect URL from cookies
         // If redirect URL exists, redirect to that URL, otherwise go to the homepage
-        const destination = redirectUrl ? redirectUrl : "/";
+        const destination = redirectUrl ? redirectUrl : "/dashboard";
 
         // Clear the redirect_url cookie after redirection
         // Cookies.remove('redirect_url');

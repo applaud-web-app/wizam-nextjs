@@ -10,7 +10,7 @@ interface ExamDetailPageProps {
 
 export default function ExamDetailPage({ params }: ExamDetailPageProps) {
   const { slug } = params; // Extract the slug from the params
-
+  
   return (
     <div className="dashboard-page">
       <SingleExam slug={slug} />

@@ -8,6 +8,7 @@ import { toast } from "react-toastify";
 import { useRouter } from "next/navigation";
 import Loader from "@/components/Common/Loader";
 import NoData from "@/components/Common/NoData";
+import { FiPlay } from "react-icons/fi";
 
 interface Exam {
   title: string | null;
@@ -21,7 +22,9 @@ interface Exam {
   point_mode: string | null;
   duration_mode: string;
   exam_duration: number;
+  is_resume: string;
   schedules: {
+    schedule_id: string;
     schedule_type: string;
     start_date: string;
     start_time: string;
@@ -216,7 +219,7 @@ export default function ExamList() {
                       : Math.floor(exam.total_time / 60)}{" "}
                     min
                   </td>
-                  <td className="p-4">
+                  {/* <td className="p-4">
                     {isUpcoming ? (
                       <span className="bg-gray-300 text-gray-500 py-1 px-5 rounded-full font-semibold text-sm cursor-not-allowed">
                         Upcoming
@@ -234,7 +237,36 @@ export default function ExamList() {
                         onClick={() => handlePayment(`/dashboard/exam-detail/${exam.slug}`)}
                       >Pay Now</button>
                     )}
-                  </td>
+                  </td> */}
+                  <td className="p-4">
+                      {isUpcoming ? (
+                        <span className="bg-gray-300 text-gray-500 py-1 px-5 rounded-full font-semibold text-sm cursor-not-allowed">
+                          Upcoming
+                        </span>
+                      ) : exam.is_resume ? (
+                        <Link
+                          href={`/dashboard/exam-play/${exam.slug}?sid=${schedules.schedule_id}`}
+                          className="text-white bg-[#C9BC0F] px-3 py-1 rounded-md hover:bg-[#928c38] transition duration-200 flex items-center space-x-1"
+                        >
+                          <FiPlay />
+                          <span>Resume</span>
+                        </Link>
+                      ) : exam.is_free === 1 ? (
+                        <Link
+                          href={`/dashboard/exam-detail/${exam.slug}?sid=${schedules.schedule_id}`}
+                          className="text-defaultcolor font-semibold hover:underline"
+                        >
+                          Start Exam
+                        </Link>
+                      ) : (
+                        <button
+                          className="bg-defaultcolor text-white py-1 px-5 rounded-full font-semibold hover:bg-defaultcolor-dark text-sm"
+                          onClick={() => handlePayment(`/dashboard/exam-detail/${exam.slug}?sid=${schedules.schedule_id}`)}
+                        >
+                          Pay Now
+                        </button>
+                      )}
+                    </td>
                 </tr>
               );
             })}
