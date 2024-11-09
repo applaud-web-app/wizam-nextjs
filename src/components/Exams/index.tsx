@@ -41,10 +41,15 @@ const Exams = () => {
         if (examResponse.data.status && courseResponse.data.status && examPackResponse.data.status) {
           const exams = examResponse.data.data;
   
-          // Filter exams based on the current time
-          const validExams = exams.filter((exam:any) => {
-            const examEndDate = exam.end_date ? new Date(`${exam.end_date}T${exam.end_time}`) : null;
-            return !examEndDate || examEndDate >= currentTime; // Include exams without end dates or with future end dates
+          // Filter exams to include upcoming and currently active exams
+          const validExams = exams.filter((exam: any) => {
+            const examStartDateTime = new Date(`${exam.start_date}T${exam.start_time}`);
+            const examEndDateTime = exam.end_date ? new Date(`${exam.end_date}T${exam.end_time}`) : null;
+  
+            return (
+              examStartDateTime >= currentTime || // Upcoming exams
+              (examStartDateTime <= currentTime && (!examEndDateTime || examEndDateTime >= currentTime)) // Currently active exams
+            );
           });
   
           setExams(validExams);
@@ -63,6 +68,7 @@ const Exams = () => {
   
     fetchExamsAndCourses();
   }, []);
+  
 
   // Handle course change
   const handleCourseChange = (courseId: string) => {

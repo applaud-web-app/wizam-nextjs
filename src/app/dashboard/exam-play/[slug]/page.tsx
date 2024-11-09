@@ -240,6 +240,140 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
     fetchExamSet();
   }, [params, router]);
 
+
+  const clearAnswer = () => {
+    if (!examData) {
+      return; // Exit if examData is null
+    }
+  
+    const question = examData.questions[currentQuestionIndex];
+    const questionId = question.id;
+  
+    setAnswers((prevAnswers) => {
+      const updatedAnswers = { ...prevAnswers };
+  
+      if (question.type === "EMQ" && Array.isArray(question.question)) {
+        // For EMQ questions with sub-questions
+        if (currentSubIndex !== null) {
+          // Clear answer for the specific sub-question
+          if (updatedAnswers[questionId]) {
+            updatedAnswers[questionId][currentSubIndex] = "";
+          }
+        } else {
+          // Clear all sub-answers
+          const subQuestionCount = question.question.length - 1; // Exclude main question
+          updatedAnswers[questionId] = Array(subQuestionCount).fill("");
+        }
+      } else if (question.type === "ORD") {
+        // For ORD questions, reset to initial order
+        updatedAnswers[questionId] = question.options || [];
+      } else if (question.type === "MTF") {
+        // For MTF questions, clear all pairs
+        updatedAnswers[questionId] = [];
+      } else {
+        // For other question types, set answer to empty array
+        updatedAnswers[questionId] = [];
+      }
+  
+      // Build the formatted answers as per submission payload format
+      const formattedAnswers = examData.questions.map((q) => {
+        const userAnswer = updatedAnswers[q.id];
+  
+        if (!userAnswer || userAnswer.length === 0) {
+          return {
+            id: q.id,
+            type: q.type,
+            answer: [],
+          };
+        }
+  
+        switch (q.type) {
+          case "MSA":
+            return {
+              id: q.id,
+              type: q.type,
+              answer: q.options ? q.options.indexOf(userAnswer[0]) + 1 : 0,
+            };
+  
+          case "MMA":
+            return {
+              id: q.id,
+              type: q.type,
+              answer: userAnswer.map((ans) =>
+                q.options ? q.options.indexOf(ans) + 1 : 0
+              ),
+            };
+  
+          case "TOF":
+            return {
+              id: q.id,
+              type: q.type,
+              answer: userAnswer[0] === "true" ? 1 : 2,
+            };
+  
+          case "SAQ":
+            return {
+              id: q.id,
+              type: q.type,
+              answer: userAnswer[0],
+            };
+  
+          case "FIB":
+            return {
+              id: q.id,
+              type: q.type,
+              answer: Array.isArray(userAnswer)
+                ? userAnswer.map((ans) => (typeof ans === "string" ? ans : String(ans)))
+                : [],
+            };
+  
+          case "MTF":
+            const matches = {};
+            return {
+              id: q.id,
+              type: q.type,
+              answer: matches,
+            };
+  
+          case "ORD":
+            return {
+              id: q.id,
+              type: q.type,
+              answer: userAnswer.map((opt) =>
+                q.options ? q.options.indexOf(opt) : -1
+              ),
+            };
+  
+          case "EMQ":
+            const filteredAnswers = userAnswer.map((ans) => {
+              return ans
+                ? q.options
+                  ? q.options.indexOf(ans) + 1
+                  : null
+                : null;
+            });
+            return {
+              id: q.id,
+              type: q.type,
+              answer: filteredAnswers.length > 0 ? filteredAnswers : [],
+            };
+  
+          default:
+            return null;
+        }
+      });
+  
+      // Save the answer progress
+      saveAnswerProgress(
+        uuid,
+        formattedAnswers.filter((answer) => answer !== null)
+      );
+  
+      return updatedAnswers;
+    });
+  };
+  
+
   useEffect(() => {
     if (!examData || submitted) return;
     timerId = setInterval(() => {
@@ -1259,9 +1393,12 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
             <div className="flex flex-wrap justify-between mt-6 items-center">
               {/* First set of buttons */}
               <div className="flex space-x-4">
-                <button className="flex items-center justify-center w-16 h-12 rounded-lg focus:outline-none border border-gray-600 text-gray-600">
-                  <FaRegWindowClose size={20} />
-                </button>
+              <button
+                className="flex items-center justify-center w-16 h-12 rounded-lg focus:outline-none border border-gray-600 text-gray-600"
+                onClick={clearAnswer}
+              >
+                <FaRegWindowClose size={20} />
+              </button>
 
                 {/* "Not Reviewed" Button */}
                 <button
@@ -1645,10 +1782,7 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
 
           {/* Legend */}
           <div className="flex justify-between items-center flex-wrap text-center p-4">
-            <div className="flex items-center w-1/2 space-x-2">
-              <div className="w-4 h-4 bg-defaultcolor"></div>
-              <span>Current</span>
-            </div>
+           
             <div className="flex items-center w-1/2 space-x-2">
               <div className="w-4 h-4 bg-[#76b51b]"></div>
               <span>Answered</span>
