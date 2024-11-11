@@ -16,9 +16,6 @@ import ResumeExamTable from "@/components/ResumeExamTable";
 import UpcomingExamsTable from "@/components/UpcomingExamsTable";
 
 
-
-
-
 interface Exam {
   id: string;
   title: string;
@@ -70,6 +67,7 @@ interface UpcomingExams {
   point_mode: string;
   point: number | null;
   schedule_type: string;
+  schedule_id: string;
   start_date: string;
   start_time: string;
   end_date: string | null;
