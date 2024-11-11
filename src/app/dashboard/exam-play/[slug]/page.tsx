@@ -60,6 +60,9 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
   const [slug, setSlug] = useState<string | null>(null);
   const [currentSubIndex, setCurrentSubIndex] = useState<number | null>(null);
 
+  const [isInitialized, setIsInitialized] = useState(false);
+
+
   const [examData, setExamData] = useState<ExamData | null>(null);
   const router = useRouter();
   const [loading, setLoading] = useState<boolean>(true);
@@ -85,6 +88,30 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
   const [notReviewedQuestions, setNotReviewedQuestions] = useState<{
     [key: number]: boolean;
   }>({});
+
+  // Utility function to shuffle an array
+  const shuffleArray = (array: any[]) => {
+    const arr = [...array];
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  };
+
+  // State to store initial shuffled options for ORD questions
+  const [initialShuffledOptions, setInitialShuffledOptions] = useState<{
+    [key: number]: string[];
+  }>({});
+
+  // Function to compare two arrays for equality
+  const arraysEqual = (a: any[], b: any[]) => {
+    if (a.length !== b.length) return false;
+    return a.every((value, index) => {
+      const normalize = (str: string) => str.replace(/<[^>]*>/g, "").trim();
+      return normalize(value) === normalize(b[index]);
+    });
+  };
 
   useEffect(() => {
     setVisitedQuestionIndices((prev) => {
@@ -201,6 +228,49 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
             );
 
             setAnswers(formattedAnswers);
+            setIsInitialized(true); // Indicate that initialization is complete
+
+            // For ORD questions, if there are saved answers, we should not shuffle the options
+            // Also, set the initialShuffledOptions to the saved answers for comparison later
+            fetchExamData.questions.forEach((question: Question) => {
+              if (question.type === "ORD") {
+                if (formattedAnswers[question.id]) {
+                  setAnswers((prev) => ({
+                    ...prev,
+                    [question.id]: [...formattedAnswers[question.id]], // Make a copy
+                  }));
+                  setInitialShuffledOptions((prev) => ({
+                    ...prev,
+                    [question.id]: [...formattedAnswers[question.id]], // Make a copy
+                  }));
+                } else {
+                  const shuffledOptions = shuffleArray(question.options || []);
+                  setAnswers((prev) => ({
+                    ...prev,
+                    [question.id]: [...shuffledOptions], // Make a copy
+                  }));
+                  setInitialShuffledOptions((prev) => ({
+                    ...prev,
+                    [question.id]: [...shuffledOptions], // Make a copy
+                  }));
+                }
+              }
+            });
+          } else {
+            // If there are no saved answers, initialize ORD questions
+            fetchExamData.questions.forEach((question: Question) => {
+              if (question.type === "ORD") {
+                const shuffledOptions = shuffleArray(question.options || []);
+                setAnswers((prev) => ({
+                  ...prev,
+                  [question.id]: [...shuffledOptions], // Make a copy
+                }));
+                setInitialShuffledOptions((prev) => ({
+                  ...prev,
+                  [question.id]: [...shuffledOptions], // Make a copy
+                }));
+              }
+            });
           }
         } else {
           toast.error("No exam found for this category");
@@ -209,22 +279,33 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
         console.error("Error fetching practice set:", error);
         if (error.response) {
           const { status, data } = error.response;
-          if (status === 401) {
+          if (data.error === "Maximum Attempt Reached") {
+            toast.error(data.error);
+            router.push("/dashboard/all-exams");
+          } else if (status === 401) {
             toast.error("User is not authenticated. Please log in.");
             router.push("/signin");
           } else if (status === 404) {
             toast.error("Please buy a subscription to access this course.");
-            Cookies.set("redirect_url", `/dashboard/exam-detail/${slug}?sid=${sid}`, {
-              expires: 1,
-            });
+            Cookies.set(
+              "redirect_url",
+              `/dashboard/exam-detail/${slug}?sid=${sid}`,
+              {
+                expires: 1,
+              }
+            );
             router.push("/pricing");
           } else if (status === 403) {
             toast.error(
               "Feature not available in your plan. Please upgrade your subscription."
             );
-            Cookies.set("redirect_url", `/dashboard/exam-detail/${slug}?sid=${sid}`, {
-              expires: 1,
-            });
+            Cookies.set(
+              "redirect_url",
+              `/dashboard/exam-detail/${slug}?sid=${sid}`,
+              {
+                expires: 1,
+              }
+            );
             router.push("/pricing");
           } else {
             toast.error(`An error occurred: ${data.error || "Unknown error"}`);
@@ -240,18 +321,17 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
     fetchExamSet();
   }, [params, router]);
 
-
   const clearAnswer = () => {
     if (!examData) {
       return; // Exit if examData is null
     }
-  
+
     const question = examData.questions[currentQuestionIndex];
     const questionId = question.id;
-  
+
     setAnswers((prevAnswers) => {
       const updatedAnswers = { ...prevAnswers };
-  
+
       if (question.type === "EMQ" && Array.isArray(question.question)) {
         // For EMQ questions with sub-questions
         if (currentSubIndex !== null) {
@@ -266,7 +346,7 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
         }
       } else if (question.type === "ORD") {
         // For ORD questions, reset to initial order
-        updatedAnswers[questionId] = question.options || [];
+        updatedAnswers[questionId] = initialShuffledOptions[questionId];
       } else if (question.type === "MTF") {
         // For MTF questions, clear all pairs
         updatedAnswers[questionId] = [];
@@ -274,11 +354,11 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
         // For other question types, set answer to empty array
         updatedAnswers[questionId] = [];
       }
-  
+
       // Build the formatted answers as per submission payload format
       const formattedAnswers = examData.questions.map((q) => {
         const userAnswer = updatedAnswers[q.id];
-  
+
         if (!userAnswer || userAnswer.length === 0) {
           return {
             id: q.id,
@@ -286,7 +366,7 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
             answer: [],
           };
         }
-  
+
         switch (q.type) {
           case "MSA":
             return {
@@ -294,7 +374,7 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
               type: q.type,
               answer: q.options ? q.options.indexOf(userAnswer[0]) + 1 : 0,
             };
-  
+
           case "MMA":
             return {
               id: q.id,
@@ -303,30 +383,32 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
                 q.options ? q.options.indexOf(ans) + 1 : 0
               ),
             };
-  
+
           case "TOF":
             return {
               id: q.id,
               type: q.type,
               answer: userAnswer[0] === "true" ? 1 : 2,
             };
-  
+
           case "SAQ":
             return {
               id: q.id,
               type: q.type,
               answer: userAnswer[0],
             };
-  
+
           case "FIB":
             return {
               id: q.id,
               type: q.type,
               answer: Array.isArray(userAnswer)
-                ? userAnswer.map((ans) => (typeof ans === "string" ? ans : String(ans)))
+                ? userAnswer.map((ans) =>
+                    typeof ans === "string" ? ans : String(ans)
+                  )
                 : [],
             };
-  
+
           case "MTF":
             const matches = {};
             return {
@@ -334,7 +416,7 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
               type: q.type,
               answer: matches,
             };
-  
+
           case "ORD":
             return {
               id: q.id,
@@ -343,7 +425,7 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
                 q.options ? q.options.indexOf(opt) : -1
               ),
             };
-  
+
           case "EMQ":
             const filteredAnswers = userAnswer.map((ans) => {
               return ans
@@ -357,22 +439,21 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
               type: q.type,
               answer: filteredAnswers.length > 0 ? filteredAnswers : [],
             };
-  
+
           default:
             return null;
         }
       });
-  
+
       // Save the answer progress
       saveAnswerProgress(
         uuid,
         formattedAnswers.filter((answer) => answer !== null)
       );
-  
+
       return updatedAnswers;
     });
   };
-  
 
   useEffect(() => {
     if (!examData || submitted) return;
@@ -786,8 +867,16 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
     let count = 0;
     for (const questionId in answers) {
       const answer = answers[questionId];
+      const question = examData?.questions.find(
+        (q) => q.id === parseInt(questionId)
+      );
+
       if (Array.isArray(answer)) {
-        if (answer.some((ans) => ans !== null && ans !== "")) {
+        if (question?.type === "ORD") {
+          if (!arraysEqual(answer, initialShuffledOptions[questionId])) {
+            count++;
+          }
+        } else if (answer.some((ans) => ans !== null && ans !== "")) {
           count++;
         }
       } else if (answer !== null && answer !== "") {
@@ -810,17 +899,22 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
   };
 
   const moveItem = (questionId: number, fromIndex: number, toIndex: number) => {
-    const currentAnswers = answers[questionId] || [];
+    setAnswers((prevAnswers) => {
+      const currentAnswers = prevAnswers[questionId] || [];
 
-    if (toIndex < 0 || toIndex >= currentAnswers.length) {
-      return;
-    }
+      if (toIndex < 0 || toIndex >= currentAnswers.length) {
+        return prevAnswers;
+      }
 
-    const reorderedAnswers = [...currentAnswers];
-    const [movedItem] = reorderedAnswers.splice(fromIndex, 1);
-    reorderedAnswers.splice(toIndex, 0, movedItem);
+      const reorderedAnswers = [...currentAnswers];
+      const [movedItem] = reorderedAnswers.splice(fromIndex, 1);
+      reorderedAnswers.splice(toIndex, 0, movedItem);
 
-    handleAnswerChange(questionId, reorderedAnswers);
+      return {
+        ...prevAnswers,
+        [questionId]: reorderedAnswers,
+      };
+    });
   };
 
   const getTotalQuestionCount = (): number => {
@@ -854,17 +948,28 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
   };
 
   useEffect(() => {
-    if (examData?.questions) {
+    if (examData?.questions && !isInitialized) {
       examData.questions.forEach((question) => {
-        if (!answers[question.id] && question.type === "ORD") {
+        if (question.type === "ORD") {
+          if (answers[question.id]) {
+            // Do not re-initialize if answers are already present
+            return;
+          }
+          const shuffledOptions = shuffleArray(question.options || []);
           setAnswers((prev) => ({
             ...prev,
-            [question.id]: question.options || [],
+            [question.id]: [...shuffledOptions],
+          }));
+          setInitialShuffledOptions((prev) => ({
+            ...prev,
+            [question.id]: [...shuffledOptions],
           }));
         }
       });
+      setIsInitialized(true); // Set initialization flag to true
     }
-  }, [examData?.questions, answers]);
+  }, [examData]);
+  
 
   const renderQuestion = (question: Question) => {
     const baseQuestionNumber = getAdjustedQuestionIndex();
@@ -1393,12 +1498,12 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
             <div className="flex flex-wrap justify-between mt-6 items-center">
               {/* First set of buttons */}
               <div className="flex space-x-4">
-              <button
-                className="flex items-center justify-center w-16 h-12 rounded-lg focus:outline-none border border-gray-600 text-gray-600"
-                onClick={clearAnswer}
-              >
-                <FaRegWindowClose size={20} />
-              </button>
+                <button
+                  className="flex items-center justify-center w-16 h-12 rounded-lg focus:outline-none border border-gray-600 text-gray-600"
+                  onClick={clearAnswer}
+                >
+                  <FaRegWindowClose size={20} />
+                </button>
 
                 {/* "Not Reviewed" Button */}
                 <button
@@ -1524,6 +1629,29 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
                   (acc: JSX.Element[], question, questionIndex) => {
                     const questionId = question.id;
 
+                    // Check if question has been answered based on its type
+                    const isAnswered = (() => {
+                      if (question.type === "ORD") {
+                        const userAnswer = answers[questionId];
+                        const initialOptions =
+                          initialShuffledOptions[questionId];
+                        if (!userAnswer || !initialOptions) return false;
+                        const normalizeArray = (arr: string[]) =>
+                          arr.map((str) => str.replace(/<[^>]*>/g, "").trim());
+                        const userNormalized = normalizeArray(userAnswer);
+                        const initialNormalized =
+                          normalizeArray(initialOptions);
+                        return !arraysEqual(userNormalized, initialNormalized);
+                      } else {
+                        return (
+                          Array.isArray(answers[questionId]) &&
+                          answers[questionId]?.some(
+                            (ans) => ans !== null && ans !== ""
+                          )
+                        );
+                      }
+                    })();
+
                     // Handle EMQ questions with sub-questions
                     if (
                       question.type === "EMQ" &&
@@ -1545,9 +1673,9 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
                           visitedQuestionIndices.has(adjustedIndex);
 
                         // Determine colors based on status
-                        let borderColor = "";
-                        let textColor = "";
-                        let bottomDivColor = "";
+                        let borderColor = "border-[#989898]";
+                        let textColor = "text-[#989898]";
+                        let bottomDivColor = "bg-[#989898]";
 
                         if (isActive) {
                           borderColor = "border-defaultcolor";
@@ -1565,10 +1693,6 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
                           borderColor = "border-[#E74444]";
                           textColor = "text-[#E74444]";
                           bottomDivColor = "bg-[#E74444]";
-                        } else {
-                          borderColor = "border-[#989898]";
-                          textColor = "text-[#989898]";
-                          bottomDivColor = "bg-[#989898]";
                         }
 
                         acc.push(
@@ -1584,7 +1708,7 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
                             {adjustedIndex}
                             <div
                               className={`absolute inset-x-0 bottom-0 h-2 ${bottomDivColor}`}
-                            ></div>
+                            />
                           </div>
                         );
                       });
@@ -1592,19 +1716,14 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
                       // For non-EMQ questions, add a single navigation item
                       const adjustedIndex = acc.length + 1;
                       const isActive = currentQuestionIndex === questionIndex;
-                      const isAnswered =
-                        Array.isArray(answers[questionId]) &&
-                        answers[questionId]?.some(
-                          (ans) => ans !== null && ans !== ""
-                        );
                       const isNotReviewed = !!notReviewedQuestions[questionId];
                       const isVisited =
                         visitedQuestionIndices.has(adjustedIndex);
 
-                      // Determine colors based on status
-                      let borderColor = "";
-                      let textColor = "";
-                      let bottomDivColor = "";
+                      // Determine colors based on isAnswered status using questionId to handle reordering
+                      let borderColor = "border-[#989898]";
+                      let textColor = "text-[#989898]";
+                      let bottomDivColor = "bg-[#989898]";
 
                       if (isActive) {
                         borderColor = "border-defaultcolor";
@@ -1622,18 +1741,14 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
                         borderColor = "border-[#E74444]";
                         textColor = "text-[#E74444]";
                         bottomDivColor = "bg-[#E74444]";
-                      } else {
-                        borderColor = "border-[#989898]";
-                        textColor = "text-[#989898]";
-                        bottomDivColor = "bg-[#989898]";
                       }
 
                       acc.push(
                         <div
-                          key={questionIndex}
+                          key={questionId} // Use questionId as key
                           className={`relative flex items-center justify-center text-lg w-12 h-12 border ${borderColor} ${textColor} transition duration-200 bg-white`}
                           onClick={() => {
-                            setCurrentQuestionIndex(questionIndex);
+                            setCurrentQuestionIndex(questionIndex); // Maintain question index for display
                             setCurrentSubIndex(null); // Reset sub-index for non-EMQ questions
                           }}
                           style={{ cursor: "pointer" }}
@@ -1641,7 +1756,7 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
                           {adjustedIndex}
                           <div
                             className={`absolute inset-x-0 bottom-0 h-2 ${bottomDivColor}`}
-                          ></div>
+                          />
                         </div>
                       );
                     }
@@ -1652,7 +1767,7 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
                 )}
               </div>
             ) : (
-              // ... The else block remains unchanged
+              // The else block remains unchanged
               <div className="flex items-center justify-center flex-wrap gap-3 text-center">
                 {examData.questions.reduce(
                   (acc: JSX.Element[], question, questionIndex) => {
@@ -1679,9 +1794,9 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
                           visitedQuestionIndices.has(adjustedIndex);
 
                         // Determine colors based on status
-                        let borderColor = "";
-                        let textColor = "";
-                        let bottomDivColor = "";
+                        let borderColor = "border-[#989898]";
+                        let textColor = "text-[#989898]";
+                        let bottomDivColor = "bg-[#989898]";
 
                         if (isActive) {
                           borderColor = "border-defaultcolor";
@@ -1699,10 +1814,6 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
                           borderColor = "border-[#E74444]";
                           textColor = "text-[#E74444]";
                           bottomDivColor = "bg-[#E74444]";
-                        } else {
-                          borderColor = "border-[#989898]";
-                          textColor = "text-[#989898]";
-                          bottomDivColor = "bg-[#989898]";
                         }
 
                         acc.push(
@@ -1713,7 +1824,7 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
                             {adjustedIndex}
                             <div
                               className={`absolute inset-x-0 bottom-0 h-2 ${bottomDivColor}`}
-                            ></div>
+                            />
                           </div>
                         );
                       });
@@ -1731,9 +1842,9 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
                         visitedQuestionIndices.has(adjustedIndex);
 
                       // Determine colors based on status
-                      let borderColor = "";
-                      let textColor = "";
-                      let bottomDivColor = "";
+                      let borderColor = "border-[#989898]";
+                      let textColor = "text-[#989898]";
+                      let bottomDivColor = "bg-[#989898]";
 
                       if (isActive) {
                         borderColor = "border-defaultcolor";
@@ -1751,10 +1862,6 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
                         borderColor = "border-[#E74444]";
                         textColor = "text-[#E74444]";
                         bottomDivColor = "bg-[#E74444]";
-                      } else {
-                        borderColor = "border-[#989898]";
-                        textColor = "text-[#989898]";
-                        bottomDivColor = "bg-[#989898]";
                       }
 
                       acc.push(
@@ -1765,7 +1872,7 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
                           {adjustedIndex}
                           <div
                             className={`absolute inset-x-0 bottom-0 h-2 ${bottomDivColor}`}
-                          ></div>
+                          />
                         </div>
                       );
                     }
@@ -1782,7 +1889,6 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
 
           {/* Legend */}
           <div className="flex justify-between items-center flex-wrap text-center p-4">
-           
             <div className="flex items-center w-1/2 space-x-2">
               <div className="w-4 h-4 bg-[#76b51b]"></div>
               <span>Answered</span>

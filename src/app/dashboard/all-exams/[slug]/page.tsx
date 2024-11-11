@@ -11,6 +11,7 @@ import { FaArrowLeftLong } from "react-icons/fa6";
 import Loader from "@/components/Common/Loader";
 import NoData from "@/components/Common/NoData";
 import { FiPlay } from "react-icons/fi";
+import { MdLockOutline } from "react-icons/md";
 
 interface ExamDetail {
   title: string;
@@ -19,7 +20,7 @@ interface ExamDetail {
   time: string;
   marks: number | string;
   is_free: number; // 1 for free, 0 for paid
-  is_resume:string;
+  is_resume: boolean;
   schedule: {
     schedule_id: string;
     start_date: string;
@@ -70,7 +71,7 @@ export default function ExamDetailPage({ params }: { params: { slug: string } })
       try {
         let cachedServerTime = getCachedServerTime();
         if (!cachedServerTime) {
-          const timeResponse = await axios.get('/api/time');
+          const timeResponse = await axios.get("/api/time");
           cachedServerTime = new Date(timeResponse.data.serverTime);
           cacheServerTime(cachedServerTime);
         }
@@ -83,11 +84,9 @@ export default function ExamDetailPage({ params }: { params: { slug: string } })
 
         if (response.data.status) {
           const examsData = response.data.data[params.slug] || [];
-          const upcomingExams = examsData.filter((exam: ExamDetail) => {
-            const examEndDate = exam.schedule.end_date ? new Date(`${exam.schedule.end_date}T${exam.schedule.end_time}`) : null;
-            return !examEndDate || examEndDate >= cachedServerTime;
-          });
-          setExams(upcomingExams);
+
+          // No need to filter exams here, we'll handle it in the render method
+          setExams(examsData);
         } else {
           toast.error("No exams found for this category");
           router.push("/dashboard/all-exams");
@@ -100,7 +99,20 @@ export default function ExamDetailPage({ params }: { params: { slug: string } })
     };
 
     fetchExams();
-  }, [params, router]);
+  }, [params.slug, router]);
+
+  // Update serverTime every second
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (serverTime) {
+      interval = setInterval(() => {
+        setServerTime((prevTime) => new Date(prevTime!.getTime() + 1000));
+      }, 1000);
+    }
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [serverTime]);
 
   const handlePayment = async (slug: string) => {
     try {
@@ -122,67 +134,33 @@ export default function ExamDetailPage({ params }: { params: { slug: string } })
       if (response.data.status === true) {
         router.push(`/dashboard/exam-detail/${slug}`);
       } else {
-        toast.error('Please buy a subscription to access this course.');
+        toast.error("Please buy a subscription to access this course.");
         router.push("/pricing");
       }
     } catch (error: any) {
       if (error.response) {
         const { status, data } = error.response;
         if (status === 401) {
-          toast.error('User is not authenticated. Please log in.');
+          toast.error("User is not authenticated. Please log in.");
           router.push("/signin");
         } else if (status === 403 || status === 404) {
-          toast.error('Please buy a subscription to access this course.');
+          toast.error("Please buy a subscription to access this course.");
           router.push("/pricing");
         } else {
-          toast.error(`An error occurred: ${data.error || 'Unknown error'}`);
+          toast.error(`An error occurred: ${data.error || "Unknown error"}`);
         }
       } else {
         toast.error("An error occurred. Please try again.");
       }
     }
   };
-  
-
-  // const handlePayment = async (slug: string) => {
-  //   try {
-  //     const jwt = Cookies.get("jwt");
-  //     if (!jwt) {
-  //       toast.error("User is not authenticated. Please log in.");
-  //       return;
-  //     }
-
-  //     const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/user-subscription`, {
-  //       headers: { Authorization: `Bearer ${jwt}` },
-  //       params: { type: "exams" },
-  //     });
-
-  //     if (response.data.status) {
-  //       router.push(`/dashboard/exam-detail/${slug}`);
-  //     } else {
-  //       toast.error("Please buy a subscription to access this course.");
-  //       router.push("/pricing");
-  //     }
-  //   } catch (error: any) {
-  //     const status = error.response?.status;
-  //     if (status === 401) {
-  //       toast.error("User is not authenticated. Please log in.");
-  //       router.push("/signin");
-  //     } else if (status === 403) {
-  //       toast.error("Upgrade subscription to access this feature.");
-  //       router.push("/pricing");
-  //     } else {
-  //       toast.error("An error occurred. Please try again.");
-  //     }
-  //   }
-  // };
 
   if (loading) {
     return <Loader />;
   }
 
   if (exams.length === 0) {
-    return <NoData message="No exams available right now. Please check back later"/>;
+    return <NoData message="No exams available right now. Please check back later" />;
   }
 
   return (
@@ -208,7 +186,6 @@ export default function ExamDetailPage({ params }: { params: { slug: string } })
               <th className="p-3 text-left font-semibold">S.No</th>
               <th className="p-3 text-left font-semibold">Exam Title</th>
               <th className="p-3 text-left font-semibold">Available Between</th>
-              {/* <th className="p-3 text-left font-semibold">Free/Paid</th> */}
               <th className="p-3 text-left font-semibold">Questions</th>
               <th className="p-3 text-left font-semibold">Marks</th>
               <th className="p-3 text-left font-semibold">Time</th>
@@ -217,17 +194,49 @@ export default function ExamDetailPage({ params }: { params: { slug: string } })
           </thead>
           <tbody className="divide-y divide-gray-200">
             {exams.map((exam, index) => {
-              const startTime = new Date(`${exam.schedule.start_date}T${exam.schedule.start_time}`);
-              const endTime = exam.schedule.end_date && exam.schedule.end_time
-                ? new Date(`${exam.schedule.end_date}T${exam.schedule.end_time}`)
-                : null;
-              const isUpcoming = serverTime && startTime > serverTime;
+              const { schedule } = exam;
+              const currentTime = serverTime || new Date();
+
+              let isUpcoming = false;
+              let isAvailable = false;
+              let isOver = false;
+
+              const startDateTime = new Date(`${schedule.start_date}T${schedule.start_time}`);
+              const endDateTime =
+                schedule.end_date && schedule.end_time
+                  ? new Date(`${schedule.end_date}T${schedule.end_time}`)
+                  : null;
+
+              if (schedule.schedule_type === "flexible" || schedule.schedule_type === "fixed") {
+                if (currentTime < startDateTime) {
+                  isUpcoming = true;
+                } else if (endDateTime && currentTime > endDateTime) {
+                  isOver = true;
+                } else {
+                  isAvailable = true;
+                }
+              } else if (schedule.schedule_type === "attempts") {
+                if (currentTime < startDateTime) {
+                  isUpcoming = true;
+                } else {
+                  isAvailable = true;
+                }
+              }
+
+              // Skip over exams
+              if (isOver) {
+                return null;
+              }
 
               let scheduleInfo;
-              if (exam.schedule.schedule_type === "flexible") {
-                scheduleInfo = `${exam.schedule.start_date} ${exam.schedule.start_time} - ${exam.schedule.end_date ?? "N/A"} ${exam.schedule.end_time ?? "N/A"}`;
+              if (schedule.schedule_type === "flexible") {
+                scheduleInfo = `${schedule.start_date} ${schedule.start_time} - ${schedule.end_date ?? "N/A"} ${schedule.end_time ?? "N/A"}`;
+              } else if (schedule.schedule_type === "fixed") {
+                scheduleInfo = `Fixed - ${schedule.start_date} ${schedule.start_time}`;
+              } else if (schedule.schedule_type === "attempts") {
+                scheduleInfo = `From ${schedule.start_date} ${schedule.start_time}`;
               } else {
-                scheduleInfo = `${exam.schedule.start_date} ${exam.schedule.start_time}`;
+                scheduleInfo = `${schedule.start_date} ${schedule.start_time}`;
               }
 
               return (
@@ -235,41 +244,41 @@ export default function ExamDetailPage({ params }: { params: { slug: string } })
                   <td className="p-4">{index + 1}</td>
                   <td className="p-4">{exam.title}</td>
                   <td className="p-4">{scheduleInfo}</td>
-                  {/* <td className="p-4">
-                    <span
-                      className={`${
-                        exam.is_free
-                          ? "text-sm rounded-full font-semibold py-1 px-5 bg-green-500 text-white"
-                          : "text-sm rounded-full font-semibold py-1 px-5 bg-secondary text-white"
-                      }`}
-                    >
-                      {exam.is_free ? "Free" : "Paid"}
-                    </span>
-                  </td> */}
                   <td className="p-4">{exam.questions}</td>
                   <td className="p-4">{exam.marks}</td>
                   <td className="p-4">{exam.time} mins</td>
                   <td className="p-4">
                     {isUpcoming ? (
-                      <span className="bg-[#ffc300] hover:bg-yellow-500 text-white py-1 px-5 rounded-full font-semibold text-sm cursor-not-allowed">
-                        Upcoming
-                      </span>
+                      <button
+                        className="bg-[#ffc300] hover:bg-yellow-500 text-white py-1 px-5 rounded-full font-semibold text-sm cursor-not-allowed inline-flex items-center space-x-1 w-32"
+                        disabled
+                      >
+                        <MdLockOutline className="flex-shrink-0" />
+                        <span>Upcoming</span>
+                      </button>
                     ) : exam.is_resume ? (
                       <Link
-                        href={`/dashboard/exam-play/${exam.slug}?sid=${exam.schedule.schedule_id}`}
-                        className="text-white bg-[#C9BC0F] px-3 py-1 rounded-md hover:bg-[#928c38] transition duration-200 flex items-center justify-center space-x-1"
+                        href={`/dashboard/exam-play/${exam.slug}?sid=${schedule.schedule_id}`}
+                        className="text-white bg-[#C9BC0F] px-5 py-1 rounded-full hover:bg-[#928c38] transition duration-200 inline-flex items-center justify-center space-x-1 font-semibold text-sm w-32"
                       >
                         <FiPlay />
                         <span>Resume</span>
                       </Link>
                     ) : exam.is_free === 1 ? (
-                      <Link href={`/dashboard/exam-detail/${exam.slug}?sid=${exam.schedule.schedule_id}`} className="text-defaultcolor font-semibold">
+                      <Link
+                        href={`/dashboard/exam-detail/${exam.slug}?sid=${schedule.schedule_id}`}
+                        className="bg-green-600 text-white px-5 py-1 rounded-full font-semibold text-sm hover:bg-green-700 transition duration-200 inline-flex items-center justify-center w-32"
+                      >
                         Start Exam
                       </Link>
                     ) : (
                       <button
-                        className="bg-defaultcolor text-white py-1 px-5 rounded-full font-semibold"
-                        onClick={() => handlePayment(exam.slug+"?sid="+exam.schedule.schedule_id)}
+                        className="bg-defaultcolor text-white py-1 px-5 rounded-full font-semibold text-sm hover:bg-defaultcolor-dark w-32"
+                        onClick={() =>
+                          handlePayment(
+                            `${exam.slug}?sid=${schedule.schedule_id}`
+                          )
+                        }
                       >
                         Pay Now
                       </button>
@@ -285,24 +294,60 @@ export default function ExamDetailPage({ params }: { params: { slug: string } })
       {/* Mobile Card View (hidden on medium and larger screens) */}
       <div className="grid grid-cols-1 gap-4 md:hidden">
         {exams.map((exam, index) => {
-          const startTime = new Date(`${exam.schedule.start_date}T${exam.schedule.start_time}`);
-          const endTime = exam.schedule.end_date && exam.schedule.end_time
-            ? new Date(`${exam.schedule.end_date}T${exam.schedule.end_time}`)
-            : null;
-          const isUpcoming = serverTime && startTime > serverTime;
+          const { schedule } = exam;
+          const currentTime = serverTime || new Date();
+
+          let isUpcoming = false;
+          let isAvailable = false;
+          let isOver = false;
+
+          const startDateTime = new Date(`${schedule.start_date}T${schedule.start_time}`);
+          const endDateTime =
+            schedule.end_date && schedule.end_time
+              ? new Date(`${schedule.end_date}T${schedule.end_time}`)
+              : null;
+
+          if (schedule.schedule_type === "flexible" || schedule.schedule_type === "fixed") {
+            if (currentTime < startDateTime) {
+              isUpcoming = true;
+            } else if (endDateTime && currentTime > endDateTime) {
+              isOver = true;
+            } else {
+              isAvailable = true;
+            }
+          } else if (schedule.schedule_type === "attempts") {
+            if (currentTime < startDateTime) {
+              isUpcoming = true;
+            } else {
+              isAvailable = true;
+            }
+          }
+
+          // Skip over exams
+          if (isOver) {
+            return null;
+          }
 
           let scheduleInfo;
-          if (exam.schedule.schedule_type === "flexible") {
-            scheduleInfo = `${exam.schedule.start_date} ${exam.schedule.start_time} - ${exam.schedule.end_date ?? "N/A"} ${exam.schedule.end_time ?? "N/A"}`;
+          if (schedule.schedule_type === "flexible") {
+            scheduleInfo = `${schedule.start_date} ${schedule.start_time} - ${schedule.end_date ?? "N/A"} ${schedule.end_time ?? "N/A"}`;
+          } else if (schedule.schedule_type === "fixed") {
+            scheduleInfo = `${schedule.start_date} ${schedule.start_time} (Fixed)`;
+          } else if (schedule.schedule_type === "attempts") {
+            scheduleInfo = `From ${schedule.start_date} ${schedule.start_time}`;
           } else {
-            scheduleInfo = `${exam.schedule.start_date} ${exam.schedule.start_time}`;
+            scheduleInfo = `${schedule.start_date} ${schedule.start_time}`;
           }
 
           return (
             <div key={index} className="p-4 bg-white shadow-sm rounded-lg">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-lg font-semibold">{exam.title}</h3>
-                {exam.is_free === 1 && <span className="bg-green-500 text-white text-xs font-semibold px-3 py-1 rounded-full">Free</span>}
+                {exam.is_free === 1 && (
+                  <span className="bg-green-500 text-white text-xs font-semibold px-3 py-1 rounded-full">
+                    Free
+                  </span>
+                )}
               </div>
               <div className="text-gray-600 flex flex-col mb-3">
                 <div className="flex items-center justify-between border-b border-dashed pb-2 mb-2">
@@ -331,15 +376,32 @@ export default function ExamDetailPage({ params }: { params: { slug: string } })
                 <span className="font-semibold">Available Between:</span> {scheduleInfo}
               </div>
               {isUpcoming ? (
-                <span className="bg-gray-300 text-gray-500 py-2 px-5 rounded-sm text-sm block w-full text-center">Upcoming</span>
+                <button
+                  className="bg-[#ffc300] hover:bg-yellow-500 text-white py-2 px-5 rounded-full font-semibold text-sm cursor-not-allowed inline-flex items-center justify-center space-x-1 w-full"
+                  disabled
+                >
+                  <MdLockOutline className="flex-shrink-0" />
+                  <span>Upcoming</span>
+                </button>
+              ) : exam.is_resume ? (
+                <Link
+                  href={`/dashboard/exam-play/${exam.slug}?sid=${schedule.schedule_id}`}
+                  className="text-white bg-[#C9BC0F] px-5 py-2 rounded-full hover:bg-[#928c38] transition duration-200 inline-flex items-center justify-center space-x-1 font-semibold text-sm w-full"
+                >
+                  <FiPlay />
+                  <span>Resume</span>
+                </Link>
               ) : exam.is_free === 1 ? (
-                <Link href={`/dashboard/exam-detail/${exam.slug}?sid=${exam.schedule.schedule_id}`} className="bg-defaultcolor text-white py-2 px-5 block rounded-sm text-center w-full">
-                  View Details
+                <Link
+                  href={`/dashboard/exam-detail/${exam.slug}?sid=${schedule.schedule_id}`}
+                  className="bg-green-600 text-white px-5 py-2 rounded-full font-semibold text-sm hover:bg-green-700 transition duration-200 inline-flex items-center justify-center w-full"
+                >
+                  Start Exam
                 </Link>
               ) : (
                 <button
-                  onClick={() => handlePayment(exam.slug)}
-                  className="bg-yellow-500 text-white py-2 px-5 rounded-sm block w-full"
+                  onClick={() => handlePayment(`${exam.slug}?sid=${schedule.schedule_id}`)}
+                  className="bg-defaultcolor text-white py-2 px-5 rounded-full font-semibold text-sm hover:bg-defaultcolor-dark w-full"
                 >
                   Pay Now
                 </button>

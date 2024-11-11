@@ -2,19 +2,17 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import Cookies from "js-cookie";
-
 import { FiCheckCircle, FiPercent, FiThumbsUp, FiThumbsDown } from "react-icons/fi";
 import DashboardCard from "@/components/DashboardCards";
 import NoData from "@/components/Common/NoData";
 import Loader from "@/components/Common/Loader";
 import { useRouter } from "next/navigation";
 import FullCalendar from "@fullcalendar/react";
-
 import dayGridPlugin from "@fullcalendar/daygrid";
 import { Tooltip } from "flowbite-react";
 import ResumeExamTable from "@/components/ResumeExamTable";
 import UpcomingExamsTable from "@/components/UpcomingExamsTable";
-
+import { toast } from "react-toastify";
 
 interface Exam {
   id: string;
@@ -52,7 +50,7 @@ interface ResumeExam {
   exam_duration: number;
   point_mode: string;
   point: number;
-  schedule_id:string;
+  schedule_id: string;
 }
 
 interface UpcomingExams {
@@ -72,6 +70,8 @@ interface UpcomingExams {
   start_time: string;
   end_date: string | null;
   end_time: string | null;
+  is_free: number; // Indicates if the exam is free
+  is_resume: boolean; // Indicates if the exam can be resumed
 }
 
 interface CalendarExam {
@@ -104,12 +104,34 @@ interface DashboardData {
   calenderQuiz: CalendarQuiz[];
 }
 
+const CACHE_KEY = "serverTimeCache";
+const CACHE_DURATION = 60000; // 1 minute in milliseconds
+
 export default function DashboardPage() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [userName, setUserName] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [serverTime, setServerTime] = useState<Date | null>(null);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
+
+  const getCachedServerTime = (): Date | null => {
+    const cachedData = sessionStorage.getItem(CACHE_KEY);
+    if (cachedData) {
+      const { serverTime, timestamp } = JSON.parse(cachedData);
+      if (Date.now() - timestamp < CACHE_DURATION) {
+        return new Date(serverTime);
+      }
+    }
+    return null;
+  };
+
+  const cacheServerTime = (time: Date) => {
+    sessionStorage.setItem(
+      CACHE_KEY,
+      JSON.stringify({ serverTime: time.toISOString(), timestamp: Date.now() })
+    );
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -127,16 +149,30 @@ export default function DashboardPage() {
       }
 
       try {
-        const dashboardResponse = await axios.get<DashboardData>(`${process.env.NEXT_PUBLIC_API_URL}/student-dashboard`, {
-          headers: { Authorization: `Bearer ${jwt}` },
-          params: { category: category_id },
-        });
+        let cachedServerTime = getCachedServerTime();
+        if (!cachedServerTime) {
+          const timeResponse = await axios.get("/api/time");
+          cachedServerTime = new Date(timeResponse.data.serverTime);
+          cacheServerTime(cachedServerTime);
+        }
+        setServerTime(cachedServerTime);
+
+        const dashboardResponse = await axios.get<DashboardData>(
+          `${process.env.NEXT_PUBLIC_API_URL}/student-dashboard`,
+          {
+            headers: { Authorization: `Bearer ${jwt}` },
+            params: { category: category_id },
+          }
+        );
 
         setData(dashboardResponse.data);
 
-        const profileResponse = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/profile`, {
-          headers: { Authorization: `Bearer ${jwt}` },
-        });
+        const profileResponse = await axios.get(
+          `${process.env.NEXT_PUBLIC_API_URL}/profile`,
+          {
+            headers: { Authorization: `Bearer ${jwt}` },
+          }
+        );
 
         setUserName(profileResponse.data.user.name);
       } catch (error) {
@@ -149,6 +185,19 @@ export default function DashboardPage() {
     fetchData();
   }, []);
 
+  // Update serverTime every second
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (serverTime) {
+      interval = setInterval(() => {
+        setServerTime((prevTime) => new Date(prevTime!.getTime() + 1000));
+      }, 1000);
+    }
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [serverTime]);
+
   if (loading) return <Loader />;
   if (error) return <div>{error}</div>;
   if (!data) return <NoData message="No Data Found" />;
@@ -156,22 +205,29 @@ export default function DashboardPage() {
   const roundedAverageScore = Math.round(data.average_exam);
 
   // Generate events dynamically from API response
-  const examEvents = data.calenderExam?.map((exam) => ({
-    title: exam.title,
-    date: exam.start_date,
-  })) || [];
+  const examEvents =
+    data.calenderExam?.map((exam) => ({
+      title: exam.title,
+      date: exam.start_date,
+    })) || [];
 
-  const quizEvents = data.calenderQuiz?.map((quiz) => ({
-    title: quiz.title,
-    date: quiz.start_date,
-  })) || [];
+  const quizEvents =
+    data.calenderQuiz?.map((quiz) => ({
+      title: quiz.title,
+      date: quiz.start_date,
+    })) || [];
 
   const renderEventContent = (eventInfo: { event: { title: string; startStr: string } }) => (
-    <Tooltip  placement="bottom"
-      content={`Event: ${eventInfo.event.title || "N/A"} on ${eventInfo.event.startStr || "N/A"}`}
+    <Tooltip
+      placement="bottom"
+      content={`Event: ${eventInfo.event.title || "N/A"} on ${
+        eventInfo.event.startStr || "N/A"
+      }`}
       className="tooltip-content z-50"
     >
-      <div className="text-center cursor-pointer">{eventInfo.event.title || "Untitled Event"}</div>
+      <div className="text-center cursor-pointer">
+        {eventInfo.event.title || "Untitled Event"}
+      </div>
     </Tooltip>
   );
 
@@ -182,31 +238,47 @@ export default function DashboardPage() {
       </h1>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <DashboardCard title="Completed Exams" content={`${data.completed_exam}`} icon={<FiThumbsUp />} iconColor="text-green-500" />
-        <DashboardCard title="Average Score" content={`${roundedAverageScore}%`} icon={<FiPercent />} iconColor="text-indigo-500" />
-        <DashboardCard title="Passed" content={`${data.pass_exam}`} icon={<FiCheckCircle />} iconColor="text-defaultcolor" />
-        <DashboardCard title="Failed" content={`${data.failed_exam}`} icon={<FiThumbsDown />} iconColor="text-red-500" />
-        
+        <DashboardCard
+          title="Completed Exams"
+          content={`${data.completed_exam}`}
+          icon={<FiThumbsUp />}
+          iconColor="text-green-500"
+        />
+        <DashboardCard
+          title="Average Score"
+          content={`${roundedAverageScore}%`}
+          icon={<FiPercent />}
+          iconColor="text-indigo-500"
+        />
+        <DashboardCard
+          title="Passed"
+          content={`${data.pass_exam}`}
+          icon={<FiCheckCircle />}
+          iconColor="text-defaultcolor"
+        />
+        <DashboardCard
+          title="Failed"
+          content={`${data.failed_exam}`}
+          icon={<FiThumbsDown />}
+          iconColor="text-red-500"
+        />
       </div>
 
       {/* Render ResumeExamTable with dynamic data */}
-      {data.resumedExam && data.resumedExam.length > 0 && <ResumeExamTable resumedExam={data.resumedExam} />}
-      {data.upcomingExams && data.upcomingExams.length > 0 && (
-        <UpcomingExamsTable upcomingExams={data.upcomingExams} />
+      {data.resumedExam && data.resumedExam.length > 0 && (
+        <ResumeExamTable resumedExam={data.resumedExam} />
       )}
 
-      {/* {data.exams && data.exams.length > 0 && <ExamTable exams={data.exams} />}
-      {data.quizzes && data.quizzes.length > 0 && <QuizTable quizzes={data.quizzes} />} */}
+      {data.upcomingExams && data.upcomingExams.length > 0 && (
+        <UpcomingExamsTable upcomingExams={data.upcomingExams} serverTime={serverTime} />
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 my-8">
         {/* Exam Calendar */}
         <div>
-        <h2 className="text-lg lg:text-2xl font-bold mb-3">Exams</h2>
-     
-        <div className="bg-white p-2 shadow-sm rounded-lg">
-         
-          
-        <FullCalendar
+          <h2 className="text-lg lg:text-2xl font-bold mb-3">Exams</h2>
+          <div className="bg-white p-2 shadow-sm rounded-lg">
+            <FullCalendar
               eventClassNames="text-center text-blue-500 cursor-pointer"
               plugins={[dayGridPlugin]}
               initialView="dayGridMonth"
@@ -220,16 +292,14 @@ export default function DashboardPage() {
               height="auto"
               contentHeight="auto"
             />
-        </div>
+          </div>
         </div>
 
         {/* Quiz Calendar */}
         <div>
-        <h2 className="text-lg lg:text-2xl font-bold mb-3">Quizzes</h2>
-        <div className="bg-white p-2 shadow-sm rounded-lg">
-         
-          
-        <FullCalendar
+          <h2 className="text-lg lg:text-2xl font-bold mb-3">Quizzes</h2>
+          <div className="bg-white p-2 shadow-sm rounded-lg">
+            <FullCalendar
               eventClassNames="text-center text-blue-500 cursor-pointer"
               plugins={[dayGridPlugin]}
               initialView="dayGridMonth"
@@ -243,8 +313,8 @@ export default function DashboardPage() {
               height="auto"
               contentHeight="auto"
             />
+          </div>
         </div>
-      </div>
       </div>
     </div>
   );

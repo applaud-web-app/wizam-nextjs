@@ -4,11 +4,11 @@ import { useState } from "react";
 import Header from "@/components/DashboardHeader";
 import Sidebar from "@/components/DashboardSidebar";
 import Footer from "@/components/DashboardFooter";
-import { Jost } from "next/font/google";
+import { Poppins } from "next/font/google";
 import {  useSyllabus } from "@/context/SyllabusContext"; // Use Syllabus Context
 
 // Importing the Google font
-const jost = Jost({
+const poppins = Poppins({
   subsets: ["latin"],
   weight: ["400", "600", "700"],
 });
@@ -26,7 +26,7 @@ export default function DashboardLayout({ children }: LayoutProps): JSX.Element 
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
 
   return (
-    <div className={jost.className}>
+    <div className={poppins.className}>
       {/* Outer container with overflow-hidden to prevent unintended overflow */}
       <div className="bg-[#f3f4f6] text-gray-900 dark:bg-gray-900 dark:text-gray-100 transition-colors duration-500 min-h-screen flex flex-col overflow-hidden">
         

@@ -68,7 +68,7 @@ export default function ResumeExamTable({ resumedExam }: ResumeExamTableProps) {
                 <td className="p-4">
                   <button
                     onClick={() => handleResumeExam(exam.slug+"?sid="+exam.schedule_id)}
-                    className="text-white bg-[#C9BC0F] px-3 py-1 rounded-md hover:bg-[#928c38] transition duration-200 flex items-center space-x-1"
+                    className="text-white bg-[#C9BC0F] px-5 py-1 rounded-full hover:bg-[#928c38] transition duration-200 flex items-center space-x-1"
                   >
                     <FiPlay />
                     <span>Resume</span>

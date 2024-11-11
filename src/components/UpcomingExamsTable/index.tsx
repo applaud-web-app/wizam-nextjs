@@ -1,5 +1,10 @@
 import Link from "next/link";
 import { MdLockOutline } from "react-icons/md";
+import { FiPlay } from "react-icons/fi";
+import { useRouter } from "next/navigation";
+import axios from "axios";
+import Cookies from "js-cookie";
+import { toast } from "react-toastify";
 
 interface UpcomingExam {
   id: number;
@@ -18,16 +23,20 @@ interface UpcomingExam {
   start_time: string;
   end_date: string | null;
   end_time: string | null;
+  is_free: number;
+  is_resume: boolean;
 }
 
 interface UpcomingExamsTableProps {
   upcomingExams: UpcomingExam[];
+  serverTime: Date | null;
 }
 
-export default function UpcomingExamsTable({ upcomingExams }: UpcomingExamsTableProps) {
-  if (!upcomingExams || upcomingExams.length === 0) return <p>No upcoming exams available</p>;
+export default function UpcomingExamsTable({ upcomingExams, serverTime }: UpcomingExamsTableProps) {
+  const router = useRouter();
 
-  const isDisabled = true; // Change this to control if links should be disabled
+  if (!upcomingExams || upcomingExams.length === 0)
+    return <p>No upcoming exams available</p>;
 
   return (
     <div className="mb-8">
@@ -50,73 +59,162 @@ export default function UpcomingExamsTable({ upcomingExams }: UpcomingExamsTable
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
             {upcomingExams.map((examEntry, index) => {
-              // Get either the flat structure fields or fields within exam object
-              const examSlug = examEntry.exam_slug;
-              const examName = examEntry.exam_name;
-              const durationMode = examEntry.duration_mode;
-              const examDuration = examEntry.exam_duration;
-              const totalTime = examEntry.total_time;
-              const totalQuestions = examEntry.total_questions;
-              const totalMarks = examEntry.total_marks;
-              const pointMode = examEntry.point_mode;
-              const point = examEntry.point;
-              const start_date = examEntry.start_date;
-              const start_time = examEntry.start_time;
-              const end_date = examEntry.end_date;
-              const end_time = examEntry.end_time;
-              const schedule_type = examEntry.schedule_type;
-              const schedule_id = examEntry.schedule_id;
+              const {
+                exam_slug,
+                exam_name,
+                duration_mode,
+                exam_duration,
+                total_time,
+                total_questions,
+                total_marks,
+                point_mode,
+                point,
+                start_date,
+                start_time,
+                end_date,
+                end_time,
+                schedule_type,
+                schedule_id,
+                is_free,
+                is_resume,
+              } = examEntry;
 
-              // Get schedule details if available
-              // const schedule = examEntry.schedules;
-              if (!examName) return null; // Skip if exam_name is missing
+              if (!exam_name) return null;
 
               // Combine date and time for Start and End
-              const startDateTime = start_date
-                ? `${new Date(start_date).toLocaleDateString()} ${start_time}`
-                : "N/A";
-              const endDateTime = end_date ? `${new Date(end_date).toLocaleDateString()} ${end_time || "N/A"}`
-                : "N/A";
+              const startDateTime = new Date(`${start_date}T${start_time}`);
+              const endDateTime =
+                end_date && end_time ? new Date(`${end_date}T${end_time}`) : null;
 
-              let scheduleTime = startDateTime;
+              let scheduleTime = startDateTime.toLocaleString();
               if (schedule_type === "flexible") {
-                scheduleTime = `${startDateTime} - ${endDateTime}`;
+                const endDateTimeStr = endDateTime
+                  ? endDateTime.toLocaleString()
+                  : "N/A";
+                scheduleTime = `${startDateTime.toLocaleString()} - ${endDateTimeStr}`;
               } else if (schedule_type === "fixed") {
-                scheduleTime = `Fixed : ${startDateTime}`;
+                scheduleTime = `Fixed: ${startDateTime.toLocaleString()}`;
               }
+
+              const currentTime = serverTime || new Date();
+
+              let isUpcoming = false;
+              let isAvailable = false;
+              let isOver = false;
+
+              if (schedule_type === "flexible" || schedule_type === "fixed") {
+                if (currentTime < startDateTime) {
+                  isUpcoming = true;
+                } else if (endDateTime && currentTime > endDateTime) {
+                  isOver = true;
+                } else {
+                  isAvailable = true;
+                }
+              } else if (schedule_type === "attempts") {
+                if (currentTime < startDateTime) {
+                  isUpcoming = true;
+                } else {
+                  isAvailable = true;
+                }
+              }
+
+              // Skip over exams
+              if (isOver) {
+                return null;
+              }
+
+              const handlePayment = async () => {
+                try {
+                  const jwt = Cookies.get("jwt");
+                  const type = "exams";
+                  if (!jwt) {
+                    toast.error("User is not authenticated. Please log in.");
+                    return;
+                  }
+                  const response = await axios.get(
+                    `${process.env.NEXT_PUBLIC_API_URL}/user-subscription`,
+                    {
+                      headers: {
+                        Authorization: `Bearer ${jwt}`,
+                      },
+                      params: { type },
+                    }
+                  );
+                  if (response.data.status === true) {
+                    router.push(
+                      `/dashboard/exam-detail/${exam_slug}?sid=${schedule_id}`
+                    );
+                  } else {
+                    toast.error("Please buy a subscription to access this course.");
+                    router.push("/pricing");
+                  }
+                } catch (error: any) {
+                  if (error.response) {
+                    const { status, data } = error.response;
+                    if (status === 401) {
+                      toast.error("User is not authenticated. Please log in.");
+                      router.push("/signin");
+                    } else if (status === 403 || status === 404) {
+                      toast.error("Please buy a subscription to access this course.");
+                      router.push("/pricing");
+                    } else {
+                      toast.error(`An error occurred: ${data.error || "Unknown error"}`);
+                    }
+                  } else {
+                    toast.error("An error occurred. Please try again.");
+                  }
+                }
+              };
 
               return (
                 <tr key={examEntry.id} className="hover:bg-gray-50">
                   <td className="p-4">{index + 1}</td>
-                  <td className="p-4">{examName}</td>
+                  <td className="p-4">{exam_name}</td>
                   <td className="p-4">{scheduleTime}</td>
                   <td className="p-4">
-                    {durationMode === "manual"
-                      ? examDuration
-                      : Math.floor(totalTime / 60)}{" "}
+                    {duration_mode === "manual"
+                      ? exam_duration
+                      : Math.floor(total_time / 60)}{" "}
                     min
                   </td>
-                  <td className="p-4">{totalQuestions}</td>
+                  <td className="p-4">{total_questions}</td>
                   <td className="p-4">
-                    {pointMode === "manual"
-                      ? totalQuestions * (point || 0)
-                      : totalMarks}
+                    {point_mode === "manual"
+                      ? total_questions * (point || 0)
+                      : total_marks}
                   </td>
                   <td className="p-4">
-                    <div>
-                      <Link data-id={`/dashboard/exam-detail/${examSlug}?sid=${schedule_id}`}
-                        href={isDisabled ? "#" : `/dashboard/exam-detail/${examSlug}?sid=${schedule_id}`}
-                        onClick={(e) => isDisabled && e.preventDefault()}
-                        className={`px-3 text-sm py-1 inline-flex items-center justify-center space-x-1 rounded-full transition duration-200 ${
-                          isDisabled
-                            ? "text-white bg-[#ffc300] hover:bg-yellow-500"
-                            : "text-white bg-[#ffc300] hover:bg-yellow-500"
-                        }`}
+                    {isUpcoming ? (
+                      <button
+                        className="bg-[#ffc300] hover:bg-yellow-500 text-white py-1 px-5 rounded-full font-semibold text-sm cursor-not-allowed inline-flex items-center space-x-1 w-32"
+                        disabled
                       >
-                        <MdLockOutline />
+                        <MdLockOutline className="flex-shrink-0" />
                         <span>Upcoming</span>
+                      </button>
+                    ) : is_resume ? (
+                      <Link
+                        href={`/dashboard/exam-play/${exam_slug}?sid=${schedule_id}`}
+                        className="text-white bg-[#C9BC0F] px-5 py-1 rounded-full hover:bg-[#928c38] transition duration-200 inline-flex items-center justify-center space-x-1 font-semibold text-sm w-32"
+                      >
+                        <FiPlay />
+                        <span>Resume</span>
                       </Link>
-                    </div>
+                    ) : is_free === 1 ? (
+                      <Link
+                        href={`/dashboard/exam-detail/${exam_slug}?sid=${schedule_id}`}
+                        className="bg-green-600 text-white px-5 py-1 rounded-full font-semibold text-sm hover:bg-green-700 transition duration-200 inline-flex items-center justify-center w-32"
+                      >
+                        Start Exam
+                      </Link>
+                    ) : (
+                      <button
+                        className="bg-defaultcolor text-white py-1 px-5 rounded-full font-semibold text-sm hover:bg-defaultcolor-dark w-32"
+                        onClick={handlePayment}
+                      >
+                        Pay Now
+                      </button>
+                    )}
                   </td>
                 </tr>
               );
