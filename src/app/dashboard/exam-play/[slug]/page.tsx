@@ -37,7 +37,11 @@ interface Question {
   question: string | string[]; // The question text
   options?: string[];
 }
-
+interface SavedAnswer {
+  id: number;
+  type: string;
+  answer: any;
+}
 // ExamData interface
 interface ExamData {
   question_view: string;
@@ -47,7 +51,7 @@ interface ExamData {
   points: number;
   finish_button: string; // "enable" or "disable"
   total_time: string;
-  saved_answers: string;
+  saved_answers: SavedAnswer[];
 }
 
 export default function PlayExamPage({ params }: { params: { slug: string } }) {
@@ -164,6 +168,17 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
             saved_answers: fetchExamData.saved_answers,
           });
           setTimeLeft(Math.round(parseFloat(fetchExamData.duration) * 60));
+
+          initializeAnswers({
+            title: fetchExamData.title,
+            questions: fetchExamData.questions,
+            duration: fetchExamData.duration,
+            points: fetchExamData.points,
+            question_view: fetchExamData.question_view,
+            finish_button: fetchExamData.finish_button,
+            total_time: fetchExamData.total_time,
+            saved_answers: fetchExamData.saved_answers,
+          });
 
           // Now that examData is loaded, set up saved answers
           if (fetchExamData.saved_answers) {
@@ -320,6 +335,33 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
 
     fetchExamSet();
   }, [params, router]);
+
+  
+ // Function to initialize answers and start from the last answered question
+ const initializeAnswers = (fetchExamData: ExamData) => {
+  const formattedAnswers: { [key: number]: string[] | null } = {};
+
+  // Populate answers from saved answers in `fetchExamData`
+  fetchExamData.questions.forEach((question) => {
+    const savedAnswer = fetchExamData.saved_answers.find((ans) => ans.id === question.id);
+    formattedAnswers[question.id] = savedAnswer ? savedAnswer.answer : null;
+  });
+
+  setAnswers(formattedAnswers);
+  setIsInitialized(true);
+
+  // Find the last answered question based on saved answers
+  let lastAnsweredIndex = 0;
+  fetchExamData.questions.forEach((question, index) => {
+    const savedAnswer = fetchExamData.saved_answers.find((ans) => ans.id === question.id);
+    if (savedAnswer && savedAnswer.answer && savedAnswer.answer.length > 0) {
+      lastAnsweredIndex = index;
+    }
+  });
+
+  // Set the initial question index to the last answered question
+  setCurrentQuestionIndex(lastAnsweredIndex);
+};
 
   const clearAnswer = () => {
     if (!examData) {
