@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import {
   FaCheckCircle,
-  FaTimesCircle,FaRegCalendarAlt,
+  FaTimesCircle,
+  FaRegCalendarAlt,
   FaCheck,
   FaTimes,
   FaRegCircle,
@@ -634,21 +635,21 @@ const ExamResult = ({ params }: ExamResultProps) => {
         <h1 className="text-3xl font-bold">{userExamResult.title}</h1>
       </div>
 
-        <div className="flex items-center space-x-3 flex-wrap mb-3">
-          <div className="mb-1">
-            <p className="text-lg">Exam Packs: {examData.exam_result_type}</p>
-          </div>
-          
-          <div className="flex items-center mb-1">
-            <FaRegCalendarAlt  className=" mr-2" />
-            <p className="text-lg">{examData.exam_result_date}</p>
-          </div>
-
-          <div className="flex items-center mb-1">
-            <FaClock className="mr-2" />
-            <p className="text-lg">{examData.exam_result_time}</p>
-          </div>
+      <div className="flex items-center space-x-3 flex-wrap mb-3">
+        <div className="mb-1">
+          <p className="text-lg">Exam Packs: {examData.exam_result_type}</p>
         </div>
+
+        <div className="flex items-center mb-1">
+          <FaRegCalendarAlt className=" mr-2" />
+          <p className="text-lg">{examData.exam_result_date}</p>
+        </div>
+
+        <div className="flex items-center mb-1">
+          <FaClock className="mr-2" />
+          <p className="text-lg">{examData.exam_result_time}</p>
+        </div>
+      </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
         <button
@@ -682,154 +683,163 @@ const ExamResult = ({ params }: ExamResultProps) => {
       </div>
 
       {activeTab === "A" && (
-  <div>
-    {/* Pass or Fail Message */}
-    <div className="text-center mb-8">
-      {passed ? (
-        <div className="bg-white p-8 rounded-lg shadow-sm">
-          <FaCheckCircle className="text-green-500 mx-auto mb-3" size={60} />
-          <h1 className="text-3xl font-bold text-green-600 uppercase">
-            Congratulations! You Passed!
-          </h1>
-          <p className="text-gray-700 mt-2">
-            You successfully met the passing criteria for this exam.
-          </p>
-        </div>
-      ) : (
-        <div className="bg-white p-8 rounded-lg shadow-sm">
-          <FaTimesCircle className="text-red-500 mx-auto mb-3" size={60} />
-          <h1 className="text-3xl font-bold text-red-600 uppercase">
-            Sorry, You Failed
-          </h1>
-          <p className="text-gray-700 mt-2">
-            Review your performance below to understand areas for improvement.
-          </p>
+        <div>
+          {/* Pass or Fail Message */}
+          <div className="text-center mb-8">
+            {passed ? (
+              <div className="bg-white p-8 rounded-lg shadow-sm">
+                <FaCheckCircle
+                  className="text-green-500 mx-auto mb-3"
+                  size={60}
+                />
+                <h1 className="text-3xl font-bold text-green-600 uppercase">
+                  Congratulations! You Passed!
+                </h1>
+                <p className="text-gray-700 mt-2">
+                  You successfully met the passing criteria for this exam.
+                </p>
+              </div>
+            ) : (
+              <div className="bg-white p-8 rounded-lg shadow-sm">
+                <FaTimesCircle
+                  className="text-red-500 mx-auto mb-3"
+                  size={60}
+                />
+                <h1 className="text-3xl font-bold text-red-600 uppercase">
+                  Sorry, You Failed
+                </h1>
+                <p className="text-gray-700 mt-2">
+                  Review your performance below to understand areas for
+                  improvement.
+                </p>
+              </div>
+            )}
+          </div>
+
+          <div className="bg-white lg:p-6 p-3 rounded-lg shadow-sm">
+            {/* Summary Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mb-6">
+              <ResultCard
+                title="Total Questions"
+                value={totalQuestions}
+                icon={<FaQuestionCircle className="text-blue-700" size={32} />}
+              />
+              <ResultCard
+                title="Correct Answers"
+                value={userExamResult.correctCount}
+                icon={<FaCheckCircle className="text-green-700" size={32} />}
+              />
+              <ResultCard
+                title="Wrong Answers"
+                value={userExamResult.wrongCount}
+                icon={<FaTimesCircle className="text-red-700" size={32} />}
+              />
+              <ResultCard
+                title="Skipped"
+                value={userExamResult.skippedCount}
+                icon={<FaMinusCircle className="text-orange-700" size={32} />}
+              />
+              <ResultCard
+                title="Marks"
+                value={userExamResult.marks}
+                icon={<FaRibbon className="text-purple-700" size={32} />}
+              />
+              <ResultCard
+                title="Time Taken"
+                value={formatTimeTaken(userExamResult.timeTaken)}
+                icon={<FaClock className="text-teal-700" size={32} />}
+              />
+            </div>
+
+            {/* Chart Section */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-8">
+              {/* Answer Distribution Chart */}
+              <div className="border border-gray-200 p-3 rounded-lg  ">
+                <h2 className="text-lg font-semibold text-gray-800 mb-2">
+                  Answer Distribution
+                </h2>
+                <p className="text-sm text-gray-600">
+                  A breakdown of your answers, showing correct, incorrect, and
+                  skipped responses.
+                </p>
+                <div
+                  className="mx-auto"
+                  style={{ width: "100%", maxWidth: "300px", height: "auto" }}
+                >
+                  <Doughnut
+                    data={{
+                      labels: ["Correct", "Incorrect", "Skipped"],
+                      datasets: [
+                        {
+                          data: [
+                            userExamResult.correctCount,
+                            userExamResult.wrongCount,
+                            userExamResult.skippedCount,
+                          ],
+                          backgroundColor: ["#4CAF50", "#F44336", "#FF9800"],
+                        },
+                      ],
+                    }}
+                    options={{
+                      responsive: true,
+                      plugins: {
+                        legend: { position: "bottom" },
+                        tooltip: {
+                          callbacks: {
+                            label: (context) =>
+                              `${context.label}: ${context.raw}`,
+                          },
+                        },
+                      },
+                    }}
+                  />
+                </div>
+              </div>
+
+              {/* Score Comparison Chart */}
+              <div className="border border-gray-200 p-3 rounded-lg ">
+                <h2 className="text-lg font-semibold text-gray-800 mb-2">
+                  Score Comparison
+                </h2>
+                <p className="text-sm text-gray-600 ">
+                  See how your score compares to the passing score.
+                </p>
+                <div className="mx-auto">
+                  <Bar
+                    data={{
+                      labels: ["Your Score", "Passing Score"],
+                      datasets: [
+                        {
+                          label: "Score",
+                          data: [
+                            userExamResult.correctCount,
+                            Math.ceil(totalQuestions * passingScore),
+                          ],
+                          backgroundColor: ["#4CAF50", "#FFC107"],
+                        },
+                      ],
+                    }}
+                    options={{
+                      responsive: true,
+                      plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                          callbacks: {
+                            label: (context) => `Score: ${context.raw}`,
+                          },
+                        },
+                      },
+                      scales: {
+                        y: { beginAtZero: true, max: totalQuestions },
+                      },
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       )}
-    </div>
-
-    <div className="bg-white lg:p-6 p-3 rounded-lg shadow-sm">
-    {/* Summary Cards */}
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mb-6">
-      <ResultCard
-        title="Total Questions"
-        value={totalQuestions}
-        icon={<FaQuestionCircle className="text-blue-700" size={32} />}
-      />
-      <ResultCard
-        title="Correct Answers"
-        value={userExamResult.correctCount}
-        icon={<FaCheckCircle className="text-green-700" size={32} />}
-      />
-      <ResultCard
-        title="Wrong Answers"
-        value={userExamResult.wrongCount}
-        icon={<FaTimesCircle className="text-red-700" size={32} />}
-      />
-      <ResultCard
-        title="Skipped"
-        value={userExamResult.skippedCount}
-        icon={<FaMinusCircle className="text-orange-700" size={32} />}
-      />
-      <ResultCard
-        title="Marks"
-        value={userExamResult.marks}
-        icon={<FaRibbon className="text-purple-700" size={32} />}
-      />
-      <ResultCard
-        title="Time Taken"
-        value={formatTimeTaken(userExamResult.timeTaken)}
-        icon={<FaClock className="text-teal-700" size={32} />}
-      />
-    </div>
-
-    {/* Chart Section */}
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-8">
-      {/* Answer Distribution Chart */}
-      <div className="border border-gray-200 p-3 rounded-lg  ">
-        <h2 className="text-lg font-semibold text-gray-800 mb-2">
-          Answer Distribution
-        </h2>
-        <p className="text-sm text-gray-600">
-          A breakdown of your answers, showing correct, incorrect, and skipped responses.
-        </p>
-        <div className="mx-auto" style={{ width: '100%', maxWidth: '300px', height: 'auto' }}>
-          <Doughnut
-            data={{
-              labels: ["Correct", "Incorrect", "Skipped"],
-              datasets: [
-                {
-                  data: [
-                    userExamResult.correctCount,
-                    userExamResult.wrongCount,
-                    userExamResult.skippedCount,
-                  ],
-                  backgroundColor: ["#4CAF50", "#F44336", "#FF9800"],
-                },
-              ],
-            }}
-            options={{
-              responsive: true,
-              plugins: {
-                legend: { position: "bottom" },
-                tooltip: {
-                  callbacks: {
-                    label: (context) => `${context.label}: ${context.raw}`,
-                  },
-                },
-              },
-            }}
-          />
-        </div>
-      </div>
-
-      {/* Score Comparison Chart */}
-      <div className="border border-gray-200 p-3 rounded-lg ">
-        <h2 className="text-lg font-semibold text-gray-800 mb-2">
-          Score Comparison
-        </h2>
-        <p className="text-sm text-gray-600 ">
-          See how your score compares to the passing score.
-        </p>
-        <div className="mx-auto" >
-          <Bar
-            data={{
-              labels: ["Your Score", "Passing Score"],
-              datasets: [
-                {
-                  label: "Score",
-                  data: [
-                    userExamResult.correctCount,
-                    Math.ceil(totalQuestions * passingScore),
-                  ],
-                  backgroundColor: ["#4CAF50", "#FFC107"],
-                },
-              ],
-            }}
-            options={{
-              responsive: true,
-              plugins: {
-                legend: { display: false },
-                tooltip: {
-                  callbacks: {
-                    label: (context) => `Score: ${context.raw}`,
-                  },
-                },
-              },
-              scales: {
-                y: { beginAtZero: true, max: totalQuestions },
-              },
-            }}
-          />
-        </div>
-      </div>
-    </div>
-    </div>
-
-
-  </div>
-)}
-
 
       {activeTab === "B" && (
         <div>
