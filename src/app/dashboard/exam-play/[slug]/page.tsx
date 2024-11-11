@@ -336,32 +336,62 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
     fetchExamSet();
   }, [params, router]);
 
+  const initializeAnswers = (fetchExamData: ExamData) => {
+    const formattedAnswers: { [key: number]: string[] | null } = {};
   
- // Function to initialize answers and start from the last answered question
- const initializeAnswers = (fetchExamData: ExamData) => {
-  const formattedAnswers: { [key: number]: string[] | null } = {};
-
-  // Populate answers from saved answers in `fetchExamData`
-  fetchExamData.questions.forEach((question) => {
-    const savedAnswer = fetchExamData.saved_answers.find((ans) => ans.id === question.id);
-    formattedAnswers[question.id] = savedAnswer ? savedAnswer.answer : null;
-  });
-
-  setAnswers(formattedAnswers);
-  setIsInitialized(true);
-
-  // Find the last answered question based on saved answers
-  let lastAnsweredIndex = 0;
-  fetchExamData.questions.forEach((question, index) => {
-    const savedAnswer = fetchExamData.saved_answers.find((ans) => ans.id === question.id);
-    if (savedAnswer && savedAnswer.answer && savedAnswer.answer.length > 0) {
-      lastAnsweredIndex = index;
+    // Check if saved_answers and questions exist before proceeding
+    if (!fetchExamData.saved_answers || !fetchExamData.questions) {
+      console.error("Missing saved_answers or questions in exam data.");
+      return;
     }
-  });
-
-  // Set the initial question index to the last answered question
-  setCurrentQuestionIndex(lastAnsweredIndex);
-};
+  
+    // Populate answers from saved answers in fetchExamData
+    fetchExamData.questions.forEach((question) => {
+      const savedAnswer = fetchExamData.saved_answers.find((ans) => ans.id === question.id);
+  
+      
+      if (question.type === "ORD") {
+        if (savedAnswer && savedAnswer.answer.length > 0) {
+          // Set initial state to saved order using saved indices
+          formattedAnswers[question.id] = savedAnswer.answer.map(
+            (index: number) => question.options ? question.options[index] : ""
+          );
+  
+          // Set initial shuffled options to the saved order for later comparison
+          setInitialShuffledOptions((prev) => ({
+            ...prev,
+            [question.id]: [...(formattedAnswers[question.id] || [])], // Ensure it’s an array
+          }));
+        } else {
+          // No saved answer, initialize with a shuffled order
+          const shuffledOptions = shuffleArray(question.options || []);
+          formattedAnswers[question.id] = shuffledOptions;
+  
+          setInitialShuffledOptions((prev) => ({
+            ...prev,
+            [question.id]: shuffledOptions,
+          }));
+        }
+      } else {
+        // For other question types, set the saved answer directly
+        formattedAnswers[question.id] = savedAnswer ? savedAnswer.answer : [];
+      }
+    });
+  
+    setAnswers(formattedAnswers);
+    setIsInitialized(true);
+  
+    // Set the initial question index to the last answered question
+    let lastAnsweredIndex = 0;
+    fetchExamData.questions.forEach((question, index) => {
+      const savedAnswer = fetchExamData.saved_answers.find((ans) => ans.id === question.id);
+      if (savedAnswer && savedAnswer.answer && savedAnswer.answer.length > 0) {
+        lastAnsweredIndex = index;
+      }
+    });
+    setCurrentQuestionIndex(lastAnsweredIndex);
+  };
+  
 
   const clearAnswer = () => {
     if (!examData) {
@@ -663,14 +693,14 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
               answer: matches,
             };
 
-          case "ORD":
-            return {
-              id: question.id,
-              type: question.type,
-              answer: userAnswer.map((opt: string) =>
-                question.options ? question.options.indexOf(opt) : -1
-              ),
-            };
+            case "ORD":
+              return {
+                id: question.id,
+                type: question.type,
+                answer: (answers[question.id] || []).map((opt) =>
+                  question.options ? question.options.indexOf(opt) : -1
+                ),
+              };
 
           case "EMQ":
             const filteredAnswers = userAnswer.map((ans: string) => {
@@ -705,23 +735,44 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
   };
 
   const saveAnswerProgress = async (uuid: any, formattedAnswers: any) => {
+    // Return early if examData or uuid is null
+    if (!examData || !uuid) return;
+  
     try {
+      const ordQuestionIds = examData.questions
+        .filter((question) => question.type === "ORD")
+        .map((question) => question.id);
+  
+      const answersToSave = formattedAnswers.map((answer: { id: number; answer: number[]; }) => {
+        // Check for ORD answers if they match initial shuffled options
+        if (ordQuestionIds.includes(answer.id)) {
+          const initialOrder = initialShuffledOptions[answer.id] || [];
+          const currentOrder = answer.answer.map((index: number) =>
+            examData.questions.find((q) => q.id === answer.id)?.options?.[index]
+          );
+  
+          // Only save if the order has changed
+          if (arraysEqual(initialOrder, currentOrder)) {
+            return null;
+          }
+        }
+        return answer;
+      }).filter(Boolean); // Filter out null values where answers are unchanged
+  
+      if (answersToSave.length === 0) return; // If no answers to save, skip API call
+  
       const response = await axios.post(
         `${process.env.NEXT_PUBLIC_API_URL}/save-answer-progress/${uuid}`,
-        { answers: formattedAnswers },
+        { answers: answersToSave },
         {
           headers: {
             Authorization: `Bearer ${Cookies.get("jwt")}`,
           },
         }
       );
-
+  
       if (response.data.status) {
-        console.log(
-          "Answer progress saved successfully:",
-          response.data.message
-        );
-        // toast.success("Answer progress saved successfully!");
+        console.log("Answer progress saved successfully:", response.data.message);
       } else {
         console.error("Failed to save answer progress:", response.data.message);
         toast.error("Failed to save answer progress.");
@@ -731,6 +782,7 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
       toast.error("Failed to save answer progress.");
     }
   };
+  
 
   const handleNextQuestion = () => {
     if (
@@ -1151,6 +1203,7 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
                 </div>
               );
             }
+            
 
             case "TOF": {
               return (
