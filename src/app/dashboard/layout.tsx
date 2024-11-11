@@ -1,11 +1,12 @@
 "use client";
 
 import { useState } from "react";
+import { usePathname } from "next/navigation"; // Import usePathname hook from next/navigation
 import Header from "@/components/DashboardHeader";
 import Sidebar from "@/components/DashboardSidebar";
 import Footer from "@/components/DashboardFooter";
 import { Poppins } from "next/font/google";
-import {  useSyllabus } from "@/context/SyllabusContext"; // Use Syllabus Context
+import { useSyllabus } from "@/context/SyllabusContext"; // Use Syllabus Context
 
 // Importing the Google font
 const poppins = Poppins({
@@ -21,9 +22,16 @@ interface LayoutProps {
 export default function DashboardLayout({ children }: LayoutProps): JSX.Element {
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(false); // State to control sidebar open/close
   const { syllabusStatus } = useSyllabus(); // Get syllabus status from context (dynamically updated)
+  const pathname = usePathname(); // Get the current pathname
 
   // Function to toggle sidebar open/close state
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
+
+  // Define the base routes where you don't want the sidebar to appear, simulating wildcard paths
+  const noSidebarBaseRoutes = ["/dashboard/exam-play", "/dashboard/quiz-play"];
+  
+  // Check if the current route starts with any of the base routes
+  const showSidebar = !noSidebarBaseRoutes.some(route => pathname.startsWith(route));
 
   return (
     <div className={poppins.className}>
@@ -36,12 +44,14 @@ export default function DashboardLayout({ children }: LayoutProps): JSX.Element 
         {/* Main Container */}
         <div className="flex flex-1 pt-[70px] overflow-hidden">
           
-          {/* Sidebar navigation */}
-          <Sidebar
-            isSyllabusEnabled={syllabusStatus} // Dynamically check if the syllabus is enabled from context
-            isOpen={sidebarOpen} // Pass the sidebar open/close state
-            toggleSidebar={toggleSidebar} // Pass the function to toggle sidebar state
-          />
+          {/* Conditionally render Sidebar */}
+          {showSidebar && (
+            <Sidebar
+              isSyllabusEnabled={syllabusStatus} // Dynamically check if the syllabus is enabled from context
+              isOpen={sidebarOpen} // Pass the sidebar open/close state
+              toggleSidebar={toggleSidebar} // Pass the function to toggle sidebar state
+            />
+          )}
 
           {/* Main Content Area */}
           <div className="flex-1 flex flex-col overflow-hidden">

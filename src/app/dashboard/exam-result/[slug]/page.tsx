@@ -30,6 +30,7 @@ import {
   Title,
 } from "chart.js";
 import { Doughnut, Bar } from "react-chartjs-2";
+import NoData from "@/components/Common/NoData";
 
 ChartJS.register(
   ArcElement,
@@ -850,7 +851,7 @@ const ExamResult = ({ params }: ExamResultProps) => {
             {leaderBoard.length > 0 ? (
               <LeaderboardTable entries={leaderBoard} />
             ) : (
-              <p>No leaderboard data available.</p>
+              <NoData message="No leaderboard data available." />
             )}
           </div>
         </div>
