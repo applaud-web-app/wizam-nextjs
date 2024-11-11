@@ -1944,13 +1944,16 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
 
           {/* Exam Instructions */}
           <div className="p-4 text-center">
-            <button
-              className="bg-[#E74444] block text-white w-full px-4 py-2 rounded-lg hover:bg-green-600 transition-colors"
-              onClick={handleFinishClick}
-            >
-              Finish Exam
-            </button>
-          </div>
+              {examData?.finish_button === "enable" && (
+                <button
+                  className="bg-[#E74444] block text-white w-full px-4 py-2 rounded-lg hover:bg-green-600 transition-colors"
+                  onClick={handleFinishClick}
+                >
+                  Finish Exam
+                </button>
+              )}
+            </div>
+
         </div>
       )}
       {showModal && <ConfirmationModal />}{" "}
