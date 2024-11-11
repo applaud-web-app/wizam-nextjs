@@ -349,7 +349,6 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
     fetchExamData.questions.forEach((question) => {
       const savedAnswer = fetchExamData.saved_answers.find((ans) => ans.id === question.id);
   
-      
       if (question.type === "ORD") {
         if (savedAnswer && savedAnswer.answer.length > 0) {
           // Set initial state to saved order using saved indices
