@@ -1188,7 +1188,11 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
                               const newAnswers = currentAnswers.includes(option)
                                 ? currentAnswers.filter((a) => a !== option)
                                 : [...currentAnswers, option];
-                              handleAnswerChange(question.id, newAnswers);
+                              // Update answer immediately on a single click
+                              setAnswers((prevAnswers) => ({
+                                ...prevAnswers,
+                                [question.id]: newAnswers,
+                              }));
                             }}
                             checked={isChecked || false}
                             className={`cursor-pointer focus:ring-1 focus:ring-defaultcolor ${
