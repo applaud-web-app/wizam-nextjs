@@ -1,5 +1,4 @@
 "use client";
-
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import Cookies from "js-cookie";
@@ -108,7 +107,7 @@ const Subscription: React.FC = () => {
                   <td className="p-4">{getStatusBadge(subscription.status)}</td>
                   <td className="p-4">
                     <Link
-                      href={`/invoice/${subscription.id}`}
+                      href={`/invoice/${subscription.id}`} // Link to Invoice page with invoiceId
                       className="bg-defaultcolor text-white px-5 py-1 text-sm rounded-full hover:bg-defaultcolor-dark transition"
                     >
                       View Invoice

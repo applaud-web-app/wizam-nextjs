@@ -1,6 +1,6 @@
 "use client";
 import { FC, useEffect, useState } from "react";
-import { useRouter, usePathname } from "next/navigation"; // Import useRouter and usePathname from next/navigation
+import { useRouter, usePathname } from "next/navigation";
 import Image from "next/image";
 import axios from "axios";
 import Cookies from "js-cookie";
@@ -36,18 +36,18 @@ const Invoice: FC<Partial<InvoiceProps>> = () => {
   const router = useRouter();
   const pathname = usePathname();
 
-  // Extract subscriptionId from pathname
-  const subscriptionId = pathname.split("/").pop();
+  // Extract invoiceId from pathname
+  const invoiceId = pathname.split("/").pop();
 
   useEffect(() => {
-    if (!subscriptionId) return; // Wait until subscriptionId is available
+    if (!invoiceId) return; // Wait until invoiceId is available
 
     const fetchInvoiceData = async () => {
       try {
         const token = Cookies.get("jwt");
         if (!token) throw new Error("Authorization token not found.");
 
-        const invoiceResponse = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/invoice-detail/${subscriptionId}`, {
+        const invoiceResponse = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/invoice-detail/${invoiceId}`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -67,7 +67,7 @@ const Invoice: FC<Partial<InvoiceProps>> = () => {
     };
 
     fetchInvoiceData();
-  }, [subscriptionId]); // Refetch data if subscriptionId changes
+  }, [invoiceId]); // Refetch data if invoiceId changes
 
   const downloadInvoice = () => {
     const invoiceElement = document.getElementById("invoice-section");
