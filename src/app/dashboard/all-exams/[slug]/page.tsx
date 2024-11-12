@@ -35,6 +35,12 @@ interface ExamDetail {
 const CACHE_KEY = "serverTimeCache";
 const CACHE_DURATION = 60000; // 1 minute in milliseconds
 
+const formatDateTime = (dateString: string, timeString: string | null) => {
+  if (!dateString) return "N/A";
+  const date = new Date(`${dateString}T${timeString || "00:00"}`);
+  return date.toLocaleDateString("en-GB") + " " + date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+};
+
 export default function ExamDetailPage({ params }: { params: { slug: string } }) {
   const [exams, setExams] = useState<ExamDetail[]>([]);
   const [serverTime, setServerTime] = useState<Date | null>(null);
@@ -155,6 +161,8 @@ export default function ExamDetailPage({ params }: { params: { slug: string } })
     }
   };
 
+
+
   if (loading) {
     return <Loader />;
   }
@@ -230,13 +238,13 @@ export default function ExamDetailPage({ params }: { params: { slug: string } })
 
               let scheduleInfo;
               if (schedule.schedule_type === "flexible") {
-                scheduleInfo = `${schedule.start_date} ${schedule.start_time} - ${schedule.end_date ?? "N/A"} ${schedule.end_time ?? "N/A"}`;
+                scheduleInfo = `${formatDateTime(schedule.start_date, schedule.start_time)} - ${formatDateTime(schedule.end_date!, schedule.end_time)}`;
               } else if (schedule.schedule_type === "fixed") {
-                scheduleInfo = `Fixed - ${schedule.start_date} ${schedule.start_time}`;
+                scheduleInfo = `Fixed - ${formatDateTime(schedule.start_date, schedule.start_time)}`;
               } else if (schedule.schedule_type === "attempts") {
-                scheduleInfo = `From ${schedule.start_date} ${schedule.start_time}`;
+                scheduleInfo = `From ${formatDateTime(schedule.start_date, schedule.start_time)}`;
               } else {
-                scheduleInfo = `${schedule.start_date} ${schedule.start_time}`;
+                scheduleInfo = `${formatDateTime(schedule.start_date, schedule.start_time)}`;
               }
 
               return (
@@ -330,13 +338,13 @@ export default function ExamDetailPage({ params }: { params: { slug: string } })
 
           let scheduleInfo;
           if (schedule.schedule_type === "flexible") {
-            scheduleInfo = `${schedule.start_date} ${schedule.start_time} - ${schedule.end_date ?? "N/A"} ${schedule.end_time ?? "N/A"}`;
+            scheduleInfo = `${formatDateTime(schedule.start_date, schedule.start_time)} - ${formatDateTime(schedule.end_date!, schedule.end_time)}`;
           } else if (schedule.schedule_type === "fixed") {
-            scheduleInfo = `${schedule.start_date} ${schedule.start_time} (Fixed)`;
+            scheduleInfo = `Fixed - ${formatDateTime(schedule.start_date, schedule.start_time)}`;
           } else if (schedule.schedule_type === "attempts") {
-            scheduleInfo = `From ${schedule.start_date} ${schedule.start_time}`;
+            scheduleInfo = `From ${formatDateTime(schedule.start_date, schedule.start_time)}`;
           } else {
-            scheduleInfo = `${schedule.start_date} ${schedule.start_time}`;
+            scheduleInfo = `${formatDateTime(schedule.start_date, schedule.start_time)}`;
           }
 
           return (
