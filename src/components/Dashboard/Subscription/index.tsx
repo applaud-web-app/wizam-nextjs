@@ -10,7 +10,7 @@ import Link from "next/link";
 interface SubscriptionData {
   id: string;
   plan_name: string;
-  plan_price: string;
+  plan_price: number; // Assume plan_price is a number for formatting
   purchase_date: string;
   ends_date: string;
   status: string;
@@ -34,7 +34,8 @@ const Subscription: React.FC = () => {
           },
         });
 
-        if (response.data.status) {
+        // Check if subscriptions exist and is an array
+        if (response.data.status && Array.isArray(response.data.subscriptions)) {
           setSubscriptions(response.data.subscriptions);
         } else {
           throw new Error("Failed to fetch subscriptions.");
@@ -89,13 +90,15 @@ const Subscription: React.FC = () => {
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {subscriptions.map((subscription, index) => (
-                <tr key={index} className="hover:bg-gray-50">
+                <tr key={subscription.id} className="hover:bg-gray-50">
                   <td className="p-4">{index + 1}</td>
                   <td className="p-4">{subscription.plan_name}</td>
-                  <td className="p-4">${subscription.plan_price}</td>
+                  <td className="p-4">
+                    ${subscription.plan_price.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                  </td>
                   <td className="p-4">{`${subscription.purchase_date} to ${subscription.ends_date}`}</td>
                   <td className="p-4">
-                    {subscription.features.map((feature, idx) => (
+                    {subscription.features?.map((feature, idx) => (
                       <span key={idx} className="text-gray-600 pr-3">
                         {feature}
                         {idx < subscription.features.length - 1 && ", "}
