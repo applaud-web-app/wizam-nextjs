@@ -21,6 +21,7 @@ interface Quiz {
   point_mode: string | null;
   point: number | null;
   is_free: number;
+  is_resume: number;
   total_questions: number;
   total_marks: number | string;
   total_time: number;
@@ -229,7 +230,7 @@ export default function QuizList() {
                       : Math.floor(quiz.total_time / 60)}{" "}
                     min
                   </td>
-                  <td className="p-4">
+                  {/* <td className="p-4">
                     {isUpcoming ? (
                       <button
                         className="bg-[#ffc300] hover:bg-yellow-500 text-white py-1 px-5 rounded-full font-semibold text-sm cursor-not-allowed inline-flex items-center space-x-1 w-32"
@@ -249,6 +250,40 @@ export default function QuizList() {
                       <button
                         className="bg-quaternary text-white py-1 px-5 rounded-full font-semibold text-sm hover:bg-quaternary-dark w-32"
                         onClick={() => handlePayment(quiz.slug+"?sid="+schedules.schedule_id)}
+                      >
+                        Pay Now
+                      </button>
+                    )}
+                  </td> */}
+
+                  <td>
+                  {isUpcoming ? (
+                      <button
+                        className="bg-[#ffc300] hover:bg-yellow-500 text-white py-1 px-5 rounded-full font-semibold text-sm cursor-not-allowed inline-flex items-center space-x-1 w-32"
+                        disabled
+                      >
+                        <MdLockOutline className="flex-shrink-0" />
+                        <span>Upcoming</span>
+                      </button>
+                    ) : quiz.is_resume ? (
+                      <Link
+                        href={`/dashboard/quiz-play/${quiz.slug}?sid=${schedules.schedule_id}`}
+                        className="text-white bg-[#C9BC0F] px-5 py-1 rounded-full hover:bg-[#928c38] transition duration-200 inline-flex items-center justify-center space-x-1 font-semibold text-sm w-32"
+                      >
+                        <FiPlay />
+                        <span>Resume</span>
+                      </Link>
+                    ) : quiz.is_free === 1 ? (
+                      <Link
+                      href={`/dashboard/quiz-detail/${quiz.slug}?sid=${schedules.schedule_id}`}
+                        className="bg-green-600 text-white px-5 py-1 rounded-full font-semibold text-sm hover:bg-green-700 transition duration-200 inline-flex items-center justify-center w-32"
+                      >
+                        Start Quiz
+                      </Link>
+                    ) : (
+                      <button
+                        onClick={() => handlePayment(quiz.slug)}
+                        className="bg-yellow-500 text-white py-1 px-5 rounded-full font-semibold"
                       >
                         Pay Now
                       </button>
