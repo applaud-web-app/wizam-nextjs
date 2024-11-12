@@ -28,7 +28,7 @@ export default function DashboardLayout({ children }: LayoutProps): JSX.Element 
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
 
   // Define the base routes where you don't want the sidebar to appear, simulating wildcard paths
-  const noSidebarBaseRoutes = ["/dashboard/exam-play", "/dashboard/quiz-play"];
+  const noSidebarBaseRoutes = ["/dashboard/exam-play", "/dashboard/quiz-play", "/dashboard/practice-test-play"];
   
   // Check if the current route starts with any of the base routes
   const showSidebar = !noSidebarBaseRoutes.some(route => pathname.startsWith(route));

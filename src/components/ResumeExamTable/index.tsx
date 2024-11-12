@@ -12,7 +12,9 @@ interface ResumeExam {
   exam_duration: number;
   point_mode: string;
   point: number;
-  schedule_id:string;
+  schedule_id: string;
+  startDate?: string; // Example start date property
+  endDate?: string; // Example end date property
 }
 
 interface ResumeExamTableProps {
@@ -24,6 +26,11 @@ export default function ResumeExamTable({ resumedExam }: ResumeExamTableProps) {
 
   if (!resumedExam || resumedExam.length === 0) return <p>No resumed exams available</p>;
 
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-GB"); // Formats as dd/mm/yyyy
+  };
+
   // Function to handle resume action
   const handleResumeExam = (examSlug: string) => {
     router.push(`/dashboard/exam-play/${examSlug}`);
@@ -33,7 +40,6 @@ export default function ResumeExamTable({ resumedExam }: ResumeExamTableProps) {
     <div className="mb-8">
       <div className="flex justify-between items-center flex-wrap">
         <h2 className="text-lg lg:text-2xl font-bold mb-3">Resumed Exams</h2>
-       
       </div>
 
       <div className="overflow-x-auto rounded-lg shadow-sm">
@@ -45,6 +51,8 @@ export default function ResumeExamTable({ resumedExam }: ResumeExamTableProps) {
               <th className="p-3 text-left">Duration (Min)</th>
               <th className="p-3 text-left">Total Questions</th>
               <th className="p-3 text-left">Total Marks</th>
+              <th className="p-3 text-left">Start Date</th>
+              <th className="p-3 text-left">End Date</th>
               <th className="p-3 text-left">Action</th>
             </tr>
           </thead>
@@ -65,9 +73,11 @@ export default function ResumeExamTable({ resumedExam }: ResumeExamTableProps) {
                     ? exam.total_questions * (exam.point || 0)
                     : exam.total_marks}
                 </td>
+                <td className="p-4">{exam.startDate ? formatDate(exam.startDate) : "N/A"}</td>
+                <td className="p-4">{exam.endDate ? formatDate(exam.endDate) : "N/A"}</td>
                 <td className="p-4">
                   <button
-                    onClick={() => handleResumeExam(exam.slug+"?sid="+exam.schedule_id)}
+                    onClick={() => handleResumeExam(exam.slug + "?sid=" + exam.schedule_id)}
                     className="text-white bg-[#C9BC0F] px-5 py-1 rounded-full hover:bg-[#928c38] transition duration-200 flex items-center space-x-1"
                   >
                     <FiPlay />

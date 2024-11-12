@@ -9,6 +9,7 @@ import Loader from '@/components/Common/Loader';
 import NoData from '@/components/Common/NoData';
 import { toast } from 'react-toastify'; // Optional: For notifications
 import { useRouter } from "next/navigation"; // Use router to redirect
+import { FiPlay } from 'react-icons/fi';
 
 // Define interfaces for skills and practice sets
 interface PracticeSet {
@@ -19,6 +20,7 @@ interface PracticeSet {
   time: number; // Time limit for the practice set
   marks: number; // Total marks for the practice set
   is_free:number;
+  is_resume:number;
 }
 
 interface skillsData {
@@ -123,6 +125,7 @@ export default function PracticeSetPage() {
               time: practice.practice_time, // Time in seconds
               marks: practice.practice_marks,
               is_free: practice.is_free,
+              is_resume: practice.is_resume,
             })),
           }));
 
@@ -182,16 +185,34 @@ export default function PracticeSetPage() {
                     <FaCheck className="inline mr-2 text-defaultcolor" /> <strong>Marks: </strong>{practiceSet.marks}
                   </p>
 
-                  {/* Start Test Button */}
+               
+                
+                {/* Start/Resume/Pay Button */}
                   {practiceSet.is_free === 1 ? (
-                    <Link href={`/dashboard/practice-test/${practiceSet.slug}`}>
-                      <span className="bg-green-500 block text-center text-white px-4 py-2 rounded hover:bg-green-700 transition duration-200 w-full">
-                        Start Test
-                      </span>
+                    <Link
+                      href={
+                        practiceSet.is_resume === 1
+                          ? `/dashboard/practice-test-play/${practiceSet.slug}`
+                          : `/dashboard/practice-test/${practiceSet.slug}`
+                      }
+                      className={`${
+                        practiceSet.is_resume === 1 ? "bg-[#C9BC0F] hover:bg-[#928c38]" : "bg-green-500 hover:bg-green-700"
+                      }  text-center text-white px-4 py-2 rounded transition duration-200 w-full flex items-center justify-center space-x-1`}
+                    >
+                      {practiceSet.is_resume === 1 ? <FiPlay /> : null}
+                      <span>{practiceSet.is_resume === 1 ? "Resume" : "Start Test"}</span>
                     </Link>
                   ) : (
-                    <button onClick={() => handlePayment(`/dashboard/practice-test/${practiceSet.slug}`)} className="bg-defaultcolor block text-center text-white px-4 py-2 rounded hover:bg-defaultcolor-dark transition duration-200 w-full">Paid Exam</button>
+                    <button
+                      onClick={() => handlePayment(`/dashboard/practice-test/${practiceSet.slug}`)}
+                      className="bg-defaultcolor hover:bg-defaultcolor-dark block text-center text-white px-4 py-2 rounded transition duration-200 w-full"
+                    >
+                      Paid Exam
+                    </button>
                   )}
+
+
+
                 </div>
               ))}
             </div>

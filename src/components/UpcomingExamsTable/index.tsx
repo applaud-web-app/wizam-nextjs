@@ -81,19 +81,18 @@ export default function UpcomingExamsTable({ upcomingExams, serverTime }: Upcomi
 
               if (!exam_name) return null;
 
-              // Combine date and time for Start and End
-              const startDateTime = new Date(`${start_date}T${start_time}`);
-              const endDateTime =
-                end_date && end_time ? new Date(`${end_date}T${end_time}`) : null;
+              const formatDateTime = (date: Date) =>
+                `${date.toLocaleDateString("en-GB")} ${date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`;
 
-              let scheduleTime = startDateTime.toLocaleString();
+              const startDateTime = new Date(`${start_date}T${start_time}`);
+              const endDateTime = end_date && end_time ? new Date(`${end_date}T${end_time}`) : null;
+
+              let scheduleTime = formatDateTime(startDateTime);
               if (schedule_type === "flexible") {
-                const endDateTimeStr = endDateTime
-                  ? endDateTime.toLocaleString()
-                  : "N/A";
-                scheduleTime = `${startDateTime.toLocaleString()} - ${endDateTimeStr}`;
+                const endDateTimeStr = endDateTime ? formatDateTime(endDateTime) : "N/A";
+                scheduleTime = `${formatDateTime(startDateTime)} - ${endDateTimeStr}`;
               } else if (schedule_type === "fixed") {
-                scheduleTime = `Fixed: ${startDateTime.toLocaleString()}`;
+                scheduleTime = `Fixed: ${formatDateTime(startDateTime)}`;
               }
 
               const currentTime = serverTime || new Date();
@@ -118,7 +117,6 @@ export default function UpcomingExamsTable({ upcomingExams, serverTime }: Upcomi
                 }
               }
 
-              // Skip over exams
               if (isOver) {
                 return null;
               }

@@ -1,6 +1,12 @@
 import { useState, useEffect } from "react";
 import Loader from "@/components/Common/Loader";
-import { FaClock, FaQuestionCircle, FaStar, FaCheckCircle, FaInfoCircle } from "react-icons/fa";
+import {
+  FaClock,
+  FaQuestionCircle,
+  FaStar,
+  FaCheckCircle,
+  FaInfoCircle,
+} from "react-icons/fa";
 import Cookies from "js-cookie";
 import axios from "axios";
 import NoData from "@/components/Common/NoData";
@@ -17,6 +23,7 @@ interface TestDetails {
   marks: number;
   description: string;
   is_free: number;
+  is_resume: number;
 }
 
 interface SinglePracticeSetProps {
@@ -39,12 +46,15 @@ export default function SinglePracticeSet({ slug }: SinglePracticeSetProps) {
         return;
       }
 
-      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/user-subscription`, {
-        headers: {
-          Authorization: `Bearer ${jwt}`,
-        },
-        params: { type },
-      });
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_API_URL}/user-subscription`,
+        {
+          headers: {
+            Authorization: `Bearer ${jwt}`,
+          },
+          params: { type },
+        }
+      );
 
       if (response.data.status === true) {
         router.push(slug);
@@ -62,7 +72,9 @@ export default function SinglePracticeSet({ slug }: SinglePracticeSetProps) {
           toast.error("Please buy a subscription to access this course.");
           router.push("/pricing");
         } else if (status === 403) {
-          toast.error("Feature not available in your plan. Please upgrade your subscription.");
+          toast.error(
+            "Feature not available in your plan. Please upgrade your subscription."
+          );
           router.push("/pricing");
         } else {
           toast.error(`An error occurred: ${data.error || "Unknown error"}`);
@@ -86,12 +98,15 @@ export default function SinglePracticeSet({ slug }: SinglePracticeSetProps) {
       setLoading(true);
 
       try {
-        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/practice-set-detail/${slug}`, {
-          params: { category },
-          headers: {
-            Authorization: `Bearer ${Cookies.get("jwt")}`,
-          },
-        });
+        const response = await axios.get(
+          `${process.env.NEXT_PUBLIC_API_URL}/practice-set-detail/${slug}`,
+          {
+            params: { category },
+            headers: {
+              Authorization: `Bearer ${Cookies.get("jwt")}`,
+            },
+          }
+        );
 
         const data = response.data;
 
@@ -124,8 +139,12 @@ export default function SinglePracticeSet({ slug }: SinglePracticeSetProps) {
       {/* Practice Test Header */}
       <div className="bg-white p-5 rounded-lg shadow-sm mb-5">
         <div className="mb-5 text-center">
-          <h1 className="text-4xl font-bold text-gray-900">{testDetails.title}</h1>
-          <p className="text-lg font-medium text-gray-600">{testDetails.testType}</p>
+          <h1 className="text-4xl font-bold text-gray-900">
+            {testDetails.title}
+          </h1>
+          <p className="text-lg font-medium text-gray-600">
+            {testDetails.testType}
+          </p>
           <span className="inline-block bg-blue-100 text-blue-600 text-sm font-semibold px-4 py-1 rounded-full mt-2">
             {testDetails.syllabus}
           </span>
@@ -136,7 +155,9 @@ export default function SinglePracticeSet({ slug }: SinglePracticeSetProps) {
           <div className="border border-gray-300 bg-gray-50 p-5 rounded-lg flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <FaQuestionCircle className="text-indigo-500" size={24} />
-              <span className="text-lg font-semibold text-gray-700">Questions</span>
+              <span className="text-lg font-semibold text-gray-700">
+                Questions
+              </span>
             </div>
             <span className="bg-indigo-100 text-indigo-600 text-sm font-bold px-3 py-1 rounded-full">
               {testDetails.totalQuestions}
@@ -146,7 +167,9 @@ export default function SinglePracticeSet({ slug }: SinglePracticeSetProps) {
           <div className="border border-gray-300 bg-gray-50 p-5 rounded-lg flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <FaClock className="text-green-500" size={24} />
-              <span className="text-lg font-semibold text-gray-700">Duration</span>
+              <span className="text-lg font-semibold text-gray-700">
+                Duration
+              </span>
             </div>
             <span className="bg-green-100 text-green-600 text-sm font-bold px-3 py-1 rounded-full">
               {testDetails.duration}
@@ -172,9 +195,15 @@ export default function SinglePracticeSet({ slug }: SinglePracticeSetProps) {
         </h3>
         <div className="text-gray-600">
           <ul className="list-disc ml-6 space-y-2">
-            <li>The clock is server-set. The countdown will display remaining time.</li>
+            <li>
+              The clock is server-set. The countdown will display remaining
+              time.
+            </li>
             <li>Use the question palette to navigate between questions.</li>
-            <li>Click "Save & Next" to save the current question and move to the next.</li>
+            <li>
+              Click "Save & Next" to save the current question and move to the
+              next.
+            </li>
             <li>The question palette indicates the status of each question.</li>
           </ul>
         </div>
@@ -205,24 +234,45 @@ export default function SinglePracticeSet({ slug }: SinglePracticeSetProps) {
         </label>
       </div>
 
-      {/* Start/Pay Button */}
+     
+      {/* Start/Resume/Pay Button */}
       {testDetails.is_free === 1 ? (
-        <Link
-          href={`/dashboard/practice-test-play/${slug}`}
-          className={`block w-full ${
-            isChecked ? "bg-green-500 hover:bg-green-600" : "bg-gray-300 cursor-not-allowed"
-          } text-white text-center font-semibold py-3 rounded-lg transition-colors`}
-          onClick={(e) => {
-            if (!isChecked) e.preventDefault();
-          }}
-        >
-          Start Test
-        </Link>
+        testDetails.is_resume === 1 ? (
+          <Link
+            href={`/dashboard/practice-test-play/${slug}`}
+            className={`block w-full ${
+              isChecked
+                ? "bg-[#C9BC0F] hover:bg-[#928c38]"
+                : "bg-gray-300 cursor-not-allowed"
+            } text-white text-center font-semibold py-3 rounded-lg transition-colors`}
+            onClick={(e) => {
+              if (!isChecked) e.preventDefault();
+            }}
+          >
+            Resume Test
+          </Link>
+        ) : (
+          <Link
+            href={`/dashboard/practice-test-play/${slug}`}
+            className={`block w-full ${
+              isChecked
+                ? "bg-green-500 hover:bg-green-600"
+                : "bg-gray-300 cursor-not-allowed"
+            } text-white text-center font-semibold py-3 rounded-lg transition-colors`}
+            onClick={(e) => {
+              if (!isChecked) e.preventDefault();
+            }}
+          >
+            Start Test
+          </Link>
+        )
       ) : (
         <button
-        className={`block w-full ${
-          isChecked ? "bg-yellow-500 hover:bg-yellow-600" : "bg-gray-300 cursor-not-allowed"
-        } text-white text-center font-semibold py-3 rounded-lg transition-colors`}
+          className={`block w-full ${
+            isChecked
+              ? "bg-defaultcolor hover:bg-defaultcolor-dark"
+              : "bg-gray-300 cursor-not-allowed"
+          } text-white text-center font-semibold py-3 rounded-lg transition-colors`}
           disabled={!isChecked}
           onClick={() => handlePayment(`/dashboard/practice-test-play/${slug}`)}
         >

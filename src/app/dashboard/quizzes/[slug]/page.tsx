@@ -9,6 +9,9 @@ import Link from "next/link";
 import { FaClock, FaQuestionCircle, FaStar } from "react-icons/fa";
 import { FaArrowLeftLong } from "react-icons/fa6";
 import Loader from "@/components/Common/Loader";
+import NoData from "@/components/Common/NoData";
+import { FiPlay } from "react-icons/fi";
+import { MdLockOutline } from "react-icons/md";
 
 interface QuizDetail {
   title: string;
@@ -17,6 +20,7 @@ interface QuizDetail {
   time: string;
   marks: number | string;
   is_free: number;
+  is_resume: boolean;
   schedule: {
     start_date: string;
     start_time: string;
@@ -24,6 +28,7 @@ interface QuizDetail {
     end_time: string | null;
     grace_period: string | null;
     schedule_type: string;
+    schedule_id: string;
   };
 }
 
@@ -77,7 +82,6 @@ export default function QuizTypeDetailPage({ params }: { params: { slug: string 
           headers: { Authorization: `Bearer ${jwt}` },
         });
 
-        // Filter out past quizzes based on end_date and end_time
         const filteredQuizzes = response.data.data.filter((quiz: QuizDetail) => {
           const endDateTime = quiz.schedule.end_date && quiz.schedule.end_time
             ? new Date(`${quiz.schedule.end_date}T${quiz.schedule.end_time}`)
@@ -100,6 +104,14 @@ export default function QuizTypeDetailPage({ params }: { params: { slug: string 
 
     fetchQuizzes();
   }, [params, router]);
+
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      setServerTime(new Date());
+    }, 1000);
+
+    return () => clearInterval(intervalId);
+  }, []);
 
   const handlePayment = async (slug: string) => {
     try {
@@ -134,12 +146,17 @@ export default function QuizTypeDetailPage({ params }: { params: { slug: string 
     }
   };
 
+  const formatDateTime = (dateString: string, timeString: string | null) => {
+    const date = new Date(`${dateString}T${timeString || "00:00"}`);
+    return date.toLocaleDateString("en-GB") + " " + date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  };
+
   if (loading) {
     return <Loader />;
   }
 
   if (quizzes.length === 0) {
-    return <div className="text-center text-gray-500">No quizzes available at this time.</div>;
+    return <NoData message="No quizzes available at this time." />;
   }
 
   return (
@@ -156,7 +173,6 @@ export default function QuizTypeDetailPage({ params }: { params: { slug: string 
         </h1>
       </div>
 
-      {/* Desktop Table View */}
       <div className="overflow-x-auto rounded-lg shadow-sm bg-white hidden md:block">
         <table className="min-w-full table-auto rounded-lg overflow-hidden">
           <thead className="bg-quaternary text-white">
@@ -164,7 +180,6 @@ export default function QuizTypeDetailPage({ params }: { params: { slug: string 
               <th className="p-3 text-left font-semibold">S.No</th>
               <th className="p-3 text-left font-semibold">Quiz Title</th>
               <th className="p-3 text-left font-semibold">Available Between</th>
-              {/* <th className="p-3 text-left font-semibold">Free/Paid</th> */}
               <th className="p-3 text-left font-semibold">Questions</th>
               <th className="p-3 text-left font-semibold">Marks</th>
               <th className="p-3 text-left font-semibold">Time</th>
@@ -173,17 +188,19 @@ export default function QuizTypeDetailPage({ params }: { params: { slug: string 
           </thead>
           <tbody className="divide-y divide-gray-200">
             {quizzes.map((quiz, index) => {
-              const startTime = new Date(`${quiz.schedule.start_date}T${quiz.schedule.start_time}`);
-              const endTime = quiz.schedule.end_date && quiz.schedule.end_time
-                ? new Date(`${quiz.schedule.end_date}T${quiz.schedule.end_time}`)
+              const { schedule } = quiz;
+              const startTime = new Date(`${schedule.start_date}T${schedule.start_time}`);
+              const endTime = schedule.end_date && schedule.end_time
+                ? new Date(`${schedule.end_date}T${schedule.end_time}`)
                 : null;
               const isUpcoming = serverTime && startTime > serverTime;
+              const isAvailable = !isUpcoming && (!endTime || serverTime! <= endTime);
 
               let scheduleInfo;
-              if (quiz.schedule.schedule_type === "flexible") {
-                scheduleInfo = `${quiz.schedule.start_date} ${quiz.schedule.start_time} - ${quiz.schedule.end_date ?? "N/A"} ${quiz.schedule.end_time ?? "N/A"}`;
+              if (schedule.schedule_type === "flexible") {
+                scheduleInfo = `${formatDateTime(schedule.start_date, schedule.start_time)} - ${formatDateTime(schedule.end_date!, schedule.end_time)}`;
               } else {
-                scheduleInfo = `${quiz.schedule.start_date} ${quiz.schedule.start_time}`;
+                scheduleInfo = `${formatDateTime(schedule.start_date, schedule.start_time)}`;
               }
 
               return (
@@ -191,33 +208,37 @@ export default function QuizTypeDetailPage({ params }: { params: { slug: string 
                   <td className="p-4">{index + 1}</td>
                   <td className="p-4">{quiz.title}</td>
                   <td className="p-4">{scheduleInfo}</td>
-                  {/* <td className="p-4">
-                    <span
-                      className={`${
-                        quiz.is_free
-                          ? "text-sm rounded-full font-semibold py-1 px-5 bg-green-500 text-white"
-                          : "text-sm rounded-full font-semibold py-1 px-5 bg-secondary text-white"
-                      }`}
-                    >
-                      {quiz.is_free ? "Free" : "Paid"}
-                    </span>
-                  </td> */}
                   <td className="p-4">{quiz.questions}</td>
                   <td className="p-4">{quiz.marks}</td>
-                  <td className="p-4">{quiz.time} mins</td>
+                  <td className="p-4">{quiz.time}</td>
                   <td className="p-4">
                     {isUpcoming ? (
-                      <span className="bg-gray-300 text-gray-500 py-1 px-5 rounded-full font-semibold text-sm">
-                        Upcoming
-                      </span>
+                      <button
+                        className="bg-[#ffc300] hover:bg-yellow-500 text-white py-1 px-5 rounded-full font-semibold text-sm cursor-not-allowed inline-flex items-center space-x-1 w-32"
+                        disabled
+                      >
+                        <MdLockOutline className="flex-shrink-0" />
+                        <span>Upcoming</span>
+                      </button>
+                    ) : quiz.is_resume ? (
+                      <Link
+                        href={`/dashboard/quiz-play/${quiz.slug}?sid=${schedule.schedule_id}`}
+                        className="text-white bg-[#C9BC0F] px-5 py-1 rounded-full hover:bg-[#928c38] transition duration-200 inline-flex items-center justify-center space-x-1 font-semibold text-sm w-32"
+                      >
+                        <FiPlay />
+                        <span>Resume</span>
+                      </Link>
                     ) : quiz.is_free === 1 ? (
-                      <Link href={`/dashboard/quiz-detail/${quiz.slug}`} className="text-quaternary font-semibold">
-                        View Details
+                      <Link
+                        href={`/dashboard/quiz-detail/${quiz.slug}?sid=${schedule.schedule_id}`}
+                        className="bg-green-600 text-white px-5 py-1 rounded-full font-semibold text-sm hover:bg-green-700 transition duration-200 inline-flex items-center justify-center w-32"
+                      >
+                        Start Quiz
                       </Link>
                     ) : (
                       <button
-                        className="bg-yellow-500 text-white py-1 px-5 rounded-full font-semibold"
                         onClick={() => handlePayment(quiz.slug)}
+                        className="bg-yellow-500 text-white py-1 px-5 rounded-full font-semibold"
                       >
                         Pay Now
                       </button>
@@ -230,20 +251,20 @@ export default function QuizTypeDetailPage({ params }: { params: { slug: string 
         </table>
       </div>
 
-      {/* Mobile Card View */}
       <div className="grid grid-cols-1 gap-4 md:hidden">
         {quizzes.map((quiz, index) => {
-          const startTime = new Date(`${quiz.schedule.start_date}T${quiz.schedule.start_time}`);
-          const endTime = quiz.schedule.end_date && quiz.schedule.end_time
-            ? new Date(`${quiz.schedule.end_date}T${quiz.schedule.end_time}`)
+          const { schedule } = quiz;
+          const startTime = new Date(`${schedule.start_date}T${schedule.start_time}`);
+          const endTime = schedule.end_date && schedule.end_time
+            ? new Date(`${schedule.end_date}T${schedule.end_time}`)
             : null;
           const isUpcoming = serverTime && startTime > serverTime;
 
           let scheduleInfo;
-          if (quiz.schedule.schedule_type === "flexible") {
-            scheduleInfo = `${quiz.schedule.start_date} ${quiz.schedule.start_time} - ${quiz.schedule.end_date ?? "N/A"} ${quiz.schedule.end_time ?? "N/A"}`;
+          if (schedule.schedule_type === "flexible") {
+            scheduleInfo = `${formatDateTime(schedule.start_date, schedule.start_time)} - ${formatDateTime(schedule.end_date!, schedule.end_time)}`;
           } else {
-            scheduleInfo = `${quiz.schedule.start_date} ${quiz.schedule.start_time}`;
+            scheduleInfo = `${formatDateTime(schedule.start_date, schedule.start_time)}`;
           }
 
           return (
@@ -265,7 +286,7 @@ export default function QuizTypeDetailPage({ params }: { params: { slug: string 
                     <FaClock className="text-gray-400 mr-2" />
                     <span className="font-medium">Time:</span>
                   </div>
-                  <span>{quiz.time} mins</span>
+                  <span>{quiz.time}</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center">
@@ -280,15 +301,20 @@ export default function QuizTypeDetailPage({ params }: { params: { slug: string 
               </div>
               {isUpcoming ? (
                 <span className="bg-gray-300 text-gray-500 py-2 px-5 rounded-sm text-sm block w-full text-center">Upcoming</span>
+              ) : quiz.is_resume ? (
+                <Link
+                  href={`/dashboard/quiz-play/${quiz.slug}?sid=${schedule.schedule_id}`}
+                  className="bg-[#C9BC0F] text-white py-2 px-5 rounded-full inline-flex items-center justify-center space-x-1 font-semibold text-sm w-full"
+                >
+                  <FiPlay />
+                  <span>Resume</span>
+                </Link>
               ) : quiz.is_free === 1 ? (
-                <Link href={`/dashboard/quiz-detail/${quiz.slug}`} className="bg-quaternary text-white py-2 px-5 block rounded-sm text-center w-full">
-                  View Details
+                <Link href={`/dashboard/quiz-detail/${quiz.slug}?sid=${schedule.schedule_id}`} className="bg-green-600 text-white py-2 px-5 rounded-full inline-flex items-center justify-center w-full">
+                  Start Quiz
                 </Link>
               ) : (
-                <button
-                  onClick={() => handlePayment(quiz.slug)}
-                  className="bg-yellow-500 text-white py-2 px-5 rounded-sm block w-full"
-                >
+                <button onClick={() => handlePayment(quiz.slug)} className="bg-yellow-500 text-white py-2 px-5 rounded-full block w-full">
                   Pay Now
                 </button>
               )}

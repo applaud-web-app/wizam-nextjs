@@ -190,6 +190,11 @@ export default function ExamList() {
     }
   };
 
+  const formatDateTime = (dateString: string, timeString: string | null) => {
+    const date = new Date(`${dateString}T${timeString || "00:00"}`);
+    return date.toLocaleDateString("en-GB") + " " + date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  };
+
   if (loading) {
     return <Loader />;
   }
@@ -205,8 +210,6 @@ export default function ExamList() {
   return (
     <div className="mb-5">
       <h2 className="text-lg lg:text-2xl font-bold mb-3">All Exams</h2>
-
-      {/* Removed the server time display */}
 
       <div className="overflow-x-auto rounded-lg shadow-sm">
         <table className="min-w-full table-auto rounded-lg overflow-hidden text-nowrap">
@@ -256,13 +259,13 @@ export default function ExamList() {
 
               let scheduleInfo;
               if (schedules.schedule_type === "flexible") {
-                scheduleInfo = `${schedules.start_date} ${schedules.start_time} - ${schedules.end_date} ${schedules.end_time}`;
+                scheduleInfo = `${formatDateTime(schedules.start_date, schedules.start_time)} - ${formatDateTime(schedules.end_date!, schedules.end_time)}`;
               } else if (schedules.schedule_type === "fixed") {
-                scheduleInfo = `Fixed - ${schedules.start_date} ${schedules.start_time}`;
+                scheduleInfo = `Fixed - ${formatDateTime(schedules.start_date, schedules.start_time)}`;
               } else if (schedules.schedule_type === "attempts") {
-                scheduleInfo = `From ${schedules.start_date} ${schedules.start_time}`;
+                scheduleInfo = `From ${formatDateTime(schedules.start_date, schedules.start_time)}`;
               } else {
-                scheduleInfo = `${schedules.start_date} ${schedules.start_time}`;
+                scheduleInfo = `${formatDateTime(schedules.start_date, schedules.start_time)}`;
               }
 
               return (
