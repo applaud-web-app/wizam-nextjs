@@ -199,8 +199,9 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
                         : [];
                     break;
                   case "MMA":
+                    answerData.answer.sort(); // Sort the indices before mapping
                     formattedAnswer = answerData.answer.map(
-                      (index: number) => question?.options[index]
+                      (index: number) => question?.options[index-1]
                     );
                     break;
                   case "TOF":

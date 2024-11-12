@@ -26,6 +26,7 @@ interface SinglePracticeSetProps {
 export default function SinglePracticeSet({ slug }: SinglePracticeSetProps) {
   const [testDetails, setTestDetails] = useState<TestDetails | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
+  const [isChecked, setIsChecked] = useState<boolean>(false); // For checkbox state
   const router = useRouter();
 
   const handlePayment = async (slug: string) => {
@@ -148,7 +149,7 @@ export default function SinglePracticeSet({ slug }: SinglePracticeSetProps) {
               <span className="text-lg font-semibold text-gray-700">Duration</span>
             </div>
             <span className="bg-green-100 text-green-600 text-sm font-bold px-3 py-1 rounded-full">
-              {testDetails.duration} min
+              {testDetails.duration}
             </span>
           </div>
 
@@ -190,17 +191,39 @@ export default function SinglePracticeSet({ slug }: SinglePracticeSetProps) {
         />
       </div>
 
+      {/* Terms and Conditions Checkbox */}
+      <div className="flex items-center mb-4">
+        <input
+          type="checkbox"
+          id="terms"
+          checked={isChecked}
+          onChange={(e) => setIsChecked(e.target.checked)}
+          className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+        />
+        <label htmlFor="terms" className="ml-2 text-gray-600">
+          I have read all the instructions.
+        </label>
+      </div>
+
       {/* Start/Pay Button */}
       {testDetails.is_free === 1 ? (
         <Link
           href={`/dashboard/practice-test-play/${slug}`}
-          className="block w-full bg-green-500 text-white text-center font-semibold py-3 rounded-lg hover:bg-green-600 transition-colors"
+          className={`block w-full ${
+            isChecked ? "bg-green-500 hover:bg-green-600" : "bg-gray-300 cursor-not-allowed"
+          } text-white text-center font-semibold py-3 rounded-lg transition-colors`}
+          onClick={(e) => {
+            if (!isChecked) e.preventDefault();
+          }}
         >
           Start Test
         </Link>
       ) : (
         <button
-          className="block w-full bg-yellow-500 text-white text-center font-semibold py-3 rounded-lg hover:bg-yellow-600 transition-colors"
+        className={`block w-full ${
+          isChecked ? "bg-yellow-500 hover:bg-yellow-600" : "bg-gray-300 cursor-not-allowed"
+        } text-white text-center font-semibold py-3 rounded-lg transition-colors`}
+          disabled={!isChecked}
           onClick={() => handlePayment(`/dashboard/practice-test-play/${slug}`)}
         >
           Pay Now

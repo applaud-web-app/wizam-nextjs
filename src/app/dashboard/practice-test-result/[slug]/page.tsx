@@ -172,21 +172,15 @@ const PracticeTestResult = ({ params }: PracticeTestResultProps) => {
  
   const renderOptions = (question: Question) => {
     const correctAnswerDisplay =
-      typeof question.correctAnswer === "object" &&
-      !Array.isArray(question.correctAnswer)
-        ? Object.entries(question.correctAnswer)
-            .map(([key, value]) => `${key}: ${value}`)
-            .join(", ")
-        : Array.isArray(question.correctAnswer)
-        ? question.correctAnswer.join(", ")
-        : question.correctAnswer || "N/A";
+    typeof question.correctAnswer === "object" && !Array.isArray(question.correctAnswer)
+      ? Object.entries(question.correctAnswer).map(([key, value]) => `${key}: ${value}`).join(", ")
+      : Array.isArray(question.correctAnswer)
+      ? question.correctAnswer.join(", ")
+      : question.correctAnswer || "N/A";
 
-    const userAnswerDisplay =
-      typeof question.userAnswer === "object" &&
-      !Array.isArray(question.userAnswer)
-        ? Object.entries(question.userAnswer)
-            .map(([key, value]) => `${key}: ${value}`)
-            .join(", ")
+      const userAnswerDisplay =
+      typeof question.userAnswer === "object" && !Array.isArray(question.userAnswer)
+        ? Object.entries(question.userAnswer).map(([key, value]) => `${key}: ${value}`).join(", ")
         : Array.isArray(question.userAnswer)
         ? question.userAnswer.join(", ")
         : question.userAnswer || "Skipped";
@@ -195,64 +189,54 @@ const PracticeTestResult = ({ params }: PracticeTestResultProps) => {
       case "MSA": // Multiple Single Answer
 
       case "TOF": // True or False
-        return (
-          <div className="mb-4">
-            {question.options?.map((option, index) => (
-              <div
-                key={index}
-                className={`flex justify-between border items-center p-3 rounded-md mb-2 ${
-                  typeof question.correctAnswer === "string" &&
-                  parseInt(question.correctAnswer) - 1 === index
-                    ? "bg-green-500 text-white"
-                    : typeof question.userAnswer === "number" &&
-                      question.userAnswer - 1 === index
-                    ? "bg-red-500 text-white"
-                    : "bg-white"
+      return (
+        <div className="mb-4">
+          {question.options?.map((option, index) => (
+            <div
+              key={index}
+              className={`flex justify-between border items-center p-3 rounded-md mb-2 ${
+                typeof question.correctAnswer === "string" && parseInt(question.correctAnswer) - 1 === index
+                  ? "bg-green-500 text-white"
+                  : typeof question.userAnswer === "number" && question.userAnswer - 1 === index
+                  ? "bg-red-500 text-white"
+                  : "bg-white"
+              }`}
+            >
+              {/* Left Circle Icon with letter */}
+              <span
+                className={`flex items-center justify-center w-6 h-6 rounded-full  mr-2 font-bold ${
+                  typeof question.correctAnswer === "string" && parseInt(question.correctAnswer) - 1 === index
+                    ? "bg-white text-green-500"
+                    : typeof question.userAnswer === "number" && question.userAnswer - 1 === index
+                    ? "bg-white text-red-500"
+                    : "bg-gray-200 text-gray-700"
                 }`}
               >
-                {/* Left Circle Icon with letter */}
-                <span
-                  className={`flex items-center justify-center w-6 h-6 rounded-full  mr-2 font-bold ${
-                    typeof question.correctAnswer === "string" &&
-                    parseInt(question.correctAnswer) - 1 === index
-                      ? "bg-white text-green-500"
-                      : typeof question.userAnswer === "number" &&
-                        question.userAnswer - 1 === index
-                      ? "bg-white text-red-500"
-                      : " bg-gray-200 text-gray-700"
-                  }`}
-                >
-                  {String.fromCharCode(65 + index)}{" "}
-                  {/* Renders A, B, C, D, etc. */}
-                </span>
+                {String.fromCharCode(65 + index)}
+              </span>
 
-                {/* Option text */}
-                <div
-                  className="flex-grow"
-                  dangerouslySetInnerHTML={{
-                    __html:
-                      typeof option === "string"
-                        ? option
-                        : (option as Option).text,
-                  }}
-                />
+              {/* Option text */}
+              <div
+                className="flex-grow"
+                dangerouslySetInnerHTML={{
+                  __html: typeof option === "string" ? option : (option as Option).text,
+                }}
+              />
 
-                {/* Right Icon for correct or incorrect indication */}
-                <span className="ml-2">
-                  {typeof question.correctAnswer === "string" &&
-                  parseInt(question.correctAnswer) - 1 === index ? (
-                    <FaCheck className="text-white" />
-                  ) : typeof question.userAnswer === "number" &&
-                    question.userAnswer - 1 === index ? (
-                    <FaTimes className="text-white" />
-                  ) : (
-                    <FaRegCircle className="text-gray-400" />
-                  )}
-                </span>
-              </div>
-            ))}
-          </div>
-        );
+              {/* Right Icon for correct or incorrect indication */}
+              <span className="ml-2">
+                {typeof question.correctAnswer === "string" && parseInt(question.correctAnswer) - 1 === index ? (
+                  <FaCheck className="text-white" />
+                ) : typeof question.userAnswer === "number" && question.userAnswer - 1 === index ? (
+                  <FaTimes className="text-white" />
+                ) : (
+                  <FaRegCircle className="text-gray-400" />
+                )}
+              </span>
+            </div>
+          ))}
+        </div>
+      );
 
       case "MMA": // Multiple Match Answer
         return (
@@ -263,7 +247,7 @@ const PracticeTestResult = ({ params }: PracticeTestResultProps) => {
                 question.correctAnswer.includes((index + 1).toString()); // Checking if (index + 1) is in correctAnswer array as string
               const isUserAnswer =
                 Array.isArray(question.userAnswer) &&
-                question.userAnswer.includes(index); // Checking if index is in userAnswer array
+                question.userAnswer.includes(index+1); // Checking if index is in userAnswer array
 
               return (
                 <div
@@ -425,7 +409,6 @@ const PracticeTestResult = ({ params }: PracticeTestResultProps) => {
             </p>
           </div>
         );
-
       case "ORD": // Ordering
         return (
           <div>
@@ -584,28 +567,50 @@ const PracticeTestResult = ({ params }: PracticeTestResultProps) => {
   };
 
   const renderQuestionResult = (question: Question, index: number) => {
+    // Determine question status based on user's answer and correctness
+    let questionStatus = "Skipped";
+    if (question.userAnswer) {
+      questionStatus = question.isCorrect ? "Correct" : "Wrong";
+    }
+  
+    // Define badge color based on status
+    const badgeColor =
+      questionStatus === "Correct"
+        ? "bg-green-200 text-green-800"
+        : questionStatus === "Wrong"
+        ? "bg-red-200 text-red-800"
+        : "bg-yellow-200 text-yellow-800";
+  
     return (
       <div
         key={question.id}
         className={`p-2 lg:p-4 border-l-[6px] lg:border-l-[12px] bg-[#f6f7f9] ${
-          !question.userAnswer ||
-          (Array.isArray(question.userAnswer) &&
-            question.userAnswer.length === 0)
+          questionStatus === "Skipped"
             ? "border-yellow-500"
-            : "border-green-500"
+            : questionStatus === "Correct"
+            ? "border-green-500"
+            : "border-red-500"
         }`}
       >
-        <h3 className="text-base font-semibold mb-2">
-          <span className="underline">Question {index + 1}:</span>{" "}
-          <div
-            className="bg-white p-2 rounded-lg"
-            dangerouslySetInnerHTML={{
-              __html: Array.isArray(question.question)
-                ? question.question[0]
-                : question.question,
-            }}
-          />
-        </h3>
+        <div className="flex justify-between items-center mb-2">
+          <h3 className="text-base font-semibold">
+            <span className="underline">Question {index + 1}:</span>
+          </h3>
+          
+          {/* Status Badge */}
+          <span className={`px-2 py-1 text-xs font-semibold rounded ${badgeColor}`}>
+            {questionStatus}
+          </span>
+        </div>
+  
+        <div
+          className="bg-white px-3 py-4 rounded-lg mb-4"
+          dangerouslySetInnerHTML={{
+            __html: Array.isArray(question.question)
+              ? question.question[0]
+              : question.question,
+          }}
+        />
         {renderOptions(question)}
       </div>
     );
