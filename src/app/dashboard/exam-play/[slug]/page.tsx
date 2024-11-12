@@ -451,7 +451,7 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
               id: q.id,
               type: q.type,
               answer: userAnswer.map((ans) =>
-                q.options ? q.options.indexOf(ans) + 1 : 0
+                q.options ? q.options.indexOf(ans) + 1 : 1
               ),
             };
 
@@ -640,10 +640,9 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
               id: question.id,
               type: question.type,
               answer: userAnswer.map((ans: any) =>
-                question.options ? question.options.indexOf(ans) + 1 : 0
-              ),
+                question.options ? question.options.indexOf(ans) + 1 : 1
+              ), // Ensure each index is incremented by 1
             };
-
           case "TOF":
             return {
               id: question.id,
@@ -836,10 +835,10 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
               id: question.id,
               type: question.type,
               answer: userAnswer.map((ans: string) =>
-                question.options ? question.options.indexOf(ans) + 1 : 0
-              ),
+                question.options ? question.options.indexOf(ans) + 1 : 1
+              ), // Increment each index by 1
             };
-
+              
           case "TOF":
             return {
               id: question.id,
