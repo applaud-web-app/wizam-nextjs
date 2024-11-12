@@ -3,18 +3,18 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import Cookies from "js-cookie";
-import Loader from "@/components/Common/Loader"; // Adjust path if necessary
+import Loader from "@/components/Common/Loader";
 import NoData from "@/components/Common/NoData";
 import Link from "next/link";
 
 interface SubscriptionData {
-  id:string;
+  id: string;
   plan_name: string;
   plan_price: string;
   purchase_date: string;
   ends_date: string;
   status: string;
-  features: string[]; 
+  features: string[];
 }
 
 const Subscription: React.FC = () => {
@@ -81,19 +81,19 @@ const Subscription: React.FC = () => {
                 <th className="p-3 text-left rounded-tl-lg">S.No</th>
                 <th className="p-3 text-left">Plan Name</th>
                 <th className="p-3 text-left">Plan Price</th>
-                <th className="p-3 text-left">Duration</th> {/* Combined Purchase and Ends Date */}
+                <th className="p-3 text-left">Duration</th>
                 <th className="p-3 text-left">Features</th>
-                <th className="p-3 text-left ">Status</th>
+                <th className="p-3 text-left">Status</th>
                 <th className="p-3 text-left rounded-tr-lg">Invoice</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {subscriptions.map((subscription, index) => (
                 <tr key={index} className="hover:bg-gray-50">
-                  <td className="p-4">{index + 1}</td> {/* S.No */}
-                  <td className="p-4">{subscription.plan_name}</td> {/* Plan Name */}
-                  <td className="p-4">${subscription.plan_price}</td> {/* Plan Price */}
-                  <td className="p-4">{`${subscription.purchase_date} to ${subscription.ends_date}`}</td> {/* Combined Duration */}
+                  <td className="p-4">{index + 1}</td>
+                  <td className="p-4">{subscription.plan_name}</td>
+                  <td className="p-4">${subscription.plan_price}</td>
+                  <td className="p-4">{`${subscription.purchase_date} to ${subscription.ends_date}`}</td>
                   <td className="p-4">
                     {subscription.features.map((feature, idx) => (
                       <span key={idx} className="text-gray-600 pr-3">
@@ -101,9 +101,16 @@ const Subscription: React.FC = () => {
                         {idx < subscription.features.length - 1 && ", "}
                       </span>
                     ))}
-                  </td> {/* Features */}
-                  <td className="p-4">{getStatusBadge(subscription.status)}</td> {/* Status */}
-                  <td className="p-4"><Link href={"/invoice/"+subscription.id}  className="bg-defaultcolor text-white px-5 py-1 text-sm rounded-full hover:bg-defaultcolor-dark transition">Download</Link></td>
+                  </td>
+                  <td className="p-4">{getStatusBadge(subscription.status)}</td>
+                  <td className="p-4">
+                    <Link
+                      href={`/invoice/${subscription.id}`}
+                      className="bg-defaultcolor text-white px-5 py-1 text-sm rounded-full hover:bg-defaultcolor-dark transition"
+                    >
+                      View Invoice
+                    </Link>
+                  </td>
                 </tr>
               ))}
             </tbody>
