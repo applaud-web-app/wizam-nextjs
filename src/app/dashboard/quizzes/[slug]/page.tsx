@@ -314,7 +314,7 @@ export default function QuizTypeDetailPage({ params }: { params: { slug: string 
                   Start Quiz
                 </Link>
               ) : (
-                <button onClick={() => handlePayment(quiz.slug)} className="bg-yellow-500 text-white py-2 px-5 rounded-full block w-full">
+                <button onClick={() => handlePayment(quiz.slug+"?sid="+schedule.schedule_id)} className="bg-yellow-500 text-white py-2 px-5 rounded-full block w-full">
                   Pay Now
                 </button>
               )}

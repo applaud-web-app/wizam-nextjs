@@ -7,6 +7,7 @@ import NoData from "@/components/Common/NoData";
 import Link from "next/link";
 import { toast } from "react-toastify";
 import { useRouter } from "next/navigation";
+import { useSearchParams } from "next/navigation"; // Import useSearchParams
 
 interface QuizDetails {
   title: string;
@@ -28,6 +29,14 @@ export default function SingleQuiz({ slug }: SingleQuizProps) {
   const [loading, setLoading] = useState<boolean>(true);
   const [isChecked, setIsChecked] = useState<boolean>(false); // For checkbox state
   const router = useRouter();
+  
+  const searchParams = useSearchParams(); 
+  const sid = searchParams.get("sid");
+
+  if (!sid || Number(sid) < 0) {
+    router.push("/dashboard");
+    return null;
+  }
 
   const handlePayment = async (slug: string) => {
     try {
@@ -98,11 +107,39 @@ export default function SingleQuiz({ slug }: SingleQuizProps) {
         } else {
           setQuizDetails(null);
         }
-      } catch (error) {
-        console.error("Error fetching quiz details:", error);
-        setQuizDetails(null);
+      } catch (error: any) {
+        console.error("Error fetching practice set:", error);
+
+        // Handle errors during the API request
+        if (error.response) {
+          const { status, data } = error.response;
+
+          // Handle specific error statuses
+          if (status === 401) {
+            toast.error("User is not authenticated. Please log in.");
+            router.push("/signin"); // Redirect to sign-in page
+          } else if (status === 404) {
+            toast.error("Please buy a subscription to access this course.");
+            Cookies.set("redirect_url", `/dashboard/quiz-detail/${slug}?sid=${sid}`, {
+              expires: 1,
+            });
+            router.push("/pricing"); // Redirect to pricing page
+          } else if (status === 403) {
+            toast.error(
+              "Feature not available in your plan. Please upgrade your subscription."
+            );
+            Cookies.set("redirect_url", `/dashboard/quiz-detail/${slug}?sid=${sid}`, {
+              expires: 1,
+            });
+            router.push("/pricing"); // Redirect to pricing page
+          } else {
+            toast.error(`An error occurred: ${data.error || "Unknown error"}`);
+          }
+        } else {
+          toast.error("An error occurred. Please try again.");
+        }
       } finally {
-        setLoading(false);
+        setLoading(false); // Stop the loading state once the request is complete
       }
     };
 
@@ -202,7 +239,7 @@ export default function SingleQuiz({ slug }: SingleQuizProps) {
       {/* Start/Pay Button */}
       {quizDetails.is_free ? (
         <Link
-          href={`/dashboard/quiz-play/${slug}`}
+          href={`/dashboard/quiz-play/${slug}?sid=${sid}`}
           className={`block w-full ${
             isChecked ? "bg-green-500 hover:bg-green-600" : "bg-gray-300 cursor-not-allowed"
           } text-white text-center font-semibold py-3 rounded-lg transition-colors`}
@@ -217,7 +254,7 @@ export default function SingleQuiz({ slug }: SingleQuizProps) {
           className={`block w-full ${
             isChecked ? "bg-yellow-500 hover:bg-yellow-600" : "bg-gray-300 cursor-not-allowed"
           } text-white text-center font-semibold py-3 rounded-lg transition-colors`}
-          onClick={() => handlePayment(`/dashboard/quiz-play/${slug}`)}
+          onClick={() => handlePayment(`/dashboard/quiz-play/${slug}?sid=${sid}`)}
           disabled={!isChecked}
         >
           Pay Now

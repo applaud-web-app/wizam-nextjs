@@ -269,7 +269,7 @@ const QuizResult = ({ params }: QuizResultProps) => {
                 question.correctAnswer.includes((index + 1).toString()); // Checking if (index + 1) is in correctAnswer array as string
               const isUserAnswer =
                 Array.isArray(question.userAnswer) &&
-                question.userAnswer.includes(index); // Checking if index is in userAnswer array
+                question.userAnswer.includes(index+1); // Checking if index is in userAnswer array
 
               return (
                 <div
@@ -590,28 +590,46 @@ const QuizResult = ({ params }: QuizResultProps) => {
   };
 
   const renderQuestionResult = (question: Question, index: number) => {
+    let questionStatus = "Skipped";
+    if (question.userAnswer) {
+      questionStatus = question.isCorrect ? "Correct" : "Wrong";
+    }
+  
+    const badgeColor =
+      questionStatus === "Correct"
+        ? "bg-green-200 text-green-800"
+        : questionStatus === "Wrong"
+        ? "bg-red-200 text-red-800"
+        : "bg-yellow-200 text-yellow-800";
+  
     return (
       <div
         key={question.id}
         className={`p-2 lg:p-4 border-l-[6px] lg:border-l-[12px] bg-[#f6f7f9] ${
-          !question.userAnswer ||
-          (Array.isArray(question.userAnswer) &&
-            question.userAnswer.length === 0)
+          questionStatus === "Skipped"
             ? "border-yellow-500"
-            : "border-green-500"
+            : questionStatus === "Correct"
+            ? "border-green-500"
+            : "border-red-500"
         }`}
       >
-        <h3 className="text-base font-semibold mb-2">
-          <span className="underline">Question {index + 1}:</span>{" "}
-          <div
-            className="bg-white p-2 rounded-lg"
-            dangerouslySetInnerHTML={{
-              __html: Array.isArray(question.question)
-                ? question.question[0]
-                : question.question,
-            }}
-          />
-        </h3>
+        <div className="flex justify-between items-center mb-2">
+          <h3 className="text-base font-semibold">
+            <span className="underline">Question {index + 1}:</span>
+          </h3>
+          
+          {/* Status Badge */}
+          <span className={`px-2 py-1 text-xs font-semibold rounded ${badgeColor}`}>
+            {questionStatus}
+          </span>
+        </div>
+  
+        <div
+          className="bg-white p-2 rounded-lg"
+          dangerouslySetInnerHTML={{
+            __html: Array.isArray(question.question) ? question.question[0] : question.question,
+          }}
+        />
         {renderOptions(question)}
       </div>
     );

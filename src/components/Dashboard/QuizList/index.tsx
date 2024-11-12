@@ -25,6 +25,7 @@ interface Quiz {
   total_marks: number | string;
   total_time: number;
   schedules: {
+    schedule_id: string;
     schedule_type: string;
     start_date: string;
     start_time: string;
@@ -239,7 +240,7 @@ export default function QuizList() {
                       </button>
                     ) : quiz.is_free === 1 ? (
                       <Link
-                        href={`/dashboard/quiz-detail/${quiz.slug}`}
+                        href={`/dashboard/quiz-detail/${quiz.slug}?sid=${schedules.schedule_id}`}
                         className="bg-green-600 text-white px-5 py-1 rounded-full font-semibold text-sm hover:bg-green-700 transition duration-200 inline-flex items-center justify-center w-32"
                       >
                         Start Quiz
@@ -247,7 +248,7 @@ export default function QuizList() {
                     ) : (
                       <button
                         className="bg-quaternary text-white py-1 px-5 rounded-full font-semibold text-sm hover:bg-quaternary-dark w-32"
-                        onClick={() => handlePayment(quiz.slug)}
+                        onClick={() => handlePayment(quiz.slug+"?sid="+schedules.schedule_id)}
                       >
                         Pay Now
                       </button>
