@@ -6,8 +6,8 @@ import axios from "axios";
 import Cookies from "js-cookie";
 import { toast } from "react-toastify";
 import { useRouter } from "next/navigation";
-import Loader from "@/Components/Common/Loader";
-import NoData from "@/Components/Common/NoData";
+import Loader from "@/components/Common/Loader";
+import NoData from "@/components/Common/NoData";
 import { FiPlay } from "react-icons/fi";
 import { MdLockOutline } from "react-icons/md";
 

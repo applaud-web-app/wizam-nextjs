@@ -1,6 +1,6 @@
-import CallToAction from "@/Components/CallToAction";
-import Breadcrumb from "@/Components/Common/Breadcrumb";
-import Invoice from "@/Components/Common/Invoice";
+import CallToAction from "@/components/CallToAction";
+import Breadcrumb from "@/components/Common/Breadcrumb";
+import Invoice from "@/components/Common/Invoice";
 
 import { Metadata } from "next";
 

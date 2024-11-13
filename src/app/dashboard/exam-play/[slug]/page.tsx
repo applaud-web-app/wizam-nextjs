@@ -1,6 +1,6 @@
 "use client";
 
-import Loader from "@/Components/Common/Loader";
+import Loader from "@/components/Common/Loader";
 import { AiOutlineArrowRight, AiOutlineClockCircle } from "react-icons/ai"; // For icons
 import { MdOutlineBookmarks } from "react-icons/md";
 
@@ -22,7 +22,7 @@ import { useRouter } from "next/navigation";
 import axios from "axios";
 import { toast } from "react-toastify";
 import Link from "next/link";
-import NoData from "@/Components/Common/NoData";
+import NoData from "@/components/Common/NoData";
 import { FaHourglass } from "react-icons/fa6";
 
 // Option interface

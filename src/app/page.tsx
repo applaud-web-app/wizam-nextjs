@@ -1,15 +1,15 @@
 // app/page.tsx (or wherever the home component is located)
-import BannerSection from "@/Components/BannerSection";
-import HomeBlogSection from "@/Components/Blog/HomeBlogSection";
-import CallToAction from "@/Components/CallToAction";
-import ScrollUp from "@/Components/Common/ScrollUp";
-import Faq from "@/Components/Faq";
-import Features from "@/Components/Features";
-import HelpArea from "@/Components/HelpArea";
-import Hero from "@/Components/Hero";
-import HomeFilterBox from "@/Components/HomeFilterBox";
-import PopularExams from "@/Components/PopularExam";
-import WhyChoose from "@/Components/WhyChoose";
+import BannerSection from "@/components/BannerSection";
+import HomeBlogSection from "@/components/Blog/HomeBlogSection";
+import CallToAction from "@/components/CallToAction";
+import ScrollUp from "@/components/Common/ScrollUp";
+import Faq from "@/components/Faq";
+import Features from "@/components/Features";
+import HelpArea from "@/components/HelpArea";
+import Hero from "@/components/Hero";
+import HomeFilterBox from "@/components/HomeFilterBox";
+import PopularExams from "@/components/PopularExam";
+import WhyChoose from "@/components/WhyChoose";
 import { Metadata } from "next";
 
 // Set metadata for SEO

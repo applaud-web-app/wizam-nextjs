@@ -1,7 +1,7 @@
 "use client";
 import Link from 'next/link';
 import { usePathname } from 'next/navigation'; // Import usePathname from next/navigation
-import Payments from "@/Components/Dashboard/Payments";
+import Payments from "@/components/Dashboard/Payments";
 
 const MyPaymentsPage: React.FC = () => {
   const pathname = usePathname(); // Get the current path

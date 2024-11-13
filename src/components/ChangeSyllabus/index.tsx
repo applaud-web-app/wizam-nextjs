@@ -6,8 +6,8 @@ import Cookies from 'js-cookie';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-toastify';
 import { useSyllabus } from '@/context/SyllabusContext';
-import Loader from '@/Components/Common/Loader'; // Import Loader component
-import NoData from '@/Components/Common/NoData'; // Import NoData component
+import Loader from '@/components/Common/Loader'; // Import Loader component
+import NoData from '@/components/Common/NoData'; // Import NoData component
 
 interface Syllabus {
   id: number;

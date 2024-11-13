@@ -1,7 +1,7 @@
 "use client";
 import Link from 'next/link';
 import { usePathname } from 'next/navigation'; // Import usePathname from next/navigation
-import UserProfile from '@/Components/UserProfile';
+import UserProfile from '@/components/UserProfile';
 
 export default function ProfilePage() {
   const pathname = usePathname(); // Get the current path

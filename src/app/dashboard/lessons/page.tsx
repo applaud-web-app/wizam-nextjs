@@ -2,8 +2,8 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import Cookies from 'js-cookie';
-import Loader from '@/Components/Common/Loader';
-import NoData from '@/Components/Common/NoData';
+import Loader from '@/components/Common/Loader';
+import NoData from '@/components/Common/NoData';
 import { useRouter } from "next/navigation";
 import { toast } from 'react-toastify';
 import { FaFolder, FaSignal, FaClock, FaBookOpen, FaLock } from "react-icons/fa";

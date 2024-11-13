@@ -4,8 +4,8 @@ import { useState, useEffect } from 'react';
 import axios from 'axios'; // Import Axios for API calls
 import { useRouter } from 'next/navigation'; // useRouter for navigation in Next.js
 import { FaClock, FaBook, FaPlayCircle } from 'react-icons/fa'; // Icons for video details
-import Loader from '@/Components/Common/Loader';
-import NoData from '@/Components/Common/NoData';
+import Loader from '@/components/Common/Loader';
+import NoData from '@/components/Common/NoData';
 import Cookies from 'js-cookie'; // To handle cookies
 import { toast } from 'react-toastify'; // Optional: For notifications
 

@@ -3,9 +3,9 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { notFound } from "next/navigation";
-import Breadcrumb from "@/Components/Common/Breadcrumb";
-import Loader from "@/Components/Common/Loader";
-import NoData from "@/Components/Common/NoData";
+import Breadcrumb from "@/components/Common/Breadcrumb";
+import Loader from "@/components/Common/Loader";
+import NoData from "@/components/Common/NoData";
 import { useRouter } from "next/navigation";
 import Cookies from 'js-cookie';
 import { toast } from "react-toastify";

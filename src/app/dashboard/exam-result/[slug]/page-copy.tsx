@@ -13,9 +13,9 @@ import { toast } from "react-toastify";
 import Cookies from "js-cookie";
 import axios from "axios";
 import { useRouter } from "next/navigation";
-import Loader from "@/Components/Common/Loader";
+import Loader from "@/components/Common/Loader";
 import Link from "next/link";
-import ExamReportGenerator from "@/Components/ReportCardGenerator";
+import ExamReportGenerator from "@/components/ReportCardGenerator";
 
 // TypeScript interfaces
 interface Option {

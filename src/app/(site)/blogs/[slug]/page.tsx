@@ -2,10 +2,10 @@
 
 import { useEffect, useState } from "react";
 import axios from "axios";
-import SingleBlog from "@/Components/Blog/SingleBlog";
+import SingleBlog from "@/components/Blog/SingleBlog";
 import { format } from "date-fns";
 import Image from "next/image";
-import Loader from "@/Components/Common/Loader";
+import Loader from "@/components/Common/Loader";
 
 // Type for Blog Post data from API
 interface BlogPost {

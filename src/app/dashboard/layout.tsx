@@ -2,9 +2,9 @@
 
 import { useState } from "react";
 import { usePathname } from "next/navigation"; // Import usePathname hook from next/navigation
-import Header from "@/Components/DashboardHeader";
-import Sidebar from "@/Components/DashboardSidebar";
-import Footer from "@/Components/DashboardFooter";
+import Header from "@/components/DashboardHeader";
+import Sidebar from "@/components/DashboardSidebar";
+import Footer from "@/components/DashboardFooter";
 import { Poppins } from "next/font/google";
 import { useSyllabus } from "@/context/SyllabusContext"; // Use Syllabus Context
 

@@ -2,10 +2,10 @@
 
 import { FC, useState, useRef, useEffect } from "react";
 import axios from "axios";
-import Breadcrumb from "@/Components/Common/Breadcrumb";
-import CallToAction from "@/Components/CallToAction";
-import NoData from "@/Components/Common/NoData";
-import Loader from "@/Components/Common/Loader";
+import Breadcrumb from "@/components/Common/Breadcrumb";
+import CallToAction from "@/components/CallToAction";
+import NoData from "@/components/Common/NoData";
+import Loader from "@/components/Common/Loader";
 import { IoSearchSharp } from "react-icons/io5"; // Import the search icon
 
 

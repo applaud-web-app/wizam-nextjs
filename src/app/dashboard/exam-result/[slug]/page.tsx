@@ -17,8 +17,8 @@ import { toast } from "react-toastify";
 import Cookies from "js-cookie";
 import axios from "axios";
 import { useRouter } from "next/navigation";
-import Loader from "@/Components/Common/Loader";
-import ExamReportGenerator from "@/Components/ReportCardGenerator";
+import Loader from "@/components/Common/Loader";
+import ExamReportGenerator from "@/components/ReportCardGenerator";
 import { FaArrowLeftLong } from "react-icons/fa6";
 import {
   Chart as ChartJS,
@@ -31,7 +31,7 @@ import {
   Title,
 } from "chart.js";
 import { Doughnut, Bar } from "react-chartjs-2";
-import NoData from "@/Components/Common/NoData";
+import NoData from "@/components/Common/NoData";
 
 ChartJS.register(
   ArcElement,

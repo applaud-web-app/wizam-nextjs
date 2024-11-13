@@ -1,7 +1,7 @@
 // app/email-sent/page.tsx
 
 import React from "react";
-import EmailSent from "@/Components/Auth/EmailSent";
+import EmailSent from "@/components/Auth/EmailSent";
 
 // Metadata for the page
 export const metadata = {

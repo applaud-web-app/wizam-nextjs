@@ -1,5 +1,5 @@
-import Breadcrumb from "@/Components/Common/Breadcrumb";
-import Success from "@/Components/Success";
+import Breadcrumb from "@/components/Common/Breadcrumb";
+import Success from "@/components/Success";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {

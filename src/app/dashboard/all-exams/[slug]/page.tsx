@@ -8,8 +8,8 @@ import { toast } from "react-toastify";
 import Link from "next/link";
 import { FaClock, FaQuestionCircle, FaStar } from "react-icons/fa";
 import { FaArrowLeftLong } from "react-icons/fa6";
-import Loader from "@/Components/Common/Loader";
-import NoData from "@/Components/Common/NoData";
+import Loader from "@/components/Common/Loader";
+import NoData from "@/components/Common/NoData";
 import { FiPlay } from "react-icons/fi";
 import { MdLockOutline } from "react-icons/md";
 

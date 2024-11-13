@@ -4,8 +4,8 @@ import { useState, useEffect } from 'react';
 import axios from 'axios'; // Import Axios for server requests
 import { useRouter } from 'next/navigation'; // To handle redirection after countdown
 import { FaClock, FaBook, FaTag, FaDollarSign, FaCheckCircle } from 'react-icons/fa'; // Icons for lessons
-import Loader from '@/Components/Common/Loader';
-import NoData from '@/Components/Common/NoData';
+import Loader from '@/components/Common/Loader';
+import NoData from '@/components/Common/NoData';
 import Cookies from 'js-cookie'; // To handle cookies
 import { toast } from 'react-toastify'; // Optional: For notifications
 

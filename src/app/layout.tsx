@@ -1,14 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import ScrollToTop from "@/Components/ScrollToTop";
+import ScrollToTop from "@/components/ScrollToTop";
 import { SessionProvider } from "next-auth/react";
 import { ThemeProvider } from "next-themes";
 import "../styles/index.css";
-import PreLoader from "@/Components/Common/PreLoader";
+import PreLoader from "@/components/Common/PreLoader";
 import { usePathname, useRouter } from "next/navigation"; // Added useRouter for redirection if needed
-import Header from "@/Components/MainHeader";
-import Footer from "@/Components/MainFooter";
+import Header from "@/components/MainHeader";
+import Footer from "@/components/MainFooter";
 import { AppProgressBar as ProgressBar } from "next-nprogress-bar";
 import axios from "axios";
 import { ToastContainer } from "react-toastify"; // Import ToastContainer

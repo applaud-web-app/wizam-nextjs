@@ -5,8 +5,8 @@ import { FaVideo, FaClock, FaPlayCircle } from 'react-icons/fa'; // React icons 
 import Link from 'next/link';
 import axios from 'axios';
 import Cookies from 'js-cookie'; // To handle cookies
-import Loader from '@/Components/Common/Loader';
-import NoData from '@/Components/Common/NoData';
+import Loader from '@/components/Common/Loader';
+import NoData from '@/components/Common/NoData';
 import { useRouter } from "next/navigation"; // Use router to redirect
 import { toast } from 'react-toastify'; // Optional: For notifications
 

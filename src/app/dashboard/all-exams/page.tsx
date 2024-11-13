@@ -3,10 +3,10 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import Cookies from "js-cookie";
-import NoData from "@/Components/Common/NoData";
-import Loader from "@/Components/Common/Loader";
-import ExamList from "@/Components/Dashboard/ExamList";
-import ExamPacks from "@/Components/Dashboard/ExamPacks";
+import NoData from "@/components/Common/NoData";
+import Loader from "@/components/Common/Loader";
+import ExamList from "@/components/Dashboard/ExamList";
+import ExamPacks from "@/components/Dashboard/ExamPacks";
 
 interface ExamType {
   title: string;

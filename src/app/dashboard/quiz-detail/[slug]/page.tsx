@@ -1,6 +1,6 @@
 "use client"; // Ensure this component is client-side rendered
 
-import SingleQuiz from "@/Components/Dashboard/SingleQuiz";
+import SingleQuiz from "@/components/Dashboard/SingleQuiz";
 
 interface ExamDetailPageProps {
   params: {

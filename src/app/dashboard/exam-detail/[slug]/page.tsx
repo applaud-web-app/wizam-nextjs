@@ -1,6 +1,6 @@
 "use client"; // Ensure this component is client-side rendered
 
-import SingleExam from "@/Components/Dashboard/SingleExam";
+import SingleExam from "@/components/Dashboard/SingleExam";
 
 interface ExamDetailPageProps {
   params: {

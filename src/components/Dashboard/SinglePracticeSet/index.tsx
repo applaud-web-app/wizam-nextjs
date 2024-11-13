@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import Loader from "@/Components/Common/Loader";
+import Loader from "@/components/Common/Loader";
 import {
   FaClock,
   FaQuestionCircle,
@@ -9,7 +9,7 @@ import {
 } from "react-icons/fa";
 import Cookies from "js-cookie";
 import axios from "axios";
-import NoData from "@/Components/Common/NoData";
+import NoData from "@/components/Common/NoData";
 import Link from "next/link";
 import { toast } from "react-toastify";
 import { useRouter } from "next/navigation";
