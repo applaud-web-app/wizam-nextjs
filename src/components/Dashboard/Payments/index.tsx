@@ -5,6 +5,7 @@ import axios from "axios";
 import Cookies from "js-cookie";
 import Loader from "@/components/Common/Loader";
 import NoData from "@/components/Common/NoData";
+import { useRouter } from "next/navigation"; // Import useRouter for navigation
 
 interface PaymentData {
   payment_id: string;
@@ -18,6 +19,7 @@ const Payment: React.FC = () => {
   const [payments, setPayments] = useState<PaymentData[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const router = useRouter(); // Initialize router for navigation
 
   useEffect(() => {
     const fetchPayments = async () => {
@@ -27,7 +29,7 @@ const Payment: React.FC = () => {
 
         const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/my-payment`, {
           headers: {
-            Authorization: `Bearer ${token}`, // Sample token
+            Authorization: `Bearer ${token}`,
           },
         });
 
@@ -45,6 +47,10 @@ const Payment: React.FC = () => {
 
     fetchPayments();
   }, []);
+
+  const handleViewInvoice = (paymentId: string) => {
+    router.push(`/invoice/${paymentId}`); // Navigate to invoice page with paymentId
+  };
 
   const getStatusBadge = (status: string) => {
     let badgeClass = "";
@@ -78,34 +84,42 @@ const Payment: React.FC = () => {
   return (
     <div className="w-full">
       <div className="bg-white shadow-sm rounded-lg p-1">
-       
         <div className="overflow-x-auto">
           <table className="min-w-full table-auto whitespace-nowrap">
             <thead className="bg-defaultcolor text-white">
               <tr>
-                
                 <th className="p-3 text-left">Payment ID</th>
                 <th className="p-3 text-left">Amount</th>
                 <th className="p-3 text-left">Currency</th>
                 <th className="p-3 text-left">Payment Date</th>
-                <th className="p-3 text-left rounded-tr-lg">Status</th>
+                <th className="p-3 text-left">Status</th>
+                <th className="p-3 text-left rounded-tr-lg">Invoice</th> {/* Column for Invoice button */}
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {payments.length > 0 ? (
                 payments.map((payment, index) => (
                   <tr key={index} className="hover:bg-gray-50">
-                  
-                    <td className="p-4">{payment.payment_id}</td> {/* Amount */}
-                    <td className="p-4">{payment.amount}</td> {/* Amount */}
-                    <td className="p-4">{payment.currency.toUpperCase()}</td> {/* Currency */}
-                    <td className="p-4">{new Date(payment.created_at).toLocaleString()}</td> {/* Payment Date */}
-                    <td className="p-4">{getStatusBadge(payment.status)}</td> {/* Status */}
+                    <td className="p-4">{payment.payment_id}</td>
+                    <td className="p-4">
+                      ${parseFloat(payment.amount).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                    </td>
+                    <td className="p-4">{payment.currency.toUpperCase()}</td>
+                    <td className="p-4">{new Date(payment.created_at).toLocaleString()}</td>
+                    <td className="p-4">{getStatusBadge(payment.status)}</td>
+                    <td className="p-4">
+                      <button
+                        onClick={() => handleViewInvoice(payment.payment_id)}
+                        className="bg-blue-500 text-white px-5 py-1 text-sm rounded-full hover:bg-blue-700 transition"
+                      >
+                        View Invoice
+                      </button>
+                    </td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td className="p-4" colSpan={5}>
+                  <td className="p-4" colSpan={6}>
                     No payments found.
                   </td>
                 </tr>

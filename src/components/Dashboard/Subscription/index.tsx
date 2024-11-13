@@ -4,7 +4,6 @@ import axios from "axios";
 import Cookies from "js-cookie";
 import Loader from "@/components/Common/Loader";
 import NoData from "@/components/Common/NoData";
-import Link from "next/link";
 
 interface SubscriptionData {
   id: string;
@@ -84,7 +83,7 @@ const Subscription: React.FC = () => {
                 <th className="p-3 text-left">Duration</th>
                 <th className="p-3 text-left">Features</th>
                 <th className="p-3 text-left">Status</th>
-                <th className="p-3 text-left rounded-tr-lg">Invoice</th>
+               
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
@@ -105,14 +104,7 @@ const Subscription: React.FC = () => {
                     ))}
                   </td>
                   <td className="p-4">{getStatusBadge(subscription.status)}</td>
-                  <td className="p-4">
-                    <Link
-                      href={`/invoice/${subscription.id}`} // Link to Invoice page with invoiceId
-                      className="bg-defaultcolor text-white px-5 py-1 text-sm rounded-full hover:bg-defaultcolor-dark transition"
-                    >
-                      View Invoice
-                    </Link>
-                  </td>
+                 
                 </tr>
               ))}
             </tbody>
