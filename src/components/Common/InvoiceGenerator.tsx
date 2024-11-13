@@ -39,15 +39,22 @@ const styles = StyleSheet.create({
     fontFamily: "Roboto",
     backgroundColor: colors.white,
     lineHeight: 1.2,
-    border: "2px solid #A6DCEF", // Add a border around the page
+    border: "1px solid #A6DCEF",
     margin: 10,
-    borderRadius: 8, // Optional: rounded corners for a softer look
+    borderRadius: 8,
+  },
+  container: {
+    padding: 10,
+    borderRadius: 6,
+    border: "1px solid #ddd",
   },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: 20,
+    borderBottom: "1px solid #A6DCEF",
+    paddingBottom: 10,
   },
   logo: {
     width: 80,
@@ -69,6 +76,8 @@ const styles = StyleSheet.create({
     color: colors.primary,
     marginBottom: 10,
     marginTop: 20,
+    borderBottom: "1px solid #A6DCEF",
+    paddingBottom: 5,
   },
   subTitle: {
     fontSize: 13,
@@ -80,6 +89,9 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     marginBottom: 20,
+    padding: 10,
+    borderRadius: 4,
+    backgroundColor: colors.gray,
   },
   billingInfo: {
     flex: 1,
@@ -96,6 +108,9 @@ const styles = StyleSheet.create({
   },
   paymentDetails: {
     marginBottom: 20,
+    padding: 10,
+    borderRadius: 4,
+    border: "1px solid #ddd",
   },
   tableContainer: {
     border: "1px solid #ddd",
@@ -124,18 +139,26 @@ const styles = StyleSheet.create({
     fontSize: 12,
     textAlign: "center",
   },
+  totalContainer: {
+    padding: 10,
+    borderRadius: 4,
+    border: "1px solid #ddd",
+    marginBottom: 20,
+    backgroundColor: colors.gray,
+  },
   totalText: {
     fontSize: 14,
     fontWeight: "bold",
     color: colors.primary,
     textAlign: "right",
-    marginTop: 10,
   },
   footer: {
     textAlign: "center",
     fontSize: 10,
     color: colors.black,
     marginTop: 20,
+    borderTop: "1px solid #A6DCEF",
+    paddingTop: 10,
   },
 });
 
@@ -146,79 +169,83 @@ const InvoicePDF: React.FC<{ invoiceData: any; userData: any; siteSettings: any 
 }) => (
   <Document>
     <Page style={styles.page}>
-      {/* Header Section */}
-      <View style={styles.header}>
-        <Image style={styles.logo} src={siteSettings?.site_logo || "/images/logo/wizam-logo.png"} />
-        <View style={styles.siteInfo}>
-          <Text style={styles.siteTitle}>{siteSettings?.site_name || "Company Name"}</Text>
-          <Text>{siteSettings?.address || "Address not available"}</Text>
-          <Text>Email: {siteSettings?.email || "Email not available"}</Text>
-        </View>
-      </View>
-
-      <Text style={styles.sectionTitle}>Invoice</Text>
-
-      {/* Billing and Customer Information */}
-      <View style={styles.infoSection}>
-        <View style={styles.billingInfo}>
-          <Text style={styles.subTitle}>Billing Information</Text>
-          <Text style={styles.infoText}>Vendor Name: {invoiceData?.billing?.vendor_name || "Not available"}</Text>
-          <Text style={styles.infoText}>Address: {invoiceData?.billing?.address || "Not available"}</Text>
-          <Text style={styles.infoText}>City: {invoiceData?.billing?.city_name || "Not available"}</Text>
-          <Text style={styles.infoText}>State: {invoiceData?.billing?.state_name || "Not available"}</Text>
-          <Text style={styles.infoText}>Country: {invoiceData?.billing?.country_name || "Not available"}</Text>
-          <Text style={styles.infoText}>ZIP: {invoiceData?.billing?.zip || "Not available"}</Text>
-          <Text style={styles.infoText}>Phone Number: {invoiceData?.billing?.phone_number || "Not available"}</Text>
-          <Text style={styles.infoText}>VAT Number: {invoiceData?.billing?.vat_number || "Not available"}</Text>
+      <View style={styles.container}>
+        {/* Header Section */}
+        <View style={styles.header}>
+          <Image style={styles.logo} src={siteSettings?.site_logo || "/images/logo/wizam-logo.png"} />
+          <View style={styles.siteInfo}>
+            <Text style={styles.siteTitle}>{siteSettings?.site_name || "Company Name"}</Text>
+            <Text>{siteSettings?.address || "Address not available"}</Text>
+            <Text>Email: {siteSettings?.email || "Email not available"}</Text>
+          </View>
         </View>
 
-        <View style={styles.customerInfo}>
-          <Text style={styles.subTitle}>Customer Information</Text>
-          <Text style={styles.infoText}>Name: {userData?.name || "Not available"}</Text>
-          <Text style={styles.infoText}>Email: {userData?.email || "Not available"}</Text>
-        </View>
-      </View>
+        <Text style={styles.sectionTitle}>Invoice</Text>
 
-      {/* Payment Details */}
-      <Text style={styles.sectionTitle}>Payment Details</Text>
-      <View style={styles.paymentDetails}>
-        <Text style={styles.infoText}>Payment ID: {invoiceData?.payment?.id || "Not available"}</Text>
-        <Text style={styles.infoText}>Subscription ID: {invoiceData?.payment?.subscription_id || "Not available"}</Text>
-        <Text style={styles.infoText}>Transaction ID: {invoiceData?.payment?.stripe_payment_id || "Not available"}</Text>
-        <Text style={styles.infoText}>
-          Amount: {invoiceData?.payment?.amount || "Not available"} {invoiceData?.payment?.currency || ""}
-        </Text>
-        <Text style={styles.infoText}>Status: {invoiceData?.payment?.status || "Not available"}</Text>
-        <Text style={styles.infoText}>Date: {invoiceData?.payment?.created_at || "Not available"}</Text>
-      </View>
+        {/* Billing and Customer Information */}
+        <View style={styles.infoSection}>
+          <View style={styles.billingInfo}>
+            <Text style={styles.subTitle}>Billing Information</Text>
+            <Text style={styles.infoText}>Vendor Name: {invoiceData?.billing?.vendor_name || "Not available"}</Text>
+            <Text style={styles.infoText}>Address: {invoiceData?.billing?.address || "Not available"}</Text>
+            <Text style={styles.infoText}>City: {invoiceData?.billing?.city_name || "Not available"}</Text>
+            <Text style={styles.infoText}>State: {invoiceData?.billing?.state_name || "Not available"}</Text>
+            <Text style={styles.infoText}>Country: {invoiceData?.billing?.country_name || "Not available"}</Text>
+            <Text style={styles.infoText}>ZIP: {invoiceData?.billing?.zip || "Not available"}</Text>
+            <Text style={styles.infoText}>Phone Number: {invoiceData?.billing?.phone_number || "Not available"}</Text>
+            <Text style={styles.infoText}>VAT Number: {invoiceData?.billing?.vat_number || "Not available"}</Text>
+          </View>
 
-      {/* Product Table */}
-      <View style={styles.tableContainer}>
-        <View style={styles.tableHeader}>
-          <Text style={styles.tableHeaderCell}>Product</Text>
-          <Text style={styles.tableHeaderCell}>Price</Text>
-          <Text style={styles.tableHeaderCell}>Subscription Period</Text>
-          <Text style={styles.tableHeaderCell}>Next Billing Date</Text>
+          <View style={styles.customerInfo}>
+            <Text style={styles.subTitle}>Customer Information</Text>
+            <Text style={styles.infoText}>Name: {userData?.name || "Not available"}</Text>
+            <Text style={styles.infoText}>Email: {userData?.email || "Not available"}</Text>
+          </View>
         </View>
-        <View style={styles.tableRow}>
-          <Text style={styles.tableCell}>{invoiceData?.payment?.subscription_id || "Not available"}</Text>
-          <Text style={styles.tableCell}>
-            {siteSettings?.currency_symbol}{invoiceData?.payment?.amount || "Not available"}
+
+        {/* Payment Details */}
+        <Text style={styles.sectionTitle}>Payment Details</Text>
+        <View style={styles.paymentDetails}>
+          <Text style={styles.infoText}>Payment ID: {invoiceData?.payment?.id || "Not available"}</Text>
+          <Text style={styles.infoText}>Subscription ID: {invoiceData?.payment?.subscription_id || "Not available"}</Text>
+          <Text style={styles.infoText}>Transaction ID: {invoiceData?.payment?.stripe_payment_id || "Not available"}</Text>
+          <Text style={styles.infoText}>
+            Amount: {invoiceData?.payment?.amount || "Not available"} {invoiceData?.payment?.currency || ""}
           </Text>
-          <Text style={styles.tableCell}>One-Time</Text>
-          <Text style={styles.tableCell}>{invoiceData?.subscription?.ends_date || "Not applicable"}</Text>
+          <Text style={styles.infoText}>Status: {invoiceData?.payment?.status || "Not available"}</Text>
+          <Text style={styles.infoText}>Date: {invoiceData?.payment?.created_at || "Not available"}</Text>
         </View>
-      </View>
 
-      {/* Total Amount */}
-      <Text style={styles.totalText}>
-        Total: {siteSettings?.currency_symbol}{invoiceData?.payment?.amount || "Not available"}
-      </Text>
+        {/* Product Table */}
+        <View style={styles.tableContainer}>
+          <View style={styles.tableHeader}>
+            <Text style={styles.tableHeaderCell}>Product</Text>
+            <Text style={styles.tableHeaderCell}>Price</Text>
+            <Text style={styles.tableHeaderCell}>Subscription Period</Text>
+            <Text style={styles.tableHeaderCell}>Next Billing Date</Text>
+          </View>
+          <View style={styles.tableRow}>
+            <Text style={styles.tableCell}>{invoiceData?.payment?.subscription_id || "Not available"}</Text>
+            <Text style={styles.tableCell}>
+              {siteSettings?.currency_symbol}{invoiceData?.payment?.amount || "Not available"}
+            </Text>
+            <Text style={styles.tableCell}>One-Time</Text>
+            <Text style={styles.tableCell}>{invoiceData?.subscription?.ends_date || "Not applicable"}</Text>
+          </View>
+        </View>
 
-      {/* Footer */}
-      <View style={styles.footer}>
-        <Text>Thank you for your business!</Text>
-        <Text>If you have any questions, feel free to contact us at {siteSettings?.email || "Email not available"}.</Text>
+        {/* Total Amount */}
+        <View style={styles.totalContainer}>
+          <Text style={styles.totalText}>
+            Total: {siteSettings?.currency_symbol}{invoiceData?.payment?.amount || "Not available"}
+          </Text>
+        </View>
+
+        {/* Footer */}
+        <View style={styles.footer}>
+          <Text>Thank you for your business!</Text>
+          <Text>If you have any questions, feel free to contact us at {siteSettings?.email || "Email not available"}.</Text>
+        </View>
       </View>
     </Page>
   </Document>
