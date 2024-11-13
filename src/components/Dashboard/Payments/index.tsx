@@ -1,11 +1,11 @@
-"use client"; // This makes the component run on the client side for fetching data
+"use client";
 
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import Cookies from "js-cookie";
 import Loader from "@/components/Common/Loader";
 import NoData from "@/components/Common/NoData";
-import { useRouter } from "next/navigation"; // Import useRouter for navigation
+import InvoiceGenerator from "@/components/Common/InvoiceGenerator";
 
 interface PaymentData {
   payment_id: string;
@@ -19,7 +19,8 @@ const Payment: React.FC = () => {
   const [payments, setPayments] = useState<PaymentData[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const router = useRouter(); // Initialize router for navigation
+  const [selectedInvoiceId, setSelectedInvoiceId] = useState<string | null>(null);
+  const [downloading, setDownloading] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchPayments = async () => {
@@ -48,8 +49,9 @@ const Payment: React.FC = () => {
     fetchPayments();
   }, []);
 
-  const handleViewInvoice = (paymentId: string) => {
-    router.push(`/invoice/${paymentId}`); // Navigate to invoice page with paymentId
+  const handleDownloadInvoice = (paymentId: string) => {
+    setSelectedInvoiceId(paymentId);
+    setDownloading(paymentId);
   };
 
   const getStatusBadge = (status: string) => {
@@ -93,41 +95,42 @@ const Payment: React.FC = () => {
                 <th className="p-3 text-left">Currency</th>
                 <th className="p-3 text-left">Payment Date</th>
                 <th className="p-3 text-left">Status</th>
-                <th className="p-3 text-left rounded-tr-lg">Invoice</th> {/* Column for Invoice button */}
+                <th className="p-3 text-left rounded-tr-lg">Invoice</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {payments.length > 0 ? (
-                payments.map((payment, index) => (
-                  <tr key={index} className="hover:bg-gray-50">
-                    <td className="p-4">{payment.payment_id}</td>
-                    <td className="p-4">
-                      ${parseFloat(payment.amount).toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                    </td>
-                    <td className="p-4">{payment.currency.toUpperCase()}</td>
-                    <td className="p-4">{new Date(payment.created_at).toLocaleString()}</td>
-                    <td className="p-4">{getStatusBadge(payment.status)}</td>
-                    <td className="p-4">
-                      <button
-                        onClick={() => handleViewInvoice(payment.payment_id)}
-                        className="bg-blue-500 text-white px-5 py-1 text-sm rounded-full hover:bg-blue-700 transition"
-                      >
-                        View Invoice
-                      </button>
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td className="p-4" colSpan={6}>
-                    No payments found.
+              {payments.map((payment) => (
+                <tr key={payment.payment_id} className="hover:bg-gray-50">
+                  <td className="p-4">{payment.payment_id}</td>
+                  <td className="p-4">
+                    ${parseFloat(payment.amount).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                  </td>
+                  <td className="p-4">{payment.currency.toUpperCase()}</td>
+                  <td className="p-4">{new Date(payment.created_at).toLocaleString()}</td>
+                  <td className="p-4">{getStatusBadge(payment.status)}</td>
+                  <td className="p-4">
+                    <button
+                      onClick={() => handleDownloadInvoice(payment.payment_id)}
+                      className="bg-defaultcolor text-white px-3 py-1 text-sm rounded-full hover:bg-defaultcolor-dark transition"
+                    >
+                      {downloading === payment.payment_id ? "Downloading..." : "Download Invoice"}
+                    </button>
                   </td>
                 </tr>
-              )}
+              ))}
             </tbody>
           </table>
         </div>
       </div>
+      {selectedInvoiceId && (
+        <InvoiceGenerator
+          invoiceId={selectedInvoiceId}
+          onDownloadComplete={() => {
+            setDownloading(null);
+            setSelectedInvoiceId(null); // Clear selectedInvoiceId after download
+          }}
+        />
+      )}
     </div>
   );
 };

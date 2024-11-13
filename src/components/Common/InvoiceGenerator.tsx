@@ -1,21 +1,16 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import {
-  Page,
-  Text,
-  View,
-  Document,
-  Font,
-  StyleSheet,
-  Image,
-  pdf,
-} from "@react-pdf/renderer";
+import React, { useEffect, useState } from "react";
+import { pdf, Document, Page, Text, View, Font, StyleSheet, Image } from "@react-pdf/renderer";
 import Cookies from "js-cookie";
 import axios from "axios";
-import { useSearchParams } from "next/navigation";
+import { format } from 'date-fns';
 
-// Define colors and fonts
+interface InvoiceGeneratorProps {
+  invoiceId: string;
+  onDownloadComplete: () => void;
+}
+
 const colors = {
   primary: "#2A3B61",
   secondary: "#A6DCEF",
@@ -32,32 +27,32 @@ Font.register({
   ],
 });
 
+
 const styles = StyleSheet.create({
   page: {
-    padding: 20,
+    padding: 10,
     fontSize: 12,
     fontFamily: "Roboto",
     backgroundColor: colors.white,
-    lineHeight: 1.2,
-    border: "1px solid #A6DCEF",
-    margin: 10,
-    borderRadius: 8,
+    lineHeight: 1.4,
+  
   },
   container: {
-    padding: 10,
+    padding: 30,
     borderRadius: 6,
     border: "1px solid #ddd",
+    boxShadow: "0px 2px 8px rgba(0, 0, 0, 0.1)", // Subtle shadow for a card effect
   },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: 20,
-    borderBottom: "1px solid #A6DCEF",
-    paddingBottom: 10,
+    borderBottom: "2px solid #A6DCEF",
+    paddingBottom: 15,
   },
   logo: {
-    width: 80,
+    width: 90, // Slightly larger logo
     height: "auto",
   },
   siteInfo: {
@@ -66,18 +61,23 @@ const styles = StyleSheet.create({
     color: colors.black,
   },
   siteTitle: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: "bold",
     color: colors.primary,
+    textTransform: "uppercase",
   },
   sectionTitle: {
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: "bold",
     color: colors.primary,
     marginBottom: 10,
     marginTop: 20,
-    borderBottom: "1px solid #A6DCEF",
-    paddingBottom: 5,
+    borderBottom: "2px solid #A6DCEF",
+    paddingBottom: 6,
+    textTransform: "uppercase",
+    backgroundColor: colors.gray,
+    padding: 5,
+    borderRadius: 4,
   },
   subTitle: {
     fontSize: 13,
@@ -89,9 +89,10 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     marginBottom: 20,
-    padding: 10,
+    padding: 12,
     borderRadius: 4,
     backgroundColor: colors.gray,
+    border: "1px solid #ddd",
   },
   billingInfo: {
     flex: 1,
@@ -105,22 +106,25 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: colors.black,
     marginBottom: 4,
+    lineHeight: 1.3,
   },
   paymentDetails: {
     marginBottom: 20,
     padding: 10,
     borderRadius: 4,
     border: "1px solid #ddd",
+    backgroundColor: colors.gray,
   },
   tableContainer: {
     border: "1px solid #ddd",
     borderRadius: 4,
     overflow: "hidden",
     marginBottom: 10,
+    boxShadow: "0px 1px 4px rgba(0, 0, 0, 0.1)", // Shadow for enhanced look
   },
   tableHeader: {
     flexDirection: "row",
-    backgroundColor: colors.gray,
+    backgroundColor: colors.primary,
     padding: 8,
   },
   tableHeaderCell: {
@@ -128,11 +132,14 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     fontSize: 12,
     textAlign: "center",
+    color: colors.white,
+    textTransform: "uppercase",
   },
   tableRow: {
     flexDirection: "row",
     borderBottom: "1px solid #eee",
     padding: 8,
+    backgroundColor: "#f9f9f9", // Alternating row background
   },
   tableCell: {
     flex: 1,
@@ -140,14 +147,14 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   totalContainer: {
-    padding: 10,
+    padding: 15,
     borderRadius: 4,
     border: "1px solid #ddd",
     marginBottom: 20,
     backgroundColor: colors.gray,
   },
   totalText: {
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: "bold",
     color: colors.primary,
     textAlign: "right",
@@ -159,171 +166,131 @@ const styles = StyleSheet.create({
     marginTop: 20,
     borderTop: "1px solid #A6DCEF",
     paddingTop: 10,
+    opacity: 0.8,
   },
 });
 
-const InvoicePDF: React.FC<{ invoiceData: any; userData: any; siteSettings: any }> = ({
-  invoiceData,
-  userData,
-  siteSettings,
-}) => (
-  <Document>
-    <Page style={styles.page}>
-      <View style={styles.container}>
-        {/* Header Section */}
-        <View style={styles.header}>
-          <Image style={styles.logo} src={siteSettings?.site_logo || "/images/logo/wizam-logo.png"} />
-          <View style={styles.siteInfo}>
-            <Text style={styles.siteTitle}>{siteSettings?.site_name || "Company Name"}</Text>
-            <Text>{siteSettings?.address || "Address not available"}</Text>
-            <Text>Email: {siteSettings?.email || "Email not available"}</Text>
-          </View>
-        </View>
-
-        <Text style={styles.sectionTitle}>Invoice</Text>
-
-        {/* Billing and Customer Information */}
-        <View style={styles.infoSection}>
-          <View style={styles.billingInfo}>
-            <Text style={styles.subTitle}>Billing Information</Text>
-            <Text style={styles.infoText}>Vendor Name: {invoiceData?.billing?.vendor_name || "Not available"}</Text>
-            <Text style={styles.infoText}>Address: {invoiceData?.billing?.address || "Not available"}</Text>
-            <Text style={styles.infoText}>City: {invoiceData?.billing?.city_name || "Not available"}</Text>
-            <Text style={styles.infoText}>State: {invoiceData?.billing?.state_name || "Not available"}</Text>
-            <Text style={styles.infoText}>Country: {invoiceData?.billing?.country_name || "Not available"}</Text>
-            <Text style={styles.infoText}>ZIP: {invoiceData?.billing?.zip || "Not available"}</Text>
-            <Text style={styles.infoText}>Phone Number: {invoiceData?.billing?.phone_number || "Not available"}</Text>
-            <Text style={styles.infoText}>VAT Number: {invoiceData?.billing?.vat_number || "Not available"}</Text>
-          </View>
-
-          <View style={styles.customerInfo}>
-            <Text style={styles.subTitle}>Customer Information</Text>
-            <Text style={styles.infoText}>Name: {userData?.name || "Not available"}</Text>
-            <Text style={styles.infoText}>Email: {userData?.email || "Not available"}</Text>
-          </View>
-        </View>
-
-        {/* Payment Details */}
-        <Text style={styles.sectionTitle}>Payment Details</Text>
-        <View style={styles.paymentDetails}>
-          <Text style={styles.infoText}>Payment ID: {invoiceData?.payment?.id || "Not available"}</Text>
-          <Text style={styles.infoText}>Subscription ID: {invoiceData?.payment?.subscription_id || "Not available"}</Text>
-          <Text style={styles.infoText}>Transaction ID: {invoiceData?.payment?.stripe_payment_id || "Not available"}</Text>
-          <Text style={styles.infoText}>
-            Amount: {invoiceData?.payment?.amount || "Not available"} {invoiceData?.payment?.currency || ""}
-          </Text>
-          <Text style={styles.infoText}>Status: {invoiceData?.payment?.status || "Not available"}</Text>
-          <Text style={styles.infoText}>Date: {invoiceData?.payment?.created_at || "Not available"}</Text>
-        </View>
-
-        {/* Product Table */}
-        <View style={styles.tableContainer}>
-          <View style={styles.tableHeader}>
-            <Text style={styles.tableHeaderCell}>Product</Text>
-            <Text style={styles.tableHeaderCell}>Price</Text>
-            <Text style={styles.tableHeaderCell}>Subscription Period</Text>
-            <Text style={styles.tableHeaderCell}>Next Billing Date</Text>
-          </View>
-          <View style={styles.tableRow}>
-            <Text style={styles.tableCell}>{invoiceData?.payment?.subscription_id || "Not available"}</Text>
-            <Text style={styles.tableCell}>
-              {siteSettings?.currency_symbol}{invoiceData?.payment?.amount || "Not available"}
-            </Text>
-            <Text style={styles.tableCell}>One-Time</Text>
-            <Text style={styles.tableCell}>{invoiceData?.subscription?.ends_date || "Not applicable"}</Text>
-          </View>
-        </View>
-
-        {/* Total Amount */}
-        <View style={styles.totalContainer}>
-          <Text style={styles.totalText}>
-            Total: {siteSettings?.currency_symbol}{invoiceData?.payment?.amount || "Not available"}
-          </Text>
-        </View>
-
-        {/* Footer */}
-        <View style={styles.footer}>
-          <Text>Thank you for your business!</Text>
-          <Text>If you have any questions, feel free to contact us at {siteSettings?.email || "Email not available"}.</Text>
-        </View>
-      </View>
-    </Page>
-  </Document>
-);
-
-// Component for generating and previewing the PDF
-const InvoiceGenerator: React.FC = () => {
-  const [invoiceData, setInvoiceData] = useState<any>(null);
-  const [userData, setUserData] = useState<any>(null);
-  const [siteSettings, setSiteSettings] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
-  const searchParams = useSearchParams();
-  const sid = searchParams.get("invoice");
+const InvoiceGenerator: React.FC<InvoiceGeneratorProps> = ({ invoiceId, onDownloadComplete }) => {
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (!sid) return;
-
-    const fetchInvoiceData = async () => {
+    const generateInvoicePdf = async () => {
+      setLoading(true);
       try {
         const token = Cookies.get("jwt") || "";
         const [invoiceRes, userRes, siteRes] = await Promise.all([
-          axios.get(`${process.env.NEXT_PUBLIC_API_URL}/invoice-detail/${sid}`, { headers: { Authorization: `Bearer ${token}` } }),
-          axios.get(`${process.env.NEXT_PUBLIC_API_URL}/profile`, { headers: { Authorization: `Bearer ${token}` } }),
-          axios.get(`${process.env.NEXT_PUBLIC_API_URL}/site-setting`, { headers: { Authorization: `Bearer ${token}` } }),
+          axios.get(`${process.env.NEXT_PUBLIC_API_URL}/invoice-detail/${invoiceId}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+          axios.get(`${process.env.NEXT_PUBLIC_API_URL}/profile`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+          axios.get(`${process.env.NEXT_PUBLIC_API_URL}/site-setting`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
         ]);
-        setInvoiceData(invoiceRes.data.data);
-        setUserData(userRes.data.user);
-        setSiteSettings(siteRes.data);
-        setLoading(false);
-      } catch (err) {
-        console.error("Error fetching invoice data:", err);
-        setError("Failed to load invoice data.");
+
+        const invoiceData = invoiceRes.data.data;
+        const userData = userRes.data.user;
+        const siteSettings = siteRes.data;
+
+        console.log(siteSettings);
+
+
+        const doc = (
+          <Document>
+            <Page style={styles.page}>
+              <View style={styles.container}>
+                {/* Header Section */}
+                <View style={styles.header}>
+                  <Image style={styles.logo} src={siteSettings?.site_logo || "/images/logo/wizam-logo.png"} />
+                  <View style={styles.siteInfo}>
+                    <Text style={styles.siteTitle}>{siteSettings?.site_name || "Company Name"}</Text>
+                    <Text>{siteSettings?.address || "Address not available"}</Text>
+                    <Text>Email: {siteSettings?.email || "info@wizam.com"}</Text>
+                  </View>
+                </View>
+
+                <Text style={styles.sectionTitle}>Invoice</Text>
+
+                {/* Billing and Customer Information */}
+                <View style={styles.infoSection}>
+                  <View style={styles.billingInfo}>
+                    <Text style={styles.subTitle}>Billing Information</Text>
+                    <Text style={styles.infoText}>Vendor Name: {invoiceData?.billing?.vendor_name || "Not available"}</Text>
+                    <Text style={styles.infoText}>Address: {invoiceData?.billing?.address || "Not available"}</Text>
+                    <Text style={styles.infoText}>City: {invoiceData?.billing?.city_name || "Not available"}</Text>
+                    <Text style={styles.infoText}>State: {invoiceData?.billing?.state_name || "Not available"}</Text>
+                    <Text style={styles.infoText}>Country: {invoiceData?.billing?.country_name || "Not available"}</Text>
+                    <Text style={styles.infoText}>ZIP: {invoiceData?.billing?.zip || "Not available"}</Text>
+                    <Text style={styles.infoText}>Phone Number: {invoiceData?.billing?.phone_number || "Not available"}</Text>
+                    <Text style={styles.infoText}>VAT Number: {invoiceData?.billing?.vat_number || "Not available"}</Text>
+                  </View>
+
+                  <View style={styles.customerInfo}>
+                    <Text style={styles.subTitle}>Customer Information</Text>
+                    <Text style={styles.infoText}>Name: {userData?.name || "Not available"}</Text>
+                    <Text style={styles.infoText}>Email: {userData?.email || "Not available"}</Text>
+                  </View>
+                </View>
+
+                {/* Product Table */}
+                <View style={styles.tableContainer}>
+                  <View style={styles.tableHeader}>
+                    <Text style={styles.tableHeaderCell}>Transaction ID</Text>
+                    <Text style={styles.tableHeaderCell}>Price</Text>
+                    <Text style={styles.tableHeaderCell}>Purchase Date</Text>
+                    <Text style={styles.tableHeaderCell}>Status</Text>
+                  </View>
+                  <View style={styles.tableRow}>
+                    <Text style={styles.tableCell}>{invoiceData?.payment?.stripe_payment_id || "Not available"}</Text>
+                    <Text style={styles.tableCell}>
+                      {siteSettings?.currency_symbol}{invoiceData?.payment?.amount || "Not available"}
+                    </Text>
+                    <Text style={styles.tableCell}>
+                      {invoiceData?.payment?.created_at
+                        ? format(new Date(invoiceData.payment.created_at), 'MM/dd/yyyy')
+                        : "Not applicable"}
+                    </Text>
+                    <Text style={styles.tableCell}>{invoiceData?.payment?.status || "Not available"}</Text>
+                  </View>
+                </View>
+
+                {/* Total Amount */}
+                <View style={styles.totalContainer}>
+                  <Text style={styles.totalText}>
+                    Total: {siteSettings?.currency_symbol}{invoiceData?.payment?.amount || "Not available"}
+                  </Text>
+                </View>
+
+                {/* Footer */}
+                <View style={styles.footer}>
+                  <Text>Thank you for your business!</Text>
+                  <Text>If you have any questions, feel free to contact us.</Text>
+                </View>
+              </View>
+            </Page>
+          </Document>
+        );
+
+        const blob = await pdf(doc).toBlob();
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `invoice-${invoiceId}.pdf`;
+        link.click();
+        onDownloadComplete(); // Reset downloading status after download
+      } catch (error) {
+        console.error("Error generating invoice PDF:", error);
+      } finally {
         setLoading(false);
       }
     };
 
-    fetchInvoiceData();
-  }, [sid]);
+    generateInvoicePdf();
+  }, [invoiceId, onDownloadComplete]);
 
-  const generatePdfPreview = async () => {
-    if (invoiceData && userData && siteSettings) {
-      const doc = <InvoicePDF invoiceData={invoiceData} userData={userData} siteSettings={siteSettings} />;
-      const blob = await pdf(doc).toBlob();
-      const url = URL.createObjectURL(blob);
-      setPdfUrl(url);
-    }
-  };
-
-  const downloadPdf = () => {
-    if (pdfUrl) {
-      const link = document.createElement("a");
-      link.href = pdfUrl;
-      link.download = "invoice.pdf";
-      link.click();
-    }
-  };
-
-  if (loading) return <div>Loading...</div>;
-  if (error) return <div>{error}</div>;
-
-  return (
-    <div>
-      <button onClick={generatePdfPreview} className="px-5 py-2 bg-blue-500 text-white w-full hover:bg-blue-700 cursor-pointer mb-4">
-        Generate Invoice Preview
-      </button>
-
-      {pdfUrl && (
-        <div>
-          <iframe src={pdfUrl} title="Invoice PDF Preview" width="100%" height="600px" style={{ border: "1px solid #ddd", marginBottom: "20px" }} />
-          <button onClick={downloadPdf} className="px-5 py-2 bg-green-500 text-white w-full hover:bg-green-700 cursor-pointer">
-            Download Invoice
-          </button>
-        </div>
-      )}
-    </div>
-  );
+  return loading ? <p>Generating Invoice...</p> : null;
 };
 
 export default InvoiceGenerator;
