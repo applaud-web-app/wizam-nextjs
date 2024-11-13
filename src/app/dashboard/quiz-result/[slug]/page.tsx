@@ -617,15 +617,11 @@ const QuizResult = ({ params }: QuizResultProps) => {
           <h3 className="text-base font-semibold">
             <span className="underline">Question {index + 1}:</span>
           </h3>
-          
-          {/* Status Badge */}
           <span className={`px-2 py-1 text-xs font-semibold rounded ${badgeColor}`}>
             {questionStatus}
           </span>
         </div>
-  
-        <div
-          className="bg-white p-2 rounded-lg"
+        <div className="bg-white p-2 rounded-lg"
           dangerouslySetInnerHTML={{
             __html: Array.isArray(question.question) ? question.question[0] : question.question,
           }}
