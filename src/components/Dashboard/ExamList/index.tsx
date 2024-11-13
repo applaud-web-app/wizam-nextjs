@@ -11,6 +11,9 @@ import NoData from "@/components/Common/NoData";
 import { FiPlay } from "react-icons/fi";
 import { MdLockOutline } from "react-icons/md";
 
+import { format } from "date-fns";
+
+
 interface Exam {
   id: number;
   exam_type_slug: string;
@@ -210,7 +213,12 @@ export default function ExamList() {
   return (
     <div className="mb-5">
       <h2 className="text-lg lg:text-2xl font-bold mb-3">All Exams</h2>
-
+  {/* Display server time at the top of the table */}
+  {serverTime && (
+      <div className="text-sm text-gray-600 mb-4">
+        Server Time: {format(serverTime, 'dd/MM/yyyy HH:mm:ss')}
+      </div>
+    )}
       <div className="overflow-x-auto rounded-lg shadow-sm">
         <table className="min-w-full table-auto rounded-lg overflow-hidden text-nowrap">
           <thead className="bg-defaultcolor text-white">
