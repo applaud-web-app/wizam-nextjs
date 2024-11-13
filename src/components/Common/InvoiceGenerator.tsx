@@ -27,7 +27,6 @@ Font.register({
   ],
 });
 
-
 const styles = StyleSheet.create({
   page: {
     padding: 10,
@@ -35,13 +34,12 @@ const styles = StyleSheet.create({
     fontFamily: "Roboto",
     backgroundColor: colors.white,
     lineHeight: 1.4,
-  
   },
   container: {
-    padding: 30,
+    padding: 20,
     borderRadius: 6,
     border: "1px solid #ddd",
-    boxShadow: "0px 2px 8px rgba(0, 0, 0, 0.1)", // Subtle shadow for a card effect
+    boxShadow: "0px 2px 8px rgba(0, 0, 0, 0.1)",
   },
   header: {
     flexDirection: "row",
@@ -52,7 +50,7 @@ const styles = StyleSheet.create({
     paddingBottom: 15,
   },
   logo: {
-    width: 90, // Slightly larger logo
+    width: 90,
     height: "auto",
   },
   siteInfo: {
@@ -120,7 +118,7 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     overflow: "hidden",
     marginBottom: 10,
-    boxShadow: "0px 1px 4px rgba(0, 0, 0, 0.1)", // Shadow for enhanced look
+    boxShadow: "0px 1px 4px rgba(0, 0, 0, 0.1)",
   },
   tableHeader: {
     flexDirection: "row",
@@ -139,12 +137,14 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     borderBottom: "1px solid #eee",
     padding: 8,
-    backgroundColor: "#f9f9f9", // Alternating row background
+    backgroundColor: "#f9f9f9",
   },
   tableCell: {
     flex: 1,
     fontSize: 12,
     textAlign: "center",
+    whiteSpace: "pre", 
+    lineHeight: 1.2,      
   },
   totalContainer: {
     padding: 15,
@@ -192,10 +192,7 @@ const InvoiceGenerator: React.FC<InvoiceGeneratorProps> = ({ invoiceId, onDownlo
 
         const invoiceData = invoiceRes.data.data;
         const userData = userRes.data.user;
-        const siteSettings = siteRes.data;
-
-        console.log(siteSettings);
-
+        const siteSettings = siteRes.data.data;
 
         const doc = (
           <Document>
@@ -203,11 +200,11 @@ const InvoiceGenerator: React.FC<InvoiceGeneratorProps> = ({ invoiceId, onDownlo
               <View style={styles.container}>
                 {/* Header Section */}
                 <View style={styles.header}>
-                  <Image style={styles.logo} src={siteSettings?.site_logo || "/images/logo/wizam-logo.png"} />
+                  <Image style={styles.logo} src="/images/logo/wizam-logo.png" />
                   <View style={styles.siteInfo}>
-                    <Text style={styles.siteTitle}>{siteSettings?.site_name || "Company Name"}</Text>
-                    <Text>{siteSettings?.address || "Address not available"}</Text>
-                    <Text>Email: {siteSettings?.email || "info@wizam.com"}</Text>
+                    <Text style={styles.siteTitle}>{siteSettings.site_name}</Text>
+                    <Text>{siteSettings.address}</Text>
+                    <Text>Email: {siteSettings.email}</Text>
                   </View>
                 </View>
 
@@ -217,20 +214,20 @@ const InvoiceGenerator: React.FC<InvoiceGeneratorProps> = ({ invoiceId, onDownlo
                 <View style={styles.infoSection}>
                   <View style={styles.billingInfo}>
                     <Text style={styles.subTitle}>Billing Information</Text>
-                    <Text style={styles.infoText}>Vendor Name: {invoiceData?.billing?.vendor_name || "Not available"}</Text>
-                    <Text style={styles.infoText}>Address: {invoiceData?.billing?.address || "Not available"}</Text>
-                    <Text style={styles.infoText}>City: {invoiceData?.billing?.city_name || "Not available"}</Text>
-                    <Text style={styles.infoText}>State: {invoiceData?.billing?.state_name || "Not available"}</Text>
-                    <Text style={styles.infoText}>Country: {invoiceData?.billing?.country_name || "Not available"}</Text>
-                    <Text style={styles.infoText}>ZIP: {invoiceData?.billing?.zip || "Not available"}</Text>
-                    <Text style={styles.infoText}>Phone Number: {invoiceData?.billing?.phone_number || "Not available"}</Text>
-                    <Text style={styles.infoText}>VAT Number: {invoiceData?.billing?.vat_number || "Not available"}</Text>
+                    <Text style={styles.infoText}>Vendor Name: {invoiceData.billing.vendor_name || "Not available"}</Text>
+                    <Text style={styles.infoText}>Address: {invoiceData.billing.address || "Not available"}</Text>
+                    <Text style={styles.infoText}>City: {invoiceData.billing.city_name || "Not available"}</Text>
+                    <Text style={styles.infoText}>State: {invoiceData.billing.state_name || "Not available"}</Text>
+                    <Text style={styles.infoText}>Country: {invoiceData.billing.country_name || "Not available"}</Text>
+                    <Text style={styles.infoText}>ZIP: {invoiceData.billing.zip || "Not available"}</Text>
+                    <Text style={styles.infoText}>Phone Number: {invoiceData.billing.phone_number || "Not available"}</Text>
+                    <Text style={styles.infoText}>VAT Number: {invoiceData.billing.vat_number || "Not available"}</Text>
                   </View>
 
                   <View style={styles.customerInfo}>
                     <Text style={styles.subTitle}>Customer Information</Text>
-                    <Text style={styles.infoText}>Name: {userData?.name || "Not available"}</Text>
-                    <Text style={styles.infoText}>Email: {userData?.email || "Not available"}</Text>
+                    <Text style={styles.infoText}>Name: {userData.name || "Not available"}</Text>
+                    <Text style={styles.infoText}>Email: {userData.email || "Not available"}</Text>
                   </View>
                 </View>
 
@@ -238,28 +235,30 @@ const InvoiceGenerator: React.FC<InvoiceGeneratorProps> = ({ invoiceId, onDownlo
                 <View style={styles.tableContainer}>
                   <View style={styles.tableHeader}>
                     <Text style={styles.tableHeaderCell}>Transaction ID</Text>
+                    <Text style={styles.tableHeaderCell}></Text>
                     <Text style={styles.tableHeaderCell}>Price</Text>
                     <Text style={styles.tableHeaderCell}>Purchase Date</Text>
                     <Text style={styles.tableHeaderCell}>Status</Text>
                   </View>
                   <View style={styles.tableRow}>
-                    <Text style={styles.tableCell}>{invoiceData?.payment?.stripe_payment_id || "Not available"}</Text>
+                    <Text style={styles.tableCell}>{invoiceData.payment.stripe_payment_id || "Not available"}</Text>
+                    <Text style={styles.tableCell}></Text>
                     <Text style={styles.tableCell}>
-                      {siteSettings?.currency_symbol}{invoiceData?.payment?.amount || "Not available"}
+                      {siteSettings.currency_symbol}{invoiceData.payment.amount || "Not available"}
                     </Text>
                     <Text style={styles.tableCell}>
-                      {invoiceData?.payment?.created_at
-                        ? format(new Date(invoiceData.payment.created_at), 'MM/dd/yyyy')
+                      {invoiceData.payment.created_at
+                        ? format(new Date(invoiceData.payment.created_at), 'dd/MM/yyyy')
                         : "Not applicable"}
                     </Text>
-                    <Text style={styles.tableCell}>{invoiceData?.payment?.status || "Not available"}</Text>
+                    <Text style={styles.tableCell}>{invoiceData.payment.status || "Not available"}</Text>
                   </View>
                 </View>
 
                 {/* Total Amount */}
                 <View style={styles.totalContainer}>
                   <Text style={styles.totalText}>
-                    Total: {siteSettings?.currency_symbol}{invoiceData?.payment?.amount || "Not available"}
+                    Total: {siteSettings.currency_symbol}{invoiceData.payment.amount || "Not available"}
                   </Text>
                 </View>
 
@@ -279,7 +278,7 @@ const InvoiceGenerator: React.FC<InvoiceGeneratorProps> = ({ invoiceId, onDownlo
         link.href = url;
         link.download = `invoice-${invoiceId}.pdf`;
         link.click();
-        onDownloadComplete(); // Reset downloading status after download
+        onDownloadComplete();
       } catch (error) {
         console.error("Error generating invoice PDF:", error);
       } finally {
