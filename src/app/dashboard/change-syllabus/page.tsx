@@ -1,5 +1,5 @@
 "use client";
-import ChangeSyllabus from '@/components/ChangeSyllabus'; // Import the ChangeSyllabus component
+import ChangeSyllabus from '@/Components/ChangeSyllabus'; // Import the ChangeSyllabus component
 
 export default function ChangeSyllabusPage() {
   return (

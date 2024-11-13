@@ -5,8 +5,8 @@ import { FaBook, FaClock, FaQuestionCircle, FaCheck } from 'react-icons/fa'; // 
 import Link from 'next/link';
 import axios from 'axios';
 import Cookies from 'js-cookie'; // To handle cookies
-import Loader from '@/components/Common/Loader';
-import NoData from '@/components/Common/NoData';
+import Loader from '@/Components/Common/Loader';
+import NoData from '@/Components/Common/NoData';
 import { toast } from 'react-toastify'; // Optional: For notifications
 import { useRouter } from "next/navigation"; // Use router to redirect
 import { FiPlay } from 'react-icons/fi';

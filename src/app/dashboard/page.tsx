@@ -3,15 +3,15 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import Cookies from "js-cookie";
 import { FiCheckCircle, FiPercent, FiThumbsUp, FiThumbsDown } from "react-icons/fi";
-import DashboardCard from "@/components/DashboardCards";
-import NoData from "@/components/Common/NoData";
-import Loader from "@/components/Common/Loader";
+import DashboardCard from "@/Components/DashboardCards";
+import NoData from "@/Components/Common/NoData";
+import Loader from "@/Components/Common/Loader";
 import { useRouter } from "next/navigation";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import { Tooltip } from "flowbite-react";
-import ResumeExamTable from "@/components/ResumeExamTable";
-import UpcomingExamsTable from "@/components/UpcomingExamsTable";
+import ResumeExamTable from "@/Components/ResumeExamTable";
+import UpcomingExamsTable from "@/Components/UpcomingExamsTable";
 import { toast } from "react-toastify";
 
 interface Exam {

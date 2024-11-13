@@ -3,10 +3,10 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import Cookies from 'js-cookie'; // Access cookies
-import NoData from '@/components/Common/NoData';
-import Loader from '@/components/Common/Loader';
-import QuizList from '@/components/Dashboard/QuizList';
-import QuizPacks from '@/components/Dashboard/QuizPacks';
+import NoData from '@/Components/Common/NoData';
+import Loader from '@/Components/Common/Loader';
+import QuizList from '@/Components/Dashboard/QuizList';
+import QuizPacks from '@/Components/Dashboard/QuizPacks';
 
 interface QuizType {
   title: string;

@@ -2,7 +2,7 @@
 
 "use client"; // Ensure this component is client-side rendered
 
-import SinglePracticeSet from "@/components/Dashboard/SinglePracticeSet";
+import SinglePracticeSet from "@/Components/Dashboard/SinglePracticeSet";
 
 interface PracticeTestDetailPageProps {
   params: {

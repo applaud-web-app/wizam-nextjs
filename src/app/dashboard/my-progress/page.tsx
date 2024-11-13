@@ -1,6 +1,6 @@
 // pages/MyProgressPage.tsx
 
-import Progress from "@/components/Dashboard/Progress";
+import Progress from "@/Components/Dashboard/Progress";
 
 
 const MyProgressPage: React.FC = () => {

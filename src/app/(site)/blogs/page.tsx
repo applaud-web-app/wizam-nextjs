@@ -1,5 +1,5 @@
-import Blog from "@/components/Blog";
-import Breadcrumb from "@/components/Common/Breadcrumb";
+import Blog from "@/Components/Blog";
+import Breadcrumb from "@/Components/Common/Breadcrumb";
 import { Metadata } from "next";
 
 // Blog Metadata

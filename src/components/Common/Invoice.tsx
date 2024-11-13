@@ -1,226 +1,333 @@
 "use client";
-import { FC, useEffect, useState } from "react";
-import { useRouter, usePathname } from "next/navigation";
-import Image from "next/image";
-import axios from "axios";
+import React, { useState, useEffect, FC } from "react";
+import {
+  Page,
+  Text,
+  View,
+  Document,
+  StyleSheet,
+  Font,
+  Image,
+  BlobProvider,
+} from "@react-pdf/renderer";
 import Cookies from "js-cookie";
-import html2canvas from "html2canvas";
-import jsPDF from "jspdf";
-import { useSiteSettings } from "@/context/SiteContext";
-import NoData from "./NoData";
-import Loader from "./Loader";
+import axios from "axios";
 
-interface InvoiceProps {
-  productName: string;
-  price: string;
-  transactionId: string;
-  date: string;
-  email: string;
-  customerName?: string;
-  billingAddress: string;
-  subscriptionPeriod: string;
-  nextBillingDate: string;
-  subscriptionPrice: string;
-  companyName: string;
-  companyAddress: string;
-  companyEmail: string;
-  ownerName: string;
+// Types for data models
+interface InvoiceData {
+  subscription: {
+    created_at: string;
+    transaction_id: string;
+    plan_name: string;
+    plan_price: string;
+    ends_date: string;
+  };
+  billing: {
+    address: string;
+  };
 }
 
-const Invoice: FC<Partial<InvoiceProps>> = () => {
-  const [invoiceData, setInvoiceData] = useState<any>(null);
-  const [userData, setUserData] = useState<any>(null);
+interface UserData {
+  name: string;
+  email: string;
+}
+
+interface SiteSettings {
+  site_name: string;
+  site_logo: string;
+  address: string;
+  email: string;
+  currency_symbol: string;
+}
+
+// Register fonts
+Font.register({
+  family: "Roboto",
+  fonts: [
+    {
+      src: "https://fonts.gstatic.com/s/roboto/v20/KFOmCnqEu92Fr1Mu4mxP.ttf",
+      fontWeight: 400,
+    },
+    {
+      src: "https://fonts.gstatic.com/s/roboto/v20/KFOlCnqEu92Fr1MmWUlfBBc9.ttf",
+      fontWeight: 700,
+    },
+  ],
+});
+
+const styles = StyleSheet.create({
+  page: {
+    padding: 20,
+    fontSize: 12,
+    fontFamily: "Roboto",
+    backgroundColor: "#f7f7fa",
+  },
+  header: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingBottom: 10,
+    borderBottom: "1px solid #ccc",
+    marginBottom: 15,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "#333",
+    textAlign: "center",
+    marginBottom: 10,
+  },
+  logo: {
+    width: 60,
+    height: "auto",
+  },
+  siteName: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#333",
+  },
+  infoContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginVertical: 15,
+  },
+  customerInfo: {
+    width: "48%",
+  },
+  invoiceInfo: {
+    width: "48%",
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: "bold",
+    marginVertical: 10,
+    color: "#555",
+  },
+  text: {
+    fontSize: 12,
+    color: "#333",
+    lineHeight: 1.5,
+  },
+  label: {
+    fontWeight: "bold",
+    color: "#555",
+  },
+  tableContainer: {
+    marginTop: 15,
+    borderWidth: 1,
+    borderColor: "#eee",
+    borderRadius: 5,
+  },
+  tableHeader: {
+    flexDirection: "row",
+    backgroundColor: "#f1f1f1",
+    padding: 10,
+  },
+  tableHeaderCell: {
+    flex: 1,
+    fontWeight: "bold",
+    fontSize: 14,
+    color: "#333",
+    textAlign: "center",
+    padding: 5,
+  },
+  tableRow: {
+    flexDirection: "row",
+    borderBottomWidth: 1,
+    borderBottomColor: "#eee",
+    padding: 5,
+  },
+  tableCell: {
+    flex: 1,
+    fontSize: 12,
+    color: "#333",
+    textAlign: "center",
+    padding: 8,
+  },
+  totalSection: {
+    backgroundColor: "#f9f9f9",
+    padding: 10,
+    marginTop: 15,
+    borderRadius: 5,
+    textAlign: "right",
+  },
+  footer: {
+    marginTop: 30,
+    paddingTop: 10,
+    borderTop: "1px solid #ccc",
+    textAlign: "center",
+    fontSize: 10,
+    color: "#888",
+  },
+  socialIcons: {
+    flexDirection: "row",
+    justifyContent: "center",
+    marginTop: 5,
+  },
+  icon: {
+    width: 12,
+    height: 12,
+    marginHorizontal: 5,
+  },
+});
+
+
+// Invoice PDF structure component
+const InvoicePDF: FC<{
+  invoiceData: InvoiceData;
+  userData: UserData;
+  siteSettings: SiteSettings;
+}> = ({ invoiceData, userData, siteSettings }) => (
+  <Document>
+    <Page style={styles.page}>
+      <View style={styles.header}>
+        <Image
+          style={styles.logo}
+          src={siteSettings?.site_logo || "/images/logo/wizam-logo.png"}
+        />
+        <Text style={styles.siteName}>{siteSettings?.site_name}</Text>
+      </View>
+
+      {/* Customer Information */}
+      <View>
+        <Text style={styles.sectionTitle}>Customer Information</Text>
+        <Text style={styles.text}>
+          Name: {userData?.name || "Not available"}
+        </Text>
+        <Text style={styles.text}>
+          Email: {userData?.email || "Not available"}
+        </Text>
+        <Text style={styles.text}>
+          Billing Address: {invoiceData?.billing?.address || "Not available"}
+        </Text>
+      </View>
+
+      {/* Invoice Details */}
+      <View style={{ marginTop: 10 }}>
+        <Text style={styles.sectionTitle}>Invoice Details</Text>
+        <Text style={styles.text}>
+          Date: {invoiceData?.subscription?.created_at || "Not available"}
+        </Text>
+        <Text style={styles.text}>
+          Transaction ID:{" "}
+          {invoiceData?.subscription?.transaction_id || "Not available"}
+        </Text>
+      </View>
+
+      {/* Subscription Table */}
+      <View style={styles.tableContainer}>
+        <View style={styles.tableHeader}>
+          <Text style={styles.tableHeaderCell}>Product</Text>
+          <Text style={styles.tableHeaderCell}>Price</Text>
+          <Text style={styles.tableHeaderCell}>Subscription Period</Text>
+          <Text style={styles.tableHeaderCell}>Next Billing Date</Text>
+        </View>
+        <View style={styles.tableRow}>
+          <Text style={styles.tableCell}>
+            {invoiceData?.subscription?.plan_name || "Not available"}
+          </Text>
+          <Text style={styles.tableCell}>
+            {siteSettings?.currency_symbol}
+            {invoiceData?.subscription?.plan_price || "Not available"}
+          </Text>
+          <Text style={styles.tableCell}>3 Months</Text>
+          <Text style={styles.tableCell}>
+            {invoiceData?.subscription?.ends_date || "Not available"}
+          </Text>
+        </View>
+      </View>
+
+      {/* Total */}
+      <View style={styles.totalSection}>
+        <Text style={styles.text}>
+          <Text style={styles.label}>Total: </Text>
+          {siteSettings?.currency_symbol}
+          {invoiceData?.subscription?.plan_price || "Not available"}
+        </Text>
+      </View>
+
+      {/* Footer */}
+      <View style={styles.footer}>
+        <Text>
+          {siteSettings?.site_name} | {siteSettings?.address}
+        </Text>
+        <Text>{siteSettings?.email}</Text>
+      </View>
+    </Page>
+  </Document>
+);
+
+
+// Component to fetch data and display PDF in iframe
+const InvoiceGenerator: FC<{ invoiceId: string }> = ({ invoiceId }) => {
+  const [invoiceData, setInvoiceData] = useState<InvoiceData | null>(null);
+  const [userData, setUserData] = useState<UserData | null>(null);
+  const [siteSettings, setSiteSettings] = useState<SiteSettings | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const { siteSettings, loading: siteLoading, error: siteError } = useSiteSettings();
-  const router = useRouter();
-  const pathname = usePathname();
-
-  // Extract invoiceId from pathname
-  const invoiceId = pathname.split("/").pop();
-
   useEffect(() => {
-    if (!invoiceId) return; // Wait until invoiceId is available
-
     const fetchInvoiceData = async () => {
       try {
-        const token = Cookies.get("jwt");
-        if (!token) throw new Error("Authorization token not found.");
+        const token = Cookies.get("jwt") || "";
+        const invoiceRes = await axios.get(
+          `${process.env.NEXT_PUBLIC_API_URL}/invoice-detail/${invoiceId}`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+        setInvoiceData(invoiceRes.data);
 
-        const invoiceResponse = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/invoice-detail/${invoiceId}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        setInvoiceData(invoiceResponse.data);
+        const userRes = await axios.get(
+          `${process.env.NEXT_PUBLIC_API_URL}/profile`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+        setUserData(userRes.data.user);
 
-        const userResponse = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/profile`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        setUserData(userResponse.data.user);
-      } catch (error) {
-        console.error("Error fetching data:", error);
-        setError("Failed to load invoice or user details. Please try again.");
+        const siteRes = await axios.get(
+          `${process.env.NEXT_PUBLIC_API_URL}/site-setting`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+        setSiteSettings(siteRes.data);
+      } catch (err) {
+        setError("Failed to load invoice data.");
       }
     };
-
     fetchInvoiceData();
-  }, [invoiceId]); // Refetch data if invoiceId changes
+  }, [invoiceId]);
 
-  const downloadInvoice = () => {
-    const invoiceElement = document.getElementById("invoice-section");
-
-    if (!invoiceElement) return;
-
-    html2canvas(invoiceElement).then((canvas) => {
-      const imgData = canvas.toDataURL("image/png");
-      const pdf = new jsPDF("p", "mm", "a4");
-
-      const imgWidth = 210;
-      const pageHeight = 295;
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-      let heightLeft = imgHeight;
-
-      let position = 0;
-
-      pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
-      heightLeft -= pageHeight;
-
-      while (heightLeft >= 0) {
-        position = heightLeft - imgHeight;
-        pdf.addPage();
-        pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
-        heightLeft -= pageHeight;
-      }
-
-      pdf.save("invoice.pdf");
-    });
-  };
-
-  if (error) {
-    return <div>{error}</div>;
-  }
-
-  if (siteError) {
-    return <div>{siteError}</div>;
-  }
-
-  if (siteLoading || !siteSettings) {
-    return <Loader />;
-  }
-
-  if (!invoiceData || !invoiceData.data || !userData) {
-    return <NoData message="No invoice data available." />;
-  }
-
-  // Safely access nested properties with optional chaining and fallback values
-  const companyName = invoiceData?.data?.billing?.vendor_name || "Not available";
-  const companyAddress = invoiceData?.data?.billing
-    ? `${invoiceData.data.billing.address || ""}, ${invoiceData.data.billing.city_name || ""}, ${invoiceData.data.billing.state_name || ""}, ${invoiceData.data.billing.country_name || ""}, ${invoiceData.data.billing.zip || ""}`
-    : "Not available";
-  const productName = invoiceData?.data?.subscription?.plan_name || "Not available";
-  const price = invoiceData?.data?.subscription?.plan_price || "Not available";
-  const subscriptionPeriod = "3 Months"; // Assume static period, adjust as necessary
-  const nextBillingDate = invoiceData?.data?.subscription?.ends_date || "Not available";
-  const date = invoiceData?.data?.subscription?.created_at || "Not available";
-  const billingAddress = invoiceData?.data?.billing
-    ? `${invoiceData.data.billing.address || ""}, ${invoiceData.data.billing.city_name || ""}, ${invoiceData.data.billing.state_name || ""}, ${invoiceData.data.billing.country_name || ""}, ${invoiceData.data.billing.zip || ""}`
-    : "Not available";
-  const transactionId = invoiceData?.data?.subscription?.transaction_id || "Not available";
-
-  // Extracting user data safely
-  const customerName = userData?.name || "Not available";
-  const email = userData?.email || "Not available";
-  const phoneNumber = userData?.phone_number || "Not available";
+  if (error) return <div>{error}</div>;
+  if (!invoiceData || !userData || !siteSettings) return <div>Loading...</div>;
 
   return (
-    <section className="py-16 bg-gray-50">
-      <div className="container mx-auto">
-        <div id="invoice-section" className="bg-white p-8 rounded-xl border border-gray-200 max-w-4xl mx-auto">
-          <div className="flex flex-col md:flex-row justify-between items-center mb-10">
-            <div className="text-left">
-              <h1 className="text-3xl font-bold text-secondary mb-2">Invoice</h1>
-              <p className="text-sm text-gray-600">{siteSettings.site_name}</p>
-              <p className="text-sm text-gray-600">{siteSettings.address}</p>
-              <p className="text-sm text-gray-600">{siteSettings.email}</p>
-            </div>
-            <Image src={siteSettings.site_logo} alt="Logo" className="w-auto h-10" width={100} height={100} />
-          </div>
+    <BlobProvider
+      document={
+        <InvoicePDF
+          invoiceData={invoiceData}
+          userData={userData}
+          siteSettings={siteSettings}
+        />
+      }
+    >
+      {({ url, loading, error }) => {
+        if (loading) return <div>Loading PDF...</div>;
+        if (error || !url) return <div>Error generating PDF</div>;
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
-            <div className="bg-gray-100 p-6 rounded-lg border border-gray-300">
-              <h2 className="text-lg font-semibold text-gray-700 mb-4">Customer Information</h2>
-              <div className="text-sm text-gray-600 space-y-2">
-                <p><strong>Name:</strong> {customerName}</p>
-                <p><strong>Email:</strong> {email}</p>
-                <p><strong>Billing Address:</strong> {billingAddress}</p>
-                <p><strong>Phone:</strong> {phoneNumber}</p>
-              </div>
-            </div>
-
-            <div className="bg-gray-100 p-6 rounded-lg border border-gray-300">
-              <h2 className="text-lg font-semibold text-gray-700 mb-4">Invoice Details</h2>
-              <div className="text-sm text-gray-600 space-y-2">
-                <p><strong>Invoice Date:</strong> {date}</p>
-                <p><strong>Transaction ID:</strong> {transactionId}</p>
-                <p><strong>Payment Method:</strong> Credit Card</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="mb-3">
-            <h2 className="text-xl font-semibold text-gray-700 mb-6 border-b pb-2">Subscription Summary</h2>
-            <table className="w-full text-left">
-              <thead className="bg-gray-200 text-sm">
-                <tr>
-                  <th className="py-3 px-4 text-gray-700">Product</th>
-                  <th className="py-3 px-4 text-gray-700">Subscription Period</th>
-                  <th className="py-3 px-4 text-gray-700">Price</th>
-                  <th className="py-3 px-4 text-gray-700">Next Billing Date</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr className="border-b">
-                  <td className="py-4 px-4 text-gray-600">{productName}</td>
-                  <td className="py-4 px-4 text-gray-600">{subscriptionPeriod}</td>
-                  <td className="py-4 px-4 text-gray-600">{siteSettings.currency_symbol}{price}</td>
-                  <td className="py-4 px-4 text-gray-600">{nextBillingDate}</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-          <div className="mb-6">
-            <div className="flex justify-between">
-              <h3 className="text-lg font-semibold text-gray-800 mt-2">Total:</h3>
-              <p className="text-lg font-bold text-gray-800">{siteSettings.currency_symbol}{price}</p>
-            </div>
-          </div>
-
-          <div className="bg-gray-100 p-6 rounded-lg border border-gray-300 mb-10">
-            <h2 className="text-lg font-semibold text-gray-700 mb-4">Owner Information</h2>
-            <div className="text-sm text-gray-600 space-y-2">
-              <p><strong>Company:</strong> {siteSettings.site_name}</p>
-              <p><strong>Email:</strong> {siteSettings.email}</p>
-              <p><strong>Address:</strong> {siteSettings.address}</p>
-            </div>
-          </div>
-
-          <p className="text-center text-xs text-gray-500 mt-10 mb-3">{siteSettings.copyright}</p>
-        </div>
-        <div className="text-center max-w-4xl mx-auto mt-3">
-          <button
-            onClick={downloadInvoice}
-            className="bg-secondary hover:bg-secondary-dark text-white px-3 py-2 w-full rounded-lg text-center"
-          >
-            Download Invoice
-          </button>
-        </div>
-      </div>
-    </section>
+        return (
+          <iframe
+            src={url}
+            title="Invoice PDF"
+            width="100%"
+            height="900px"
+            style={{ border: "1px solid #ddd", marginTop: "20px" }}
+          />
+        );
+      }}
+    </BlobProvider>
   );
 };
 
-export default Invoice;
+export default InvoiceGenerator;

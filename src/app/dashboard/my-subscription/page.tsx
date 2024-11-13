@@ -1,7 +1,7 @@
 "use client";
 import Link from 'next/link';
 import { usePathname } from 'next/navigation'; // Import usePathname from next/navigation
-import Subscription from "@/components/Dashboard/Subscription";
+import Subscription from "@/Components/Dashboard/Subscription";
 
 const MySubscriptionPage: React.FC = () => {
   const pathname = usePathname(); // Get the current path

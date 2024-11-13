@@ -1,6 +1,6 @@
-import CallToAction from "@/components/CallToAction";
-import Breadcrumb from "@/components/Common/Breadcrumb";
-import Exams from "@/components/Exams";
+import CallToAction from "@/Components/CallToAction";
+import Breadcrumb from "@/Components/Common/Breadcrumb";
+import Exams from "@/Components/Exams";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {

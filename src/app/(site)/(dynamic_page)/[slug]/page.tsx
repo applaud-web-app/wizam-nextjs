@@ -2,8 +2,8 @@
 import axios from "axios";
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
-import ClientContent from "@/components/ClientContent"; // Client-side component
-import Breadcrumb from "@/components/Common/Breadcrumb";
+import ClientContent from "@/Components/ClientContent"; // Client-side component
+import Breadcrumb from "@/Components/Common/Breadcrumb";
 
 // Define the structure of the page data
 interface PageData {

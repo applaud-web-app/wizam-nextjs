@@ -8,10 +8,13 @@ import { toast } from "react-toastify";
 import Link from "next/link";
 import { FaClock, FaQuestionCircle, FaStar } from "react-icons/fa";
 import { FaArrowLeftLong } from "react-icons/fa6";
-import Loader from "@/components/Common/Loader";
-import NoData from "@/components/Common/NoData";
+
 import { FiPlay } from "react-icons/fi";
 import { MdLockOutline } from "react-icons/md";
+import Loader from "@/components/Common/Loader";
+import NoData from "@/components/Common/NoData";
+
+
 
 interface QuizDetail {
   title: string;
@@ -152,7 +155,8 @@ export default function QuizTypeDetailPage({ params }: { params: { slug: string 
   };
 
   if (loading) {
-    return <Loader />;
+    // return <Loader />;
+    return <Loader/>;
   }
 
   if (quizzes.length === 0) {

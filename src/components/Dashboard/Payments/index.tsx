@@ -3,8 +3,8 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import Cookies from "js-cookie";
-import Loader from "@/components/Common/Loader";
-import NoData from "@/components/Common/NoData";
+import Loader from "@/Components/Common/Loader";
+import NoData from "@/Components/Common/NoData";
 
 interface PaymentData {
   payment_id: string;
