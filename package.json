@@ -2,12 +2,12 @@
   "name": "wizam-next",
   "version": "0.1.0",
   "private": true,
-  "scripts": {
-    "dev": "node server.js",
-    "build": "next build",
-   "start": "NODE_ENV=production node server.js",
-    "lint": "next lint"
-  },
+ "scripts": {
+  "dev": "node server.mjs",
+  "build": "NODE_OPTIONS='--max-old-space-size=4096' next build",
+  "start": "NODE_ENV=production node server.mjs",
+  "lint": "next lint"
+},
   "dependencies": {
     "@fullcalendar/daygrid": "^6.1.15",
     "@fullcalendar/react": "^6.1.15",
