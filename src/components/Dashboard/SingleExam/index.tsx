@@ -224,14 +224,16 @@ export default function SingleExam({ slug }: SingleExamProps) {
         />
       </div>
 
-      {/* Terms and Conditions Checkbox */}
+
+      <div className="bg-white p-3 rounded-lg">
+            {/* Terms and Conditions Checkbox */}
       <div className="flex items-center mb-4">
         <input
           type="checkbox"
           id="terms"
           checked={isChecked}
           onChange={(e) => setIsChecked(e.target.checked)}
-          className="w-5 h-5 text-blue-600 bg-white border-gray-600 rounded focus:ring-blue-500"
+          className="w-4 h-4 text-blue-600 bg-white border-gray-600 rounded focus:ring-blue-500"
         />
         <label htmlFor="terms" className="ml-2 text-gray-600">
           I have read all the instructions.
@@ -262,6 +264,9 @@ export default function SingleExam({ slug }: SingleExamProps) {
           Pay Now
         </button>
       )}
+      </div>
+
+    
     </div>
   );
 }

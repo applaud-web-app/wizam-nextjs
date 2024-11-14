@@ -221,7 +221,7 @@ export default function SingleQuiz({ slug }: SingleQuizProps) {
         </h3>
         <div dangerouslySetInnerHTML={{ __html: quizDetails.description || "" }} />
       </div>
-
+      <div className="bg-white p-3 rounded-lg">
       {/* Terms and Conditions Checkbox */}
       <div className="flex items-center mb-4">
         <input
@@ -261,6 +261,7 @@ export default function SingleQuiz({ slug }: SingleQuizProps) {
           Pay Now
         </button>
       )}
+    </div>
     </div>
   );
 }

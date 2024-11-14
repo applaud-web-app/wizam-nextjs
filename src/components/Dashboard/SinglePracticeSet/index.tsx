@@ -219,7 +219,7 @@ export default function SinglePracticeSet({ slug }: SinglePracticeSetProps) {
           className="text-gray-600"
         />
       </div>
-
+      <div className="bg-white p-3 rounded-lg">
       {/* Terms and Conditions Checkbox */}
       <div className="flex items-center mb-4">
         <input
@@ -227,7 +227,7 @@ export default function SinglePracticeSet({ slug }: SinglePracticeSetProps) {
           id="terms"
           checked={isChecked}
           onChange={(e) => setIsChecked(e.target.checked)}
-          className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+          className="w-4 h-4 text-blue-600 bg-white border-gray-600 rounded focus:ring-blue-500"
         />
         <label htmlFor="terms" className="ml-2 text-gray-600">
           I have read all the instructions.
@@ -280,5 +280,7 @@ export default function SinglePracticeSet({ slug }: SinglePracticeSetProps) {
         </button>
       )}
     </div>
+    </div>
+    
   );
 }
