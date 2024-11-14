@@ -196,11 +196,11 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
                     break;
                   case "TOF":
                     formattedAnswer = [
-                      answerData.answer === 1 ? "true" : "false",
+                      answerData.answer === 1 ? "true" : (answerData.answer === 2 ? "false" : null),
                     ];
                     break;
                   case "SAQ":
-                    formattedAnswer = [answerData.answer];
+                    formattedAnswer = [answerData.answer === "" ? null : answerData.answer];
                     break;
                   case "FIB":
                     formattedAnswer = answerData.answer;

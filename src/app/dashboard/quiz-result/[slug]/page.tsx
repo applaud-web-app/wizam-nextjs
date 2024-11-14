@@ -54,6 +54,7 @@ interface Question {
   correctAnswer: string | string[] | Record<string, string>;
   userAnswer?: string | number | string[] | Record<string, string>;
   isCorrect?: boolean;
+  isUnanswered?: boolean;
   explanation?: string;
   options?: (Option | string)[];
 }
@@ -132,6 +133,7 @@ const QuizResult = ({ params }: QuizResultProps) => {
               correctAnswer: q.correct_answer,
               userAnswer: q.user_answer,
               isCorrect: q.is_correct,
+              isUnanswered: q.is_unanswered,
               options: q.question_option || [],
             })),
           });
@@ -178,24 +180,18 @@ const QuizResult = ({ params }: QuizResultProps) => {
  
   const renderOptions = (question: Question) => {
     const correctAnswerDisplay =
-      typeof question.correctAnswer === "object" &&
-      !Array.isArray(question.correctAnswer)
-        ? Object.entries(question.correctAnswer)
-            .map(([key, value]) => `${key}: ${value}`)
-            .join(", ")
-        : Array.isArray(question.correctAnswer)
-        ? question.correctAnswer.join(", ")
-        : question.correctAnswer || "N/A";
+    typeof question.correctAnswer === "object" && !Array.isArray(question.correctAnswer)
+      ? Object.entries(question.correctAnswer)
+          .map(([key, value]) => `${key}: ${value}`)
+          .join(", ")
+      : Array.isArray(question.correctAnswer)
+      ? question.correctAnswer.join(", ")
+      : question.correctAnswer || "N/A";
 
     const userAnswerDisplay =
-      typeof question.userAnswer === "object" &&
-      !Array.isArray(question.userAnswer)
-        ? Object.entries(question.userAnswer)
-            .map(([key, value]) => `${key}: ${value}`)
-            .join(", ")
-        : Array.isArray(question.userAnswer)
-        ? question.userAnswer.join(", ")
-        : question.userAnswer || "Skipped";
+    question.userAnswer && Array.isArray(question.userAnswer) && question.userAnswer.length > 0
+    ? question.userAnswer.join(", ")
+    : "Unanswered";
 
     switch (question.type) {
       case "MSA": // Multiple Single Answer
@@ -334,8 +330,8 @@ const QuizResult = ({ params }: QuizResultProps) => {
                 <p className="font-semibold text-red-500">
                   Your Answer:{" "}
                   {Array.isArray(question.userAnswer)
-                    ? question.userAnswer[index] || "Skipped"
-                    : "Skipped"}
+                    ? question.userAnswer[index] || "No Answer"
+                    : "No Answer"}
                 </p>
 
                 {/* Correct Answer */}
@@ -590,27 +586,28 @@ const QuizResult = ({ params }: QuizResultProps) => {
   };
 
   const renderQuestionResult = (question: Question, index: number) => {
-    let questionStatus = "Skipped";
-    if (question.userAnswer) {
+    let questionStatus = "Unanswered";
+    if (!question.isUnanswered) {
       questionStatus = question.isCorrect ? "Correct" : "Wrong";
     }
   
+    // Define badge color based on status
     const badgeColor =
-      questionStatus === "Correct"
-        ? "bg-green-200 text-green-800"
-        : questionStatus === "Wrong"
-        ? "bg-red-200 text-red-800"
-        : "bg-yellow-200 text-yellow-800";
+    questionStatus === "Correct"
+      ? "bg-green-200 text-green-800"
+      : questionStatus === "Wrong"
+      ? "bg-red-200 text-red-800"
+      : "bg-yellow-200 text-yellow-800"; // Yellow for Unanswered
   
     return (
       <div
         key={question.id}
         className={`p-2 lg:p-4 border-l-[6px] lg:border-l-[12px] bg-[#f6f7f9] ${
-          questionStatus === "Skipped"
-            ? "border-yellow-500"
-            : questionStatus === "Correct"
-            ? "border-green-500"
-            : "border-red-500"
+          questionStatus === "Unanswered"
+          ? "border-yellow-500"
+          : questionStatus === "Correct"
+          ? "border-green-500"
+          : "border-red-500"
         }`}
       >
         <div className="flex justify-between items-center mb-2">
@@ -725,7 +722,7 @@ const QuizResult = ({ params }: QuizResultProps) => {
               icon={<FaTimesCircle className="text-red-700" size={32} />}
             />
             <ResultCard
-              title="Skipped"
+              title="Unanswered"
               value={userQuizResult.skippedCount}
               icon={<FaMinusCircle className="text-orange-700" size={32} />}
             />
@@ -749,7 +746,7 @@ const QuizResult = ({ params }: QuizResultProps) => {
               
                 <Doughnut
                   data={{
-                    labels: ["Correct", "Incorrect", "Skipped"],
+                    labels: ["Correct", "Incorrect", "Unanswered"],
                     datasets: [
                       {
                         data: [
