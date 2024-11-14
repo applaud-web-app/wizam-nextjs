@@ -21,6 +21,8 @@ import Cookies from "js-cookie";
 import { useRouter } from "next/navigation";
 import axios from "axios";
 import { toast } from "react-toastify";
+import { Tooltip } from 'flowbite-react';
+
 import Link from "next/link";
 import NoData from "@/components/Common/NoData";
 import { FaHourglass } from "react-icons/fa6";
@@ -206,11 +208,11 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
                     break;
                   case "TOF":
                     formattedAnswer = [
-                      answerData.answer === 1 ? "true" : "false",
+                      answerData.answer === 1 ? "true" : (answerData.answer === 2 ? "false" : null)
                     ];
                     break;
                   case "SAQ":
-                    formattedAnswer = [answerData.answer];
+                    formattedAnswer = [answerData.answer == "" ? null : answerData.answer];
                     break;
                   case "FIB":
                     formattedAnswer = answerData.answer;
@@ -337,10 +339,64 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
     fetchExamSet();
   }, [params, router]);
 
+  // const initializeAnswers = (fetchExamData: ExamData) => {
+  //   const formattedAnswers: { [key: number]: string[] | null } = {};
+  
+  //   // Check if saved_answers and questions exist before proceeding
+  //   if (!fetchExamData.saved_answers || !fetchExamData.questions) {
+  //     console.error("Missing saved_answers or questions in exam data.");
+  //     return;
+  //   }
+  
+  //   // Populate answers from saved answers in fetchExamData
+  //   fetchExamData.questions.forEach((question) => {
+  //     const savedAnswer = fetchExamData.saved_answers.find((ans) => ans.id === question.id);
+  
+  //     if (question.type === "ORD") {
+  //       if (savedAnswer && savedAnswer.answer.length > 0) {
+  //         // Set initial state to saved order using saved indices
+  //         formattedAnswers[question.id] = savedAnswer.answer.map(
+  //           (index: number) => question.options ? question.options[index] : ""
+  //         );
+  
+  //         // Set initial shuffled options to the saved order for later comparison
+  //         setInitialShuffledOptions((prev) => ({
+  //           ...prev,
+  //           [question.id]: [...(formattedAnswers[question.id] || [])], // Ensure it’s an array
+  //         }));
+  //       } else {
+  //         // No saved answer, initialize with a shuffled order
+  //         const shuffledOptions = shuffleArray(question.options || []);
+  //         formattedAnswers[question.id] = shuffledOptions;
+  
+  //         setInitialShuffledOptions((prev) => ({
+  //           ...prev,
+  //           [question.id]: shuffledOptions,
+  //         }));
+  //       }
+  //     } else {
+  //       // For other question types, set the saved answer directly
+  //       formattedAnswers[question.id] = savedAnswer ? savedAnswer.answer : [];
+  //     }
+  //   });
+  
+  //   setAnswers(formattedAnswers);
+  //   setIsInitialized(true);
+  
+  //   // Set the initial question index to the last answered question
+  //   let lastAnsweredIndex = 0;
+  //   fetchExamData.questions.forEach((question, index) => {
+  //     const savedAnswer = fetchExamData.saved_answers.find((ans) => ans.id === question.id);
+  //     if (savedAnswer && savedAnswer.answer && savedAnswer.answer.length > 0) {
+  //       lastAnsweredIndex = index;
+  //     }
+  //   });
+  //   setCurrentQuestionIndex(lastAnsweredIndex);
+  // };
+
   const initializeAnswers = (fetchExamData: ExamData) => {
     const formattedAnswers: { [key: number]: string[] | null } = {};
   
-    // Check if saved_answers and questions exist before proceeding
     if (!fetchExamData.saved_answers || !fetchExamData.questions) {
       console.error("Missing saved_answers or questions in exam data.");
       return;
@@ -349,31 +405,24 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
     // Populate answers from saved answers in fetchExamData
     fetchExamData.questions.forEach((question) => {
       const savedAnswer = fetchExamData.saved_answers.find((ans) => ans.id === question.id);
-  
       if (question.type === "ORD") {
         if (savedAnswer && savedAnswer.answer.length > 0) {
-          // Set initial state to saved order using saved indices
           formattedAnswers[question.id] = savedAnswer.answer.map(
             (index: number) => question.options ? question.options[index] : ""
           );
-  
-          // Set initial shuffled options to the saved order for later comparison
           setInitialShuffledOptions((prev) => ({
             ...prev,
-            [question.id]: [...(formattedAnswers[question.id] || [])], // Ensure it’s an array
+            [question.id]: [...(formattedAnswers[question.id] || [])],
           }));
         } else {
-          // No saved answer, initialize with a shuffled order
           const shuffledOptions = shuffleArray(question.options || []);
           formattedAnswers[question.id] = shuffledOptions;
-  
           setInitialShuffledOptions((prev) => ({
             ...prev,
             [question.id]: shuffledOptions,
           }));
         }
       } else {
-        // For other question types, set the saved answer directly
         formattedAnswers[question.id] = savedAnswer ? savedAnswer.answer : [];
       }
     });
@@ -381,7 +430,7 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
     setAnswers(formattedAnswers);
     setIsInitialized(true);
   
-    // Set the initial question index to the last answered question
+    // Set the current question index to the last answered question
     let lastAnsweredIndex = 0;
     fetchExamData.questions.forEach((question, index) => {
       const savedAnswer = fetchExamData.saved_answers.find((ans) => ans.id === question.id);
@@ -389,7 +438,7 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
         lastAnsweredIndex = index;
       }
     });
-    setCurrentQuestionIndex(lastAnsweredIndex);
+    setCurrentQuestionIndex(lastAnsweredIndex); // Ensure it resumes at the last answered question
   };
   
 
@@ -1225,6 +1274,8 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
                           : question.question,
                       }}
                     ></p>
+            
+                    {/* "True" Option */}
                     <label
                       className={`flex items-center justify-between border p-3 rounded-lg cursor-pointer transition-all bg-white hover:bg-yellow-100 ${
                         answers[question.id]?.includes("true")
@@ -1259,9 +1310,7 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
                         onChange={() =>
                           handleAnswerChange(question.id, ["true"])
                         }
-                        checked={
-                          answers[question.id]?.includes("true") || false
-                        }
+                        checked={answers[question.id]?.includes("true") || false} // Only checked if true is explicitly saved
                         className={`cursor-pointer focus:ring-1 focus:ring-defaultcolor ${
                           answers[question.id]?.includes("true")
                             ? "checked:bg-defaultcolor"
@@ -1269,6 +1318,8 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
                         }`}
                       />
                     </label>
+            
+                    {/* "False" Option */}
                     <label
                       className={`flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-all bg-white hover:bg-yellow-100 ${
                         answers[question.id]?.includes("false")
@@ -1303,9 +1354,7 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
                         onChange={() =>
                           handleAnswerChange(question.id, ["false"])
                         }
-                        checked={
-                          answers[question.id]?.includes("false") || false
-                        }
+                        checked={answers[question.id]?.includes("false") || false} // Only checked if false is explicitly saved
                         className={`cursor-pointer focus:ring-1 focus:ring-defaultcolor ${
                           answers[question.id]?.includes("false")
                             ? "checked:bg-defaultcolor"
@@ -1317,6 +1366,7 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
                 </div>
               );
             }
+            
 
             case "SAQ": {
               return (
@@ -1594,32 +1644,33 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
 
             {/* Navigation Buttons */}
             <div className="flex flex-wrap justify-between mt-6 items-center">
-              {/* First set of buttons */}
-              <div className="flex space-x-4">
-                <button
-                  className="flex items-center justify-center w-16 h-12 rounded-lg focus:outline-none border border-gray-600 text-gray-600"
-                  onClick={clearAnswer}
-                >
-                  <FaRegWindowClose size={20} />
-                </button>
+            
+                <div className="flex space-x-4">
+                {/* Clear Answer Button with Tooltip */}
+                <Tooltip content="Clear Answer" placement="top">
+                  <button
+                    className="flex items-center justify-center w-16 h-12 rounded-lg focus:outline-none border border-gray-600 text-gray-600"
+                    onClick={clearAnswer}
+                  >
+                    <FaRegWindowClose size={20} />
+                  </button>
+                </Tooltip>
 
-                {/* "Not Reviewed" Button */}
-                <button
-                  className={`flex items-center justify-center w-16 h-12 rounded-lg border  focus:outline-none  ${
-                    notReviewedQuestions[
-                      examData.questions[currentQuestionIndex].id
-                    ]
-                      ? "bg-[#C9BC0F] text-white"
-                      : "bg-gray-400 text-white"
-                  }`}
-                  onClick={() =>
-                    toggleNotReviewed(
-                      examData.questions[currentQuestionIndex].id
-                    )
-                  }
-                >
-                  <MdOutlineBookmarks size={20} />
-                </button>
+                {/* "Not Reviewed" Button with Tooltip */}
+                <Tooltip content="Mark as Not Reviewed" placement="top">
+                  <button
+                    className={`flex items-center justify-center w-16 h-12 rounded-lg border focus:outline-none ${
+                      notReviewedQuestions[examData.questions[currentQuestionIndex].id]
+                        ? "bg-[#C9BC0F] text-white"
+                        : "bg-gray-400 text-white"
+                    }`}
+                    onClick={() =>
+                      toggleNotReviewed(examData.questions[currentQuestionIndex].id)
+                    }
+                  >
+                    <MdOutlineBookmarks size={20} />
+                  </button>
+                </Tooltip>  
               </div>
 
               {/* Second set of buttons */}

@@ -21,6 +21,8 @@ import Cookies from "js-cookie";
 import { useRouter } from "next/navigation";
 import axios from "axios";
 import { toast } from "react-toastify";
+import { Tooltip } from 'flowbite-react';
+
 import Link from "next/link";
 import NoData from "@/components/Common/NoData";
 import { FaHourglass } from "react-icons/fa6";
@@ -1596,14 +1598,18 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
             <div className="flex flex-wrap justify-between mt-6 items-center">
               {/* First set of buttons */}
               <div className="flex space-x-4">
+              <Tooltip content="Clear Answer" placement="top">
                 <button
                   className="flex items-center justify-center w-16 h-12 rounded-lg focus:outline-none border border-gray-600 text-gray-600"
                   onClick={clearAnswer}
                 >
                   <FaRegWindowClose size={20} />
                 </button>
+                </Tooltip>
+
 
                 {/* "Not Reviewed" Button */}
+                <Tooltip content="Mark as Not Reviewed" placement="top">
                 <button
                   className={`flex items-center justify-center w-16 h-12 rounded-lg border  focus:outline-none  ${
                     notReviewedQuestions[
@@ -1620,6 +1626,7 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
                 >
                   <MdOutlineBookmarks size={20} />
                 </button>
+                </Tooltip>  
               </div>
 
               {/* Second set of buttons */}

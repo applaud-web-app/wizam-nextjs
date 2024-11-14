@@ -190,15 +190,16 @@ const ExamResult = ({ params }: ExamResultProps) => {
         ? question.correctAnswer.join(", ")
         : question.correctAnswer || "N/A";
 
-    const userAnswerDisplay =
-      typeof question.userAnswer === "object" &&
-      !Array.isArray(question.userAnswer)
-        ? Object.entries(question.userAnswer)
-            .map(([key, value]) => `${key}: ${value}`)
-            .join(", ")
-        : Array.isArray(question.userAnswer)
-        ? question.userAnswer.join(", ")
-        : question.userAnswer || "Skipped";
+   const userAnswerDisplay =
+  question.userAnswer &&
+  typeof question.userAnswer === "object" &&
+  !Array.isArray(question.userAnswer)
+    ? Object.entries(question.userAnswer)
+        .map(([key, value]) => `${key}: ${value}`)
+        .join(", ")
+    : Array.isArray(question.userAnswer)
+    ? question.userAnswer.join(", ")
+    : "Skipped";
 
     switch (question.type) {
       case "MSA": // Multiple Single Answer

@@ -20,6 +20,8 @@ import {
 import Cookies from "js-cookie";
 import { useRouter } from "next/navigation";
 import axios from "axios";
+import { Tooltip } from 'flowbite-react';
+
 import { toast } from "react-toastify";
 import Link from "next/link";
 import NoData from "@/components/Common/NoData";
@@ -1584,30 +1586,33 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
             <div className="flex flex-wrap justify-between mt-6 items-center">
               {/* First set of buttons */}
               <div className="flex space-x-4">
+              <Tooltip content="Clear Answer" placement="top">
                 <button
                   className="flex items-center justify-center w-16 h-12 rounded-lg focus:outline-none border border-gray-600 text-gray-600"
                   onClick={clearAnswer}
                 >
                   <FaRegWindowClose size={20} />
                 </button>
-
+                </Tooltip>
                 {/* "Not Reviewed" Button */}
-                <button
-                  className={`flex items-center justify-center w-16 h-12 rounded-lg border  focus:outline-none  ${
-                    notReviewedQuestions[
-                      examData.questions[currentQuestionIndex].id
-                    ]
-                      ? "bg-[#C9BC0F] text-white"
-                      : "bg-gray-400 text-white"
-                  }`}
-                  onClick={() =>
-                    toggleNotReviewed(
-                      examData.questions[currentQuestionIndex].id
-                    )
-                  }
-                >
-                  <MdOutlineBookmarks size={20} />
-                </button>
+                  <Tooltip content="Mark as Not Reviewed" placement="top">
+                  <button
+                    className={`flex items-center justify-center w-16 h-12 rounded-lg border  focus:outline-none  ${
+                      notReviewedQuestions[
+                        examData.questions[currentQuestionIndex].id
+                      ]
+                        ? "bg-[#C9BC0F] text-white"
+                        : "bg-gray-400 text-white"
+                    }`}
+                    onClick={() =>
+                      toggleNotReviewed(
+                        examData.questions[currentQuestionIndex].id
+                      )
+                    }
+                  >
+                    <MdOutlineBookmarks size={20} />
+                  </button>
+                  </Tooltip>
               </div>
 
               {/* Second set of buttons */}
