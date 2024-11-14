@@ -51,8 +51,7 @@ export default function ResumeExamTable({ resumedExam }: ResumeExamTableProps) {
               <th className="p-3 text-left">Duration (Min)</th>
               <th className="p-3 text-left">Total Questions</th>
               <th className="p-3 text-left">Total Marks</th>
-              <th className="p-3 text-left">Start Date</th>
-              <th className="p-3 text-left">End Date</th>
+           
               <th className="p-3 text-left">Action</th>
             </tr>
           </thead>
@@ -73,8 +72,7 @@ export default function ResumeExamTable({ resumedExam }: ResumeExamTableProps) {
                     ? exam.total_questions * (exam.point || 0)
                     : exam.total_marks}
                 </td>
-                <td className="p-4">{exam.startDate ? formatDate(exam.startDate) : "N/A"}</td>
-                <td className="p-4">{exam.endDate ? formatDate(exam.endDate) : "N/A"}</td>
+              
                 <td className="p-4">
                   <button
                     onClick={() => handleResumeExam(exam.slug + "?sid=" + exam.schedule_id)}
