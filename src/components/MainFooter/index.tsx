@@ -56,6 +56,11 @@ const Footer = () => {
     }
   };
 
+  function updateCopyrightText(copyrightText:any) {
+    const currentYear = new Date().getFullYear();
+    return copyrightText.replace("['Y']", currentYear);
+  }
+
   if (loading) {
     return <p>Loading footer...</p>;
   }
@@ -143,7 +148,7 @@ const Footer = () => {
         </div>
 
         <div className="mt-12 flex flex-wrap items-center justify-between border-t border-gray-600 pt-4">
-          <p className="text-sm text-gray-400 leading-relaxed">{siteSettings.copyright}</p>
+          <p className="text-sm text-gray-400 leading-relaxed">{updateCopyrightText(siteSettings.copyright)}</p>
           <div className="flex space-x-4">
             {siteSettings.facebook && (
               <Link href={siteSettings.facebook} aria-label="Facebook" className="text-gray-400 hover:text-green-400">

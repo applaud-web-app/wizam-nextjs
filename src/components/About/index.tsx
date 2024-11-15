@@ -17,6 +17,7 @@ interface AboutData {
   strategy: SectionData;
   operate: SectionData;
   bestData: SectionData;
+  description:string;
 }
 
 interface SectionData {
@@ -34,7 +35,7 @@ const About: React.FC = () => {
     // Fetch both about data and user profile data when the component mounts
     const fetchAboutData = async () => {
       try {
-        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/about`);
+        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/about-page`);
         if (response.data.status) {
           setAboutData(response.data.data);
         } else {
@@ -71,11 +72,15 @@ const About: React.FC = () => {
 
   return (
     <>
-      <Mission data={aboutData.mission} />
+      {/* <Mission data={aboutData.mission} />
       <Vision data={aboutData.vision} />
       <Values data={aboutData.values} />
       <Strategy data={aboutData.strategy} operate={aboutData.operate} bestData={aboutData.bestData} />
-      <Image className="w-full h-auto" src="/images/about/bottom-banner.png" width={1920} height={500} alt={""} />
+      <Image className="w-full h-auto" src="/images/about/bottom-banner.png" width={1920} height={500} alt={""} /> */}
+      <section className="bg-gray-1 pb-8 pt-20 dark:bg-dark-2 lg:pb-[70px] lg:pt-[120px]">
+        <div className="container mx-auto px-4"  dangerouslySetInnerHTML={{ __html: aboutData.description }}>
+        </div>
+      </section>
     </>
   );
 };

@@ -8,6 +8,7 @@ const HelpArea = () => {
   const [activeTab, setActiveTab] = useState("");
   const [tabsData, setTabsData] = useState<any[]>([]);
   const [title, setTitle] = useState<string>("");
+  const [verification, setVerification] = useState<{ title: string; image: string } | null>(null);
 
   // Fetch help data from API
   useEffect(() => {
@@ -18,6 +19,7 @@ const HelpArea = () => {
           const enabledTabs = response.data.data.data.filter((tab: any) => tab.status === "1"); // Only include tabs with status '1'
           setTabsData(enabledTabs);
           setTitle(response.data.data.title);
+          setVerification(response.data.verification);
           if (enabledTabs.length > 0) {
             setActiveTab(enabledTabs[0].title); // Set the first enabled tab as active by default
           }
@@ -55,7 +57,7 @@ const HelpArea = () => {
                 >
                   <div>
                     <h3 className="font-bold text-2xl">{tab.title}</h3>
-                    <p className="mt-1 text-base">{tab.description.substring(0, 120)}</p>
+                    <p className="mt-1 text-base">{tab.short_description}</p>
                   </div>
                 </button>
               ))}
@@ -79,22 +81,25 @@ const HelpArea = () => {
         </div>
       </section>
 
-      <section className="bg-[#DFECF8] py-10">
-        <div className="container mx-auto px-4">
-          <div className="rounded-lg text-center flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-4">
-            <Image
-              src="/images/approved.png"
-              alt="Verified Badge"
-              width={64}
-              height={64}
-              className="flex-shrink-0"
-            />
-            <p className="text-[24px] sm:text-[28px] lg:text-[36px] font-bold text-secondary">
-              Verified Questions by Top Schools for Best Quality
-            </p>
+       {/* Dynamic Verification Section */}
+       {verification && (
+        <section className="bg-[#DFECF8] py-10">
+          <div className="container mx-auto px-4">
+            <div className="rounded-lg text-center flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-4">
+              <Image
+                src={verification.image}
+                alt="Verified Badge"
+                width={64}
+                height={64}
+                className="flex-shrink-0"
+              />
+              <p className="text-[24px] sm:text-[28px] lg:text-[36px] font-bold text-secondary">
+                {verification.title}
+              </p>
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
     </>
   );
 };
