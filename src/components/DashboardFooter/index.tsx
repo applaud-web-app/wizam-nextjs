@@ -4,6 +4,15 @@ import { useSiteSettings } from "@/context/SiteContext"; // Import the SiteConte
 
 export default function Footer() {
   const { siteSettings, loading } = useSiteSettings(); // Access site settings and loading state
+  const currentYear = new Date().getFullYear(); // Get the current year
+
+  // Helper function to handle dynamic replacement with type safety
+  const getCopyrightText = (): string => {
+    if (typeof siteSettings?.copyright === "string") {
+      return siteSettings.copyright.replace("['Y']", currentYear.toString());
+    }
+    return `© ${currentYear} All rights reserved`;
+  };
 
   return (
     <footer>
@@ -22,7 +31,7 @@ export default function Footer() {
       <div className="bg-defaultcolor dark:bg-defaultcolor text-white px-4 lg:px-7 py-4">
         <div className="flex flex-col md:flex-row justify-between items-center text-center md:text-left">
           {/* Footer Copyright Text */}
-          <p className="text-sm text-gray-100 mb-3 md:mb-0">{siteSettings?.copyright || "All rights reserved"}</p>
+          <p className="text-sm text-gray-100 mb-3 md:mb-0">{getCopyrightText()}</p>
 
           {/* Social Media Links */}
           {!loading && (
