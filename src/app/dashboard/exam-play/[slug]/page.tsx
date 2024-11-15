@@ -449,18 +449,23 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
               answer: filteredAnswers.length > 0 ? filteredAnswers : null,
             };
 
-          default:
-            return null;
-        }
+            default:
+              return null;
+          }
+        });
+  
+        // Log the formatted answer structure
+        console.log(
+          "Current formatted answers:",
+          formattedAnswers?.filter((answer) => answer !== null)
+        );
+        saveAnswerProgress(
+          uuid,
+          formattedAnswers?.filter((answer) => answer !== null)
+        );
+        return existingAnswers;
       });
-
-      saveAnswerProgress(
-        uuid,
-        formattedAnswers?.filter((answer) => answer !== null)
-      );
-      return existingAnswers;
-    });
-  };
+    };
   
   useEffect(() => {
     if (!examData || submitted) return;
