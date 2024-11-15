@@ -2,17 +2,9 @@ import Link from "next/link";
 import { FaFacebook, FaTwitter, FaLinkedin, FaInstagram } from "react-icons/fa";
 import { useSiteSettings } from "@/context/SiteContext"; // Import the SiteContext to access site settings
 
-
-
 export default function Footer() {
   const { siteSettings, loading } = useSiteSettings(); // Access site settings and loading state
 
-  
-  function updateCopyrightText(copyrightText:any) {
-    const currentYear = new Date().getFullYear();
-    return copyrightText.replace("['Y']", currentYear);
-  }
-  
   return (
     <footer>
       {/* Contact Information Section */}
@@ -30,7 +22,7 @@ export default function Footer() {
       <div className="bg-defaultcolor dark:bg-defaultcolor text-white px-4 lg:px-7 py-4">
         <div className="flex flex-col md:flex-row justify-between items-center text-center md:text-left">
           {/* Footer Copyright Text */}
-          <p className="text-sm text-gray-100 mb-3 md:mb-0">{updateCopyrightText(siteSettings?.copyright) || "All rights reserved"}</p>
+          <p className="text-sm text-gray-100 mb-3 md:mb-0">{siteSettings?.copyright || "All rights reserved"}</p>
 
           {/* Social Media Links */}
           {!loading && (
