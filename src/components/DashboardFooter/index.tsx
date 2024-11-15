@@ -2,14 +2,17 @@ import Link from "next/link";
 import { FaFacebook, FaTwitter, FaLinkedin, FaInstagram } from "react-icons/fa";
 import { useSiteSettings } from "@/context/SiteContext"; // Import the SiteContext to access site settings
 
-function updateCopyrightText(copyrightText:any) {
-  const currentYear = new Date().getFullYear();
-  return copyrightText.replace("['Y']", currentYear);
-}
+
 
 export default function Footer() {
   const { siteSettings, loading } = useSiteSettings(); // Access site settings and loading state
 
+  
+  function updateCopyrightText(copyrightText:any) {
+    const currentYear = new Date().getFullYear();
+    return copyrightText.replace("['Y']", currentYear);
+  }
+  
   return (
     <footer>
       {/* Contact Information Section */}
