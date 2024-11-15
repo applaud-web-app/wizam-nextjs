@@ -107,7 +107,7 @@ const Payment: React.FC = () => {
                   </td>
                   <td className="p-4">{payment.currency.toUpperCase()}</td>
                   <td className="p-4">{new Date(payment.created_at).toLocaleString()}</td>
-                  <td className="p-4">{getStatusBadge(payment.status)}</td>
+                  <td className="p-4 capitalize">{getStatusBadge(payment.status == "succeeded" ? "paid" : payment.status)}</td>
                   <td className="p-4">
                     <button
                       onClick={() => handleDownloadInvoice(payment.payment_id)}
