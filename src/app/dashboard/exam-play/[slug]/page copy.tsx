@@ -58,13 +58,16 @@ interface ExamData {
 
 export default function PlayExamPage({ params }: { params: { slug: string } }) {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState<number>(0);
-  const [answers, setAnswers] = useState<{ [key: number]: string[] | null }>({});
+  const [answers, setAnswers] = useState<{ [key: number]: string[] | null }>(
+    {}
+  );
   const [timeLeft, setTimeLeft] = useState<number>(1800); // Timer (in seconds)
   const [submitted, setSubmitted] = useState<boolean>(false); // Controls whether exam is submitted
   const [slug, setSlug] = useState<string | null>(null);
   const [currentSubIndex, setCurrentSubIndex] = useState<number | null>(null);
 
   const [isInitialized, setIsInitialized] = useState(false);
+
 
   const [examData, setExamData] = useState<ExamData | null>(null);
   const router = useRouter();
@@ -78,7 +81,9 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
   const submittedRef = useRef<boolean>(false);
   const hasFetchedData = useRef(false);
   const searchParams = useSearchParams();
-  const [visitedQuestionIndices, setVisitedQuestionIndices] = useState<Set<number>>(new Set());
+  const [visitedQuestionIndices, setVisitedQuestionIndices] = useState<
+    Set<number>
+  >(new Set());
 
   const sid = searchParams.get("sid");
   if (!sid || Number(sid) < 0) {
@@ -86,7 +91,9 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
     return null;
   }
 
-  const [notReviewedQuestions, setNotReviewedQuestions] = useState<{ [key: number]: boolean }>({});
+  const [notReviewedQuestions, setNotReviewedQuestions] = useState<{
+    [key: number]: boolean;
+  }>({});
 
   // Utility function to shuffle an array
   const shuffleArray = (array: any[]) => {
@@ -99,23 +106,19 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
   };
 
   // State to store initial shuffled options for ORD questions
-  const [initialShuffledOptions, setInitialShuffledOptions] = useState<{ [key: number]: string[] }>({});
+  const [initialShuffledOptions, setInitialShuffledOptions] = useState<{
+    [key: number]: string[];
+  }>({});
 
   // Function to compare two arrays for equality
-  const arraysEqual = (a?: any[], b?: any[]) => {
-    if (a === b) return true; // Both are the same reference or both are undefined/null
-    if (!a || !b) return false; // One is undefined/null while the other isn't
-    if (a.length !== b.length) return false; // Different lengths
-  
+  const arraysEqual = (a: any[], b: any[]) => {
+    if (a.length !== b.length) return false;
     return a.every((value, index) => {
-      const normalize = (str: any) => {
-        if (typeof str !== 'string') return str;
-        return str.replace(/<[^>]*>/g, "").trim();
-      };
+      const normalize = (str: string) => str.replace(/<[^>]*>/g, "").trim();
       return normalize(value) === normalize(b[index]);
     });
   };
-  
+
   useEffect(() => {
     setVisitedQuestionIndices((prev) => {
       const newSet = new Set(prev);
@@ -168,28 +171,125 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
           });
           setTimeLeft(Math.round(parseFloat(fetchExamData.duration) * 60));
 
-          // **Start of Local Storage Integration**
-          const localStorageKey = `examStatus_${fetchExamData.uuid}`;
-          const savedData = localStorage.getItem(localStorageKey);
-          if (savedData) {
-            try {
-              const parsedData = JSON.parse(savedData);
-              setAnswers(parsedData.answers || {});
-              setNotReviewedQuestions(parsedData.notReviewedQuestions || {});
-              setVisitedQuestionIndices(new Set(parsedData.visitedQuestionIndices || []));
-              setCurrentQuestionIndex(parsedData.currentQuestionIndex || 0);
-              setCurrentSubIndex(parsedData.currentSubIndex || null);
-              setTimeLeft(parsedData.timeLeft || Math.round(parseFloat(fetchExamData.duration) * 60));
-            } catch (error) {
-              console.error('Error parsing local storage data:', error);
-              // If there's an error parsing, initialize from server data
-              initializeAnswers(fetchExamData);
-            }
+          initializeAnswers({
+            title: fetchExamData.title,
+            questions: fetchExamData.questions,
+            duration: fetchExamData.duration,
+            points: fetchExamData.points,
+            question_view: fetchExamData.question_view,
+            finish_button: fetchExamData.finish_button,
+            total_time: fetchExamData.total_time,
+            saved_answers: fetchExamData.saved_answers,
+          });
+
+          // Now that examData is loaded, set up saved answers
+          if (fetchExamData.saved_answers) {
+            const formattedAnswers = fetchExamData.saved_answers.reduce(
+              (acc: any, answerData: any) => {
+                const questionType = answerData.type;
+                const questionId = answerData.id;
+                let formattedAnswer;
+                const question = fetchExamData.questions.find(
+                  (q: Question) => q.id === questionId
+                );
+
+                switch (questionType) {
+                  case "MSA":
+                    formattedAnswer =
+                      answerData.answer !== null
+                        ? [question?.options[answerData.answer - 1]]
+                        : [];
+                    break;
+                  case "MMA":
+                    answerData.answer.sort(); // Sort the indices before mapping
+                    formattedAnswer = answerData.answer.map(
+                      (index: number) => question?.options[index-1]
+                    );
+                    break;
+                  case "TOF":
+                    formattedAnswer = [
+                      answerData.answer === 1 ? "true" : (answerData.answer === 2 ? "false" : null)
+                    ];
+                    break;
+                  case "SAQ":
+                    formattedAnswer = [answerData.answer == "" ? null : answerData.answer];
+                    break;
+                  case "FIB":
+                    formattedAnswer = answerData.answer;
+                    break;
+                  case "MTF":
+                    formattedAnswer = Object.entries(answerData.answer).map(
+                      ([key, value]) => [
+                        question?.options[parseInt(key) - 1],
+                        value,
+                      ]
+                    );
+                    break;
+                  case "ORD":
+                    formattedAnswer = answerData.answer.map(
+                      (index: number) => question?.options[index]
+                    );
+                    break;
+                  case "EMQ":
+                    formattedAnswer = answerData.answer.map(
+                      (index: number) => question?.options[index - 1]
+                    );
+                    break;
+                  default:
+                    formattedAnswer = [];
+                }
+
+                acc[questionId] = formattedAnswer;
+                return acc;
+              },
+              {}
+            );
+
+            setAnswers(formattedAnswers);
+            setIsInitialized(true); // Indicate that initialization is complete
+
+            // For ORD questions, if there are saved answers, we should not shuffle the options
+            // Also, set the initialShuffledOptions to the saved answers for comparison later
+            fetchExamData.questions.forEach((question: Question) => {
+              if (question.type === "ORD") {
+                if (formattedAnswers[question.id]) {
+                  setAnswers((prev) => ({
+                    ...prev,
+                    [question.id]: [...formattedAnswers[question.id]], // Make a copy
+                  }));
+                  setInitialShuffledOptions((prev) => ({
+                    ...prev,
+                    [question.id]: [...formattedAnswers[question.id]], // Make a copy
+                  }));
+                } else {
+                  const shuffledOptions = shuffleArray(question.options || []);
+                  setAnswers((prev) => ({
+                    ...prev,
+                    [question.id]: [...shuffledOptions], // Make a copy
+                  }));
+                  setInitialShuffledOptions((prev) => ({
+                    ...prev,
+                    [question.id]: [...shuffledOptions], // Make a copy
+                  }));
+                }
+              }
+            });
           } else {
-            // If no local storage data, initialize from server data
-            initializeAnswers(fetchExamData);
+            // If there are no saved answers, initialize ORD questions
+            fetchExamData.questions.forEach((question: Question) => {
+              if (question.type === "ORD") {
+                const shuffledOptions = shuffleArray(question.options || []);
+                setAnswers((prev) => ({
+                  ...prev,
+                  [question.id]: [...shuffledOptions], // Make a copy
+                }));
+                setInitialShuffledOptions((prev) => ({
+                  ...prev,
+                  [question.id]: [...shuffledOptions], // Make a copy
+                }));
+              }
+            });
           }
-          // **End of Local Storage Integration**
         } else {
           toast.error("No exam found for this category");
         }
@@ -239,67 +339,108 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
     fetchExamSet();
   }, [params, router]);
 
- // Initialize Answers Function
-const initializeAnswers = (fetchExamData: ExamData) => {
-  const formattedAnswers: { [key: number]: string[] | null } = {};
+  // const initializeAnswers = (fetchExamData: ExamData) => {
+  //   const formattedAnswers: { [key: number]: string[] | null } = {};
+  
+  //   // Check if saved_answers and questions exist before proceeding
+  //   if (!fetchExamData.saved_answers || !fetchExamData.questions) {
+  //     console.error("Missing saved_answers or questions in exam data.");
+  //     return;
+  //   }
+  
+  //   // Populate answers from saved answers in fetchExamData
+  //   fetchExamData.questions.forEach((question) => {
+  //     const savedAnswer = fetchExamData.saved_answers.find((ans) => ans.id === question.id);
+  
+  //     if (question.type === "ORD") {
+  //       if (savedAnswer && savedAnswer.answer.length > 0) {
+  //         // Set initial state to saved order using saved indices
+  //         formattedAnswers[question.id] = savedAnswer.answer.map(
+  //           (index: number) => question.options ? question.options[index] : ""
+  //         );
+  
+  //         // Set initial shuffled options to the saved order for later comparison
+  //         setInitialShuffledOptions((prev) => ({
+  //           ...prev,
+  //           [question.id]: [...(formattedAnswers[question.id] || [])], // Ensure it’s an array
+  //         }));
+  //       } else {
+  //         // No saved answer, initialize with a shuffled order
+  //         const shuffledOptions = shuffleArray(question.options || []);
+  //         formattedAnswers[question.id] = shuffledOptions;
+  
+  //         setInitialShuffledOptions((prev) => ({
+  //           ...prev,
+  //           [question.id]: shuffledOptions,
+  //         }));
+  //       }
+  //     } else {
+  //       // For other question types, set the saved answer directly
+  //       formattedAnswers[question.id] = savedAnswer ? savedAnswer.answer : [];
+  //     }
+  //   });
+  
+  //   setAnswers(formattedAnswers);
+  //   setIsInitialized(true);
+  
+  //   // Set the initial question index to the last answered question
+  //   let lastAnsweredIndex = 0;
+  //   fetchExamData.questions.forEach((question, index) => {
+  //     const savedAnswer = fetchExamData.saved_answers.find((ans) => ans.id === question.id);
+  //     if (savedAnswer && savedAnswer.answer && savedAnswer.answer.length > 0) {
+  //       lastAnsweredIndex = index;
+  //     }
+  //   });
+  //   setCurrentQuestionIndex(lastAnsweredIndex);
+  // };
 
-  if (!fetchExamData.saved_answers || !fetchExamData.questions) {
-    console.error("Missing saved_answers or questions in exam data.");
-    return;
-  }
-
-  // Populate answers from saved answers in fetchExamData
-  fetchExamData.questions.forEach((question) => {
-    const savedAnswer = fetchExamData.saved_answers.find((ans) => ans.id === question.id);
-    
-    if (question.type === "ORD") {
-      if (savedAnswer && savedAnswer.answer.length > 0) {
-        formattedAnswers[question.id] = savedAnswer.answer.map(
-          (index: number) => question.options ? question.options[index] : ""
-        );
-        setInitialShuffledOptions((prev) => ({
-          ...prev,
-          [question.id]: [...(formattedAnswers[question.id] || [])],
-        }));
-      } else {
-        const shuffledOptions = shuffleArray(question.options || []);
-        formattedAnswers[question.id] = shuffledOptions;
-        setInitialShuffledOptions((prev) => ({
-          ...prev,
-          [question.id]: shuffledOptions,
-        }));
-      }
-    } else if (question.type === "FIB") {
-      if (savedAnswer && Array.isArray(savedAnswer.answer)) {
-        // If the answer is already an array, use it directly
-        formattedAnswers[question.id] = savedAnswer.answer;
-      } else if (savedAnswer && typeof savedAnswer.answer === "string") {
-        // If the answer is a string (e.g., "himanshu, dev"), split it into an array
-        formattedAnswers[question.id] = savedAnswer.answer.split(",").map(ans => ans.trim());
-      } else {
-        // If there's no saved answer, initialize with empty strings based on the number of blanks
-        const numberOfBlanks = parseInt(question.options?.[0] ?? "0", 10);
-        formattedAnswers[question.id] = Array(numberOfBlanks).fill("");
-      }
-    } else {
-      // Handle other question types
-      formattedAnswers[question.id] = savedAnswer ? savedAnswer.answer : [];
+  const initializeAnswers = (fetchExamData: ExamData) => {
+    const formattedAnswers: { [key: number]: string[] | null } = {};
+  
+    if (!fetchExamData.saved_answers || !fetchExamData.questions) {
+      console.error("Missing saved_answers or questions in exam data.");
+      return;
     }
-  });
-
-  setAnswers(formattedAnswers);
-  setIsInitialized(true);
-
-  // Set the current question index to the last answered question
-  let lastAnsweredIndex = 0;
-  fetchExamData.questions.forEach((question, index) => {
-    const savedAnswer = fetchExamData.saved_answers.find((ans) => ans.id === question.id);
-    if (savedAnswer && savedAnswer.answer && (Array.isArray(savedAnswer.answer) ? savedAnswer.answer.some(ans => ans !== "") : savedAnswer.answer !== "")) {
-      lastAnsweredIndex = index;
-    }
-  });
-  setCurrentQuestionIndex(lastAnsweredIndex); // Ensure it resumes at the last answered question
-};
+  
+    // Populate answers from saved answers in fetchExamData
+    fetchExamData.questions.forEach((question) => {
+      const savedAnswer = fetchExamData.saved_answers.find((ans) => ans.id === question.id);
+      if (question.type === "ORD") {
+        if (savedAnswer && savedAnswer.answer.length > 0) {
+          formattedAnswers[question.id] = savedAnswer.answer.map(
+            (index: number) => question.options ? question.options[index] : ""
+          );
+          setInitialShuffledOptions((prev) => ({
+            ...prev,
+            [question.id]: [...(formattedAnswers[question.id] || [])],
+          }));
+        } else {
+          const shuffledOptions = shuffleArray(question.options || []);
+          formattedAnswers[question.id] = shuffledOptions;
+          setInitialShuffledOptions((prev) => ({
+            ...prev,
+            [question.id]: shuffledOptions,
+          }));
+        }
+      } else {
+        formattedAnswers[question.id] = savedAnswer ? savedAnswer.answer : [];
+      }
+    });
+  
+    setAnswers(formattedAnswers);
+    setIsInitialized(true);
+  
+    // Set the current question index to the last answered question
+    let lastAnsweredIndex = 0;
+    fetchExamData.questions.forEach((question, index) => {
+      const savedAnswer = fetchExamData.saved_answers.find((ans) => ans.id === question.id);
+      if (savedAnswer && savedAnswer.answer && savedAnswer.answer.length > 0) {
+        lastAnsweredIndex = index;
+      }
+    });
+    setCurrentQuestionIndex(lastAnsweredIndex); // Ensure it resumes at the last answered question
+  };
+  
 
   const clearAnswer = () => {
     if (!examData) {
@@ -604,7 +745,7 @@ const initializeAnswers = (fetchExamData: ExamData) => {
               return {
                 id: question.id,
                 type: question.type,
-                answer: (answers[question.id] || []).map((opt: string) =>
+                answer: (answers[question.id] || []).map((opt) =>
                   question.options ? question.options.indexOf(opt) : -1
                 ),
               };
@@ -644,12 +785,12 @@ const initializeAnswers = (fetchExamData: ExamData) => {
   const saveAnswerProgress = async (uuid: any, formattedAnswers: any) => {
     // Return early if examData or uuid is null
     if (!examData || !uuid) return;
-
+  
     try {
       const ordQuestionIds = examData.questions
         .filter((question) => question.type === "ORD")
         .map((question) => question.id);
-
+  
       const answersToSave = formattedAnswers
         .map((answer: { id: number; answer: number[] }) => {
           // Check for ORD answers if they match initial shuffled options
@@ -658,7 +799,7 @@ const initializeAnswers = (fetchExamData: ExamData) => {
             const currentOrder = answer.answer.map((index: number) =>
               examData.questions.find((q) => q.id === answer.id)?.options?.[index]
             );
-
+            
             // Only save if the order has changed
             if (arraysEqual(initialOrder, currentOrder)) {
               return null;
@@ -667,9 +808,9 @@ const initializeAnswers = (fetchExamData: ExamData) => {
           return answer;
         })
         .filter(Boolean); // Filter out null values where answers are unchanged
-
+  
       if (answersToSave.length === 0) return; // If no answers to save, skip API call
-
+  
       const response = await axios.post(
         `${process.env.NEXT_PUBLIC_API_URL}/save-answer-progress/${uuid}`,
         { answers: answersToSave },
@@ -679,7 +820,7 @@ const initializeAnswers = (fetchExamData: ExamData) => {
           },
         }
       );
-
+  
       if (response.data.status) {
         console.log("Answer progress saved successfully:", response.data.message);
       } else {
@@ -691,6 +832,8 @@ const initializeAnswers = (fetchExamData: ExamData) => {
       toast.error("Failed to save answer progress.");
     }
   };
+  
+  
 
   const handleNextQuestion = () => {
     if (
@@ -748,7 +891,7 @@ const initializeAnswers = (fetchExamData: ExamData) => {
                 question.options ? question.options.indexOf(ans) + 1 : 1
               ), // Increment each index by 1
             };
-
+              
           case "TOF":
             return {
               id: question.id,
@@ -846,9 +989,6 @@ const initializeAnswers = (fetchExamData: ExamData) => {
 
       if (response.data.status) {
         toast.success("Exam submitted successfully!");
-        // **Clear Local Storage Upon Successful Submission**
-        const localStorageKey = `examStatus_${uuid}`;
-        localStorage.removeItem(localStorageKey);
       } else {
         toast.error("Error submitting exam");
       }
@@ -974,21 +1114,7 @@ const initializeAnswers = (fetchExamData: ExamData) => {
       setIsInitialized(true); // Set initialization flag to true
     }
   }, [examData]);
-
-  // **Persist Progress to Local Storage**
-  useEffect(() => {
-    if (!uuid) return;
-    const localStorageKey = `examStatus_${uuid}`;
-    const dataToSave = {
-      answers,
-      notReviewedQuestions,
-      visitedQuestionIndices: Array.from(visitedQuestionIndices),
-      currentQuestionIndex,
-      currentSubIndex,
-      timeLeft,
-    };
-    localStorage.setItem(localStorageKey, JSON.stringify(dataToSave));
-  }, [uuid, answers, notReviewedQuestions, visitedQuestionIndices, currentQuestionIndex, currentSubIndex, timeLeft]);
+  
 
   const renderQuestion = (question: Question) => {
     const baseQuestionNumber = getAdjustedQuestionIndex();
@@ -1132,6 +1258,7 @@ const initializeAnswers = (fetchExamData: ExamData) => {
                 </div>
               );
             }
+            
 
             case "TOF": {
               return (
@@ -1150,7 +1277,7 @@ const initializeAnswers = (fetchExamData: ExamData) => {
                           : question.question,
                       }}
                     ></p>
-
+            
                     {/* "True" Option */}
                     <label
                       className={`flex items-center justify-between border p-3 rounded-lg cursor-pointer transition-all bg-white hover:bg-yellow-100 ${
@@ -1194,7 +1321,7 @@ const initializeAnswers = (fetchExamData: ExamData) => {
                         }`}
                       />
                     </label>
-
+            
                     {/* "False" Option */}
                     <label
                       className={`flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-all bg-white hover:bg-yellow-100 ${
@@ -1242,6 +1369,7 @@ const initializeAnswers = (fetchExamData: ExamData) => {
                 </div>
               );
             }
+            
 
             case "SAQ": {
               return (
@@ -1316,9 +1444,7 @@ const initializeAnswers = (fetchExamData: ExamData) => {
                                 <option
                                   key={j}
                                   value={match}
-                                  dangerouslySetInnerHTML={{
-                                    __html: match,
-                                  }}
+                                  dangerouslySetInnerHTML={{ __html: match }}
                                 ></option>
                               ))}
                           </select>
@@ -1383,11 +1509,12 @@ const initializeAnswers = (fetchExamData: ExamData) => {
 
             case "FIB": {
               const numberOfBlanks = parseInt(question.options?.[0] ?? "0", 10);
-            
               return (
                 <div className="flex justify-normal bg-[#f6f7f9]">
                   <div className="bg-defaultcolor p-3">
-                    <h5 className="text-white font-semibold text-3xl">{questionNumber}</h5>
+                    <h5 className="text-white font-semibold text-3xl">
+                      {questionNumber}
+                    </h5>
                   </div>
                   <div className="space-y-4 p-4 w-full">
                     <p
@@ -1404,17 +1531,14 @@ const initializeAnswers = (fetchExamData: ExamData) => {
                         type="text"
                         className="p-3 w-full rounded-lg border border-gray-300 focus:ring-1 focus:ring-defaultcolor focus:border-defaultcolor mb-2"
                         placeholder={`Answer ${index + 1}`}
-                        value={
-                          Array.isArray(answers[question.id])
-                            ? answers[question.id]?.[index] ?? ""
-                            : "" // Default to an empty string if not initialized
-                        }
+                        value={answers[question.id]?.[index] || ""}
                         onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                          const currentAnswers = Array.isArray(answers[question.id])
-                            ? [...answers[question.id]!]
-                            : Array(numberOfBlanks).fill(""); // Initialize with blank values if null/undefined
-                          currentAnswers[index] = e.target.value; // Update the specific blank's value
-                          handleAnswerChange(question.id, currentAnswers); // Update the answers state
+                          const newAnswers = [
+                            ...(answers[question.id] ||
+                              Array(numberOfBlanks).fill("")),
+                          ];
+                          newAnswers[index] = e.target.value;
+                          handleAnswerChange(question.id, newAnswers);
                         }}
                       />
                     ))}
@@ -1422,8 +1546,6 @@ const initializeAnswers = (fetchExamData: ExamData) => {
                 </div>
               );
             }
-            
-  
             case "EMQ": {
               const mainQuestion = Array.isArray(question.question)
                 ? question.question[0]
@@ -1525,7 +1647,7 @@ const initializeAnswers = (fetchExamData: ExamData) => {
 
             {/* Navigation Buttons */}
             <div className="flex flex-wrap justify-between mt-6 items-center">
-              
+            
                 <div className="flex space-x-4">
                 {/* Clear Answer Button with Tooltip */}
                 <Tooltip content="Clear Answer" placement="top">
@@ -1750,7 +1872,7 @@ const initializeAnswers = (fetchExamData: ExamData) => {
                       const isVisited =
                         visitedQuestionIndices.has(adjustedIndex);
 
-                      // Determine colors based on status
+                      // Determine colors based on isAnswered status using questionId to handle reordering
                       let borderColor = "border-[#989898]";
                       let textColor = "text-[#989898]";
                       let bottomDivColor = "bg-[#989898]";
@@ -1936,6 +2058,41 @@ const initializeAnswers = (fetchExamData: ExamData) => {
               <span>Not Visited</span>
             </div>
           </div>
+
+          {/* <div className="h-6 bg-gray-100  border-y  border-gray-200"></div> */}
+
+          {/* Answered, Skipped, and Not Reviewed Count */}
+          {/* <div className="flex justify-around items-center space-x-2 text-center p-4">
+            <div className="w-1/3 flex items-center justify-center space-x-2 px-5 py-1 rounded-md bg-green-100 shadow-inner">
+              <FaRegSmile className="text-green-600" size={20} />
+              <span className="text-md font-medium text-green-700">
+                Attempted:{" "}
+                <span className="text-lg font-semibold">
+                  {getAnsweredCount()}
+                </span>
+              </span>
+            </div>
+            <div className="w-1/3  flex items-center justify-center space-x-2 px-5 py-1 rounded-md bg-yellow-100 shadow-inner">
+              <FaRegFrown className="text-yellow-600" size={20} />
+              <span className="text-md font-medium text-yellow-700">
+                Skipped:{" "}
+                <span className="text-lg font-semibold">
+                  {getSkippedCount()}
+                </span>
+              </span>
+            </div>
+            <div className="w-1/3  flex items-center justify-center space-x-2 px-5 py-1 rounded-md bg-orange-100 shadow-inner">
+              <FaRegSmile className="text-orange-600" size={20} />
+              <span className="text-md font-medium text-orange-700">
+                Under Review:{" "}
+                <span className="text-lg font-semibold">
+                  {getNotReviewedCount()}
+                </span>
+              </span>
+            </div>
+          </div> */}
+
+          <div className="h-6 bg-gray-100  border-y  border-gray-200"></div>
 
           {/* Exam Instructions */}
           <div className="p-4 text-center">
