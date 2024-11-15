@@ -34,7 +34,7 @@ const HelpArea = () => {
 
   return (
     <>
-      <section className="relative overflow-hidden bg-[#ecf3fc] py-12 sm:py-16 lg:py-24">
+      <section className="relative overflow-hidden bg-[#ecf3fc] pb-12 sm:pb-16 lg:pb-24 pt-8 sm:pt-12 lg:pt-16">
         <div className="container mx-auto">
           {/* Main Heading */}
           <div className="text-center max-w-3xl mx-auto mb-12">

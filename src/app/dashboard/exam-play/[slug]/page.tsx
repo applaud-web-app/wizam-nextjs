@@ -39,11 +39,13 @@ interface Question {
   question: string | string[]; // The question text
   options?: string[];
 }
+
 interface SavedAnswer {
   id: number;
   type: string;
   answer: any;
 }
+
 // ExamData interface
 interface ExamData {
   question_view: string;
@@ -239,67 +241,67 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
     fetchExamSet();
   }, [params, router]);
 
- // Initialize Answers Function
-const initializeAnswers = (fetchExamData: ExamData) => {
-  const formattedAnswers: { [key: number]: string[] | null } = {};
+  // **Modified Initialize Answers Function**
+  const initializeAnswers = (fetchExamData: ExamData) => {
+    const formattedAnswers: { [key: number]: string[] | null } = {};
+    const shuffledOptionsMap: { [key: number]: string[] } = {};
 
-  if (!fetchExamData.saved_answers || !fetchExamData.questions) {
-    console.error("Missing saved_answers or questions in exam data.");
-    return;
-  }
-
-  // Populate answers from saved answers in fetchExamData
-  fetchExamData.questions.forEach((question) => {
-    const savedAnswer = fetchExamData.saved_answers.find((ans) => ans.id === question.id);
-    
-    if (question.type === "ORD") {
-      if (savedAnswer && savedAnswer.answer.length > 0) {
-        formattedAnswers[question.id] = savedAnswer.answer.map(
-          (index: number) => question.options ? question.options[index] : ""
-        );
-        setInitialShuffledOptions((prev) => ({
-          ...prev,
-          [question.id]: [...(formattedAnswers[question.id] || [])],
-        }));
-      } else {
-        const shuffledOptions = shuffleArray(question.options || []);
-        formattedAnswers[question.id] = shuffledOptions;
-        setInitialShuffledOptions((prev) => ({
-          ...prev,
-          [question.id]: shuffledOptions,
-        }));
-      }
-    } else if (question.type === "FIB") {
-      if (savedAnswer && Array.isArray(savedAnswer.answer)) {
-        // If the answer is already an array, use it directly
-        formattedAnswers[question.id] = savedAnswer.answer;
-      } else if (savedAnswer && typeof savedAnswer.answer === "string") {
-        // If the answer is a string (e.g., "himanshu, dev"), split it into an array
-        formattedAnswers[question.id] = savedAnswer.answer.split(",").map(ans => ans.trim());
-      } else {
-        // If there's no saved answer, initialize with empty strings based on the number of blanks
-        const numberOfBlanks = parseInt(question.options?.[0] ?? "0", 10);
-        formattedAnswers[question.id] = Array(numberOfBlanks).fill("");
-      }
-    } else {
-      // Handle other question types
-      formattedAnswers[question.id] = savedAnswer ? savedAnswer.answer : [];
+    if (!fetchExamData.saved_answers || !fetchExamData.questions) {
+      console.error("Missing saved_answers or questions in exam data.");
+      return;
     }
-  });
 
-  setAnswers(formattedAnswers);
-  setIsInitialized(true);
+    // Populate answers from saved answers in fetchExamData
+    fetchExamData.questions.forEach((question) => {
+      const savedAnswer = fetchExamData.saved_answers.find((ans) => ans.id === question.id);
+      
+      if (question.type === "ORD") {
+        if (savedAnswer && Array.isArray(savedAnswer.answer) && savedAnswer.answer.length > 0) {
+          // For ORD, assume answer is an array of indices
+          const shuffledOptions = savedAnswer.answer.map(
+            (index: number) => question.options ? question.options[index] : ""
+          );
+          formattedAnswers[question.id] = shuffledOptions;
+          shuffledOptionsMap[question.id] = shuffledOptions;
+        } else {
+          // **Shuffle options and set as answer if unattempted**
+          const shuffledOptions = shuffleArray(question.options || []);
+          formattedAnswers[question.id] = shuffledOptions;
+          shuffledOptionsMap[question.id] = shuffledOptions;
+        }
+      } else if (question.type === "FIB") {
+        if (savedAnswer && Array.isArray(savedAnswer.answer)) {
+          // If the answer is already an array, use it directly
+          formattedAnswers[question.id] = savedAnswer.answer;
+        } else if (savedAnswer && typeof savedAnswer.answer === "string") {
+          // If the answer is a string (e.g., "himanshu, dev"), split it into an array
+          formattedAnswers[question.id] = savedAnswer.answer.split(",").map(ans => ans.trim());
+        } else {
+          // **Set to null if unattempted**
+          formattedAnswers[question.id] = null;
+        }
+      } else {
+        // Handle other question types
+        formattedAnswers[question.id] = savedAnswer ? savedAnswer.answer : null; // Set to null if not answered
+      }
+    });
 
-  // Set the current question index to the last answered question
-  let lastAnsweredIndex = 0;
-  fetchExamData.questions.forEach((question, index) => {
-    const savedAnswer = fetchExamData.saved_answers.find((ans) => ans.id === question.id);
-    if (savedAnswer && savedAnswer.answer && (Array.isArray(savedAnswer.answer) ? savedAnswer.answer.some(ans => ans !== "") : savedAnswer.answer !== "")) {
-      lastAnsweredIndex = index;
-    }
-  });
-  setCurrentQuestionIndex(lastAnsweredIndex); // Ensure it resumes at the last answered question
-};
+    setAnswers(formattedAnswers);
+    setInitialShuffledOptions(shuffledOptionsMap);
+    setIsInitialized(true);
+
+    // Set the current question index to the last answered question
+    let lastAnsweredIndex = 0;
+    fetchExamData.questions.forEach((question, index) => {
+      const savedAnswer = fetchExamData.saved_answers.find((ans) => ans.id === question.id);
+      if (savedAnswer && savedAnswer.answer && (Array.isArray(savedAnswer.answer) ? savedAnswer.answer.some(ans => ans !== "") : savedAnswer.answer !== "")) {
+        lastAnsweredIndex = index;
+      }
+    });
+    setCurrentQuestionIndex(lastAnsweredIndex); // Ensure it resumes at the last answered question
+  };
+
+  // **Removed the Redundant useEffect for Shuffling ORD Options**
 
   const clearAnswer = () => {
     if (!examData) {
@@ -325,25 +327,46 @@ const initializeAnswers = (fetchExamData: ExamData) => {
           updatedAnswers[questionId] = Array(subQuestionCount).fill("");
         }
       } else if (question.type === "ORD") {
-        // For ORD questions, reset to initial order
-        updatedAnswers[questionId] = initialShuffledOptions[questionId];
+        // **Set to null for ORD if not attempted**
+        updatedAnswers[questionId] = null;
+        setInitialShuffledOptions((prev) => ({
+          ...prev,
+          [questionId]: [],
+        }));
       } else if (question.type === "MTF") {
-        // For MTF questions, clear all pairs
-        updatedAnswers[questionId] = [];
+        // For MTF questions, clear all pairs by setting to null
+        updatedAnswers[questionId] = null;
+      } else if (question.type === "FIB") {
+        // **Set to null for FIB if not attempted**
+        updatedAnswers[questionId] = null;
       } else {
-        // For other question types, set answer to empty array
-        updatedAnswers[questionId] = [];
+        // For other question types, set answer to null
+        updatedAnswers[questionId] = null;
       }
 
       // Build the formatted answers as per submission payload format
       const formattedAnswers = examData.questions.map((q) => {
         const userAnswer = updatedAnswers[q.id];
 
-        if (!userAnswer || userAnswer.length === 0) {
+        if (!userAnswer || (Array.isArray(userAnswer) && userAnswer.length === 0)) {
+          let blankAnswer;
+          switch (q.type) {
+            case "MSA":
+            case "TOF":
+            case "SAQ":
+              blankAnswer = null;
+              break;
+            case "ORD":
+            case "FIB":
+              blankAnswer = null; // **Set to null for ORD and FIB**
+              break;
+            default:
+              blankAnswer = [];
+          }
           return {
             id: q.id,
             type: q.type,
-            answer: [],
+            answer: blankAnswer,
           };
         }
 
@@ -352,18 +375,19 @@ const initializeAnswers = (fetchExamData: ExamData) => {
             return {
               id: q.id,
               type: q.type,
-              answer: q.options ? q.options.indexOf(userAnswer[0]) + 1 : 0,
+              answer: q.options
+                ? q.options.indexOf(userAnswer[0]) + 1
+                : 0,
             };
 
           case "MMA":
             return {
               id: q.id,
               type: q.type,
-              answer: userAnswer.map((ans) =>
+              answer: userAnswer.map((ans: any) =>
                 q.options ? q.options.indexOf(ans) + 1 : 1
-              ),
+              ), // Ensure each index is incremented by 1
             };
-
           case "TOF":
             return {
               id: q.id,
@@ -386,28 +410,43 @@ const initializeAnswers = (fetchExamData: ExamData) => {
                 ? userAnswer.map((ans) =>
                     typeof ans === "string" ? ans : String(ans)
                   )
-                : [],
+                : null, // **Set to null if not an array**
             };
 
           case "MTF":
-            const matches = {};
+            const matches: { [key: number]: string } = {};
+            if (
+              Array.isArray(userAnswer) &&
+              userAnswer.every(
+                (pair) => Array.isArray(pair) && pair.length === 2
+              )
+            ) {
+              (userAnswer as unknown as [string, string][]).forEach(
+                (pair: [string, string]) => {
+                  if (q.options) {
+                    const termIndex = q.options.indexOf(pair[0]) + 1;
+                    matches[termIndex] = pair[1];
+                  }
+                }
+              );
+            }
             return {
               id: q.id,
               type: q.type,
-              answer: matches,
+              answer: Object.keys(matches).length > 0 ? matches : null,
             };
 
           case "ORD":
             return {
               id: q.id,
               type: q.type,
-              answer: userAnswer.map((opt) =>
+              answer: userAnswer.map((opt: string) =>
                 q.options ? q.options.indexOf(opt) : -1
               ),
             };
 
           case "EMQ":
-            const filteredAnswers = userAnswer.map((ans) => {
+            const filteredAnswers = userAnswer.map((ans: string) => {
               return ans
                 ? q.options
                   ? q.options.indexOf(ans) + 1
@@ -417,1288 +456,1355 @@ const initializeAnswers = (fetchExamData: ExamData) => {
             return {
               id: q.id,
               type: q.type,
-              answer: filteredAnswers.length > 0 ? filteredAnswers : [],
+              answer: filteredAnswers.length > 0 ? filteredAnswers : null,
             };
 
-          default:
-            return null;
-        }
-      });
-
-      // Save the answer progress
-      saveAnswerProgress(
-        uuid,
-        formattedAnswers.filter((answer) => answer !== null)
-      );
-
-      return updatedAnswers;
-    });
-  };
-
-  useEffect(() => {
-    if (!examData || submitted) return;
-    timerId = setInterval(() => {
-      setTimeLeft((prev) => {
-        if (prev <= 0) {
-          clearInterval(timerId!);
-          if (!submittedRef.current) {
-            handleSubmit();
+     
+            default:
+              return null;
           }
-          return 0;
-        }
-        return prev - 1;
+        });
+  
+        // Save the answer progress
+        saveAnswerProgress(
+          uuid,
+          formattedAnswers.filter((answer) => answer !== null)
+        );
+  
+        return updatedAnswers;
       });
-    }, 1000);
-    return () => clearInterval(timerId!);
-  }, [examData]);
+    };
+  
 
-  // Modal Dialog for Confirming Submission
-  const ConfirmationModal = ({}) => {
-    return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-[1001]">
-        <div className="bg-white p-6 rounded-lg shadow-lg w-96">
-          <h2 className="font-bold text-lg mb-2">Are you sure?</h2>
-          <p className="text-gray-600 mb-4">
-            Are you sure you want to submit the test? Once submitted, you will
-            not be able to make further changes.
-          </p>
-          <div className="mt-6 flex justify-between">
-            <button
-              className="border border-gray-400 text-gray-700 px-4 py-2 rounded hover:bg-gray-100"
-              onClick={() => setShowModal(false)}
-            >
-              Cancel
-            </button>
-            <button
-              className="bg-[#E74444] text-white px-4 py-2 rounded hover:bg-red-600"
-              onClick={() => {
-                setShowModal(false);
-                handleSubmit();
-              }}
-            >
-              Finish Exam
-            </button>
+    useEffect(() => {
+      if (!examData || submitted) return;
+      timerId = setInterval(() => {
+        setTimeLeft((prev) => {
+          if (prev <= 0) {
+            clearInterval(timerId!);
+            if (!submittedRef.current) {
+              handleSubmit();
+            }
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+      return () => clearInterval(timerId!);
+    }, [examData]);
+
+    // Modal Dialog for Confirming Submission
+    const ConfirmationModal = ({}) => {
+      return (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-[1001]">
+          <div className="bg-white p-6 rounded-lg shadow-lg w-96">
+            <h2 className="font-bold text-lg mb-2">Are you sure?</h2>
+            <p className="text-gray-600 mb-4">
+              Are you sure you want to submit the test? Once submitted, you will
+              not be able to make further changes.
+            </p>
+            <div className="mt-6 flex justify-between">
+              <button
+                className="border border-gray-400 text-gray-700 px-4 py-2 rounded hover:bg-gray-100"
+                onClick={() => setShowModal(false)}
+              >
+                Cancel
+              </button>
+              <button
+                className="bg-[#E74444] text-white px-4 py-2 rounded hover:bg-red-600"
+                onClick={() => {
+                  setShowModal(false);
+                  handleSubmit();
+                }}
+              >
+                Finish Exam
+              </button>
+            </div>
           </div>
         </div>
-      </div>
-    );
-  };
+      );
+    };
 
-  // Toggle "Not Reviewed" status
-  const toggleNotReviewed = (questionId: number) => {
-    setNotReviewedQuestions((prev) => ({
-      ...prev,
-      [questionId]: !prev[questionId],
-    }));
-  };
+    // Toggle "Not Reviewed" status
+    const toggleNotReviewed = (questionId: number) => {
+      setNotReviewedQuestions((prev) => ({
+        ...prev,
+        [questionId]: !prev[questionId],
+      }));
+    };
 
-  const handleAnswerChange = (
-    questionId: number,
-    answer: string[],
-    subQuestionIndex?: number // for handling sub-questions like in EMQ
-  ) => {
-    setAnswers((prev: any) => {
-      const existingAnswers = { ...prev };
+    const handleAnswerChange = (
+      questionId: number,
+      answer: string[],
+      subQuestionIndex?: number // for handling sub-questions like in EMQ
+    ) => {
+      setAnswers((prev: any) => {
+        const existingAnswers = { ...prev };
 
-      // Handle sub-questions (like in EMQ)
-      if (typeof subQuestionIndex === "number") {
-        const updatedSubAnswers = existingAnswers[questionId] || [];
-        updatedSubAnswers[subQuestionIndex] = answer[0];
-        existingAnswers[questionId] = updatedSubAnswers;
-      } else if (answer.length === 2) {
-        // For MTF, handle pairs of answers
-        const updatedPairs = [...(existingAnswers[questionId] || [])];
-        const existingIndex = updatedPairs.findIndex(
-          (pair) => pair[0] === answer[0]
-        );
+        // Handle sub-questions (like in EMQ)
+        if (typeof subQuestionIndex === "number") {
+          const updatedSubAnswers = existingAnswers[questionId] || [];
+          updatedSubAnswers[subQuestionIndex] = answer[0];
+          existingAnswers[questionId] = updatedSubAnswers;
+        } else if (answer.length === 2) {
+          // For MTF, handle pairs of answers
+          const updatedPairs = [...(existingAnswers[questionId] || [])];
+          const existingIndex = updatedPairs.findIndex(
+            (pair) => pair[0] === answer[0]
+          );
 
-        if (existingIndex > -1) {
-          updatedPairs[existingIndex] = answer;
+          if (existingIndex > -1) {
+            updatedPairs[existingIndex] = answer;
+          } else {
+            updatedPairs.push(answer);
+          }
+          existingAnswers[questionId] = updatedPairs;
         } else {
-          updatedPairs.push(answer);
-        }
-        existingAnswers[questionId] = updatedPairs;
-      } else {
-        existingAnswers[questionId] = answer;
-      }
-
-      // Build the formatted answers as per submission payload format
-      const formattedAnswers = examData?.questions.map((question) => {
-        const userAnswer = existingAnswers[question.id];
-
-        if (!userAnswer || userAnswer.length === 0) {
-          return {
-            id: question.id,
-            type: question.type,
-            answer: [],
-          };
+          existingAnswers[questionId] = answer;
         }
 
-        switch (question.type) {
-          case "MSA":
-            return {
-              id: question.id,
-              type: question.type,
-              answer: question.options
-                ? question.options.indexOf(userAnswer[0]) + 1
-                : 0,
-            };
+        // Build the formatted answers as per submission payload format
+        const formattedAnswers = examData?.questions.map((question) => {
+          const userAnswer = existingAnswers[question.id];
 
-          case "MMA":
-            return {
-              id: question.id,
-              type: question.type,
-              answer: userAnswer.map((ans: any) =>
-                question.options ? question.options.indexOf(ans) + 1 : 1
-              ), // Ensure each index is incremented by 1
-            };
-          case "TOF":
-            return {
-              id: question.id,
-              type: question.type,
-              answer: userAnswer[0] === "true" ? 1 : 2,
-            };
-
-          case "SAQ":
-            return {
-              id: question.id,
-              type: question.type,
-              answer: userAnswer[0],
-            };
-
-          case "FIB":
-            return {
-              id: question.id,
-              type: question.type,
-              answer: Array.isArray(userAnswer)
-                ? userAnswer.map((ans) =>
-                    typeof ans === "string" ? ans : String(ans)
-                  )
-                : [],
-            };
-
-          case "MTF":
-            const matches: { [key: number]: string } = {};
-            if (
-              Array.isArray(userAnswer) &&
-              userAnswer.every(
-                (pair) => Array.isArray(pair) && pair.length === 2
-              )
-            ) {
-              (userAnswer as unknown as [string, string][]).forEach(
-                (pair: [string, string]) => {
-                  if (question.options) {
-                    const termIndex = question.options.indexOf(pair[0]) + 1;
-                    matches[termIndex] = pair[1];
-                  }
-                }
-              );
+          // **Handle Unattempted Questions Properly**
+          if (!userAnswer || (Array.isArray(userAnswer) && userAnswer.length === 0)) {
+            let blankAnswer;
+            switch (question.type) {
+              case "MSA":
+              case "TOF":
+              case "SAQ":
+                blankAnswer = null;
+                break;
+              case "ORD":
+              case "FIB":
+                blankAnswer = null; // **Set to null for ORD and FIB**
+                break;
+              default:
+                blankAnswer = [];
             }
             return {
               id: question.id,
               type: question.type,
-              answer: matches,
+              answer: blankAnswer,
             };
+          }
+
+          switch (question.type) {
+            case "MSA":
+              return {
+                id: question.id,
+                type: question.type,
+                answer: question.options
+                  ? question.options.indexOf(userAnswer[0]) + 1
+                  : 0,
+              };
+
+            case "MMA":
+              return {
+                id: question.id,
+                type: question.type,
+                answer: userAnswer.map((ans: any) =>
+                  question.options ? question.options.indexOf(ans) + 1 : 1
+                ), // Ensure each index is incremented by 1
+              };
+            case "TOF":
+              return {
+                id: question.id,
+                type: question.type,
+                answer: userAnswer[0] === "true" ? 1 : 2,
+              };
+
+            case "SAQ":
+              return {
+                id: question.id,
+                type: question.type,
+                answer: userAnswer[0],
+              };
+
+            case "FIB":
+              return {
+                id: question.id,
+                type: question.type,
+                answer: Array.isArray(userAnswer)
+                  ? userAnswer.map((ans) =>
+                      typeof ans === "string" ? ans : String(ans)
+                    )
+                  : null, // **Set to null if not an array**
+              };
+
+            case "MTF":
+              const matches: { [key: number]: string } = {};
+              if (
+                Array.isArray(userAnswer) &&
+                userAnswer.every(
+                  (pair) => Array.isArray(pair) && pair.length === 2
+                )
+              ) {
+                (userAnswer as unknown as [string, string][]).forEach(
+                  (pair: [string, string]) => {
+                    if (question.options) {
+                      const termIndex = question.options.indexOf(pair[0]) + 1;
+                      matches[termIndex] = pair[1];
+                    }
+                  }
+                );
+              }
+              return {
+                id: question.id,
+                type: question.type,
+                answer: Object.keys(matches).length > 0 ? matches : null,
+              };
 
             case "ORD":
               return {
                 id: question.id,
                 type: question.type,
-                answer: (answers[question.id] || []).map((opt: string) =>
+                answer: userAnswer.map((opt: string) =>
                   question.options ? question.options.indexOf(opt) : -1
                 ),
               };
 
-          case "EMQ":
-            const filteredAnswers = userAnswer.map((ans: string) => {
-              return ans
-                ? question.options
-                  ? question.options.indexOf(ans) + 1
-                  : null
-                : null;
-            });
-            return {
-              id: question.id,
-              type: question.type,
-              answer: filteredAnswers.length > 0 ? filteredAnswers : [],
-            };
+            case "EMQ":
+              const filteredAnswers = userAnswer.map((ans: string) => {
+                return ans
+                  ? question.options
+                    ? question.options.indexOf(ans) + 1
+                    : null
+                  : null;
+              });
+              return {
+                id: question.id,
+                type: question.type,
+                answer: filteredAnswers.length > 0 ? filteredAnswers : null,
+              };
 
-          default:
-            return null;
-        }
-      });
-
-      // Log the formatted answer structure
-      console.log(
-        "Current formatted answers:",
-        formattedAnswers?.filter((answer) => answer !== null)
-      );
-      saveAnswerProgress(
-        uuid,
-        formattedAnswers?.filter((answer) => answer !== null)
-      );
-      return existingAnswers;
-    });
-  };
-
-  const saveAnswerProgress = async (uuid: any, formattedAnswers: any) => {
-    // Return early if examData or uuid is null
-    if (!examData || !uuid) return;
-
-    try {
-      const ordQuestionIds = examData.questions
-        .filter((question) => question.type === "ORD")
-        .map((question) => question.id);
-
-      const answersToSave = formattedAnswers
-        .map((answer: { id: number; answer: number[] }) => {
-          // Check for ORD answers if they match initial shuffled options
-          if (ordQuestionIds.includes(answer.id)) {
-            const initialOrder = initialShuffledOptions[answer.id] || [];
-            const currentOrder = answer.answer.map((index: number) =>
-              examData.questions.find((q) => q.id === answer.id)?.options?.[index]
-            );
-
-            // Only save if the order has changed
-            if (arraysEqual(initialOrder, currentOrder)) {
+            default:
               return null;
-            }
           }
-          return answer;
-        })
-        .filter(Boolean); // Filter out null values where answers are unchanged
+        });
 
-      if (answersToSave.length === 0) return; // If no answers to save, skip API call
+        // Log the formatted answer structure
+        console.log(
+          "Current formatted answers:",
+          formattedAnswers?.filter((answer) => answer !== null)
+        );
+        saveAnswerProgress(
+          uuid,
+          formattedAnswers?.filter((answer) => answer !== null)
+        );
+        return existingAnswers;
+      });
+    };
 
-      const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/save-answer-progress/${uuid}`,
-        { answers: answersToSave },
-        {
-          headers: {
-            Authorization: `Bearer ${Cookies.get("jwt")}`,
-          },
+    const saveAnswerProgress = async (uuid: any, formattedAnswers: any) => {
+      // Return early if examData or uuid is null
+      if (!examData || !uuid) return;
+
+      try {
+        const ordQuestionIds = examData.questions
+          .filter((question) => question.type === "ORD")
+          .map((question) => question.id);
+
+        const answersToSave = formattedAnswers
+          .map((answer: { id: number; answer: number[] | null }) => {
+            // Check for ORD answers if they match initial shuffled options
+            if (ordQuestionIds.includes(answer.id) && answer.answer) {
+              const initialOrder = initialShuffledOptions[answer.id] || [];
+              const currentOrder = answer.answer.map((index: number) =>
+                examData.questions.find((q) => q.id === answer.id)?.options?.[index]
+              );
+
+              // Only save if the order has changed
+              if (arraysEqual(initialOrder, currentOrder)) {
+                return null;
+              }
+            }
+            return answer;
+          })
+          .filter(Boolean); // Filter out null values where answers are unchanged
+
+        if (answersToSave.length === 0) return; // If no answers to save, skip API call
+
+        const response = await axios.post(
+          `${process.env.NEXT_PUBLIC_API_URL}/save-answer-progress/${uuid}`,
+          { answers: answersToSave },
+          {
+            headers: {
+              Authorization: `Bearer ${Cookies.get("jwt")}`,
+            },
+          }
+        );
+
+        if (response.data.status) {
+          console.log("Answer progress saved successfully:", response.data.message);
+        } else {
+          console.error("Failed to save answer progress:", response.data.message);
+          toast.error("Failed to save answer progress.");
         }
-      );
-
-      if (response.data.status) {
-        console.log("Answer progress saved successfully:", response.data.message);
-      } else {
-        console.error("Failed to save answer progress:", response.data.message);
+      } catch (error) {
+        console.error("Error saving answer progress:", error);
         toast.error("Failed to save answer progress.");
       }
-    } catch (error) {
-      console.error("Error saving answer progress:", error);
-      toast.error("Failed to save answer progress.");
-    }
-  };
+    };
 
-  const handleNextQuestion = () => {
-    if (
-      examData?.questions &&
-      currentQuestionIndex < examData.questions.length - 1
-    ) {
-      setCurrentQuestionIndex(currentQuestionIndex + 1);
-      setCurrentSubIndex(null); // Reset sub-question index when moving to the next question
-    }
-  };
+    const handleNextQuestion = () => {
+      if (
+        examData?.questions &&
+        currentQuestionIndex < examData.questions.length - 1
+      ) {
+        setCurrentQuestionIndex(currentQuestionIndex + 1);
+        setCurrentSubIndex(null); // Reset sub-question index when moving to the next question
+      }
+    };
 
-  const handlePreviousQuestion = () => {
-    if (currentQuestionIndex > 0) {
-      setCurrentQuestionIndex(currentQuestionIndex - 1);
-      setCurrentSubIndex(null); // Reset sub-question index when moving to the previous question
-    }
-  };
+    const handlePreviousQuestion = () => {
+      if (currentQuestionIndex > 0) {
+        setCurrentQuestionIndex(currentQuestionIndex - 1);
+        setCurrentSubIndex(null); // Reset sub-question index when moving to the previous question
+      }
+    };
 
-  const handleSubmit = async () => {
-    // Prevent submission if it has already been submitted
-    if (submittedRef.current) return; // Use ref to guard against duplicate submissions
+    const handleSubmit = async () => {
+      // Prevent submission if it has already been submitted
+      if (submittedRef.current) return; // Use ref to guard against duplicate submissions
 
-    setSubmitted(true);
-    submittedRef.current = true; // Set ref to prevent future calls
-    if (timerId) clearInterval(timerId); // Stop the timer when submitting
+      setSubmitted(true);
+      submittedRef.current = true; // Set ref to prevent future calls
+      if (timerId) clearInterval(timerId); // Stop the timer when submitting
 
-    const formattedAnswers = examDataRef.current?.questions.map(
-      (question: Question) => {
-        const userAnswer = answersRef.current[question.id];
+      const formattedAnswers = examDataRef.current?.questions.map(
+        (question: Question) => {
+          const userAnswer = answersRef.current[question.id];
 
-        // Ensure that blank answers are submitted if no answer is provided
-        if (!userAnswer || userAnswer.length === 0) {
-          return {
-            id: question.id,
-            type: question.type,
-            answer: [],
-          };
-        }
-
-        switch (question.type) {
-          case "MSA":
-            return {
-              id: question.id,
-              type: question.type,
-              answer: question.options
-                ? question.options.indexOf(userAnswer[0]) + 1
-                : 0,
-            };
-
-          case "MMA":
-            return {
-              id: question.id,
-              type: question.type,
-              answer: userAnswer.map((ans: string) =>
-                question.options ? question.options.indexOf(ans) + 1 : 1
-              ), // Increment each index by 1
-            };
-
-          case "TOF":
-            return {
-              id: question.id,
-              type: question.type,
-              answer: userAnswer[0] === "true" ? 1 : 2,
-            };
-
-          case "SAQ":
-            return {
-              id: question.id,
-              type: question.type,
-              answer: userAnswer[0],
-            };
-
-          case "FIB":
-            return {
-              id: question.id,
-              type: question.type,
-              answer: Array.isArray(userAnswer)
-                ? userAnswer.map((ans) =>
-                    typeof ans === "string" ? ans : String(ans)
-                  )
-                : [],
-            };
-
-          case "MTF":
-            const matches: { [key: number]: string } = {};
-            if (
-              Array.isArray(userAnswer) &&
-              userAnswer.every(
-                (pair) => Array.isArray(pair) && pair.length === 2
-              )
-            ) {
-              (userAnswer as unknown as [string, string][]).forEach(
-                (pair: [string, string]) => {
-                  if (question.options) {
-                    const termIndex = question.options.indexOf(pair[0]) + 1;
-                    matches[termIndex] = pair[1];
-                  }
-                }
-              );
+          // **Handle Unattempted Questions Properly**
+          if (!userAnswer || (Array.isArray(userAnswer) && userAnswer.length === 0)) {
+            let blankAnswer;
+            switch (question.type) {
+              case "MSA":
+              case "TOF":
+              case "SAQ":
+                blankAnswer = null;
+                break;
+              case "ORD":
+              case "FIB":
+                blankAnswer = null; // **Set to null for ORD and FIB**
+                break;
+              default:
+                blankAnswer = [];
             }
             return {
               id: question.id,
               type: question.type,
-              answer: matches,
+              answer: blankAnswer,
             };
+          }
 
-          case "ORD":
-            return {
-              id: question.id,
-              type: question.type,
-              answer: userAnswer.map((opt: string) =>
-                question.options ? question.options.indexOf(opt) : -1
-              ),
-            };
+          switch (question.type) {
+            case "MSA":
+              return {
+                id: question.id,
+                type: question.type,
+                answer: question.options
+                  ? question.options.indexOf(userAnswer[0]) + 1
+                  : 0,
+              };
 
-          case "EMQ":
-            const filteredAnswers = userAnswer.map((ans: string) => {
-              return ans
-                ? question.options
-                  ? question.options.indexOf(ans) + 1
-                  : null
-                : null;
-            });
-            return {
-              id: question.id,
-              type: question.type,
-              answer: filteredAnswers.length > 0 ? filteredAnswers : [],
-            };
+            case "MMA":
+              return {
+                id: question.id,
+                type: question.type,
+                answer: userAnswer.map((ans: string) =>
+                  question.options ? question.options.indexOf(ans) + 1 : 1
+                ), // Increment each index by 1
+              };
 
-          default:
-            return null;
+            case "TOF":
+              return {
+                id: question.id,
+                type: question.type,
+                answer: userAnswer[0] === "true" ? 1 : 2,
+              };
+
+            case "SAQ":
+              return {
+                id: question.id,
+                type: question.type,
+                answer: userAnswer[0],
+              };
+
+            case "FIB":
+              return {
+                id: question.id,
+                type: question.type,
+                answer: Array.isArray(userAnswer)
+                  ? userAnswer.map((ans) =>
+                      typeof ans === "string" ? ans : String(ans)
+                    )
+                  : null, // **Set to null if not an array**
+              };
+
+            case "MTF":
+              const matches: { [key: number]: string } = {};
+              if (
+                Array.isArray(userAnswer) &&
+                userAnswer.every(
+                  (pair) => Array.isArray(pair) && pair.length === 2
+                )
+              ) {
+                (userAnswer as unknown as [string, string][]).forEach(
+                  (pair: [string, string]) => {
+                    if (question.options) {
+                      const termIndex = question.options.indexOf(pair[0]) + 1;
+                      matches[termIndex] = pair[1];
+                    }
+                  }
+                );
+              }
+              return {
+                id: question.id,
+                type: question.type,
+                answer: Object.keys(matches).length > 0 ? matches : null,
+              };
+
+            case "ORD":
+              return {
+                id: question.id,
+                type: question.type,
+                answer: userAnswer.map((opt: string) =>
+                  question.options ? question.options.indexOf(opt) : -1
+                ),
+              };
+
+            case "EMQ":
+              const filteredAnswers = userAnswer.map((ans: string) => {
+                return ans
+                  ? question.options
+                    ? question.options.indexOf(ans) + 1
+                    : null
+                  : null;
+              });
+              return {
+                id: question.id,
+                type: question.type,
+                answer: filteredAnswers.length > 0 ? filteredAnswers : null,
+              };
+
+            default:
+              return null;
+          }
         }
-      }
-    );
+      );
 
-    const payload = {
-      examId: uuid,
-      answers: formattedAnswers?.filter((answer: any) => answer !== null),
+      const payload = {
+        examId: uuid,
+        answers: formattedAnswers?.filter((answer: any) => answer !== null),
+      };
+
+      console.log("Submitting answers:", payload);
+
+      try {
+        const response = await axios.post(
+          `${process.env.NEXT_PUBLIC_API_URL}/finish-exam/${uuid}`,
+          payload,
+          {
+            headers: {
+              Authorization: `Bearer ${Cookies.get("jwt")}`,
+            },
+          }
+        );
+
+        if (response.data.status) {
+          toast.success("Exam submitted successfully!");
+          // **Clear Local Storage Upon Successful Submission**
+          const localStorageKey = `examStatus_${uuid}`;
+          localStorage.removeItem(localStorageKey);
+        } else {
+          toast.error("Error submitting exam");
+        }
+      } catch (error) {
+        console.error("Error submitting exam:", error);
+        toast.error("An error occurred during submission");
+      }
     };
 
-    console.log("Submitting answers:", payload);
+    const handleFinishClick = () => {
+      setShowModal(true);
+    };
 
-    try {
-      const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/finish-exam/${uuid}`,
-        payload,
-        {
-          headers: {
-            Authorization: `Bearer ${Cookies.get("jwt")}`,
-          },
-        }
-      );
+    const formatTimeLeft = (time: number) => {
+      const minutes = Math.floor(time / 60);
+      const seconds = time % 60;
+      return `${minutes}:${seconds < 10 ? `0${seconds}` : seconds}`;
+    };
 
-      if (response.data.status) {
-        toast.success("Exam submitted successfully!");
-        // **Clear Local Storage Upon Successful Submission**
-        const localStorageKey = `examStatus_${uuid}`;
-        localStorage.removeItem(localStorageKey);
-      } else {
-        toast.error("Error submitting exam");
-      }
-    } catch (error) {
-      console.error("Error submitting exam:", error);
-      toast.error("An error occurred during submission");
-    }
-  };
+    const getAnsweredCount = () => {
+      let count = 0;
+      for (const questionId in answers) {
+        const answer = answers[questionId];
+        const question = examData?.questions.find(
+          (q) => q.id === parseInt(questionId)
+        );
 
-  const handleFinishClick = () => {
-    setShowModal(true);
-  };
-
-  const formatTimeLeft = (time: number) => {
-    const minutes = Math.floor(time / 60);
-    const seconds = time % 60;
-    return `${minutes}:${seconds < 10 ? `0${seconds}` : seconds}`;
-  };
-
-  const getAnsweredCount = () => {
-    let count = 0;
-    for (const questionId in answers) {
-      const answer = answers[questionId];
-      const question = examData?.questions.find(
-        (q) => q.id === parseInt(questionId)
-      );
-
-      if (Array.isArray(answer)) {
-        if (question?.type === "ORD") {
-          if (!arraysEqual(answer, initialShuffledOptions[questionId])) {
+        if (Array.isArray(answer)) {
+          if (question?.type === "ORD") {
+            if (!arraysEqual(answer, initialShuffledOptions[questionId])) {
+              count++;
+            }
+          } else if (answer.some((ans) => ans !== null && ans !== "")) {
             count++;
           }
-        } else if (answer.some((ans) => ans !== null && ans !== "")) {
+        } else if (answer !== null && answer !== "") {
           count++;
         }
-      } else if (answer !== null && answer !== "") {
-        count++;
       }
-    }
-    return count;
-  };
-
-  const getSkippedCount = () => {
-    return examData?.questions
-      ? getTotalQuestionCount() - getAnsweredCount()
-      : 0;
-  };
-
-  const getNotReviewedCount = () => {
-    return Object.keys(notReviewedQuestions).filter(
-      (questionId) => notReviewedQuestions[parseInt(questionId)]
-    ).length;
-  };
-
-  const moveItem = (questionId: number, fromIndex: number, toIndex: number) => {
-    setAnswers((prevAnswers) => {
-      const currentAnswers = prevAnswers[questionId] || [];
-
-      if (toIndex < 0 || toIndex >= currentAnswers.length) {
-        return prevAnswers;
-      }
-
-      const reorderedAnswers = [...currentAnswers];
-      const [movedItem] = reorderedAnswers.splice(fromIndex, 1);
-      reorderedAnswers.splice(toIndex, 0, movedItem);
-
-      return {
-        ...prevAnswers,
-        [questionId]: reorderedAnswers,
-      };
-    });
-  };
-
-  const getTotalQuestionCount = (): number => {
-    if (!examData || !examData.questions) {
-      return 0; // Return 0 or a fallback value if examData or questions are undefined
-    }
-
-    return examData.questions.reduce((count, question) => {
-      if (question.type === "EMQ" && Array.isArray(question.question)) {
-        // Exclude the first (common) question and count each sub-question
-        return count + question.question.length - 1;
-      }
-      return count + 1; // Non-EMQ questions count as 1
-    }, 0);
-  };
-
-  const getAdjustedQuestionIndex = (): number => {
-    let index = 0;
-    for (let i = 0; i < currentQuestionIndex; i++) {
-      const question = examData?.questions[i];
-      if (question?.type === "EMQ" && Array.isArray(question.question)) {
-        index += question.question.length - 1; // Number of sub-questions
-      } else {
-        index += 1;
-      }
-    }
-    if (examData?.questions[currentQuestionIndex]?.type === "EMQ") {
-      return index + (currentSubIndex || 0);
-    }
-    return index;
-  };
-
-  useEffect(() => {
-    if (examData?.questions && !isInitialized) {
-      examData.questions.forEach((question) => {
-        if (question.type === "ORD") {
-          if (answers[question.id]) {
-            // Do not re-initialize if answers are already present
-            return;
-          }
-          const shuffledOptions = shuffleArray(question.options || []);
-          setAnswers((prev) => ({
-            ...prev,
-            [question.id]: [...shuffledOptions],
-          }));
-          setInitialShuffledOptions((prev) => ({
-            ...prev,
-            [question.id]: [...shuffledOptions],
-          }));
-        }
-      });
-      setIsInitialized(true); // Set initialization flag to true
-    }
-  }, [examData]);
-
-  // **Persist Progress to Local Storage**
-  useEffect(() => {
-    if (!uuid) return;
-    const localStorageKey = `examStatus_${uuid}`;
-    const dataToSave = {
-      answers,
-      notReviewedQuestions,
-      visitedQuestionIndices: Array.from(visitedQuestionIndices),
-      currentQuestionIndex,
-      currentSubIndex,
-      timeLeft,
+      return count;
     };
-    localStorage.setItem(localStorageKey, JSON.stringify(dataToSave));
-  }, [uuid, answers, notReviewedQuestions, visitedQuestionIndices, currentQuestionIndex, currentSubIndex, timeLeft]);
 
-  const renderQuestion = (question: Question) => {
-    const baseQuestionNumber = getAdjustedQuestionIndex();
-    const questionNumber =
-      question.type === "EMQ" ? baseQuestionNumber + 1 : baseQuestionNumber + 1;
+    const getSkippedCount = () => {
+      return examData?.questions
+        ? getTotalQuestionCount() - getAnsweredCount()
+        : 0;
+    };
 
-    return (
-      <div>
-        {(() => {
-          switch (question.type) {
-            case "MSA": {
-              return (
-                <div className="flex justify-normal bg-[#f6f7f9]">
-                  <div className="bg-defaultcolor p-3">
-                    <h5 className="text-white font-semibold text-3xl">
-                      {questionNumber}
-                    </h5>
-                  </div>
-                  <div className="space-y-4 p-4 w-full">
-                    <p
-                      className="mb-4 bg-white p-3 rounded-lg"
-                      dangerouslySetInnerHTML={{
-                        __html: Array.isArray(question.question)
-                          ? question.question[0]
-                          : question.question,
-                      }}
-                    ></p>
-                    {question.options?.map((option, index) => {
-                      const isChecked = answers[question.id]?.includes(option);
-                      return (
-                        <label
-                          key={index}
-                          className={`flex items-center justify-between space-x-3 p-3 bg-white border rounded-lg cursor-pointer transition-all mb-3 ${
-                            isChecked ? "border-defaultcolor" : "border-white"
-                          } hover:bg-yellow-100`}
-                        >
-                          <div className="flex items-center space-x-3">
-                            <div
-                              className={`flex items-center justify-center w-8 h-8 rounded-full text-black transition-all ${
-                                isChecked
-                                  ? "bg-defaultcolor text-white"
-                                  : "bg-gray-200"
-                              }`}
-                            >
-                              {String.fromCharCode(65 + index)}
-                            </div>
-                            <div
-                              className={`transition-all ${
-                                isChecked ? "text-defaultcolor" : "text-black"
-                              }`}
-                              dangerouslySetInnerHTML={{ __html: option }}
-                            ></div>
-                          </div>
-                          <input
-                            type="radio"
-                            name={`question-${question.id}`}
-                            value={option}
-                            onChange={() =>
-                              handleAnswerChange(question.id, [option])
-                            }
-                            checked={isChecked || false}
-                            className={`cursor-pointer focus:ring-1 focus:ring-defaultcolor ${
-                              isChecked ? "checked:bg-defaultcolor" : ""
-                            }`}
-                          />
-                        </label>
-                      );
-                    })}
-                  </div>
-                </div>
-              );
-            }
+    const getNotReviewedCount = () => {
+      return Object.keys(notReviewedQuestions).filter(
+        (questionId) => notReviewedQuestions[parseInt(questionId)]
+      ).length;
+    };
 
-            case "MMA": {
-              return (
-                <div className="flex justify-normal bg-[#f6f7f9]">
-                  <div className="bg-defaultcolor p-3">
-                    <h5 className="text-white font-semibold text-3xl">
-                      {questionNumber}
-                    </h5>
-                  </div>
-                  <div className="space-y-4 p-4 w-full">
-                    <p
-                      className="mb-4 bg-white p-3 rounded-lg"
-                      dangerouslySetInnerHTML={{
-                        __html: Array.isArray(question.question)
-                          ? question.question[0]
-                          : question.question,
-                      }}
-                    ></p>
-                    {question.options?.map((option, index) => {
-                      const isChecked = answers[question.id]?.includes(option);
-                      return (
-                        <label
-                          key={index}
-                          className={`flex items-center justify-between space-x-3 p-3 bg-white border rounded-lg cursor-pointer transition-all mb-3 ${
-                            isChecked ? "border-defaultcolor" : "border-white"
-                          } hover:bg-yellow-100`}
-                        >
-                          <div className="flex items-center space-x-3">
-                            <div
-                              className={`flex items-center justify-center w-8 h-8 rounded-full text-black transition-all ${
-                                isChecked
-                                  ? "bg-defaultcolor text-white"
-                                  : "bg-gray-200"
-                              }`}
-                            >
-                              {String.fromCharCode(65 + index)}
-                            </div>
-                            <div
-                              className={`transition-all ${
-                                isChecked ? "text-defaultcolor" : "text-black"
-                              }`}
-                              dangerouslySetInnerHTML={{ __html: option }}
-                            ></div>
-                          </div>
-                          <input
-                            type="checkbox"
-                            name={`question-${question.id}`}
-                            value={option}
-                            onChange={() => {
-                              const currentAnswers = answers[question.id] || [];
-                              const newAnswers = currentAnswers.includes(option)
-                                ? currentAnswers.filter((a) => a !== option)
-                                : [...currentAnswers, option];
-                              // Update answer immediately on a single click
-                              setAnswers((prevAnswers) => ({
-                                ...prevAnswers,
-                                [question.id]: newAnswers,
-                              }));
-                            }}
-                            checked={isChecked || false}
-                            className={`cursor-pointer focus:ring-1 focus:ring-defaultcolor ${
-                              isChecked ? "checked:bg-defaultcolor" : ""
-                            }`}
-                          />
-                        </label>
-                      );
-                    })}
-                  </div>
-                </div>
-              );
-            }
+    const moveItem = (questionId: number, fromIndex: number, toIndex: number) => {
+      setAnswers((prevAnswers) => {
+        const currentAnswers = prevAnswers[questionId] || [];
 
-            case "TOF": {
-              return (
-                <div className="flex justify-normal bg-[#f6f7f9]">
-                  <div className="bg-defaultcolor p-3">
-                    <h5 className="text-white font-semibold text-3xl">
-                      {questionNumber}
-                    </h5>
-                  </div>
-                  <div className="space-y-4 p-4 w-full">
-                    <p
-                      className="mb-4 bg-white p-3 rounded-lg"
-                      dangerouslySetInnerHTML={{
-                        __html: Array.isArray(question.question)
-                          ? question.question[0]
-                          : question.question,
-                      }}
-                    ></p>
+        if (toIndex < 0 || toIndex >= currentAnswers.length) {
+          return prevAnswers;
+        }
 
-                    {/* "True" Option */}
-                    <label
-                      className={`flex items-center justify-between border p-3 rounded-lg cursor-pointer transition-all bg-white hover:bg-yellow-100 ${
-                        answers[question.id]?.includes("true")
-                          ? "border-defaultcolor"
-                          : "border-white"
-                      }`}
-                    >
-                      <div className="flex items-center space-x-3">
-                        <div
-                          className={`flex items-center justify-center w-8 h-8 rounded-full text-black transition-all ${
-                            answers[question.id]?.includes("true")
-                              ? "bg-defaultcolor text-white"
-                              : "bg-gray-200"
-                          }`}
-                        >
-                          T
-                        </div>
-                        <span
-                          className={`transition-all ${
-                            answers[question.id]?.includes("true")
-                              ? "text-defaultcolor"
-                              : "text-black"
-                          }`}
-                        >
-                          True
-                        </span>
-                      </div>
-                      <input
-                        type="radio"
-                        name={`question-${question.id}`}
-                        value="true"
-                        onChange={() =>
-                          handleAnswerChange(question.id, ["true"])
-                        }
-                        checked={answers[question.id]?.includes("true") || false} // Only checked if true is explicitly saved
-                        className={`cursor-pointer focus:ring-1 focus:ring-defaultcolor ${
-                          answers[question.id]?.includes("true")
-                            ? "checked:bg-defaultcolor"
-                            : ""
-                        }`}
-                      />
-                    </label>
+        const reorderedAnswers = [...currentAnswers];
+        const [movedItem] = reorderedAnswers.splice(fromIndex, 1);
+        reorderedAnswers.splice(toIndex, 0, movedItem);
 
-                    {/* "False" Option */}
-                    <label
-                      className={`flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-all bg-white hover:bg-yellow-100 ${
-                        answers[question.id]?.includes("false")
-                          ? "border-defaultcolor"
-                          : "border-white"
-                      }`}
-                    >
-                      <div className="flex items-center space-x-3">
-                        <div
-                          className={`flex items-center justify-center w-8 h-8 rounded-full text-black transition-all ${
-                            answers[question.id]?.includes("false")
-                              ? "bg-defaultcolor text-white"
-                              : "bg-gray-200"
-                          }`}
-                        >
-                          F
-                        </div>
-                        <span
-                          className={`transition-all ${
-                            answers[question.id]?.includes("false")
-                              ? "text-defaultcolor"
-                              : "text-black"
-                          }`}
-                        >
-                          False
-                        </span>
-                      </div>
-                      <input
-                        type="radio"
-                        name={`question-${question.id}`}
-                        value="false"
-                        onChange={() =>
-                          handleAnswerChange(question.id, ["false"])
-                        }
-                        checked={answers[question.id]?.includes("false") || false} // Only checked if false is explicitly saved
-                        className={`cursor-pointer focus:ring-1 focus:ring-defaultcolor ${
-                          answers[question.id]?.includes("false")
-                            ? "checked:bg-defaultcolor"
-                            : ""
-                        }`}
-                      />
-                    </label>
-                  </div>
-                </div>
-              );
-            }
+        return {
+          ...prevAnswers,
+          [questionId]: reorderedAnswers,
+        };
+      });
+    };
 
-            case "SAQ": {
-              return (
-                <div className="flex justify-normal bg-[#f6f7f9]">
-                  <div className="bg-defaultcolor p-3">
-                    <h5 className="text-white font-semibold text-3xl">
-                      {questionNumber}
-                    </h5>
-                  </div>
-                  <div className="space-y-4 p-4 w-full">
-                    <p
-                      className="mb-4 bg-white p-3 rounded-lg"
-                      dangerouslySetInnerHTML={{
-                        __html: Array.isArray(question.question)
-                          ? question.question[0]
-                          : question.question,
-                      }}
-                    ></p>
-                    <textarea
-                      className="w-full p-4 rounded-lg border border-gray-300 focus:ring-1 focus:ring-defaultcolor focus:border-defaultcolor"
-                      placeholder="Type your answer here..."
-                      value={answers[question.id]?.[0] || ""}
-                      onChange={(e) =>
-                        handleAnswerChange(question.id, [e.target.value])
-                      }
-                      rows={4}
-                    ></textarea>
-                  </div>
-                </div>
-              );
-            }
+    const getTotalQuestionCount = (): number => {
+      if (!examData || !examData.questions) {
+        return 0; // Return 0 or a fallback value if examData or questions are undefined
+      }
 
-            case "MTF": {
-              return (
-                <div className="flex justify-normal bg-[#f6f7f9]">
-                  <div className="bg-defaultcolor p-3">
-                    <h5 className="text-white font-semibold text-3xl">
-                      {questionNumber}
-                    </h5>
-                  </div>
-                  <div className="space-y-4 p-4 w-full">
-                    <p className="mb-4 font-medium">Match the following:</p>
-                    {question.options
-                      ?.slice(0, question.options.length / 2)
-                      .map((opt, i) => (
-                        <div
-                          key={i}
-                          className="flex flex-col sm:flex-row sm:space-x-4 mb-4 space-y-2 sm:space-y-0"
-                        >
-                          <p
-                            className="flex-1 p-2 rounded bg-white text-left"
-                            dangerouslySetInnerHTML={{ __html: opt }}
-                          ></p>
-                          <select
-                            className="flex-1 p-2 rounded border border-gray-300 focus:ring-1 focus:ring-defaultcolor focus:border-defaultcolor w-full sm:w-auto appearance-none"
-                            onChange={(e) =>
-                              handleAnswerChange(question.id, [
-                                opt,
-                                e.target.value,
-                              ])
-                            }
-                            value={
-                              answers[question.id]?.find(
-                                (pair) => pair[0] === opt
-                              )?.[1] || ""
-                            }
+      return examData.questions.reduce((count, question) => {
+        if (question.type === "EMQ" && Array.isArray(question.question)) {
+          // Exclude the first (common) question and count each sub-question
+          return count + question.question.length - 1;
+        }
+        return count + 1; // Non-EMQ questions count as 1
+      }, 0);
+    };
+
+    const getAdjustedQuestionIndex = (): number => {
+      let index = 0;
+      for (let i = 0; i < currentQuestionIndex; i++) {
+        const question = examData?.questions[i];
+        if (question?.type === "EMQ" && Array.isArray(question.question)) {
+          index += question.question.length - 1; // Number of sub-questions
+        } else {
+          index += 1;
+        }
+      }
+      if (examData?.questions[currentQuestionIndex]?.type === "EMQ") {
+        return index + (currentSubIndex || 0);
+      }
+      return index;
+    };
+
+    useEffect(() => {
+      // **Removed the Redundant useEffect for Shuffling ORD Options**
+      // All ORD initialization is now handled in initializeAnswers
+    }, [examData]);
+
+    // **Persist Progress to Local Storage**
+    useEffect(() => {
+      if (!uuid) return;
+      const localStorageKey = `examStatus_${uuid}`;
+      const dataToSave = {
+        answers,
+        notReviewedQuestions,
+        visitedQuestionIndices: Array.from(visitedQuestionIndices),
+        currentQuestionIndex,
+        currentSubIndex,
+        timeLeft,
+      };
+      localStorage.setItem(localStorageKey, JSON.stringify(dataToSave));
+    }, [uuid, answers, notReviewedQuestions, visitedQuestionIndices, currentQuestionIndex, currentSubIndex, timeLeft]);
+
+    const renderQuestion = (question: Question) => {
+      const baseQuestionNumber = getAdjustedQuestionIndex();
+      const questionNumber =
+        question.type === "EMQ" ? baseQuestionNumber + 1 : baseQuestionNumber + 1;
+
+      return (
+        <div>
+          {(() => {
+            switch (question.type) {
+              case "MSA": {
+                return (
+                  <div className="flex justify-normal bg-[#f6f7f9]">
+                    <div className="bg-defaultcolor p-3">
+                      <h5 className="text-white font-semibold text-3xl">
+                        {questionNumber}
+                      </h5>
+                    </div>
+                    <div className="space-y-4 p-4 w-full">
+                      <p
+                        className="mb-4 bg-white p-3 rounded-lg"
+                        dangerouslySetInnerHTML={{
+                          __html: Array.isArray(question.question)
+                            ? question.question[0]
+                            : question.question,
+                        }}
+                      ></p>
+                      {question.options?.map((option, index) => {
+                        const isChecked = answers[question.id]?.includes(option);
+                        return (
+                          <label
+                            key={index}
+                            className={`flex items-center justify-between space-x-3 p-3 bg-white border rounded-lg cursor-pointer transition-all mb-3 ${
+                              isChecked ? "border-defaultcolor" : "border-white"
+                            } hover:bg-yellow-100`}
                           >
-                            <option value="">Select match</option>
-                            {question.options
-                              ?.slice(question.options.length / 2)
-                              .map((match, j) => (
+                            <div className="flex items-center space-x-3">
+                              <div
+                                className={`flex items-center justify-center w-8 h-8 rounded-full text-black transition-all ${
+                                  isChecked
+                                    ? "bg-defaultcolor text-white"
+                                    : "bg-gray-200"
+                                }`}
+                              >
+                                {String.fromCharCode(65 + index)}
+                              </div>
+                              <div
+                                className={`transition-all ${
+                                  isChecked ? "text-defaultcolor" : "text-black"
+                                }`}
+                                dangerouslySetInnerHTML={{ __html: option }}
+                              ></div>
+                            </div>
+                            <input
+                              type="radio"
+                              name={`question-${question.id}`}
+                              value={option}
+                              onChange={() =>
+                                handleAnswerChange(question.id, [option])
+                              }
+                              checked={isChecked || false}
+                              className={`cursor-pointer focus:ring-1 focus:ring-defaultcolor ${
+                                isChecked ? "checked:bg-defaultcolor" : ""
+                              }`}
+                            />
+                          </label>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              }
+
+              case "MMA": {
+                return (
+                  <div className="flex justify-normal bg-[#f6f7f9]">
+                    <div className="bg-defaultcolor p-3">
+                      <h5 className="text-white font-semibold text-3xl">
+                        {questionNumber}
+                      </h5>
+                    </div>
+                    <div className="space-y-4 p-4 w-full">
+                      <p
+                        className="mb-4 bg-white p-3 rounded-lg"
+                        dangerouslySetInnerHTML={{
+                          __html: Array.isArray(question.question)
+                            ? question.question[0]
+                            : question.question,
+                        }}
+                      ></p>
+                      {question.options?.map((option, index) => {
+                        const isChecked = answers[question.id]?.includes(option);
+                        return (
+                          <label
+                            key={index}
+                            className={`flex items-center justify-between space-x-3 p-3 bg-white border rounded-lg cursor-pointer transition-all mb-3 ${
+                              isChecked ? "border-defaultcolor" : "border-white"
+                            } hover:bg-yellow-100`}
+                          >
+                            <div className="flex items-center space-x-3">
+                              <div
+                                className={`flex items-center justify-center w-8 h-8 rounded-full text-black transition-all ${
+                                  isChecked
+                                    ? "bg-defaultcolor text-white"
+                                    : "bg-gray-200"
+                                }`}
+                              >
+                                {String.fromCharCode(65 + index)}
+                              </div>
+                              <div
+                                className={`transition-all ${
+                                  isChecked ? "text-defaultcolor" : "text-black"
+                                }`}
+                                dangerouslySetInnerHTML={{ __html: option }}
+                              ></div>
+                            </div>
+                            <input
+                              type="checkbox"
+                              name={`question-${question.id}`}
+                              value={option}
+                              onChange={() => {
+                                const currentAnswers = answers[question.id] || [];
+                                const newAnswers = currentAnswers.includes(option)
+                                  ? currentAnswers.filter((a) => a !== option)
+                                  : [...currentAnswers, option];
+                                // Update answer immediately on a single click
+                                setAnswers((prevAnswers) => ({
+                                  ...prevAnswers,
+                                  [question.id]: newAnswers,
+                                }));
+                              }}
+                              checked={isChecked || false}
+                              className={`cursor-pointer focus:ring-1 focus:ring-defaultcolor ${
+                                isChecked ? "checked:bg-defaultcolor" : ""
+                              }`}
+                            />
+                          </label>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              }
+
+              case "TOF": {
+                return (
+                  <div className="flex justify-normal bg-[#f6f7f9]">
+                    <div className="bg-defaultcolor p-3">
+                      <h5 className="text-white font-semibold text-3xl">
+                        {questionNumber}
+                      </h5>
+                    </div>
+                    <div className="space-y-4 p-4 w-full">
+
+                      <p
+                        className="mb-4 bg-white p-3 rounded-lg"
+                        dangerouslySetInnerHTML={{
+                          __html: Array.isArray(question.question)
+                            ? question.question[0]
+                            : question.question,
+                        }}
+                      ></p>
+
+                      {/* "True" Option */}
+                      <label
+                        className={`flex items-center justify-between border p-3 rounded-lg cursor-pointer transition-all bg-white hover:bg-yellow-100 ${
+                          answers[question.id]?.includes("true")
+                            ? "border-defaultcolor"
+                            : "border-white"
+                        }`}
+                      >
+                        <div className="flex items-center space-x-3">
+                          <div
+                            className={`flex items-center justify-center w-8 h-8 rounded-full text-black transition-all ${
+                              answers[question.id]?.includes("true")
+                                ? "bg-defaultcolor text-white"
+                                : "bg-gray-200"
+                            }`}
+                          >
+                            T
+                          </div>
+                          <span
+                            className={`transition-all ${
+                              answers[question.id]?.includes("true")
+                                ? "text-defaultcolor"
+                                : "text-black"
+                            }`}
+                          >
+                            True
+                          </span>
+                        </div>
+                        <input
+                          type="radio"
+                          name={`question-${question.id}`}
+                          value="true"
+                          onChange={() =>
+                            handleAnswerChange(question.id, ["true"])
+                          }
+                          checked={answers[question.id]?.includes("true") || false} // Only checked if true is explicitly saved
+                          className={`cursor-pointer focus:ring-1 focus:ring-defaultcolor ${
+                            answers[question.id]?.includes("true")
+                              ? "checked:bg-defaultcolor"
+                              : ""
+                          }`}
+                        />
+                      </label>
+
+                      {/* "False" Option */}
+                      <label
+                        className={`flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-all bg-white hover:bg-yellow-100 ${
+                          answers[question.id]?.includes("false")
+                            ? "border-defaultcolor"
+                            : "border-white"
+                        }`}
+                      >
+                        <div className="flex items-center space-x-3">
+                          <div
+                            className={`flex items-center justify-center w-8 h-8 rounded-full text-black transition-all ${
+                              answers[question.id]?.includes("false")
+                                ? "bg-defaultcolor text-white"
+                                : "bg-gray-200"
+                            }`}
+                          >
+                            F
+                          </div>
+                          <span
+                            className={`transition-all ${
+                              answers[question.id]?.includes("false")
+                                ? "text-defaultcolor"
+                                : "text-black"
+                            }`}
+                          >
+                            False
+                          </span>
+                        </div>
+                        <input
+                          type="radio"
+                          name={`question-${question.id}`}
+                          value="false"
+                          onChange={() =>
+                            handleAnswerChange(question.id, ["false"])
+                          }
+                          checked={answers[question.id]?.includes("false") || false} // Only checked if false is explicitly saved
+                          className={`cursor-pointer focus:ring-1 focus:ring-defaultcolor ${
+                            answers[question.id]?.includes("false")
+                              ? "checked:bg-defaultcolor"
+                              : ""
+                          }`}
+                        />
+                      </label>
+                    </div>
+                  </div>
+                );
+              }
+
+              case "SAQ": {
+                return (
+                  <div className="flex justify-normal bg-[#f6f7f9]">
+                    <div className="bg-defaultcolor p-3">
+                      <h5 className="text-white font-semibold text-3xl">
+                        {questionNumber}
+                      </h5>
+                    </div>
+                    <div className="space-y-4 p-4 w-full">
+                      <p
+                        className="mb-4 bg-white p-3 rounded-lg"
+                        dangerouslySetInnerHTML={{
+                          __html: Array.isArray(question.question)
+                            ? question.question[0]
+                            : question.question,
+                        }}
+                      ></p>
+                      <textarea
+                        className="w-full p-4 rounded-lg border border-gray-300 focus:ring-1 focus:ring-defaultcolor focus:border-defaultcolor"
+                        placeholder="Type your answer here..."
+                        value={answers[question.id]?.[0] || ""}
+                        onChange={(e) =>
+                          handleAnswerChange(question.id, [e.target.value])
+                        }
+                        rows={4}
+                      ></textarea>
+                    </div>
+                  </div>
+                );
+              }
+
+              case "MTF": {
+                return (
+                  <div className="flex justify-normal bg-[#f6f7f9]">
+                    <div className="bg-defaultcolor p-3">
+                      <h5 className="text-white font-semibold text-3xl">
+                        {questionNumber}
+                      </h5>
+                    </div>
+                    <div className="space-y-4 p-4 w-full">
+                      <p className="mb-4 font-medium">Match the following:</p>
+                      {question.options
+                        ?.slice(0, question.options.length / 2)
+                        .map((opt, i) => (
+                          <div
+                            key={i}
+                            className="flex flex-col sm:flex-row sm:space-x-4 mb-4 space-y-2 sm:space-y-0"
+                          >
+                            <p
+                              className="flex-1 p-2 rounded bg-white text-left"
+                              dangerouslySetInnerHTML={{ __html: opt }}
+                            ></p>
+                            <select
+                              className="flex-1 p-2 rounded border border-gray-300 focus:ring-1 focus:ring-defaultcolor focus:border-defaultcolor w-full sm:w-auto appearance-none"
+                              onChange={(e) =>
+                                handleAnswerChange(question.id, [
+                                  opt,
+                                  e.target.value,
+                                ])
+                              }
+                              value={
+                                answers[question.id]?.find(
+                                  (pair) => pair[0] === opt
+                                )?.[1] || ""
+                              }
+                            >
+                              <option value="">Select match</option>
+                              {question.options
+                                ?.slice(question.options.length / 2)
+                                .map((match, j) => (
+                                  <option
+                                    key={j}
+                                    value={match}
+                                    dangerouslySetInnerHTML={{
+                                      __html: match,
+                                    }}
+                                  ></option>
+                                ))}
+                            </select>
+                          </div>
+                        ))}
+                    </div>
+                  </div>
+                );
+              }
+
+              case "ORD": {
+                return (
+                  <div className="flex justify-normal bg-[#f6f7f9]">
+                    <div className="bg-defaultcolor p-3">
+                      <h5 className="text-white font-semibold text-3xl">
+                        {questionNumber}
+                      </h5>
+                    </div>
+                    <div className="space-y-4 p-4 w-full">
+                      <p className="mb-4 font-medium">
+                        Arrange in sequence (Use the arrows to reorder):
+                      </p>
+                      <ul>
+                        {answers[question.id]?.map((option, index) => (
+                          <li
+                            key={index}
+                            className="p-3 bg-white rounded-lg mb-2 flex items-center justify-between"
+                          >
+                            <div
+                              dangerouslySetInnerHTML={{ __html: option }}
+                            ></div>
+                            <div className="flex items-center space-x-2">
+                              <button
+                                className="p-2 bg-gray-300 rounded hover:bg-gray-400"
+                                onClick={() =>
+                                  moveItem(question.id, index, index - 1)
+                                }
+                                disabled={index === 0}
+                              >
+                                ↑
+                              </button>
+                              <button
+                                className="p-2 bg-gray-300 rounded hover:bg-gray-400"
+                                onClick={() =>
+                                  moveItem(question.id, index, index + 1)
+                                }
+                                disabled={
+                                  index ===
+                                  (answers[question.id]?.length || 0) - 1
+                                }
+                              >
+                                ↓
+                              </button>
+                            </div>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                );
+              }
+
+              case "FIB": {
+                const numberOfBlanks = parseInt(question.options?.[0] ?? "0", 10);
+              
+                return (
+                  <div className="flex justify-normal bg-[#f6f7f9]">
+                    <div className="bg-defaultcolor p-3">
+                      <h5 className="text-white font-semibold text-3xl">{questionNumber}</h5>
+                    </div>
+                    <div className="space-y-4 p-4 w-full">
+                      <p
+                        className="mb-4 bg-white p-3 rounded-lg"
+                        dangerouslySetInnerHTML={{
+                          __html: Array.isArray(question.question)
+                            ? question.question[0]
+                            : question.question,
+                        }}
+                      ></p>
+                      {Array.from({ length: numberOfBlanks }).map((_, index) => (
+                        <input
+                          key={index}
+                          type="text"
+                          className="p-3 w-full rounded-lg border border-gray-300 focus:ring-1 focus:ring-defaultcolor focus:border-defaultcolor mb-2"
+                          placeholder={`Answer ${index + 1}`}
+                          value={
+                            Array.isArray(answers[question.id])
+                              ? answers[question.id]?.[index] ?? ""
+                              : "" // Default to an empty string if not initialized
+                          }
+                          onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                            const currentAnswers = Array.isArray(answers[question.id])
+                              ? [...answers[question.id]!]
+                              : Array(numberOfBlanks).fill(""); // Initialize with blank values if null/undefined
+                            currentAnswers[index] = e.target.value; // Update the specific blank's value
+                            handleAnswerChange(question.id, currentAnswers); // Update the answers state
+                          }}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                );
+              }
+              
+
+              case "EMQ": {
+                const mainQuestion = Array.isArray(question.question)
+                  ? question.question[0]
+                  : "";
+                const subQuestions = Array.isArray(question.question)
+                  ? question.question.slice(1)
+                  : [];
+
+                return (
+                  <div className="space-y-4">
+                    {/* Display Main Question */}
+                    <div className="bg-white rounded-lg mb-4 p-4">
+                      <p
+                        className="font-semibold"
+                        dangerouslySetInnerHTML={{ __html: mainQuestion }}
+                      ></p>
+                    </div>
+
+                    {/* Display each Sub-question with layout and number */}
+                    {subQuestions.map((subQuestion, subIndex) => {
+                      const adjustedQuestionNumber =
+                        baseQuestionNumber + subIndex + 1;
+
+                      return (
+                        <div
+                          key={subIndex}
+                          className="flex justify-normal bg-[#f6f7f9] mb-6"
+                        >
+                          <div className="bg-defaultcolor p-3">
+                            <h5 className="text-white font-semibold text-3xl">
+                              {adjustedQuestionNumber}
+                            </h5>
+                          </div>
+                          <div className="space-y-4 p-4 w-full">
+                            <div className="text-lg bg-white p-3 rounded-sm">
+                              <span
+                                dangerouslySetInnerHTML={{ __html: subQuestion }}
+                                className="font-normal"
+                              ></span>
+                            </div>
+
+                            {/* Dropdown for each Sub-question */}
+                            <select
+                              className="p-3 rounded-lg border border-gray-300 w-full focus:ring-1 focus:ring-defaultcolor"
+                              onChange={(e) =>
+                                handleAnswerChange(
+                                  question.id,
+                                  [e.target.value],
+                                  subIndex
+                                )
+                              }
+                              value={answers[question.id]?.[subIndex] || ""}
+                            >
+                              <option value="">Select an answer</option>
+                              {question.options?.map((option, optionIndex) => (
                                 <option
-                                  key={j}
-                                  value={match}
+                                  key={optionIndex}
+                                  value={option}
                                   dangerouslySetInnerHTML={{
-                                    __html: match,
+                                    __html: option,
                                   }}
                                 ></option>
                               ))}
-                          </select>
-                        </div>
-                      ))}
-                  </div>
-                </div>
-              );
-            }
-
-            case "ORD": {
-              return (
-                <div className="flex justify-normal bg-[#f6f7f9]">
-                  <div className="bg-defaultcolor p-3">
-                    <h5 className="text-white font-semibold text-3xl">
-                      {questionNumber}
-                    </h5>
-                  </div>
-                  <div className="space-y-4 p-4 w-full">
-                    <p className="mb-4 font-medium">
-                      Arrange in sequence (Use the arrows to reorder):
-                    </p>
-                    <ul>
-                      {answers[question.id]?.map((option, index) => (
-                        <li
-                          key={index}
-                          className="p-3 bg-white rounded-lg mb-2 flex items-center justify-between"
-                        >
-                          <div
-                            dangerouslySetInnerHTML={{ __html: option }}
-                          ></div>
-                          <div className="flex items-center space-x-2">
-                            <button
-                              className="p-2 bg-gray-300 rounded hover:bg-gray-400"
-                              onClick={() =>
-                                moveItem(question.id, index, index - 1)
-                              }
-                              disabled={index === 0}
-                            >
-                              ↑
-                            </button>
-                            <button
-                              className="p-2 bg-gray-300 rounded hover:bg-gray-400"
-                              onClick={() =>
-                                moveItem(question.id, index, index + 1)
-                              }
-                              disabled={
-                                index ===
-                                (answers[question.id]?.length || 0) - 1
-                              }
-                            >
-                              ↓
-                            </button>
+                            </select>
                           </div>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
-              );
-            }
-
-            case "FIB": {
-              const numberOfBlanks = parseInt(question.options?.[0] ?? "0", 10);
-            
-              return (
-                <div className="flex justify-normal bg-[#f6f7f9]">
-                  <div className="bg-defaultcolor p-3">
-                    <h5 className="text-white font-semibold text-3xl">{questionNumber}</h5>
-                  </div>
-                  <div className="space-y-4 p-4 w-full">
-                    <p
-                      className="mb-4 bg-white p-3 rounded-lg"
-                      dangerouslySetInnerHTML={{
-                        __html: Array.isArray(question.question)
-                          ? question.question[0]
-                          : question.question,
-                      }}
-                    ></p>
-                    {Array.from({ length: numberOfBlanks }).map((_, index) => (
-                      <input
-                        key={index}
-                        type="text"
-                        className="p-3 w-full rounded-lg border border-gray-300 focus:ring-1 focus:ring-defaultcolor focus:border-defaultcolor mb-2"
-                        placeholder={`Answer ${index + 1}`}
-                        value={
-                          Array.isArray(answers[question.id])
-                            ? answers[question.id]?.[index] ?? ""
-                            : "" // Default to an empty string if not initialized
-                        }
-                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                          const currentAnswers = Array.isArray(answers[question.id])
-                            ? [...answers[question.id]!]
-                            : Array(numberOfBlanks).fill(""); // Initialize with blank values if null/undefined
-                          currentAnswers[index] = e.target.value; // Update the specific blank's value
-                          handleAnswerChange(question.id, currentAnswers); // Update the answers state
-                        }}
-                      />
-                    ))}
-                  </div>
-                </div>
-              );
-            }
-            
-  
-            case "EMQ": {
-              const mainQuestion = Array.isArray(question.question)
-                ? question.question[0]
-                : "";
-              const subQuestions = Array.isArray(question.question)
-                ? question.question.slice(1)
-                : [];
-
-              return (
-                <div className="space-y-4">
-                  {/* Display Main Question */}
-                  <div className="bg-white rounded-lg mb-4 p-4">
-                    <p
-                      className="font-semibold"
-                      dangerouslySetInnerHTML={{ __html: mainQuestion }}
-                    ></p>
-                  </div>
-
-                  {/* Display each Sub-question with layout and number */}
-                  {subQuestions.map((subQuestion, subIndex) => {
-                    const adjustedQuestionNumber =
-                      baseQuestionNumber + subIndex + 1;
-
-                    return (
-                      <div
-                        key={subIndex}
-                        className="flex justify-normal bg-[#f6f7f9] mb-6"
-                      >
-                        <div className="bg-defaultcolor p-3">
-                          <h5 className="text-white font-semibold text-3xl">
-                            {adjustedQuestionNumber}
-                          </h5>
                         </div>
-                        <div className="space-y-4 p-4 w-full">
-                          <div className="text-lg bg-white p-3 rounded-sm">
-                            <span
-                              dangerouslySetInnerHTML={{ __html: subQuestion }}
-                              className="font-normal"
-                            ></span>
-                          </div>
+                      );
+                    })}
+                  </div>
+                );
+              }
 
-                          {/* Dropdown for each Sub-question */}
-                          <select
-                            className="p-3 rounded-lg border border-gray-300 w-full focus:ring-1 focus:ring-defaultcolor"
-                            onChange={(e) =>
-                              handleAnswerChange(
-                                question.id,
-                                [e.target.value],
-                                subIndex
-                              )
-                            }
-                            value={answers[question.id]?.[subIndex] || ""}
-                          >
-                            <option value="">Select an answer</option>
-                            {question.options?.map((option, optionIndex) => (
-                              <option
-                                key={optionIndex}
-                                value={option}
-                                dangerouslySetInnerHTML={{
-                                  __html: option,
-                                }}
-                              ></option>
-                            ))}
-                          </select>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              );
+              default:
+                return <div>Unknown question type</div>;
             }
+          })()}
+        </div>
+      );
+    };
 
-            default:
-              return <div>Unknown question type</div>;
-          }
-        })()}
-      </div>
-    );
-  };
+    if (loading) return <Loader />;
 
-  if (loading) return <Loader />;
+    if (!examData || !examData.questions)
+      return <NoData message="No Exam data available" />;
 
-  if (!examData || !examData.questions)
-    return <NoData message="No Exam data available" />;
+    return (
+      <div className="dashboard-page flex flex-col md:flex-row gap-6">
+        {/* Main Exam Content */}
+        <div className="flex-1 lg:p-6 bg-white rounded-lg shadow-sm p-4">
+          {!submitted ? (
+            <>
+              <h1 className="text-2xl border p-3 font-semibold mb-5 flex items-center gap-2">
+                {examData.title}
+              </h1>
 
-  return (
-    <div className="dashboard-page flex flex-col md:flex-row gap-6">
-      {/* Main Exam Content */}
-      <div className="flex-1 lg:p-6 bg-white rounded-lg shadow-sm p-4">
-        {!submitted ? (
-          <>
-            <h1 className="text-2xl border p-3 font-semibold mb-5 flex items-center gap-2">
-              {examData.title}
-            </h1>
-
-            <div className="render_questions_view">
-              {renderQuestion(examData.questions[currentQuestionIndex])}
-            </div>
-
-            {/* Navigation Buttons */}
-            <div className="flex flex-wrap justify-between mt-6 items-center">
-              
-                <div className="flex space-x-4">
-                {/* Clear Answer Button with Tooltip */}
-                <Tooltip content="Clear Answer" placement="top">
-                  <button
-                    className="flex items-center justify-center w-16 h-12 rounded-lg focus:outline-none border border-gray-600 text-gray-600"
-                    onClick={clearAnswer}
-                  >
-                    <FaRegWindowClose size={20} />
-                  </button>
-                </Tooltip>
-
-                {/* "Not Reviewed" Button with Tooltip */}
-                <Tooltip content="Mark as Not Reviewed" placement="top">
-                  <button
-                    className={`flex items-center justify-center w-16 h-12 rounded-lg border focus:outline-none ${
-                      notReviewedQuestions[examData.questions[currentQuestionIndex].id]
-                        ? "bg-[#C9BC0F] text-white"
-                        : "bg-gray-400 text-white"
-                    }`}
-                    onClick={() =>
-                      toggleNotReviewed(examData.questions[currentQuestionIndex].id)
-                    }
-                  >
-                    <MdOutlineBookmarks size={20} />
-                  </button>
-                </Tooltip>  
+              <div className="render_questions_view">
+                {renderQuestion(examData.questions[currentQuestionIndex])}
               </div>
 
-              {/* Second set of buttons */}
+              {/* Navigation Buttons */}
+              <div className="flex flex-wrap justify-between mt-6 items-center">
+                
+                  <div className="flex space-x-4">
+                  {/* Clear Answer Button with Tooltip */}
+                  <Tooltip content="Clear Answer" placement="top">
+                    <button
+                      className="flex items-center justify-center w-16 h-12 rounded-lg focus:outline-none border border-gray-600 text-gray-600"
+                      onClick={clearAnswer}
+                    >
+                      <FaRegWindowClose size={20} />
+                    </button>
+                  </Tooltip>
 
-              <button
-                className="flex items-center justify-center w-32 h-12 bg-white text-defaultcolor border border-defaultcolor rounded-lg disabled:opacity-50"
-                disabled={currentQuestionIndex === 0}
-                onClick={handlePreviousQuestion}
-              >
-                <FaArrowLeft className="inline mr-2" /> Previous
-              </button>
+                  {/* "Not Reviewed" Button with Tooltip */}
+                  <Tooltip content="Mark as Not Reviewed" placement="top">
+                    <button
+                      className={`flex items-center justify-center w-16 h-12 rounded-lg border focus:outline-none ${
+                        notReviewedQuestions[examData.questions[currentQuestionIndex].id]
+                          ? "bg-[#C9BC0F] text-white"
+                          : "bg-gray-400 text-white"
+                      }`}
+                      onClick={() =>
+                        toggleNotReviewed(examData.questions[currentQuestionIndex].id)
+                      }
+                    >
+                      <MdOutlineBookmarks size={20} />
+                    </button>
+                  </Tooltip>  
+                </div>
 
-              {currentQuestionIndex < examData.questions.length - 1 ? (
+                {/* Second set of buttons */}
+
                 <button
-                  className="flex items-center justify-center w-32 h-12 bg-defaultcolor text-white rounded-lg hover:bg-defaultcolor-dark transition-colors"
-                  onClick={handleNextQuestion}
+                  className="flex items-center justify-center w-32 h-12 bg-white text-defaultcolor border border-defaultcolor rounded-lg disabled:opacity-50"
+                  disabled={currentQuestionIndex === 0}
+                  onClick={handlePreviousQuestion}
                 >
-                  Next <FaArrowRight className="inline ml-2" />
+                  <FaArrowLeft className="inline mr-2" /> Previous
                 </button>
-              ) : examData?.finish_button === "enable" ? (
-                <button
-                  className="flex items-center justify-center w-32 h-12 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
-                  onClick={handleFinishClick}
-                >
-                  Submit Exam
-                </button>
-              ) : null}
-            </div>
-          </>
-        ) : (
-          <div className="text-center">
-            <FaCheckCircle
-              className="inline text-green-600 mr-2 mb-3"
-              size={42}
-            />
-            <h1 className="text-3xl font-bold mb-4 text-green-600">
-              Exam Submitted
-            </h1>
-            <p className="text-lg text-gray-600">
-              Thank you for completing the exam. Your answers have been
-              submitted successfully!
-            </p>
-            <div>
-              <Link
-                href={`/dashboard/exam-result/${uuid}`}
-                className="mt-4 text-center w-full bg-defaultcolor text-white font-semibold py-2 px-4 rounded hover:bg-defaultcolor-dark transition-colors flex justify-center items-center"
-              >
-                Go to Result
-                <AiOutlineArrowRight className="ml-2" />
-              </Link>
-            </div>
-          </div>
-        )}
-      </div>
-      {!submitted && timeLeft > 0 && (
-        <div className="w-full md:w-1/4 bg-white shadow-sm rounded-lg">
-          <div className="p-4 flex items-center space-x-3">
-            <FaCircle className="text-green-400" />
-            <p>
-              {getAnsweredCount()}/{getTotalQuestionCount()} answered
-            </p>
-          </div>
 
-          <div className="px-4 py-6  bg-gray-100  border-y  border-gray-200">
-            <div className="h-3 w-full bg-gray-200 rounded-full relative">
-              <div
-                className="h-full bg-quaternary rounded-full"
-                style={{
-                  width: `${
+                {currentQuestionIndex < examData.questions.length - 1 ? (
+                  <button
+                    className="flex items-center justify-center w-32 h-12 bg-defaultcolor text-white rounded-lg hover:bg-defaultcolor-dark transition-colors"
+                    onClick={handleNextQuestion}
+                  >
+                    Next <FaArrowRight className="inline ml-2" />
+                  </button>
+                ) : examData?.finish_button === "enable" ? (
+                  <button
+                    className="flex items-center justify-center w-32 h-12 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
+                    onClick={handleFinishClick}
+                  >
+                    Submit Exam
+                  </button>
+                ) : null}
+              </div>
+            </>
+          ) : (
+            <div className="text-center">
+              <FaCheckCircle
+                className="inline text-green-600 mr-2 mb-3"
+                size={42}
+              />
+              <h1 className="text-3xl font-bold mb-4 text-green-600">
+                Exam Submitted
+              </h1>
+              <p className="text-lg text-gray-600">
+                Thank you for completing the exam. Your answers have been
+                submitted successfully!
+              </p>
+              <div>
+                <Link
+                  href={`/dashboard/exam-result/${uuid}`}
+                  className="mt-4 text-center w-full bg-defaultcolor text-white font-semibold py-2 px-4 rounded hover:bg-defaultcolor-dark transition-colors flex justify-center items-center"
+                >
+                  Go to Result
+                  <AiOutlineArrowRight className="ml-2" />
+                </Link>
+              </div>
+            </div>
+          )}
+        </div>
+        {!submitted && timeLeft > 0 && (
+          <div className="w-full md:w-1/4 bg-white shadow-sm rounded-lg">
+            <div className="p-4 flex items-center space-x-3">
+              <FaCircle className="text-green-400" />
+              <p>
+                {getAnsweredCount()}/{getTotalQuestionCount()} answered
+              </p>
+            </div>
+
+            <div className="px-4 py-6  bg-gray-100  border-y  border-gray-200">
+              <div className="h-3 w-full bg-gray-200 rounded-full relative">
+                <div
+                  className="h-full bg-quaternary rounded-full"
+                  style={{
+                    width: `${
+                      (getAnsweredCount() / getTotalQuestionCount()) * 100
+                    }%`,
+                  }}
+                ></div>
+                <span
+                  className="absolute top-[-8px] text-white text-sm bg-quaternary border border-white px-3 py-0.5 rounded-full"
+                  style={{
+                    left: `${
+                      (getAnsweredCount() / getTotalQuestionCount()) * 100 - 2
+                    }%`,
+                  }}
+                >
+                  {Math.round(
                     (getAnsweredCount() / getTotalQuestionCount()) * 100
-                  }%`,
-                }}
-              ></div>
-              <span
-                className="absolute top-[-8px] text-white text-sm bg-quaternary border border-white px-3 py-0.5 rounded-full"
-                style={{
-                  left: `${
-                    (getAnsweredCount() / getTotalQuestionCount()) * 100 - 2
-                  }%`,
-                }}
-              >
-                {Math.round(
-                  (getAnsweredCount() / getTotalQuestionCount()) * 100
-                )}
-                %
-              </span>
+                  )}
+                  %
+                </span>
+              </div>
             </div>
-          </div>
 
-          {/* Time Remaining */}
-          <div className="text-center flex space-x-3 items-center bg-[#ffc300] p-4 ">
-            <FaHourglass className="text-black" size={24} />
-            <p className="text-3xl font-bold text-black">
-              {formatTimeLeft(timeLeft)}
-            </p>
-          </div>
+            {/* Time Remaining */}
+            <div className="text-center flex space-x-3 items-center bg-[#ffc300] p-4 ">
+              <FaHourglass className="text-black" size={24} />
+              <p className="text-3xl font-bold text-black">
+                {formatTimeLeft(timeLeft)}
+              </p>
+            </div>
 
-          <div className="h-6 bg-gray-100  border-y  border-gray-200"></div>
+            <div className="h-6 bg-gray-100  border-y  border-gray-200"></div>
 
-          <div className="p-4">
-            {/* Question Navigation Grid */}
-            {examData.question_view === "enable" ? (
-              <div className="flex items-center justify-center flex-wrap gap-3 text-center">
-                {examData.questions.reduce(
-                  (acc: JSX.Element[], question, questionIndex) => {
-                    const questionId = question.id;
+            <div className="p-4">
+              {/* Question Navigation Grid */}
+              {examData.question_view === "enable" ? (
+                <div className="flex items-center justify-center flex-wrap gap-3 text-center">
+                  {examData.questions.reduce(
+                    (acc: JSX.Element[], question, questionIndex) => {
+                      const questionId = question.id;
 
-                    // Check if question has been answered based on its type
-                    const isAnswered = (() => {
-                      if (question.type === "ORD") {
-                        const userAnswer = answers[questionId];
-                        const initialOptions =
-                          initialShuffledOptions[questionId];
-                        if (!userAnswer || !initialOptions) return false;
-                        const normalizeArray = (arr: string[]) =>
-                          arr.map((str) => str.replace(/<[^>]*>/g, "").trim());
-                        const userNormalized = normalizeArray(userAnswer);
-                        const initialNormalized =
-                          normalizeArray(initialOptions);
-                        return !arraysEqual(userNormalized, initialNormalized);
+                      // Check if question has been answered based on its type
+                      const isAnswered = (() => {
+                        if (question.type === "ORD") {
+                          const userAnswer = answers[questionId];
+                          const initialOptions =
+                            initialShuffledOptions[questionId];
+                          if (!userAnswer || !initialOptions) return false;
+                          const normalizeArray = (arr: string[]) =>
+                            arr.map((str) => str.replace(/<[^>]*>/g, "").trim());
+                          const userNormalized = normalizeArray(userAnswer);
+                          const initialNormalized =
+                            normalizeArray(initialOptions);
+                          return !arraysEqual(userNormalized, initialNormalized);
+                        } else {
+                          return (
+                            Array.isArray(answers[questionId]) &&
+                            answers[questionId]?.some(
+                              (ans) => ans !== null && ans !== ""
+                            )
+                          );
+                        }
+                      })();
+
+                      // Handle EMQ questions with sub-questions
+                      if (
+                        question.type === "EMQ" &&
+                        Array.isArray(question.question)
+                      ) {
+                        const subQuestions = question.question.slice(1); // Exclude main question text
+
+                        subQuestions.forEach((_, subIndex) => {
+                          const adjustedIndex = acc.length + 1;
+                          const isActive =
+                            currentQuestionIndex === questionIndex &&
+                            currentSubIndex === subIndex;
+                          const isAnswered =
+                            !!answers[questionId]?.[subIndex] &&
+                            answers[questionId][subIndex] !== "";
+                          const isNotReviewed =
+                            !!notReviewedQuestions[questionId];
+                          const isVisited =
+                            visitedQuestionIndices.has(adjustedIndex);
+
+                          // Determine colors based on status
+                          let borderColor = "border-[#989898]";
+                          let textColor = "text-[#989898]";
+                          let bottomDivColor = "bg-[#989898]";
+
+                          if (isActive) {
+                            borderColor = "border-defaultcolor";
+                            textColor = "text-defaultcolor";
+                            bottomDivColor = "bg-defaultcolor";
+                          } else if (isNotReviewed) {
+                            borderColor = "border-[#C9BC0F]";
+                            textColor = "text-[#C9BC0F]";
+                            bottomDivColor = "bg-[#C9BC0F]";
+                          } else if (isAnswered) {
+                            borderColor = "border-[#76b51b]";
+                            textColor = "text-[#76b51b]";
+                            bottomDivColor = "bg-[#76b51b]";
+                          } else if (isVisited) {
+                            borderColor = "border-[#E74444]";
+                            textColor = "text-[#E74444]";
+                            bottomDivColor = "bg-[#E74444]";
+                          }
+
+                          acc.push(
+                            <div
+                              key={`${questionIndex}-${subIndex}`}
+                              className={`relative flex items-center justify-center text-lg w-12 h-12 border ${borderColor} ${textColor} transition duration-200 bg-white`}
+                              onClick={() => {
+                                setCurrentQuestionIndex(questionIndex); // Set the question index
+                                setCurrentSubIndex(subIndex); // Set the sub-question index
+                              }}
+                              style={{ cursor: "pointer" }}
+                            >
+                              {adjustedIndex}
+                              <div
+                                className={`absolute inset-x-0 bottom-0 h-2 ${bottomDivColor}`}
+                              />
+                            </div>
+                          );
+                        });
                       } else {
-                        return (
+                        // For non-EMQ questions, add a single navigation item
+                        const adjustedIndex = acc.length + 1;
+                        const isActive = currentQuestionIndex === questionIndex;
+                        const isNotReviewed = !!notReviewedQuestions[questionId];
+                        const isAnswered =
                           Array.isArray(answers[questionId]) &&
                           answers[questionId]?.some(
                             (ans) => ans !== null && ans !== ""
-                          )
-                        );
-                      }
-                    })();
-
-                    // Handle EMQ questions with sub-questions
-                    if (
-                      question.type === "EMQ" &&
-                      Array.isArray(question.question)
-                    ) {
-                      const subQuestions = question.question.slice(1); // Exclude main question text
-
-                      subQuestions.forEach((_, subIndex) => {
-                        const adjustedIndex = acc.length + 1;
-                        const isActive =
-                          currentQuestionIndex === questionIndex &&
-                          currentSubIndex === subIndex;
-                        const isAnswered =
-                          !!answers[questionId]?.[subIndex] &&
-                          answers[questionId][subIndex] !== "";
-                        const isNotReviewed =
-                          !!notReviewedQuestions[questionId];
+                          );
                         const isVisited =
                           visitedQuestionIndices.has(adjustedIndex);
 
@@ -1727,11 +1833,11 @@ const initializeAnswers = (fetchExamData: ExamData) => {
 
                         acc.push(
                           <div
-                            key={`${questionIndex}-${subIndex}`}
+                            key={questionId} // Use questionId as key
                             className={`relative flex items-center justify-center text-lg w-12 h-12 border ${borderColor} ${textColor} transition duration-200 bg-white`}
                             onClick={() => {
-                              setCurrentQuestionIndex(questionIndex); // Set the question index
-                              setCurrentSubIndex(subIndex); // Set the sub-question index
+                              setCurrentQuestionIndex(questionIndex); // Maintain question index for display
+                              setCurrentSubIndex(null); // Reset sub-index for non-EMQ questions
                             }}
                             style={{ cursor: "pointer" }}
                           >
@@ -1741,85 +1847,85 @@ const initializeAnswers = (fetchExamData: ExamData) => {
                             />
                           </div>
                         );
-                      });
-                    } else {
-                      // For non-EMQ questions, add a single navigation item
-                      const adjustedIndex = acc.length + 1;
-                      const isActive = currentQuestionIndex === questionIndex;
-                      const isNotReviewed = !!notReviewedQuestions[questionId];
-                      const isVisited =
-                        visitedQuestionIndices.has(adjustedIndex);
-
-                      // Determine colors based on status
-                      let borderColor = "border-[#989898]";
-                      let textColor = "text-[#989898]";
-                      let bottomDivColor = "bg-[#989898]";
-
-                      if (isActive) {
-                        borderColor = "border-defaultcolor";
-                        textColor = "text-defaultcolor";
-                        bottomDivColor = "bg-defaultcolor";
-                      } else if (isNotReviewed) {
-                        borderColor = "border-[#C9BC0F]";
-                        textColor = "text-[#C9BC0F]";
-                        bottomDivColor = "bg-[#C9BC0F]";
-                      } else if (isAnswered) {
-                        borderColor = "border-[#76b51b]";
-                        textColor = "text-[#76b51b]";
-                        bottomDivColor = "bg-[#76b51b]";
-                      } else if (isVisited) {
-                        borderColor = "border-[#E74444]";
-                        textColor = "text-[#E74444]";
-                        bottomDivColor = "bg-[#E74444]";
                       }
 
-                      acc.push(
-                        <div
-                          key={questionId} // Use questionId as key
-                          className={`relative flex items-center justify-center text-lg w-12 h-12 border ${borderColor} ${textColor} transition duration-200 bg-white`}
-                          onClick={() => {
-                            setCurrentQuestionIndex(questionIndex); // Maintain question index for display
-                            setCurrentSubIndex(null); // Reset sub-index for non-EMQ questions
-                          }}
-                          style={{ cursor: "pointer" }}
-                        >
-                          {adjustedIndex}
-                          <div
-                            className={`absolute inset-x-0 bottom-0 h-2 ${bottomDivColor}`}
-                          />
-                        </div>
-                      );
-                    }
+                      return acc;
+                    },
+                    []
+                  )}
+                </div>
+              ) : (
+                // The else block remains unchanged
+                <div className="flex items-center justify-center flex-wrap gap-3 text-center">
+                  {examData.questions.reduce(
+                    (acc: JSX.Element[], question, questionIndex) => {
+                      const questionId = question.id;
 
-                    return acc;
-                  },
-                  []
-                )}
-              </div>
-            ) : (
-              // The else block remains unchanged
-              <div className="flex items-center justify-center flex-wrap gap-3 text-center">
-                {examData.questions.reduce(
-                  (acc: JSX.Element[], question, questionIndex) => {
-                    const questionId = question.id;
+                      // Handle EMQ questions with sub-questions
+                      if (
+                        question.type === "EMQ" &&
+                        Array.isArray(question.question)
+                      ) {
+                        const subQuestions = question.question.slice(1); // Exclude main question text
 
-                    // Handle EMQ questions with sub-questions
-                    if (
-                      question.type === "EMQ" &&
-                      Array.isArray(question.question)
-                    ) {
-                      const subQuestions = question.question.slice(1); // Exclude main question text
+                        subQuestions.forEach((_, subIndex) => {
+                          const adjustedIndex = acc.length + 1;
+                          const isActive =
+                            currentQuestionIndex === questionIndex &&
+                            currentSubIndex === subIndex;
+                          const isAnswered =
+                            !!answers[questionId]?.[subIndex] &&
+                            answers[questionId][subIndex] !== "";
+                          const isNotReviewed =
+                            !!notReviewedQuestions[questionId];
+                          const isVisited =
+                            visitedQuestionIndices.has(adjustedIndex);
 
-                      subQuestions.forEach((_, subIndex) => {
+                          // Determine colors based on status
+                          let borderColor = "border-[#989898]";
+                          let textColor = "text-[#989898]";
+                          let bottomDivColor = "bg-[#989898]";
+
+                          if (isActive) {
+                            borderColor = "border-defaultcolor";
+                            textColor = "text-defaultcolor";
+                            bottomDivColor = "bg-defaultcolor";
+                          } else if (isNotReviewed) {
+                            borderColor = "border-[#C9BC0F]";
+                            textColor = "text-[#C9BC0F]";
+                            bottomDivColor = "bg-[#C9BC0F]";
+                          } else if (isAnswered) {
+                            borderColor = "border-[#76b51b]";
+                            textColor = "text-[#76b51b]";
+                            bottomDivColor = "bg-[#76b51b]";
+                          } else if (isVisited) {
+                            borderColor = "border-[#E74444]";
+                            textColor = "text-[#E74444]";
+                            bottomDivColor = "bg-[#E74444]";
+                          }
+
+                          acc.push(
+                            <div
+                              key={`${questionIndex}-${subIndex}`}
+                              className={`relative flex items-center justify-center text-lg w-12 h-12 border ${borderColor} ${textColor} transition duration-200 bg-white cursor-not-allowed`}
+                            >
+                              {adjustedIndex}
+                              <div
+                                className={`absolute inset-x-0 bottom-0 h-2 ${bottomDivColor}`}
+                              />
+                            </div>
+                          );
+                        });
+                      } else {
+                        // For non-EMQ questions, add a single navigation item
                         const adjustedIndex = acc.length + 1;
-                        const isActive =
-                          currentQuestionIndex === questionIndex &&
-                          currentSubIndex === subIndex;
+                        const isActive = currentQuestionIndex === questionIndex;
                         const isAnswered =
-                          !!answers[questionId]?.[subIndex] &&
-                          answers[questionId][subIndex] !== "";
-                        const isNotReviewed =
-                          !!notReviewedQuestions[questionId];
+                          Array.isArray(answers[questionId]) &&
+                          answers[questionId]?.some(
+                            (ans) => ans !== null && ans !== ""
+                          );
+                        const isNotReviewed = !!notReviewedQuestions[questionId];
                         const isVisited =
                           visitedQuestionIndices.has(adjustedIndex);
 
@@ -1848,7 +1954,7 @@ const initializeAnswers = (fetchExamData: ExamData) => {
 
                         acc.push(
                           <div
-                            key={`${questionIndex}-${subIndex}`}
+                            key={questionIndex}
                             className={`relative flex items-center justify-center text-lg w-12 h-12 border ${borderColor} ${textColor} transition duration-200 bg-white cursor-not-allowed`}
                           >
                             {adjustedIndex}
@@ -1857,101 +1963,53 @@ const initializeAnswers = (fetchExamData: ExamData) => {
                             />
                           </div>
                         );
-                      });
-                    } else {
-                      // For non-EMQ questions, add a single navigation item
-                      const adjustedIndex = acc.length + 1;
-                      const isActive = currentQuestionIndex === questionIndex;
-                      const isAnswered =
-                        Array.isArray(answers[questionId]) &&
-                        answers[questionId]?.some(
-                          (ans) => ans !== null && ans !== ""
-                        );
-                      const isNotReviewed = !!notReviewedQuestions[questionId];
-                      const isVisited =
-                        visitedQuestionIndices.has(adjustedIndex);
-
-                      // Determine colors based on status
-                      let borderColor = "border-[#989898]";
-                      let textColor = "text-[#989898]";
-                      let bottomDivColor = "bg-[#989898]";
-
-                      if (isActive) {
-                        borderColor = "border-defaultcolor";
-                        textColor = "text-defaultcolor";
-                        bottomDivColor = "bg-defaultcolor";
-                      } else if (isNotReviewed) {
-                        borderColor = "border-[#C9BC0F]";
-                        textColor = "text-[#C9BC0F]";
-                        bottomDivColor = "bg-[#C9BC0F]";
-                      } else if (isAnswered) {
-                        borderColor = "border-[#76b51b]";
-                        textColor = "text-[#76b51b]";
-                        bottomDivColor = "bg-[#76b51b]";
-                      } else if (isVisited) {
-                        borderColor = "border-[#E74444]";
-                        textColor = "text-[#E74444]";
-                        bottomDivColor = "bg-[#E74444]";
                       }
 
-                      acc.push(
-                        <div
-                          key={questionIndex}
-                          className={`relative flex items-center justify-center text-lg w-12 h-12 border ${borderColor} ${textColor} transition duration-200 bg-white cursor-not-allowed`}
-                        >
-                          {adjustedIndex}
-                          <div
-                            className={`absolute inset-x-0 bottom-0 h-2 ${bottomDivColor}`}
-                          />
-                        </div>
-                      );
-                    }
-
-                    return acc;
-                  },
-                  []
-                )}
-              </div>
-            )}
-          </div>
-
-          <div className="h-6 bg-gray-100  border-y  border-gray-200"></div>
-
-          {/* Legend */}
-          <div className="flex justify-between items-center flex-wrap text-center p-4">
-            <div className="flex items-center w-1/2 space-x-2">
-              <div className="w-4 h-4 bg-[#76b51b]"></div>
-              <span>Answered</span>
-            </div>
-            <div className="flex items-center w-1/2 space-x-2">
-              <div className="w-4 h-4 bg-[#C9BC0F]"></div>
-              <span>Under Review</span>
-            </div>
-            <div className="flex items-center w-1/2 space-x-2">
-              <div className="w-4 h-4 bg-[#E74444]"></div>
-              <span>Unanswered</span>
-            </div>
-            <div className="flex items-center w-1/2 space-x-2">
-              <div className="w-4 h-4 bg-[#989898]"></div>
-              <span>Not Visited</span>
-            </div>
-          </div>
-
-          {/* Exam Instructions */}
-          <div className="p-4 text-center">
-              {examData?.finish_button === "enable" && (
-                <button
-                  className="bg-[#E74444] block text-white w-full px-4 py-2 rounded-lg hover:bg-green-600 transition-colors"
-                  onClick={handleFinishClick}
-                >
-                  Finish Exam
-                </button>
+                      return acc;
+                    },
+                    []
+                  )}
+                </div>
               )}
             </div>
 
+            <div className="h-6 bg-gray-100  border-y  border-gray-200"></div>
+
+            {/* Legend */}
+            <div className="flex justify-between items-center flex-wrap text-center p-4">
+              <div className="flex items-center w-1/2 space-x-2">
+                <div className="w-4 h-4 bg-[#76b51b]"></div>
+                <span>Answered</span>
+              </div>
+              <div className="flex items-center w-1/2 space-x-2">
+                <div className="w-4 h-4 bg-[#C9BC0F]"></div>
+                <span>Under Review</span>
+              </div>
+              <div className="flex items-center w-1/2 space-x-2">
+                <div className="w-4 h-4 bg-[#E74444]"></div>
+                <span>Unanswered</span>
+              </div>
+              <div className="flex items-center w-1/2 space-x-2">
+                <div className="w-4 h-4 bg-[#989898]"></div>
+                <span>Not Visited</span>
+              </div>
+            </div>
+
+            {/* Exam Instructions */}
+            <div className="p-4 text-center">
+                {examData?.finish_button === "enable" && (
+                  <button
+                    className="bg-[#E74444] block text-white w-full px-4 py-2 rounded-lg hover:bg-green-600 transition-colors"
+                    onClick={handleFinishClick}
+                  >
+                    Finish Exam
+                  </button>
+                )}
+              </div>
+
+            </div>
+          )}
+          {showModal && <ConfirmationModal />}{" "}
         </div>
-      )}
-      {showModal && <ConfirmationModal />}{" "}
-    </div>
-  );
+    );
 }

@@ -134,7 +134,7 @@ const BannerSection: FC = () => {
                   className="w-[160px] sm:w-[200px] lg:w-[260px] h-auto object-contain mx-auto"
                 />
                 <p className="text-tertiary text-md sm:text-lg lg:text-3xl font-bold">
-                  In 2 min...
+                  In 1 minute
                 </p>
               </div>
             </>
