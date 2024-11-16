@@ -4,7 +4,6 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import NoData from "../Common/NoData";
-import { loadStripe } from "@stripe/stripe-js";
 import PricingCard from "./pricingcard";
 import Cookies from "js-cookie";
 
@@ -29,49 +28,57 @@ interface PricingApiResponse {
   status: boolean;
   data: {
     pricing: PricingPlan[];
-    customer_id: string; // Include customer_id in the response
+    customer_id: string | null; // Include customer_id in the response
   };
 }
 
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
-
 const Pricing = () => {
-  const [category, setCategory] = useState<string>(""); 
-  const [pricingPlans, setPricingPlans] = useState<PricingPlan[]>([]); 
-  const [categories, setCategories] = useState<string[]>([]); 
-  const [customerId, setCustomerId] = useState<string>(""); // New state for customer_id
-  const [loading, setLoading] = useState<boolean>(true); 
+  const [category, setCategory] = useState<string>("");
+  const [pricingPlans, setPricingPlans] = useState<PricingPlan[]>([]);
+  const [categories, setCategories] = useState<string[]>([]);
+  const [customerId, setCustomerId] = useState<string | null>(null); // State for customer_id
+  const [loading, setLoading] = useState<boolean>(true);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false); // New state for authentication
 
   useEffect(() => {
     const fetchPricingPlans = async () => {
       try {
+        const jwtToken = Cookies.get("jwt");
+        if (jwtToken) {
+          setIsAuthenticated(true);
+        } else {
+          setIsAuthenticated(false);
+        }
+
         const response = await axios.get<PricingApiResponse>(`${process.env.NEXT_PUBLIC_API_URL}/pricing`, {
           headers: {
-            Authorization: `Bearer ${Cookies.get("jwt")}`,
+            Authorization: `Bearer ${jwtToken}`,
           },
         });
 
-        const plans = response.data.data.pricing.map((plan) => ({
-          ...plan,
-          features:
-            typeof plan.features === "string"
-              ? JSON.parse(plan.features)
-              : Array.isArray(plan.features)
-              ? plan.features
-              : [], 
-          popular: !!plan.popular,
-        }));
+        if (response.data.status) {
+          const plans = response.data.data.pricing.map((plan) => ({
+            ...plan,
+            features:
+              typeof plan.features === "string"
+                ? JSON.parse(plan.features)
+                : Array.isArray(plan.features)
+                ? plan.features
+                : [],
+            popular: !!plan.popular,
+          }));
 
-        setPricingPlans(plans);
-        setCustomerId(response.data.data.customer_id); // Set the customer_id from the response
-        console.log(customerId);
-        const uniqueCategories = Array.from(
-          new Set(plans.map((plan) => plan.category_name))
-        );
-        setCategories(uniqueCategories);
+          setPricingPlans(plans);
+          setCustomerId(response.data.data.customer_id); // Set the customer_id from the response
 
-        if (uniqueCategories.length > 0) {
-          setCategory(uniqueCategories[0]);
+          const uniqueCategories = Array.from(new Set(plans.map((plan) => plan.category_name)));
+          setCategories(uniqueCategories);
+
+          if (uniqueCategories.length > 0) {
+            setCategory(uniqueCategories[0]);
+          }
+        } else {
+          console.error("API returned unsuccessful status.");
         }
 
         setLoading(false);
@@ -88,9 +95,7 @@ const Pricing = () => {
     setCategory(e.target.value);
   };
 
-  const filteredPlans = pricingPlans.filter(
-    (plan) => plan.category_name === category
-  );
+  const filteredPlans = pricingPlans.filter((plan) => plan.category_name === category);
 
   return (
     <section className="relative z-10 overflow-hidden bg-gray-50 py-20">
@@ -121,26 +126,27 @@ const Pricing = () => {
           <div className="flex justify-center items-center">
             <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-500"></div>
           </div>
-        ) : (
+        ) : filteredPlans.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {filteredPlans.length > 0 ? (
-              filteredPlans.map((plan, index) => (
-                <PricingCard
-                  key={index}
-                  title={plan.name}
-                  price={plan.price}
-                  features={Array.isArray(plan.features) ? plan.features : []}
-                  buttonLabel="Get Started"
-                  buttonLink="/signup"
-                  popular={plan.popular}
-                  priceId={plan.stripe_price_id} // Dynamic priceId
-                  priceType={plan.price_type} // Use price_type to determine fixed or monthly
-                  customerId={customerId} // Pass customer_id to the PricingCard
-                />
-              ))
-            ) : (
-              <NoData message="No pricing plans available for this category." />
-            )}
+            {filteredPlans.map((plan) => (
+              <PricingCard
+                key={plan.id}
+                title={plan.name}
+                price={plan.price}
+                features={Array.isArray(plan.features) ? plan.features : []}
+                buttonLabel={isAuthenticated ? "Get Started" : "Pay Now"}
+                buttonLink={isAuthenticated ? "" : "/signin"} // Navigate to login if not authenticated
+                popular={plan.popular}
+                priceId={plan.stripe_price_id}
+                priceType={plan.price_type}
+                customerId={customerId}
+                isAuthenticated={isAuthenticated} // Pass authentication state
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="flex justify-center items-center py-10">
+            <NoData message="No pricing plans available for this category." />
           </div>
         )}
       </div>

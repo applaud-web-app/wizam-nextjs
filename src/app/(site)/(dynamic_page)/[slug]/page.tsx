@@ -25,16 +25,30 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
 
   try {
     // Fetch page metadata and content using Axios
-    const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/${slug}`);
+    const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/page/${slug}`);
     const { data } = response;
 
     if (data.status && data.data) {
       const { meta_title, meta_description, meta_keywords } = data.data;
 
+      // Generate dynamic metadata
       return {
         title: meta_title || "Wizam",
-        description: meta_description || "Default description",
+        description: meta_description
+          ? meta_description.slice(0, 250) // Ensure description is within 250 characters
+          : "Default description for Wizam",
         keywords: meta_keywords ? meta_keywords.split(",") : ["default", "keywords"],
+        openGraph: {
+          title: meta_title || "Wizam",
+          description: meta_description || "Default description for Wizam",
+          url: `${process.env.NEXT_PUBLIC_SITE_URL}/${slug}`,
+          type: "website",
+        },
+        twitter: {
+          card: "summary_large_image",
+          title: meta_title || "Wizam",
+          description: meta_description || "Default description for Wizam",
+        },
       };
     }
 
@@ -45,8 +59,8 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
   } catch (error) {
     console.error("Error fetching metadata:", error);
     return {
-      title: "Pages - Wizam",
-      description: "An error occurred while fetching metadata.",
+      title: "Error - Wizam",
+      description: "An error occurred while fetching page metadata.",
     };
   }
 }
@@ -60,15 +74,18 @@ export default async function DynamicPage({ params }: { params: Params }) {
     const { data } = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/page/${slug}`);
 
     if (!data.status || !data.data) {
-      notFound();
+      notFound(); // Show 404 page if the data is invalid
     }
 
     const page: PageData = data.data;
 
     return (
       <>
-      <Breadcrumb pageName={page.title} />
-      <ClientContent title={page.title} description={page.description} />
+        {/* Breadcrumb navigation */}
+        <Breadcrumb pageName={page.title} />
+
+        {/* Dynamic Content */}
+        <ClientContent title={page.title} description={page.description} />
       </>
     );
   } catch (error) {

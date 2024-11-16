@@ -451,7 +451,7 @@ const Header = () => {
                   </Link>
                   <button
                     onClick={handleLogout}
-                    className="bg-primary text-secondary py-2 px-6 mx-4 rounded-full hover:bg-primary-dark transition w-full text-center"
+                    className="bg-primary text-secondary py-2 px-6  rounded-full hover:bg-primary-dark transition w-full text-center"
                   >
                     Sign Out
                   </button>

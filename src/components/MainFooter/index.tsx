@@ -91,7 +91,7 @@ const Footer = () => {
               <li className="mb-2"><Link href="/" className="hover:text-green-400">Home</Link></li>
               <li className="mb-2"><Link href="/about" className="hover:text-green-400">About Us</Link></li>
               <li className="mb-2"><Link href="/exams" className="hover:text-green-400">Exams</Link></li>
-              <li className="mb-2"><Link href="/blogs" className="hover:text-green-400">Resources</Link></li>
+              <li className="mb-2"><Link href="/blogs" className="hover:text-green-400">Knowledge Hub</Link></li>
               <li className="mb-2"><Link href="/faq" className="hover:text-green-400">FAQ</Link></li>
               <li><Link href="/contact" className="hover:text-green-400">Contact Us</Link></li>
             </ul>

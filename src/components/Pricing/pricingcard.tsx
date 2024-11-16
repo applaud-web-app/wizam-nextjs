@@ -1,3 +1,6 @@
+// components/PricingCard.tsx
+"use client";
+
 import { loadStripe } from "@stripe/stripe-js";
 import React from "react";
 import { useRouter } from "next/navigation";
@@ -9,11 +12,12 @@ interface PricingCardProps {
   price: string;
   features: string[];
   buttonLabel: string;
-  buttonLink: string; // Link to navigate if no customer ID
+  buttonLink: string; // Link to navigate if not authenticated
   popular?: boolean;
   priceId: string; // The price ID for the Stripe checkout
   priceType: string; // "fixed" or "monthly"
   customerId: string | null; // Stripe customer ID (can be null)
+  isAuthenticated: boolean; // Authentication state
 }
 
 // Load Stripe instance
@@ -29,6 +33,7 @@ const PricingCard: React.FC<PricingCardProps> = ({
   priceId,
   priceType,
   customerId,
+  isAuthenticated,
 }) => {
   const router = useRouter(); // For route navigation
 
@@ -41,20 +46,24 @@ const PricingCard: React.FC<PricingCardProps> = ({
       return;
     }
 
-    const successUrl = Cookies.get("redirect_url") ? Cookies.get("redirect_url") : '/dashboard';
+    const successUrl = Cookies.get("redirect_url") ? Cookies.get("redirect_url") : `${window.location.origin}/dashboard`;
 
     try {
       // Send the POST request to create a checkout session
-      const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/create-checkout-session`, {
-        priceId,
-        priceType,
-        customerId,
-        successUrl
-      }, {
-        headers: {
-          Authorization: `Bearer ${Cookies.get("jwt")}`,
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_API_URL}/create-checkout-session`,
+        {
+          priceId,
+          priceType,
+          customerId,
+          successUrl,
         },
-      });
+        {
+          headers: {
+            Authorization: `Bearer ${Cookies.get("jwt")}`,
+          },
+        }
+      );
 
       // Check if the response indicates success
       if (response.status !== 200) {
@@ -71,21 +80,24 @@ const PricingCard: React.FC<PricingCardProps> = ({
       }
 
       // Redirect to Stripe Checkout
-      await stripe.redirectToCheckout({ sessionId });
-    } catch (error) {
+      const { error } = await stripe.redirectToCheckout({ sessionId });
+
+      if (error) {
+        console.error("Stripe redirect error:", error);
+        alert("Failed to redirect to checkout. Please try again.");
+      }
+    } catch (error: any) {
       console.error("Error during checkout:", error);
-      alert("Failed to initiate checkout. Please try again.");
+      alert(error?.response?.data?.error || "Failed to initiate checkout. Please try again.");
     }
   };
 
   const handleClick = () => {
-    console.log(customerId);
-    handleCheckout(); 
-    // if (!customerId) {
-    //   router.push(buttonLink); // Navigate to the provided link if no customer ID
-    // } else {
-    //   handleCheckout(); // Initiate checkout process
-    // }
+    if (isAuthenticated) {
+      handleCheckout();
+    } else {
+      router.push(buttonLink); // Navigate to the provided link if not authenticated
+    }
   };
 
   return (
@@ -100,9 +112,11 @@ const PricingCard: React.FC<PricingCardProps> = ({
         {title}
       </h3>
       <p className="text-4xl sm:text-5xl font-bold text-secondary text-center mb-4">
-        {price}
+        ${price}
       </p>
-      <p className="text-gray-500 text-center mb-6">Per month, billed annually</p>
+      <p className="text-gray-500 text-center mb-6">
+        {priceType === "monthly" ? "Per month" : "One-time payment"}
+      </p>
 
       <ul className="text-gray-600 mb-8 space-y-3">
         {features.map((feature, index) => (

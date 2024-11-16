@@ -6,10 +6,9 @@ import Breadcrumb from "@/components/Common/Breadcrumb";
 import CallToAction from "@/components/CallToAction";
 import NoData from "@/components/Common/NoData";
 import Loader from "@/components/Common/Loader";
-import { IoSearchSharp } from "react-icons/io5"; // Import the search icon
+import { IoSearchSharp } from "react-icons/io5";
+import { useSeo } from "@/context/SeoContext";
 
-
-// Accordion Component for FAQs
 interface AccordionItemProps {
   header: string;
   text: string;
@@ -22,9 +21,6 @@ const AccordionItem: FC<AccordionItemProps> = ({ header, text }) => {
 
   const handleToggle = () => {
     setActive(!active);
-    if (contentRef.current) {
-      setHeight(active ? "0px" : `${contentRef.current.scrollHeight}px`);
-    }
   };
 
   useEffect(() => {
@@ -48,7 +44,9 @@ const AccordionItem: FC<AccordionItemProps> = ({ header, text }) => {
 
         <div className="flex items-center">
           <svg
-            className={`fill-primary stroke-primary duration-200 ease-in-out ${active ? "rotate-180" : ""}`}
+            className={`fill-primary stroke-primary duration-200 ease-in-out ${
+              active ? "rotate-180" : ""
+            }`}
             width="17"
             height="10"
             viewBox="0 0 17 10"
@@ -66,7 +64,7 @@ const AccordionItem: FC<AccordionItemProps> = ({ header, text }) => {
       <div
         ref={contentRef}
         style={{ maxHeight: height }}
-        className={`overflow-hidden transition-max-height duration-300 ease-in-out`}
+        className="overflow-hidden transition-max-height duration-300 ease-in-out"
       >
         <p className="py-3 text-base leading-relaxed text-body-color dark:text-dark-6">
           {text}
@@ -82,22 +80,24 @@ interface FaqItem {
 }
 
 const FAQPage = () => {
+  const { seoData, loading: seoLoading, error: seoError } = useSeo();
   const [faqs, setFaqs] = useState<FaqItem[]>([]);
-  const [filteredFaqs, setFilteredFaqs] = useState<FaqItem[]>([]); // For filtered FAQs
+  const [filteredFaqs, setFilteredFaqs] = useState<FaqItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState(""); // State to store the search query
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
-    // Fetch data from the API using axios
     const fetchFAQs = async () => {
       try {
-        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/faq`);
+        const response = await axios.get(
+          `${process.env.NEXT_PUBLIC_API_URL}/faq`
+        );
         const { data } = response.data;
-        
+
         if (Array.isArray(data)) {
           setFaqs(data);
-          setFilteredFaqs(data); // Initially show all FAQs
+          setFilteredFaqs(data);
         } else {
           throw new Error("API response is not an array");
         }
@@ -112,51 +112,82 @@ const FAQPage = () => {
   }, []);
 
   useEffect(() => {
-    // Filter FAQs based on the search query
     if (searchQuery === "") {
-      setFilteredFaqs(faqs); // Show all FAQs if search query is empty
+      setFilteredFaqs(faqs);
     } else {
       setFilteredFaqs(
-        faqs.filter(faq =>
-          faq.question.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          faq.answer.toLowerCase().includes(searchQuery.toLowerCase())
+        faqs.filter(
+          (faq) =>
+            faq.question.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            faq.answer.toLowerCase().includes(searchQuery.toLowerCase())
         )
       );
     }
   }, [searchQuery, faqs]);
 
-  if (loading) {
+  useEffect(() => {
+    if (!seoLoading && !seoError && seoData) {
+      const currentSeo = seoData["faq"] || seoData["home"];
+
+      document.title = currentSeo.title;
+
+      const setMetaTag = (name: string, content: string, property = false) => {
+        const selector = property ? `meta[property="${name}"]` : `meta[name="${name}"]`;
+        let metaTag = document.querySelector(selector) as HTMLMetaElement | null;
+        if (metaTag) {
+          metaTag.content = content;
+        } else {
+          metaTag = document.createElement("meta");
+          if (property) {
+            metaTag.setAttribute("property", name);
+          } else {
+            metaTag.setAttribute("name", name);
+          }
+          metaTag.content = content;
+          document.head.appendChild(metaTag);
+        }
+      };
+
+      setMetaTag("description", currentSeo.description);
+      setMetaTag("keywords", currentSeo.keyword);
+      setMetaTag("og:title", currentSeo.title, true);
+      setMetaTag("og:description", currentSeo.description, true);
+      setMetaTag("og:image", currentSeo.image, true);
+      setMetaTag("og:url", window.location.href, true);
+      setMetaTag("twitter:card", "summary_large_image");
+      setMetaTag("twitter:title", currentSeo.title);
+      setMetaTag("twitter:description", currentSeo.description);
+      setMetaTag("twitter:image", currentSeo.image);
+    }
+  }, [seoData, seoLoading, seoError]);
+
+  if (loading || seoLoading) {
     return <Loader />;
   }
 
-  if (error) {
-    return <p>Error: {error}</p>;
+  if (error || seoError) {
+    return <p className="text-red-500 text-center mt-10">{error || seoError}</p>;
   }
 
   return (
     <main>
-     <Breadcrumb pageName="Frequently Asked Questions" />
+      <Breadcrumb pageName="Frequently Asked Questions" />
 
       <section className="relative py-16 dark:bg-dark">
         <div className="container mx-auto px-4">
-          {/* Search Bar */}
           <div className="mb-8 relative w-full max-w-[768px] mx-auto">
-            {/* Search Icon */}
             <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
               <IoSearchSharp className="text-primary text-xl dark:text-gray-400" />
             </div>
-
-            {/* Search Input */}
             <input
               type="text"
               placeholder="You can search by keywords or questions..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)} // Update search query
+              onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-12 p-4 border rounded-lg border-gray-300 dark:border-gray-600 dark:bg-dark-2 dark:text-white focus:outline-none focus:ring-1 focus:ring-primary"
             />
           </div>
 
-          {/* Accordion Section */}
           <div className="w-full max-w-[768px] mx-auto">
             {filteredFaqs.length > 0 ? (
               filteredFaqs.map((faq, index) => (

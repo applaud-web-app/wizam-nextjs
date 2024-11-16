@@ -7,6 +7,14 @@ import { format } from "date-fns";
 import Image from "next/image";
 import Loader from "@/components/Common/Loader";
 
+// Utility function to sanitize description and limit to 250 characters
+const sanitizeAndLimitText = (html: string, limit: number): string => {
+  const div = document.createElement("div");
+  div.innerHTML = html;
+  const plainText = div.textContent || div.innerText || "";
+  return plainText.length > limit ? plainText.slice(0, limit) + "..." : plainText;
+};
+
 // Type for Blog Post data from API
 interface BlogPost {
   id: number;
@@ -59,6 +67,40 @@ export default function Post({ params }: Props) {
 
         // Set the fetched post in the state
         setPost(fetchedPost);
+
+        // Set SEO Metadata
+        const setMetaTag = (name: string, content: string, property = false) => {
+          const selector = property
+            ? `meta[property="${name}"]`
+            : `meta[name="${name}"]`;
+          let metaTag = document.querySelector(selector) as HTMLMetaElement | null;
+          if (metaTag) {
+            metaTag.content = content;
+          } else {
+            metaTag = document.createElement("meta");
+            if (property) {
+              metaTag.setAttribute("property", name);
+            } else {
+              metaTag.setAttribute("name", name);
+            }
+            metaTag.content = content;
+            document.head.appendChild(metaTag);
+          }
+        };
+
+        const plainDescription = sanitizeAndLimitText(fetchedPost.content || "", 250);
+        document.title = fetchedPost.title;
+
+        setMetaTag("description", plainDescription);
+        setMetaTag("keywords", fetchedPost.category.name || "blog, article");
+        setMetaTag("og:title", fetchedPost.title, true);
+        setMetaTag("og:description", plainDescription, true);
+        setMetaTag("og:image", fetchedPost.image, true);
+        setMetaTag("og:url", window.location.href, true);
+        setMetaTag("twitter:card", "summary_large_image");
+        setMetaTag("twitter:title", fetchedPost.title);
+        setMetaTag("twitter:description", plainDescription);
+        setMetaTag("twitter:image", fetchedPost.image);
 
         // Map related posts to the structure expected by SingleBlog component
         const relatedBlogs = postResponse.data.related.map((relatedPost: BlogPost) => ({
@@ -161,8 +203,6 @@ export default function Post({ params }: Props) {
               </div>
             </div>
           )}
-
-
         </div>
       </section>
     </>
