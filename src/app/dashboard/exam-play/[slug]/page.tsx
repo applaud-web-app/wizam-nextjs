@@ -319,46 +319,25 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
           updatedAnswers[questionId] = Array(subQuestionCount).fill("");
         }
       } else if (question.type === "ORD") {
-        // **Set to null for ORD if not attempted**
-        updatedAnswers[questionId] = null;
-        setInitialShuffledOptions((prev) => ({
-          ...prev,
-          [questionId]: [],
-        }));
+        // For ORD questions, reset to initial order
+        updatedAnswers[questionId] = initialShuffledOptions[questionId];
       } else if (question.type === "MTF") {
-        // For MTF questions, clear all pairs by setting to null
-        updatedAnswers[questionId] = null;
-      } else if (question.type === "FIB") {
-        // **Set to null for FIB if not attempted**
-        updatedAnswers[questionId] = null;
+        // For MTF questions, clear all pairs
+        updatedAnswers[questionId] = [];
       } else {
-        // For other question types, set answer to null
-        updatedAnswers[questionId] = null;
+        // For other question types, set answer to empty array
+        updatedAnswers[questionId] = [];
       }
 
       // Build the formatted answers as per submission payload format
       const formattedAnswers = examData.questions.map((q) => {
         const userAnswer = updatedAnswers[q.id];
 
-        if (!userAnswer || (Array.isArray(userAnswer) && userAnswer.length === 0)) {
-          let blankAnswer;
-          switch (q.type) {
-            case "MSA":
-            case "TOF":
-            case "SAQ":
-              blankAnswer = null;
-              break;
-            case "ORD":
-            case "FIB":
-              blankAnswer = null; // **Set to null for ORD and FIB**
-              break;
-            default:
-              blankAnswer = [];
-          }
+        if (!userAnswer || userAnswer.length === 0) {
           return {
             id: q.id,
             type: q.type,
-            answer: blankAnswer,
+            answer: [],
           };
         }
 
@@ -367,19 +346,18 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
             return {
               id: q.id,
               type: q.type,
-              answer: q.options
-                ? q.options.indexOf(userAnswer[0]) + 1
-                : 0,
+              answer: q.options ? q.options.indexOf(userAnswer[0]) + 1 : 0,
             };
 
           case "MMA":
             return {
               id: q.id,
               type: q.type,
-              answer: userAnswer.map((ans: any) =>
+              answer: userAnswer.map((ans) =>
                 q.options ? q.options.indexOf(ans) + 1 : 1
-              ), // Ensure each index is incremented by 1
+              ),
             };
+
           case "TOF":
             return {
               id: q.id,
@@ -402,41 +380,28 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
                 ? userAnswer.map((ans) =>
                     typeof ans === "string" ? ans : String(ans)
                   )
-                : null, // **Set to null if not an array**
+                : [],
             };
 
           case "MTF":
-            const matches: { [key: number]: string } = {};
-            if (
-              Array.isArray(userAnswer) &&
-              userAnswer.every(
-                (pair) => Array.isArray(pair) && pair.length === 2
-              )
-            ) {
-              (userAnswer as unknown as [string, string][]).forEach(
-                (pair: [string, string]) => {
-                  if (q.options) {
-                    const termIndex = q.options.indexOf(pair[0]) + 1;
-                    matches[termIndex] = pair[1];
-                  }
-                }
-              );
-            }
+            const matches = {};
             return {
               id: q.id,
               type: q.type,
-              answer: Object.keys(matches).length > 0 ? matches : null,
+              answer: matches,
             };
 
           case "ORD":
             return {
               id: q.id,
               type: q.type,
-              answer: userAnswer ? [...userAnswer] : null, // **Set to current order or null**
+              answer: userAnswer.map((opt) =>
+                q.options ? q.options.indexOf(opt) : -1
+              ),
             };
 
           case "EMQ":
-            const filteredAnswers = userAnswer.map((ans: string) => {
+            const filteredAnswers = userAnswer.map((ans) => {
               return ans
                 ? q.options
                   ? q.options.indexOf(ans) + 1
@@ -446,27 +411,24 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
             return {
               id: q.id,
               type: q.type,
-              answer: filteredAnswers.length > 0 ? filteredAnswers : null,
+              answer: filteredAnswers.length > 0 ? filteredAnswers : [],
             };
 
-            default:
-              return null;
-          }
-        });
-  
-        // Log the formatted answer structure
-        console.log(
-          "Current formatted answers:",
-          formattedAnswers?.filter((answer) => answer !== null)
-        );
-        saveAnswerProgress(
-          uuid,
-          formattedAnswers?.filter((answer) => answer !== null)
-        );
-        return existingAnswers;
+          default:
+            return null;
+        }
       });
-    };
-  
+
+      // Save the answer progress
+      saveAnswerProgress(
+        uuid,
+        formattedAnswers.filter((answer) => answer !== null)
+      );
+
+      return updatedAnswers;
+    });
+  };
+
   useEffect(() => {
     if (!examData || submitted) return;
     timerId = setInterval(() => {
