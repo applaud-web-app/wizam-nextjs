@@ -58,10 +58,10 @@ interface UpcomingExams {
   exam_slug: string;
   exam_name: string;
   duration_mode: string;
-  exam_duration: number | null;
-  total_questions: number;
+  exam_duration: string | null; // Changed from number | null to string | null
+  total_questions: string;      // Changed from number to string
   total_marks: string;
-  total_time: number;
+  total_time: string;           // Changed from number to string
   point_mode: string;
   point: number | null;
   schedule_type: string;
@@ -72,8 +72,9 @@ interface UpcomingExams {
   end_time: string | null;
   is_free: number; // Indicates if the exam is free
   is_resume: boolean; // Indicates if the exam can be resumed
+  total_attempts: string | null; // Changed from number | null to string | null
+  restrict_attempts: number; // Added based on sample data
 }
-
 interface CalendarExam {
   slug: string;
   title: string;

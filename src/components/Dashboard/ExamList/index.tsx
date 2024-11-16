@@ -29,6 +29,7 @@ interface Exam {
   duration_mode: string;
   exam_duration: number;
   is_resume: boolean;
+  total_attempts: number | null | string; // Updated to include string
   schedules: {
     schedule_id: number;
     schedule_type: string;
@@ -221,6 +222,7 @@ export default function ExamList() {
               <th className="p-3 text-left rounded-tl-lg">S.No</th>
               <th className="p-3 text-left">Exam Title</th>
               <th className="p-3 text-left">Available Between</th>
+              <th className="p-3 text-left">Attempts</th>
               <th className="p-3 text-left">Questions</th>
               <th className="p-3 text-left">Marks</th>
               <th className="p-3 text-left">Time</th>
@@ -276,6 +278,11 @@ export default function ExamList() {
                   <td className="p-4">{index + 1}</td>
                   <td className="p-4">{exam.title || "-"}</td>
                   <td className="p-4">{scheduleInfo}</td>
+                  <td className="p-4">
+                    {exam.total_attempts === "" || exam.total_attempts === null || exam.total_attempts === undefined
+                      ? '-'
+                      : exam.total_attempts}
+                  </td>
                   <td className="p-4">{exam.total_questions || "-"}</td>
                   <td className="p-4">
                     {exam.point_mode === "manual"

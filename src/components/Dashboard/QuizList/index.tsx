@@ -23,6 +23,7 @@ interface Quiz {
   point: number | null;
   is_free: number;
   is_resume: number;
+  total_attempts: number | null | string; // Updated to include string
   total_questions: number;
   total_marks: number | string;
   total_time: number;
@@ -190,6 +191,7 @@ export default function QuizList() {
               <th className="p-3 text-left rounded-tl-lg">S.No</th>
               <th className="p-3 text-left">Quiz Title</th>
               <th className="p-3 text-left">Available Between</th>
+              <th className="p-3 text-left">Attempts</th>
               <th className="p-3 text-left">Questions</th>
               <th className="p-3 text-left">Marks</th>
               <th className="p-3 text-left">Time</th>
@@ -219,6 +221,11 @@ export default function QuizList() {
                   <td className="p-4">{index + 1}</td>
                   <td className="p-4">{quiz.title || "-"}</td>
                   <td className="p-4">{scheduleInfo}</td>
+                  <td className="p-4">
+                    {quiz.total_attempts === "" || quiz.total_attempts === null || quiz.total_attempts === undefined
+                      ? '-'
+                      : quiz.total_attempts}
+                  </td>
                   <td className="p-4">{quiz.total_questions || "-"}</td>
                   <td className="p-4">
                     {quiz.point_mode === "manual"
@@ -231,31 +238,7 @@ export default function QuizList() {
                       : Math.floor(quiz.total_time / 60)}{" "}
                     min
                   </td>
-                  {/* <td className="p-4">
-                    {isUpcoming ? (
-                      <button
-                        className="bg-[#ffc300] hover:bg-yellow-500 text-white py-1 px-5 rounded-full font-semibold text-sm cursor-not-allowed inline-flex items-center space-x-1 w-32"
-                        disabled
-                      >
-                        <MdLockOutline className="flex-shrink-0" />
-                        <span>Upcoming</span>
-                      </button>
-                    ) : quiz.is_free === 1 ? (
-                      <Link
-                        href={`/dashboard/quiz-detail/${quiz.slug}?sid=${schedules.schedule_id}`}
-                        className="bg-green-600 text-white px-5 py-1 rounded-full font-semibold text-sm hover:bg-green-700 transition duration-200 inline-flex items-center justify-center w-32"
-                      >
-                        Start Quiz
-                      </Link>
-                    ) : (
-                      <button
-                        className="bg-quaternary text-white py-1 px-5 rounded-full font-semibold text-sm hover:bg-quaternary-dark w-32"
-                        onClick={() => handlePayment(quiz.slug+"?sid="+schedules.schedule_id)}
-                      >
-                        Pay Now
-                      </button>
-                    )}
-                  </td> */}
+                 
 
                   <td>
                   {isUpcoming ? (
