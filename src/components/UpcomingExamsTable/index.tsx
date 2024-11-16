@@ -6,15 +6,15 @@ import axios from "axios";
 import Cookies from "js-cookie";
 import { toast } from "react-toastify";
 
-interface UpcomingExam {
+interface UpcomingExams {
   id: number;
   exam_slug: string;
   exam_name: string;
   duration_mode: string;
-  exam_duration: number | null;
-  total_questions: number;
+  exam_duration: string | null; // Changed from number | null to string | null
+  total_questions: string;
   total_marks: string;
-  total_time: number;
+  total_time: string;
   point_mode: string;
   point: number | null;
   schedule_type: string;
@@ -23,12 +23,14 @@ interface UpcomingExam {
   start_time: string;
   end_date: string | null;
   end_time: string | null;
-  is_free: number;
-  is_resume: boolean;
+  is_free: number; // Indicates if the exam is free
+  is_resume: boolean; // Indicates if the exam can be resumed
+  total_attempts: string | null; // Changed from number | null to string | null
+  restrict_attempts: number; // Added based on sample data
 }
 
 interface UpcomingExamsTableProps {
-  upcomingExams: UpcomingExam[];
+  upcomingExams: UpcomingExams[];
   serverTime: Date | null;
 }
 
@@ -51,6 +53,7 @@ export default function UpcomingExamsTable({ upcomingExams, serverTime }: Upcomi
               <th className="p-3 text-left">S.No</th>
               <th className="p-3 text-left">Exam Title</th>
               <th className="p-3 text-left">Available Between/Fixed (Europe/London)</th>
+              <th className="p-3 text-left">Attempts</th>
               <th className="p-3 text-left">Duration (Min)</th>
               <th className="p-3 text-left">Total Questions</th>
               <th className="p-3 text-left">Total Marks</th>
@@ -77,6 +80,8 @@ export default function UpcomingExamsTable({ upcomingExams, serverTime }: Upcomi
                 schedule_id,
                 is_free,
                 is_resume,
+                total_attempts,
+                restrict_attempts,
               } = examEntry;
 
               if (!exam_name) return null;
@@ -170,15 +175,22 @@ export default function UpcomingExamsTable({ upcomingExams, serverTime }: Upcomi
                   <td className="p-4">{exam_name}</td>
                   <td className="p-4">{scheduleTime}</td>
                   <td className="p-4">
+                    {restrict_attempts === 1 && total_attempts
+                      ? total_attempts
+                      : '-'}
+                  </td> {/* Updated Cell */}
+                  <td className="p-4">
                     {duration_mode === "manual"
                       ? exam_duration
-                      : Math.floor(total_time / 60)}{" "}
+                      : exam_duration !== null
+                      ? Math.floor(parseInt(total_time, 10) / 60)
+                      : '-'}{" "}
                     min
                   </td>
                   <td className="p-4">{total_questions}</td>
                   <td className="p-4">
                     {point_mode === "manual"
-                      ? total_questions * (point || 0)
+                      ? (parseInt(total_questions, 10) * (point || 0)).toString()
                       : total_marks}
                   </td>
                   <td className="p-4">

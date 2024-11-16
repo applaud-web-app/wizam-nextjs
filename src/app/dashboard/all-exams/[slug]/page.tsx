@@ -21,6 +21,7 @@ interface ExamDetail {
   marks: number | string;
   is_free: number; // 1 for free, 0 for paid
   is_resume: boolean;
+  total_attempts: number | null | string; 
   schedule: {
     schedule_id: string;
     start_date: string;
@@ -194,6 +195,7 @@ export default function ExamDetailPage({ params }: { params: { slug: string } })
               <th className="p-3 text-left font-semibold">S.No</th>
               <th className="p-3 text-left font-semibold">Exam Title</th>
               <th className="p-3 text-left font-semibold">Available Between</th>
+              <th className="p-3 text-left">Attempts</th>
               <th className="p-3 text-left font-semibold">Questions</th>
               <th className="p-3 text-left font-semibold">Marks</th>
               <th className="p-3 text-left font-semibold">Time</th>
@@ -252,6 +254,11 @@ export default function ExamDetailPage({ params }: { params: { slug: string } })
                   <td className="p-4">{index + 1}</td>
                   <td className="p-4">{exam.title}</td>
                   <td className="p-4">{scheduleInfo}</td>
+                  <td className="p-4">
+                    {exam.total_attempts === "" || exam.total_attempts === null || exam.total_attempts === undefined
+                      ? '-'
+                      : exam.total_attempts}
+                  </td>
                   <td className="p-4">{exam.questions}</td>
                   <td className="p-4">{exam.marks}</td>
                   <td className="p-4">{exam.time} mins</td>

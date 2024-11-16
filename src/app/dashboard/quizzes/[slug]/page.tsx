@@ -24,6 +24,7 @@ interface QuizDetail {
   marks: number | string;
   is_free: number;
   is_resume: boolean;
+  total_attempts: number | null | string; // Updated to include string
   schedule: {
     start_date: string;
     start_time: string;
@@ -184,6 +185,7 @@ export default function QuizTypeDetailPage({ params }: { params: { slug: string 
               <th className="p-3 text-left font-semibold">S.No</th>
               <th className="p-3 text-left font-semibold">Quiz Title</th>
               <th className="p-3 text-left font-semibold">Available Between</th>
+              <th className="p-3 text-left font-semibold">Attempts</th>
               <th className="p-3 text-left font-semibold">Questions</th>
               <th className="p-3 text-left font-semibold">Marks</th>
               <th className="p-3 text-left font-semibold">Time</th>
@@ -212,6 +214,11 @@ export default function QuizTypeDetailPage({ params }: { params: { slug: string 
                   <td className="p-4">{index + 1}</td>
                   <td className="p-4">{quiz.title}</td>
                   <td className="p-4">{scheduleInfo}</td>
+                  <td className="p-4">
+                    {quiz.total_attempts === "" || quiz.total_attempts === null || quiz.total_attempts === undefined
+                      ? '-'
+                      : quiz.total_attempts}
+                  </td>
                   <td className="p-4">{quiz.questions}</td>
                   <td className="p-4">{quiz.marks}</td>
                   <td className="p-4">{quiz.time}</td>

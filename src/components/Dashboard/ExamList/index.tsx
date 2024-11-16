@@ -280,7 +280,7 @@ export default function ExamList() {
                   <td className="p-4">{scheduleInfo}</td>
                   <td className="p-4">
                     {exam.total_attempts === "" || exam.total_attempts === null || exam.total_attempts === undefined
-                      ? ''
+                      ? '-'
                       : exam.total_attempts}
                   </td>
                   <td className="p-4">{exam.total_questions || "-"}</td>
