@@ -191,14 +191,20 @@ const ExamResult = ({ params }: ExamResultProps) => {
       ? question.correctAnswer.join(", ")
       : question.correctAnswer || "N/A";
 
-  const userAnswerDisplay =
-    question.userAnswer && Array.isArray(question.userAnswer) && question.userAnswer.length > 0
-      ? question.userAnswer.join(", ")
-      : "Unanswered";
+    // const userAnswerDisplay =
+    //   question.userAnswer && Array.isArray(question.userAnswer) && question.userAnswer.length > 0
+    //     ? question.userAnswer.join(", ")
+    //     : "Unanswered";
 
-      // if (question.isUnanswered) {
-      //   return <p className="text-gray-500">This question was unanswered.</p>;
-      // }
+    const userAnswerDisplay =
+    question.userAnswer &&
+    (Array.isArray(question.userAnswer)
+      ? question.userAnswer.length > 0
+        ? question.userAnswer.join(", ")
+        : "Unanswered"
+      : typeof question.userAnswer === "string" && question.userAnswer.trim() !== ""
+      ? question.userAnswer
+      : "Unanswered");
 
     switch (question.type) {
       case "MSA": // Multiple Single Answer
@@ -334,16 +340,16 @@ const ExamResult = ({ params }: ExamResultProps) => {
             {Array.from({ length: blanks }).map((_, index) => (
               <div key={index} className="p-4 bg-white rounded-lg mb-2">
                 {/* User's Answer */}
-                <p className="font-semibold text-red-500">
-                  Your Answer:{" "}
+                <p className="font-semibold">
+                  <span className="text-defaultcolor">Your Answer:</span>{" "}
                   {Array.isArray(question.userAnswer)
                     ? question.userAnswer[index] || "No answer"
                     : "No answer"}
                 </p>
 
                 {/* Correct Answer */}
-                <p className="font-semibold text-green-600">
-                  Correct:{" "}
+                <p className="font-semibold">
+                  <span className="text-green-600">Correct Answer:</span>{" "}
                   {Array.isArray(question.correctAnswer)
                     ? question.correctAnswer[index] || "N/A"
                     : "N/A"}
@@ -371,9 +377,9 @@ const ExamResult = ({ params }: ExamResultProps) => {
                   className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center"
                 >
                   {/* Display the option label from question.options based on key */}
-                  <div className="p-2 rounded bg-white">
+                  <div className="p-2 py-5 rounded bg-white">
                     <span className="text-gray-500 font-semibold">
-                      Your Answer:
+                      Match {key}
                     </span>{" "}
                     <div
                       dangerouslySetInnerHTML={{
@@ -383,8 +389,8 @@ const ExamResult = ({ params }: ExamResultProps) => {
                   </div>
 
                   {/* Display user's selected answer */}
-                  <div className="p-2 rounded bg-yellow-50">
-                    <span className="text-yellow-500 font-semibold">
+                  <div className="p-2 rounded bg-white">
+                    <span className="text-defaultcolor font-semibold">
                       Your Answer:
                     </span>{" "}
                     {userAnswerPairs[index] ? (
@@ -401,7 +407,7 @@ const ExamResult = ({ params }: ExamResultProps) => {
                   </div>
 
                   {/* Display correct answer */}
-                  <div className="p-2 rounded bg-green-50">
+                  <div className="p-2 rounded bg-white">
                     <span className="text-green-500 font-semibold">
                       Correct:
                     </span>{" "}
@@ -418,11 +424,7 @@ const ExamResult = ({ params }: ExamResultProps) => {
           <div className="p-4 bg-white rounded-lg">
             <p className="font-medium">
               Your Answer:{" "}
-              <span
-                dangerouslySetInnerHTML={{
-                  __html: userAnswerDisplay,
-                }}
-              />
+              <span>{userAnswerDisplay}</span>
             </p>
             <p className="text-green-600">
               Correct Answer:{" "}
@@ -435,65 +437,98 @@ const ExamResult = ({ params }: ExamResultProps) => {
           </div>
         );
 
-      case "ORD": // Ordering
-        return (
-          <div>
-            <ul>
-              {Array.isArray(question.userAnswer) ? (
-                question.userAnswer.map((answerIndex: any, index) => (
-                  <li
-                    key={index}
-                    className=" mb-2 flex items-center justify-between gap-3"
-                  >
-                    {/* User's Answer */}
-                    <div className="flex-1 p-4 bg-white rounded-lg">
-                      <p className="font-semibold text-red-500">Your Answer:</p>
-                      <span
-                        dangerouslySetInnerHTML={{
-                          __html:
-                            question.options && question.options[answerIndex]
-                              ? question.options[answerIndex]
-                              : "No answer provided",
-                        }}
-                      />
-                    </div>
-
-                    {/* Correct Answer */}
-                    <div className="flex-1 p-4 bg-white rounded-lg">
-                      <p className="font-semibold text-green-500">
-                        Correct Answer:
-                      </p>
-                      <span
-                        dangerouslySetInnerHTML={{
-                          __html:
-                            Array.isArray(question.correctAnswer) &&
-                            index < question.correctAnswer.length &&
-                            question.options &&
-                            question.options[
-                              question.correctAnswer[index] as unknown as number
-                            ]
-                              ? question.options[
-                                  question.correctAnswer[
-                                    index
-                                  ] as unknown as number
-                                ]
-                              : "No correct answer available",
-                        }}
-                      />
-                    </div>
-                  </li>
-                ))
-              ) : (
-                <li className="p-4 bg-white rounded-lg mb-2 flex items-center justify-between">
-                  {typeof question.userAnswer === "string"
-                    ? question.userAnswer
-                    : "No answer provided"}
-                </li>
-              )}
-            </ul>
-          </div>
-        );
-
+        case "ORD": {
+          const userAnswer = question.userAnswer;
+          const correctAnswer = question.correctAnswer;
+    
+          if (
+            !userAnswer ||
+            (Array.isArray(userAnswer) && userAnswer.length === 0)
+          ) {
+            // User hasn't answered the question
+            return (
+              <div className="grid sm:grid-cols-2 rounded-xl gap-3">
+                <div className="mt-2">
+                  <p className="font-semibold text-defaultcolor mb-3">Your Answer:</p>
+                  <ul className="">
+                    {Array.isArray(correctAnswer) &&
+                      correctAnswer.map((answer, index) => (
+                        <li key={index} className="flex rounded-xl bg-white mb-3 p-3">
+                          {index+1}. <div className="text-red-500"> No answer</div>
+                        </li>
+                      ))}
+                  </ul>
+                </div>
+                <div className="mt-2">
+                  <p className="font-semibold text-green-500 mb-3">Correct Answer:</p>
+                  <ul className="">
+                    {Array.isArray(correctAnswer) &&
+                      correctAnswer.map((answer, index) => (
+                        <li key={index} className="flex rounded-xl bg-white mb-3  p-3">
+                          {index+1}.  <div dangerouslySetInnerHTML={{ __html: answer }} />
+                        </li>
+                      ))}
+                  </ul>
+                </div>
+              </div>
+            );
+          } else if (Array.isArray(userAnswer)) {
+            // User has answered the question
+            return (
+              <div className="grid sm:grid-cols-2 rounded-xl gap-3">
+                <div className="mt-2">
+                  <p className="font-semibold text-defaultcolor mb-3">Your Answer:</p>
+                  <ul className="">
+                    {userAnswer.map((answer, index) => (
+                      <li key={index} className="flex rounded-xl bg-white mb-3  p-3">
+                        {index+1}.  <div dangerouslySetInnerHTML={{ __html: answer }} />
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                <div className="mt-2">
+                  <p className="font-semibold text-green-500 mb-3">Correct Answer:</p>
+                  <ul className="">
+                    {Array.isArray(correctAnswer) &&
+                      correctAnswer.map((answer, index) => (
+                        <li key={index} className="flex rounded-xl bg-white mb-3  p-3">
+                          {index+1}.  <div dangerouslySetInnerHTML={{ __html: answer }} />
+                        </li>
+                      ))}
+                  </ul>
+                </div>
+              </div>
+            );
+          } else {
+            // Handle other possible types if necessary
+            return (
+              <div className=" grid sm:grid-cols-2 rounded-xl gap-3">
+                <div className="mt-2">
+                  <p className="font-semibold text-defaultcolor mb-3">Your Answer:</p>
+                  <ul className="list-decimal list-inside">
+                    {Array.isArray(correctAnswer) &&
+                      correctAnswer.map((answer, index) => (
+                        <li key={index} className="flex rounded-xl bg-white mb-3 p-3">
+                          {index+1}.  <div className="text-red-500"> No answer</div>
+                        </li>
+                      ))}
+                  </ul>
+                </div>
+                <div className="mt-2">
+                  <p className="font-semibold text-green-500 mb-3">Correct Answer:</p>
+                  <ul className="list-decimal list-inside">
+                    {Array.isArray(correctAnswer) &&
+                      correctAnswer.map((answer, index) => (
+                        <li key={index} className="flex rounded-xl bg-white mb-3  p-3">
+                          {index+1}.  <div dangerouslySetInnerHTML={{ __html: answer }} />
+                        </li>
+                      ))}
+                  </ul>
+                </div>
+              </div>
+            );
+          }
+        }
       case "EMQ": // Extended Matching Questions
         return (
           <div>
@@ -787,7 +822,7 @@ const ExamResult = ({ params }: ExamResultProps) => {
               <ResultCard
                 title="Unanswered"
                 value={userExamResult.skippedCount}
-                icon={<FaMinusCircle className="text-orange-700" size={32} />}
+                icon={<FaMinusCircle className="text-yellow-500" size={32} />}
               />
               <ResultCard
                 title="Marks"

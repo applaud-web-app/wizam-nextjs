@@ -241,7 +241,7 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
   const initializeAnswers = (fetchExamData: ExamData) => {
     const formattedAnswers: { [key: number]: string[] | null } = {};
     const shuffledOptionsMap: { [key: number]: string[] } = {};
-
+  
     if (!fetchExamData.saved_answers || !fetchExamData.questions) {
       console.error("Missing saved_answers or questions in exam data.");
       return;
@@ -252,17 +252,12 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
       const savedAnswer = fetchExamData.saved_answers.find((ans) => ans.id === question.id);
       
       if (question.type === "ORD") {
-        if (savedAnswer && Array.isArray(savedAnswer.answer) && savedAnswer.answer.length > 0) {
-          // For ORD, assume answer is an array of option strings (current order)
-          const currentOrder = savedAnswer.answer;
-          formattedAnswers[question.id] = currentOrder;
-          shuffledOptionsMap[question.id] = currentOrder;
-        } else {
-          // **Shuffle options and set as answer if unattempted**
+         // Shuffle options and store in initialShuffledOptions
           const shuffledOptions = shuffleArray(question.options || []);
-          formattedAnswers[question.id] = shuffledOptions;
           shuffledOptionsMap[question.id] = shuffledOptions;
-        }
+
+          // Set answers[question.id] to null to indicate not answered
+          formattedAnswers[question.id] = null;
       } else if (question.type === "FIB") {
         if (savedAnswer && Array.isArray(savedAnswer.answer)) {
           // If the answer is already an array, use it directly
@@ -658,26 +653,28 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
 
     try {
       const ordQuestionIds = examData.questions
-        .filter((question) => question.type === "ORD")
-        .map((question) => question.id);
+      .filter((question) => question.type === "ORD")
+      .map((question) => question.id);
 
-        const answersToSave = formattedAnswers
-        .map((answer: { id: number; answer: number[] }) => {
-          // Check for ORD answers if they match initial shuffled options
-          if (ordQuestionIds.includes(answer.id)) {
-            const initialOrder = initialShuffledOptions[answer.id] || [];
-            const currentOrder = answer.answer.map((index: number) =>
-              examData.questions.find((q) => q.id === answer.id)?.options?.[index]
-            );
-            
-            // Only save if the order has changed
-            if (arraysEqual(initialOrder, currentOrder)) {
-              return null;
-            }
+      const answersToSave = formattedAnswers
+      .map((answer: { id: number; answer: any }) => {
+        // Check for ORD answers if they match initial shuffled options
+        if (ordQuestionIds.includes(answer.id)) {
+          const initialOrder = initialShuffledOptions[answer.id] || [];
+          const currentOrder = answers[answer.id] || [];
+
+          // Only save if the order has changed
+          if (
+            !arraysEqual(currentOrder, initialOrder)
+          ) {
+            return answer;
+          } else {
+            return null;
           }
-          return answer;
-        })
-        .filter(Boolean); // Filter out null values where answers are unchanged
+        }
+        return answer;
+      })
+      .filter(Boolean);// Filter out null values where answers are unchanged
 
       if (answersToSave.length === 0) return; // If no answers to save, skip API call
 
@@ -823,11 +820,24 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
             };
 
           case "ORD":
-            return {
-              id: question.id,
-              type: question.type,
-              answer: userAnswer ? [...userAnswer] : null, // **Set to current order or null**
-            };
+              // Only include answer if user has rearranged options
+              if (
+                Array.isArray(userAnswer) &&
+                !arraysEqual(userAnswer, initialShuffledOptions[question.id])
+              ) {
+                return {
+                  id: question.id,
+                  type: question.type,
+                  answer: userAnswer ? [...userAnswer] : null,
+                };
+              } else {
+                // User hasn't rearranged, so consider it unanswered
+                return {
+                  id: question.id,
+                  type: question.type,
+                  answer: null,
+                };
+              }
 
           case "EMQ":
             const filteredAnswers = userAnswer.map((ans: string) => {
@@ -898,13 +908,16 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
       const question = examData?.questions.find(
         (q) => q.id === parseInt(questionId)
       );
-
-      if (Array.isArray(answer)) {
-        if (question?.type === "ORD") {
-          if (!arraysEqual(answer, initialShuffledOptions[questionId])) {
-            count++;
-          }
-        } else if (answer.some((ans) => ans !== null && ans !== "")) {
+  
+      if (question?.type === "ORD") {
+        if (
+          Array.isArray(answer) &&
+          !arraysEqual(answer, initialShuffledOptions[questionId])
+        ) {
+          count++;
+        }
+      } else if (Array.isArray(answer)) {
+        if (answer.some((ans) => ans !== null && ans !== "")) {
           count++;
         }
       } else if (answer !== null && answer !== "") {
@@ -928,22 +941,25 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
 
   const moveItem = (questionId: number, fromIndex: number, toIndex: number) => {
     setAnswers((prevAnswers) => {
-      const currentAnswers = prevAnswers[questionId] || [];
-
-      if (toIndex < 0 || toIndex >= currentAnswers.length) {
+      const answerArray = prevAnswers[questionId];
+      const optionsToModify = Array.isArray(answerArray)
+        ? [...answerArray]
+        : [...initialShuffledOptions[questionId]];
+  
+      if (toIndex < 0 || toIndex >= optionsToModify.length) {
         return prevAnswers;
       }
-
-      const reorderedAnswers = [...currentAnswers];
-      const [movedItem] = reorderedAnswers.splice(fromIndex, 1);
-      reorderedAnswers.splice(toIndex, 0, movedItem);
-
+  
+      const [movedItem] = optionsToModify.splice(fromIndex, 1);
+      optionsToModify.splice(toIndex, 0, movedItem);
+  
       return {
         ...prevAnswers,
-        [questionId]: reorderedAnswers,
+        [questionId]: optionsToModify,
       };
     });
   };
+  
 
   const getTotalQuestionCount = (): number => {
     if (!examData || !examData.questions) {
@@ -1339,6 +1355,11 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
             }
 
             case "ORD": {
+              const answerArray = answers[question.id];
+              const optionsToDisplay = Array.isArray(answerArray)
+                ? answerArray
+                : initialShuffledOptions[question.id] || [];
+            
               return (
                 <div className="flex justify-normal bg-[#f6f7f9]">
                   <div className="bg-defaultcolor p-3">
@@ -1351,7 +1372,7 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
                       Arrange in sequence (Use the arrows to reorder):
                     </p>
                     <ul>
-                      {answers[question.id]?.map((option, index) => (
+                      {optionsToDisplay.map((option, index) => (
                         <li
                           key={index}
                           className="p-3 bg-white rounded-lg mb-2 flex items-center justify-between"
@@ -1374,10 +1395,7 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
                               onClick={() =>
                                 moveItem(question.id, index, index + 1)
                               }
-                              disabled={
-                                index ===
-                                (answers[question.id]?.length || 0) - 1
-                              }
+                              disabled={index === optionsToDisplay.length - 1}
                             >
                               ↓
                             </button>

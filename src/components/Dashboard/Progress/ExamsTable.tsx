@@ -95,19 +95,19 @@ const ExamsTable: React.FC = () => {
                 <td className="p-4">{formatDate(exam.updated_at)}</td>
                 <td className="p-4">
                   {exam.student_percentage !== null
-                    ? `${exam.student_percentage}%`
+                    ? `${exam.student_percentage ?? 0}%`
                     : "0%"}
                 </td>
-                <td className="p-4">{exam.pass_percentage}%</td>
+                <td className="p-4">{exam.pass_percentage ?? 0}%</td>
                 <td className="p-4">
                   <span
                     className={`px-3 py-1 rounded-lg text-sm font-medium ${
-                      exam.student_percentage >= exam.pass_percentage
+                      Number(exam.student_percentage) >= Number(exam.pass_percentage)
                         ? "bg-green-100 text-green-800"
                         : "bg-red-100 text-red-800"
                     }`}
                   >
-                    {exam.student_percentage >= exam.pass_percentage ? "Passed" : "Failed"}
+                    {Number(exam.student_percentage) >= Number(exam.pass_percentage) ? "Passed" : "Failed"}
                   </span>
                 </td>
                 <td className="p-4">
