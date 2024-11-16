@@ -46,7 +46,7 @@ const PricingCard: React.FC<PricingCardProps> = ({
       return;
     }
 
-    const successUrl = Cookies.get("redirect_url") ? Cookies.get("redirect_url") : `${window.location.origin}/dashboard`;
+    const successUrl = Cookies.get("redirect_url") ? Cookies.get("redirect_url") : '/dashboard';
 
     try {
       // Send the POST request to create a checkout session
