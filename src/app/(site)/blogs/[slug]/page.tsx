@@ -24,11 +24,8 @@ interface BlogPost {
   image: string;
   slug: string;
   created_at: string;
+  user:string;
   category: {
-    id: number;
-    name: string;
-  };
-  user: {
     id: number;
     name: string;
   };
@@ -153,7 +150,7 @@ export default function Post({ params }: Props) {
               {/* Author and Date */}
               <div className="flex items-center text-gray-500 mb-6">
                 <span className="mr-2">written by</span>
-                <span className="font-semibold text-dark dark:text-white">{post.user.name}</span>
+                <span className="font-semibold text-dark dark:text-white">{post.user}</span>
                 <span className="mx-2">|</span>
                 <span>published on {format(new Date(post.created_at), "dd MMM yyyy, h:mm a")}</span>
               </div>
@@ -172,6 +169,7 @@ export default function Post({ params }: Props) {
               {/* Blog Content */}
               <div className="w-full px-4">
                 <div className="blog-details xl:pr-10" id="dynamic_content">
+                  <div className="mb-4" dangerouslySetInnerHTML={{ __html: post.short_description }} />
                   <div dangerouslySetInnerHTML={{ __html: post.content }} />
                 </div>
               </div>
