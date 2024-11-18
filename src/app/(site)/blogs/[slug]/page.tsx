@@ -149,7 +149,7 @@ export default function Post({ params }: Props) {
 
               {/* Author and Date */}
               <div className="flex items-center text-gray-500 mb-6">
-                <span className="mr-2">written by</span>
+                <span className="mr-1">written by</span>
                 <span className="font-semibold text-dark dark:text-white">{post.user}</span>
                 <span className="mx-2">|</span>
                 <span>published on {format(new Date(post.created_at), "dd MMM yyyy, h:mm a")}</span>
