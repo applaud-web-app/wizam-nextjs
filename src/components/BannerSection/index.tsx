@@ -56,13 +56,13 @@ const BannerSection: FC = () => {
     () =>
       carouselItems.map((item, index) => (
         <div key={`carousel-item-${index}`} className="item flex flex-col items-center justify-center">
-          <h2
-            className="mb-6 max-w-4xl mx-auto text-2xl sm:text-3xl lg:text-6xl font-bold text-white leading-snug sm:leading-snug lg:leading-tight"
+         <h2
+            className="mb-6 max-w-4xl mx-auto text-2xl sm:text-4xl lg:text-6xl font-bold text-white leading-snug sm:leading-snug lg:leading-tight"
             style={{ textShadow: "2px 2px 4px rgba(0, 0, 0, 0.4)" }}
           >
             {item.title}
           </h2>
-          <p className="mb-4 max-w-2xl mx-auto text-sm sm:text-lg lg:text-2xl text-white leading-relaxed">
+          <p className="mb-4 max-w-2xl mx-auto text-base sm:text-lg lg:text-2xl text-white leading-relaxed">
             {item.description}
           </p>
 
@@ -130,7 +130,7 @@ const BannerSection: FC = () => {
                   onInitialized={handleCarouselInitialized}
                   renderPrevButton={() => (
                     <button
-                      className={`absolute left-0 top-1/2 transform -translate-y-1/2 text-white p-2 rounded-full transition ${
+                      className={`absolute lg:left-0 -left-2 top-1/2 transform -translate-y-1/2 text-white p-2 rounded-full transition ${
                         carouselInitialized ? "opacity-100" : "opacity-0"
                       }`}
                       aria-label="Previous Slide"
@@ -140,7 +140,7 @@ const BannerSection: FC = () => {
                   )}
                   renderNextButton={() => (
                     <button
-                      className={`absolute right-0 top-1/2 transform -translate-y-1/2 text-white p-2 rounded-full transition ${
+                      className={`absolute lg:right-0 -right-2 top-1/2 transform -translate-y-1/2 text-white p-2 rounded-full transition ${
                         carouselInitialized ? "opacity-100" : "opacity-0"
                       }`}
                       aria-label="Next Slide"
