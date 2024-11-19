@@ -55,8 +55,11 @@ const BannerSection: FC = () => {
   const preparedItems = useMemo(
     () =>
       carouselItems.map((item, index) => (
-        <div key={`carousel-item-${index}`} className="item flex flex-col items-center justify-center">
-         <h2
+        <div
+          key={`carousel-item-${index}`}
+          className="item flex flex-col items-center justify-center"
+        >
+          <h2
             className="mb-6 max-w-4xl mx-auto text-2xl sm:text-4xl lg:text-6xl font-bold text-white leading-snug sm:leading-snug lg:leading-tight"
             style={{ textShadow: "2px 2px 4px rgba(0, 0, 0, 0.4)" }}
           >
@@ -86,7 +89,6 @@ const BannerSection: FC = () => {
           return `https://www.youtube.com/embed/${videoId}?autoplay=1`;
         }
       }
-      // Return the original link if it doesn't match known patterns
       return link;
     } catch (error) {
       console.error("Invalid YouTube URL:", link);
@@ -121,7 +123,7 @@ const BannerSection: FC = () => {
                   autoPlayInterval={3000}
                   disableDotsControls
                   disableButtonsControls={false} // Enable buttons controls
-                  autoPlayStrategy="default"
+                  autoPlayStrategy="none" // Improve looping behavior
                   responsive={{
                     0: { items: 1 },
                     600: { items: 1 },
@@ -149,10 +151,8 @@ const BannerSection: FC = () => {
                     </button>
                   )}
                   items={preparedItems}
-                  animationDuration={800} // Adjust animation duration for smoother transitions
-                  
+                  animationDuration={800} // Smooth transitions
                   controlsStrategy="responsive"
-                
                   touchMoveDefaultEvents={false}
                 />
               )}
@@ -178,7 +178,7 @@ const BannerSection: FC = () => {
                     layout="fill"
                     objectFit="cover"
                     className="mx-auto p-3 rounded-lg"
-                    priority // Preload the image for better performance
+                    priority
                   />
 
                   {/* Play Button and Logo Overlay */}
