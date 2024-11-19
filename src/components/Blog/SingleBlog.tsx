@@ -17,14 +17,14 @@ const SingleBlog = ({ blog }: { blog: Blog }) => {
   return (
     <div className="group mb-10 flex flex-col overflow-hidden rounded-lg bg-white shadow-sm hover:shadow-lg dark:bg-dark-2">
       {/* Image Section */}
-      <div className="relative h-[200px] md:h-[250px] lg:h-[300px] overflow-hidden rounded-t-lg">
+      <div className="relative  overflow-hidden rounded-t-lg">
         <Link href={`/blogs/${slug}`} aria-label="blog cover" className="block h-full">
           <Image
             src={coverImage}
             alt={title}
-            className="w-full h-full object-cover transition-transform duration-300 ease-in-out group-hover:rotate-6 group-hover:scale-110"
+            className="w-full h-full object-contain transition-transform duration-300 ease-in-out group-hover:rotate-6 group-hover:scale-110"
             width={408}
-            height={272}
+            height={280}
           />
         </Link>
       </div>

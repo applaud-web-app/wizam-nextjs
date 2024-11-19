@@ -56,7 +56,7 @@ interface ExamData {
   saved_answers: SavedAnswer[];
 }
 
-export default function PlayExamPage({ params }: { params: { slug: string } }) {
+export default function PlayQuizPage({ params }: { params: { slug: string } }) {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState<number>(0);
   const [answers, setAnswers] = useState<{ [key: number]: string[] | null }>(
     {}
