@@ -151,7 +151,7 @@ const BannerSection: FC = () => {
                     </button>
                   )}
                   items={preparedItems}
-                  animationDuration={800} // Smooth transitions
+                  animationDuration={1000} // Smooth transitions
                   controlsStrategy="responsive"
                   touchMoveDefaultEvents={false}
                 />

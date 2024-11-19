@@ -5,6 +5,7 @@ import axios from "axios";
 import SingleBlog from "@/components/Blog/SingleBlog";
 import { format } from "date-fns";
 import Image from "next/image";
+import { FaShareAlt } from "react-icons/fa"; 
 import Loader from "@/components/Common/Loader";
 
 // Utility function to sanitize description and limit to 250 characters
@@ -24,7 +25,7 @@ interface BlogPost {
   image: string;
   slug: string;
   created_at: string;
-  user:string;
+  user: string;
   category: {
     id: number;
     name: string;
@@ -121,6 +122,30 @@ export default function Post({ params }: Props) {
     fetchPost();
   }, [params.slug]);
 
+  // Function to handle sharing
+  const handleShare = async () => {
+    if (navigator.share && post) {
+      try {
+        await navigator.share({
+          title: post.title,
+          text: post.short_description,
+          url: window.location.href,
+        });
+        console.log("Shared successfully");
+      } catch (error) {
+        console.error("Error sharing", error);
+      }
+    } else {
+      // Fallback for browsers that do not support navigator.share
+      try {
+        await navigator.clipboard.writeText(window.location.href);
+        alert("Link copied to clipboard");
+      } catch (error) {
+        console.error("Could not copy link", error);
+      }
+    }
+  };
+
   if (loading) {
     return <Loader />;
   }
@@ -132,60 +157,93 @@ export default function Post({ params }: Props) {
   return (
     <>
       <section className="relative">
-        <Image src="/images/blog/blog-detail.png" alt={post.title} width={1288} height={500} className="h-full w-full object-cover object-center" />
+        <Image
+          src="/images/blog/blog-detail.png"
+          alt={post.title}
+          width={1288}
+          height={500}
+          className="h-[200px] sm:h-[300px] md:h-[400px] w-full object-cover object-center"
+        />
       </section>
 
-      <section className="py-16 dark:bg-dark lg:py-16 relative">
+      <section className="py-8 sm:py-12 md:py-16 dark:bg-dark relative bg-gray-50">
         <div className="container -mt-[100px] lg:-mt-[250px] ">
-          <div className="bg-white shadow-lg p-5 md:p-6 lg:p-8 rounded-lg">
-            <div className="w-full">
-              {/* Category Badge */}
-              <span className="inline-block bg-primary text-secondary text-xs font-semibold uppercase px-3 py-1 rounded-full mb-4">
-                {post.category.name}
-              </span>
+        <div className="bg-white shadow-lg p-4 sm:p-5 md:p-6 lg:p-8 rounded-lg">
+       
+  <div className="w-full">
+    {/* Category and Share */}
+    <div className="flex justify-between items-center mb-4">
+      {/* Category Badge */}
+      <span className="inline-block bg-primary text-secondary text-sm font-semibold uppercase px-4 py-2 rounded-full">
+        {post.category.name}
+      </span>
 
-              {/* Title */}
-              <h1 className="text-3xl font-bold text-dark dark:text-white mb-4">{post.title}</h1>
+      {/* Share Button */}
+      <button
+        onClick={handleShare}
+        className="inline-flex items-center bg-secondary text-white text-sm font-semibold hover:bg-secondary-dark px-4 py-2 rounded-full"
+      >
+        <FaShareAlt className="mr-2 text-lg" />
+        Share
+      </button>
+    </div>
 
-              {/* Author and Date */}
-              <div className="flex items-center text-gray-500 mb-6">
-                <span className="mr-1">written by</span>
-                <span className="font-semibold text-dark dark:text-white">{post.user}</span>
-                <span className="mx-2">|</span>
-                <span>published on {format(new Date(post.created_at), "dd MMM yyyy, h:mm a")}</span>
-              </div>
+    {/* Title */}
+    <h1 className="text-2xl sm:text-2xl md:text-3xl font-bold text-dark dark:text-white mb-4">
+      {post.title}
+    </h1>
 
-              {/* Image Section */}
-              <div className="wow fadeInUp relative z-20 mb-[60px] h-[300px] overflow-hidden rounded md:h-[400px] lg:h-[500px]" data-wow-delay=".1s">
-                <Image
-                  src={post.image}
-                  alt={post.title}
-                  width={1288}
-                  height={500}
-                  className="h-full w-full object-cover object-center"
-                />
-              </div>
+    {/* Author and Date */}
+    <div className="flex flex-wrap items-center text-gray-500 mb-6">
+      <span className="mr-1">Written by</span>
+      <span className="font-semibold text-dark dark:text-white">{post.user}</span>
+      <span className="hidden sm:inline mx-3 text-gray-400">|</span>
+      <span className="block sm:inline w-full sm:w-auto">
+        Published on {format(new Date(post.created_at), "dd MMM yyyy, h:mm a")}
+      </span>
+    </div>
 
-              {/* Blog Content */}
-              <div className="w-full px-4">
-                <div className="blog-details xl:pr-10" id="dynamic_content">
-                  <div className="mb-4" dangerouslySetInnerHTML={{ __html: post.short_description }} />
-                  <div dangerouslySetInnerHTML={{ __html: post.content }} />
-                </div>
-              </div>
-            </div>
-          </div>
+    {/* Blog Image */}
+    <div
+      className="relative z-20 mb-8 h-[250px] sm:h-[350px] md:h-[450px] lg:h-[550px] overflow-hidden rounded-lg shadow-md"
+      data-wow-delay=".1s"
+    >
+      <Image
+        src={post.image}
+        alt={post.title}
+        width={1288}
+        height={550}
+        className="h-full w-full object-cover object-center"
+      />
+    </div>
+
+    {/* Blog Content */}
+    <div className="blog-details" id="dynamic_content">
+      {/* Short Description */}
+      <div
+        className="mb-6 text-gray-700 dark:text-gray-300 text-base sm:text-lg leading-relaxed"
+        dangerouslySetInnerHTML={{ __html: post.short_description }}
+      />
+
+      {/* Full Content */}
+      <div
+        className="text-gray-800 dark:text-gray-400 text-base sm:text-lg leading-relaxed"
+        dangerouslySetInnerHTML={{ __html: post.content }}
+      />
+    </div>
+  </div>
+</div>
 
           {/* Related Posts */}
           {relatedPosts.length > 0 && (
-            <div className="mt-14">
-              <h2 className="relative pb-5 text-2xl font-semibold text-dark dark:text-white sm:text-[28px]">
+            <div className="mt-10 sm:mt-12 md:mt-14">
+              <h2 className="text-lg sm:text-xl md:text-2xl font-semibold text-dark dark:text-white mb-4 sm:mb-5">
                 Related Articles
               </h2>
-              <span className="mb-10 inline-block h-[2px] w-20 bg-primary"></span>
+              <span className="mb-6 inline-block h-[2px] w-16 sm:w-20 bg-primary"></span>
 
               {/* Grid Layout for Related Posts */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
                 {relatedPosts.map((relatedPost, key) => (
                   <SingleBlog
                     key={key}
