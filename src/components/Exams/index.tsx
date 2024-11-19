@@ -180,7 +180,7 @@ const Exams = () => {
               filtering ? "" : "hover:bg-secondary hover:text-primary"
             }`}
           >
-            {filtering ? "Filtering..." : "Filter"}
+            {filtering ? "Submitting..." : "Submit"}
           </button>
         </div>
 

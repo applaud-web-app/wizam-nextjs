@@ -144,7 +144,7 @@ export default function Header({ toggleSidebar }: HeaderProps) {
         <Link href="/" className="text-gray-800 dark:text-gray-300 hover:text-defaultcolor">
           Home
         </Link>
-        <Link href="/about" className="text-gray-800 dark:text-gray-300 hover:text-defaultcolor">
+        <Link href="/about-us" className="text-gray-800 dark:text-gray-300 hover:text-defaultcolor">
           About Us
         </Link>
         <Link href="/pricing" className="text-gray-800 dark:text-gray-300 hover:text-defaultcolor">

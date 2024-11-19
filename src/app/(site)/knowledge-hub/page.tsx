@@ -6,7 +6,7 @@ import Breadcrumb from "@/components/Common/Breadcrumb";
 import Blog from "@/components/Blog";
 import PreLoader from "@/components/Common/PreLoader";
 
-const BlogPage = () => {
+const KnowledgeHubPage = () => {
   const { seoData, loading, error } = useSeo();
 
   useEffect(() => {
@@ -74,4 +74,4 @@ const BlogPage = () => {
   );
 };
 
-export default BlogPage;
+export default KnowledgeHubPage;

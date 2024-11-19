@@ -106,7 +106,7 @@ const BannerSection: FC = () => {
       {/* Gradient Overlay */}
       <div className="absolute inset-0 bg-gradient-to-b from-blue-600 to-white opacity-75"></div>
 
-      <div className="container mx-auto px-4 relative z-10">
+      <div className="container mx-auto  relative z-10">
         {loading ? (
           <div className="text-center text-white py-20">
             <p>Loading banners...</p>
@@ -132,7 +132,7 @@ const BannerSection: FC = () => {
                   onInitialized={handleCarouselInitialized}
                   renderPrevButton={() => (
                     <button
-                      className={`absolute lg:left-0 -left-2 top-1/2 transform -translate-y-1/2 text-white p-2 rounded-full transition ${
+                      className={`absolute lg:left-0 -left-3 top-1/2 transform -translate-y-1/2 text-white p-2 rounded-full transition ${
                         carouselInitialized ? "opacity-100" : "opacity-0"
                       }`}
                       aria-label="Previous Slide"
@@ -142,7 +142,7 @@ const BannerSection: FC = () => {
                   )}
                   renderNextButton={() => (
                     <button
-                      className={`absolute lg:right-0 -right-2 top-1/2 transform -translate-y-1/2 text-white p-2 rounded-full transition ${
+                      className={`absolute lg:right-0 -right-3 top-1/2 transform -translate-y-1/2 text-white p-2 rounded-full transition ${
                         carouselInitialized ? "opacity-100" : "opacity-0"
                       }`}
                       aria-label="Next Slide"
@@ -159,7 +159,7 @@ const BannerSection: FC = () => {
             </div>
 
             {/* Banner Image Section */}
-            <div className="relative mt-6 bg-white/20 p-2 sm:p-3 lg:p-3 rounded-lg max-w-full sm:max-w-[600px] lg:max-w-[835px] h-[300px] sm:h-[400px] lg:h-[480px] mx-auto">
+            <div className="relative mt-6 bg-white/20 p-2 sm:p-3 lg:p-3 rounded-lg max-w-full sm:max-w-[600px] lg:max-w-[835px] h-[190px] sm:h-[400px] lg:h-[480px] mx-auto">
               {isVideoPlaying && youtubeLink ? (
                 <iframe
                   width="100%"
@@ -182,7 +182,7 @@ const BannerSection: FC = () => {
                   />
 
                   {/* Play Button and Logo Overlay */}
-                  <div className="absolute text-center top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 space-y-4 sm:space-y-6 lg:space-y-6">
+                  <div className="absolute text-center top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 space-y-2 sm:space-y-6 lg:space-y-6">
                     <button
                       className="flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 mx-auto bg-secondary hover:bg-secondary-dark rounded-full text-primary text-xl sm:text-3xl transition transform duration-300 ease-in-out hover:scale-110 animate-pulse shadow-lg"
                       aria-label="Play Video"
@@ -197,7 +197,7 @@ const BannerSection: FC = () => {
                       width={200}
                       height={60}
                       quality={100}
-                      className="w-[160px] sm:w-[200px] lg:w-[260px] h-auto object-contain mx-auto"
+                      className="w-[120px] sm:w-[200px] lg:w-[260px] h-auto object-contain mx-auto"
                     />
                     <p className="text-tertiary text-md sm:text-lg lg:text-3xl font-bold">
                       In 1 minute

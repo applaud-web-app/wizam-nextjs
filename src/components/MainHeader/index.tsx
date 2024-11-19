@@ -205,7 +205,7 @@ const Header = () => {
     if (suggestion.type === "exam") {
       router.push(`/exams/${suggestion.slug}`);
     } else if (suggestion.type === "resource") {
-      router.push(`/blogs/${suggestion.slug}`);
+      router.push(`/knowledge-hub/${suggestion.slug}`);
     }
 
     // Clear search state
@@ -257,7 +257,7 @@ const Header = () => {
 
           <div className="hidden lg:flex items-center relative space-x-6">
             <nav>
-              <ul className="flex gap-5 items-center">
+              <ul className="flex gap-3 items-center">
                 {menuData.map((menuItem, index) => (
                   <li key={index} className="group relative">
                     <Link

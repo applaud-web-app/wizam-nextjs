@@ -20,17 +20,23 @@ const menuData: Menu[] = [
     path: "/exams",
     newTab: false,
   },
-
   {
     id: 3,
+    title: "Pricing",
+    path: "/pricing",
+    newTab: false,
+  },
+
+  {
+    id: 4,
     title: "Knowledge Hub",
-    path: "/blogs",
+    path: "/knowledge-hub",
     newTab: false,
   },
   {
-    id: 4,
+    id: 5,
     title: "About Us",
-    path: "/about",
+    path: "/about-us",
     newTab: false,
   },
 

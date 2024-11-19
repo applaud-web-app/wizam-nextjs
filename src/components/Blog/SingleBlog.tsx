@@ -18,7 +18,7 @@ const SingleBlog = ({ blog }: { blog: Blog }) => {
     <div className="group mb-10 flex flex-col overflow-hidden rounded-lg bg-white shadow-sm hover:shadow-lg dark:bg-dark-2">
       {/* Image Section */}
       <div className="relative  overflow-hidden rounded-t-lg">
-        <Link href={`/blogs/${slug}`} aria-label="blog cover" className="block h-full">
+        <Link href={`/knowledge-hub/${slug}`} aria-label="blog cover" className="block h-full">
           <Image
             src={coverImage}
             alt={title}
@@ -35,7 +35,7 @@ const SingleBlog = ({ blog }: { blog: Blog }) => {
         </span>
         <h3>
           <Link
-            href={`/blogs/${slug}`}
+            href={`/knowledge-hub/${slug}`}
             className="mb-3 inline-block text-xl font-semibold text-dark hover:text-primary-dark dark:text-white dark:hover:text-primary sm:text-2xl lg:text-xl"
           >
             {title}

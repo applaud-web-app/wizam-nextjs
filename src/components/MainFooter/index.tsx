@@ -86,25 +86,27 @@ const Footer = () => {
           </div>
 
           <div className="col-span-1 lg:col-span-1">
-            <h4 className="mb-4 font-semibold text-xl leading-snug">Content</h4>
+            <h4 className="mb-4 font-semibold text-xl leading-snug">Wizam</h4>
             <ul>
               <li className="mb-2"><Link href="/" className="hover:text-green-400">Home</Link></li>
-              <li className="mb-2"><Link href="/about" className="hover:text-green-400">About Us</Link></li>
               <li className="mb-2"><Link href="/exams" className="hover:text-green-400">Exams</Link></li>
-              <li className="mb-2"><Link href="/blogs" className="hover:text-green-400">Knowledge Hub</Link></li>
+              <li className="mb-2"><Link href="/pricing" className="hover:text-green-400">Pricing</Link></li>
+              <li className="mb-2"><Link href="/knowledge-hub" className="hover:text-green-400">Knowledge Hub</Link></li>
               <li className="mb-2"><Link href="/faq" className="hover:text-green-400">FAQ</Link></li>
-              <li><Link href="/contact" className="hover:text-green-400">Contact Us</Link></li>
+           
             </ul>
           </div>
 
           <div className="col-span-1 lg:col-span-1">
-            <h4 className="mb-4 font-semibold text-xl leading-snug">Company</h4>
+            <h4 className="mb-4 font-semibold text-xl leading-snug">About Us</h4>
             <ul>
+              <li className="mb-2"><Link href="/about-us" className="hover:text-green-400">About Us</Link></li>
               {pages.map((page, index) => (
                 <li key={index} className="mb-2">
                   <Link href={`/${page.slug}`} className="hover:text-green-400">{page.title}</Link>
                 </li>
               ))}
+                
             </ul>
           </div>
 
@@ -115,9 +117,10 @@ const Footer = () => {
               <li className="mb-2">
                 <Link href={`tel:${siteSettings.number}`} className="hover:text-green-400">{siteSettings.number}</Link>
               </li>
-              <li>
+              <li className="mb-2">
                 <Link href={`mailto:${siteSettings.email}`} className="hover:text-green-400">{siteSettings.email}</Link>
               </li>
+              <li><Link href="/contact-us" className="hover:text-green-400">Contact Us</Link></li>
             </ul>
           </div>
 

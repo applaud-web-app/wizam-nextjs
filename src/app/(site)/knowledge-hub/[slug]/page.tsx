@@ -20,7 +20,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
     openGraph: {
       title: post.title,
       description: post.short_description,
-      url: `${process.env.NEXT_PUBLIC_APP_URL}/blogs/${post.slug}`,
+      url: `${process.env.NEXT_PUBLIC_APP_URL}/knowledge-hub/${post.slug}`,
       images: [
         {
           url: post.image,
