@@ -6,7 +6,13 @@ import SingleBlog from "@/components/Blog/SingleBlog";
 import { format } from "date-fns";
 import Image from "next/image";
 import Loader from "@/components/Common/Loader";
-import { FaFacebook, FaWhatsapp, FaTwitter, FaLinkedin } from "react-icons/fa";
+import {
+  FacebookShareButton,
+  TwitterShareButton,
+  WhatsappShareButton,
+  LinkedinShareButton,
+} from "next-share";
+import { FaFacebook, FaTwitter, FaWhatsapp, FaLinkedin } from "react-icons/fa";
 
 // Utility function to sanitize description and limit to 250 characters
 const sanitizeAndLimitText = (html: string, limit: number): string => {
@@ -81,33 +87,6 @@ export default function Post({ params }: Props) {
     fetchPost();
   }, [params.slug]);
 
-  // Share Functions
-  const handleFacebookShare = (url: string) => {
-    const shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`;
-    window.open(shareUrl, "_blank", "noopener,noreferrer");
-  };
-
-  const handleWhatsappShare = (url: string) => {
-    const shareUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(
-      `Check this out: ${url}`
-    )}`;
-    window.open(shareUrl, "_blank", "noopener,noreferrer");
-  };
-
-  const handleTwitterShare = (title: string, url: string) => {
-    const shareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(
-      title
-    )}&url=${encodeURIComponent(url)}`;
-    window.open(shareUrl, "_blank", "noopener,noreferrer");
-  };
-
-  const handleLinkedInShare = (title: string, url: string) => {
-    const shareUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(
-      url
-    )}&title=${encodeURIComponent(title)}`;
-    window.open(shareUrl, "_blank", "noopener,noreferrer");
-  };
-
   if (loading) {
     return <Loader />;
   }
@@ -115,6 +94,8 @@ export default function Post({ params }: Props) {
   if (error || !post) {
     return <div>{error || "Post not found"}</div>;
   }
+
+  const shareUrl = typeof window !== "undefined" ? window.location.href : "";
 
   return (
     <>
@@ -139,34 +120,25 @@ export default function Post({ params }: Props) {
 
                 {/* Share Buttons */}
                 <div className="flex justify-end items-center space-x-4">
-                  <button
-                    onClick={() => handleFacebookShare(window.location.href)}
-                    className="text-blue-600 hover:text-blue-800 text-xl"
-                    title="Share on Facebook"
-                  >
-                    <FaFacebook />
-                  </button>
-                  <button
-                    onClick={() => handleWhatsappShare(window.location.href)}
-                    className="text-green-500 hover:text-green-700 text-xl"
-                    title="Share on WhatsApp"
-                  >
-                    <FaWhatsapp />
-                  </button>
-                  <button
-                    onClick={() => handleTwitterShare(post.title, window.location.href)}
-                    className="text-blue-400 hover:text-blue-600 text-xl"
-                    title="Share on Twitter"
-                  >
-                    <FaTwitter />
-                  </button>
-                  <button
-                    onClick={() => handleLinkedInShare(post.title, window.location.href)}
-                    className="text-blue-700 hover:text-blue-900 text-xl"
-                    title="Share on LinkedIn"
-                  >
-                    <FaLinkedin />
-                  </button>
+                  {/* Facebook */}
+                  <FacebookShareButton url={shareUrl} quote={post.title}>
+                    <FaFacebook className="text-blue-600 hover:text-blue-800 text-xl" title="Share on Facebook" />
+                  </FacebookShareButton>
+
+                  {/* Twitter */}
+                  <TwitterShareButton url={shareUrl} title={post.title}>
+                    <FaTwitter className="text-blue-400 hover:text-blue-600 text-xl" title="Share on Twitter" />
+                  </TwitterShareButton>
+
+                  {/* WhatsApp */}
+                  <WhatsappShareButton url={shareUrl} title={post.title}>
+                    <FaWhatsapp className="text-green-500 hover:text-green-700 text-xl" title="Share on WhatsApp" />
+                  </WhatsappShareButton>
+
+                  {/* LinkedIn */}
+                  <LinkedinShareButton url={shareUrl} title={post.title}>
+                    <FaLinkedin className="text-blue-700 hover:text-blue-900 text-xl" title="Share on LinkedIn" />
+                  </LinkedinShareButton>
                 </div>
               </div>
 
