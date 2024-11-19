@@ -124,27 +124,40 @@ export default function Post({ params }: Props) {
 
   // Function to handle sharing
   const handleShare = async () => {
-    if (navigator.share && post) {
+    if (!post) {
+      alert("Post data is not available. Please try again later.");
+      return;
+    }
+  
+    if (navigator.share) {
       try {
         await navigator.share({
-          title: post.title,
-          text: post.short_description,
+          title: post.title, 
+          text: `${post.short_description}\nRead more at: ${window.location.href}`,
           url: window.location.href,
         });
         console.log("Shared successfully");
       } catch (error) {
-        console.error("Error sharing", error);
+        console.error("Error during share:", error);
       }
     } else {
-      // Fallback for browsers that do not support navigator.share
+      // Fallback for unsupported browsers
       try {
-        await navigator.clipboard.writeText(window.location.href);
-        alert("Link copied to clipboard");
+        const shareContent = `
+        ${post.title}\n\n
+        ${post.short_description}\n\n
+        Read more: ${window.location.href}
+        `;
+        await navigator.clipboard.writeText(shareContent);
+        alert("Post link copied to clipboard! Share it anywhere.");
       } catch (error) {
-        console.error("Could not copy link", error);
+        console.error("Error copying to clipboard:", error);
+        alert("Failed to copy the link. Please try again.");
       }
     }
   };
+  
+  
 
   if (loading) {
     return <Loader />;
@@ -172,7 +185,7 @@ export default function Post({ params }: Props) {
        
   <div className="w-full">
     {/* Category and Share */}
-    <div className="flex justify-between items-center mb-4">
+   <div className="flex justify-between items-center mb-4">
     {/* Category Badge */}
     <span className="inline-block bg-primary text-secondary text-xs sm:text-sm font-semibold uppercase px-3 sm:px-4 py-1 sm:py-2 rounded-full">
       {post.category.name}
