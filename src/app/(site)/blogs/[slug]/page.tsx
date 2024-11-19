@@ -5,8 +5,8 @@ import axios from "axios";
 import SingleBlog from "@/components/Blog/SingleBlog";
 import { format } from "date-fns";
 import Image from "next/image";
-import { FaShareAlt } from "react-icons/fa"; 
 import Loader from "@/components/Common/Loader";
+import { FaFacebook, FaWhatsapp, FaTwitter, FaLinkedin } from "react-icons/fa";
 
 // Utility function to sanitize description and limit to 250 characters
 const sanitizeAndLimitText = (html: string, limit: number): string => {
@@ -53,54 +53,15 @@ export default function Post({ params }: Props) {
   const [loading, setLoading] = useState<boolean>(true); // Loading state
   const [error, setError] = useState<string | null>(null); // Error state
 
-  // Fetch blog post details and related content based on slug
   useEffect(() => {
     const fetchPost = async () => {
       try {
-        // Fetch the blog post by slug
         const postResponse = await axios.get<{ status: boolean; data: BlogPost; related: BlogPost[] }>(
           `${process.env.NEXT_PUBLIC_API_URL}/resource/${params.slug}`
         );
         const fetchedPost = postResponse.data.data;
-
-        // Set the fetched post in the state
         setPost(fetchedPost);
 
-        // Set SEO Metadata
-        const setMetaTag = (name: string, content: string, property = false) => {
-          const selector = property
-            ? `meta[property="${name}"]`
-            : `meta[name="${name}"]`;
-          let metaTag = document.querySelector(selector) as HTMLMetaElement | null;
-          if (metaTag) {
-            metaTag.content = content;
-          } else {
-            metaTag = document.createElement("meta");
-            if (property) {
-              metaTag.setAttribute("property", name);
-            } else {
-              metaTag.setAttribute("name", name);
-            }
-            metaTag.content = content;
-            document.head.appendChild(metaTag);
-          }
-        };
-
-        const plainDescription = sanitizeAndLimitText(fetchedPost.content || "", 250);
-        document.title = fetchedPost.title;
-
-        setMetaTag("description", plainDescription);
-        setMetaTag("keywords", fetchedPost.category.name || "blog, article");
-        setMetaTag("og:title", fetchedPost.title, true);
-        setMetaTag("og:description", plainDescription, true);
-        setMetaTag("og:image", fetchedPost.image, true);
-        setMetaTag("og:url", window.location.href, true);
-        setMetaTag("twitter:card", "summary_large_image");
-        setMetaTag("twitter:title", fetchedPost.title);
-        setMetaTag("twitter:description", plainDescription);
-        setMetaTag("twitter:image", fetchedPost.image);
-
-        // Map related posts to the structure expected by SingleBlog component
         const relatedBlogs = postResponse.data.related.map((relatedPost: BlogPost) => ({
           title: relatedPost.title,
           coverImage: relatedPost.image,
@@ -108,8 +69,6 @@ export default function Post({ params }: Props) {
           date: relatedPost.created_at,
           slug: relatedPost.slug,
         }));
-
-        // Set the related posts
         setRelatedPosts(relatedBlogs);
       } catch (err) {
         console.error("Error fetching post:", err);
@@ -122,42 +81,32 @@ export default function Post({ params }: Props) {
     fetchPost();
   }, [params.slug]);
 
-  // Function to handle sharing
-  const handleShare = async () => {
-    if (!post) {
-      alert("Post data is not available. Please try again later.");
-      return;
-    }
-  
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: post.title, 
-          text: `${post.short_description}\nRead more at: ${window.location.href}`,
-          url: window.location.href,
-        });
-        console.log("Shared successfully");
-      } catch (error) {
-        console.error("Error during share:", error);
-      }
-    } else {
-      // Fallback for unsupported browsers
-      try {
-        const shareContent = `
-        ${post.title}\n\n
-        ${post.short_description}\n\n
-        Read more: ${window.location.href}
-        `;
-        await navigator.clipboard.writeText(shareContent);
-        alert("Post link copied to clipboard! Share it anywhere.");
-      } catch (error) {
-        console.error("Error copying to clipboard:", error);
-        alert("Failed to copy the link. Please try again.");
-      }
-    }
+  // Share Functions
+  const handleFacebookShare = (url: string) => {
+    const shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`;
+    window.open(shareUrl, "_blank", "noopener,noreferrer");
   };
-  
-  
+
+  const handleWhatsappShare = (url: string) => {
+    const shareUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(
+      `Check this out: ${url}`
+    )}`;
+    window.open(shareUrl, "_blank", "noopener,noreferrer");
+  };
+
+  const handleTwitterShare = (title: string, url: string) => {
+    const shareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(
+      title
+    )}&url=${encodeURIComponent(url)}`;
+    window.open(shareUrl, "_blank", "noopener,noreferrer");
+  };
+
+  const handleLinkedInShare = (title: string, url: string) => {
+    const shareUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(
+      url
+    )}&title=${encodeURIComponent(title)}`;
+    window.open(shareUrl, "_blank", "noopener,noreferrer");
+  };
 
   if (loading) {
     return <Loader />;
@@ -181,82 +130,75 @@ export default function Post({ params }: Props) {
 
       <section className="py-8 sm:py-12 md:py-16 dark:bg-dark relative bg-gray-50">
         <div className="container -mt-[100px] lg:-mt-[250px] ">
-        <div className="bg-white shadow-lg p-4 sm:p-5 md:p-6 lg:p-8 rounded-lg">
-       
-  <div className="w-full">
-    {/* Category and Share */}
-   <div className="flex justify-between items-center mb-4">
-    {/* Category Badge */}
-    <span className="inline-block bg-primary text-secondary text-xs sm:text-sm font-semibold uppercase px-3 sm:px-4 py-1 sm:py-2 rounded-full">
-      {post.category.name}
-    </span>
+          <div className="bg-white shadow-lg p-4 sm:p-5 md:p-6 lg:p-8 rounded-lg">
+            <div className="w-full">
+              <div className="flex justify-between items-center mb-4">
+                <span className="inline-block bg-primary text-secondary text-xs sm:text-sm font-semibold uppercase px-3 sm:px-4 py-1 sm:py-2 rounded-full">
+                  {post.category.name}
+                </span>
 
-    {/* Share Button */}
-    <button
-      onClick={handleShare}
-      className="inline-flex items-center bg-secondary text-white text-xs sm:text-sm font-semibold hover:bg-secondary-dark px-3 sm:px-4 py-1 sm:py-2 rounded-full"
-    >
-      <FaShareAlt className="mr-1 sm:mr-2 text-sm sm:text-lg" />
-      Share
-    </button>
-  </div>
+                {/* Share Buttons */}
+                <div className="flex justify-end items-center space-x-4">
+                  <button
+                    onClick={() => handleFacebookShare(window.location.href)}
+                    className="text-blue-600 hover:text-blue-800 text-xl"
+                    title="Share on Facebook"
+                  >
+                    <FaFacebook />
+                  </button>
+                  <button
+                    onClick={() => handleWhatsappShare(window.location.href)}
+                    className="text-green-500 hover:text-green-700 text-xl"
+                    title="Share on WhatsApp"
+                  >
+                    <FaWhatsapp />
+                  </button>
+                  <button
+                    onClick={() => handleTwitterShare(post.title, window.location.href)}
+                    className="text-blue-400 hover:text-blue-600 text-xl"
+                    title="Share on Twitter"
+                  >
+                    <FaTwitter />
+                  </button>
+                  <button
+                    onClick={() => handleLinkedInShare(post.title, window.location.href)}
+                    className="text-blue-700 hover:text-blue-900 text-xl"
+                    title="Share on LinkedIn"
+                  >
+                    <FaLinkedin />
+                  </button>
+                </div>
+              </div>
 
-    {/* Title */}
-    <h1 className="text-2xl sm:text-2xl md:text-3xl font-bold text-dark dark:text-white mb-4">
-      {post.title}
-    </h1>
+              <h1 className="text-2xl sm:text-2xl md:text-3xl font-bold text-dark dark:text-white mb-4">
+                {post.title}
+              </h1>
+              <div className="flex flex-wrap items-center text-gray-500 mb-6">
+                <span className="mr-1">Written by</span>
+                <span className="font-semibold text-dark dark:text-white">{post.user}</span>
+                <span className="hidden sm:inline mx-3 text-gray-400">|</span>
+                <span className="block sm:inline w-full sm:w-auto">
+                  Published on {format(new Date(post.created_at), "dd MMM yyyy, h:mm a")}
+                </span>
+              </div>
+              <Image
+                src={post.image}
+                alt={post.title}
+                width={1288}
+                height={550}
+                className="h-full w-full object-cover object-center mb-8 rounded-lg"
+              />
+              <div className="text-gray-700 dark:text-gray-300 mb-6" dangerouslySetInnerHTML={{ __html: post.short_description }} />
+              <div className="text-gray-800 dark:text-gray-400" dangerouslySetInnerHTML={{ __html: post.content }} />
+            </div>
+          </div>
 
-    {/* Author and Date */}
-    <div className="flex flex-wrap items-center text-gray-500 mb-6">
-      <span className="mr-1">Written by</span>
-      <span className="font-semibold text-dark dark:text-white">{post.user}</span>
-      <span className="hidden sm:inline mx-3 text-gray-400">|</span>
-      <span className="block sm:inline w-full sm:w-auto">
-        Published on {format(new Date(post.created_at), "dd MMM yyyy, h:mm a")}
-      </span>
-    </div>
-
-    {/* Blog Image */}
-    <div
-      className="relative z-20 mb-8 h-[250px] sm:h-[350px] md:h-[450px] lg:h-[550px] overflow-hidden rounded-lg shadow-md"
-      data-wow-delay=".1s"
-    >
-      <Image
-        src={post.image}
-        alt={post.title}
-        width={1288}
-        height={550}
-        className="h-full w-full object-cover object-center"
-      />
-    </div>
-
-    {/* Blog Content */}
-    <div className="blog-details" id="dynamic_content">
-      {/* Short Description */}
-      <div
-        className="mb-6 text-gray-700 dark:text-gray-300 text-base sm:text-lg leading-relaxed"
-        dangerouslySetInnerHTML={{ __html: post.short_description }}
-      />
-
-      {/* Full Content */}
-      <div
-        className="text-gray-800 dark:text-gray-400 text-base sm:text-lg leading-relaxed"
-        dangerouslySetInnerHTML={{ __html: post.content }}
-      />
-    </div>
-  </div>
-</div>
-
-          {/* Related Posts */}
           {relatedPosts.length > 0 && (
-            <div className="mt-10 sm:mt-12 md:mt-14">
-              <h2 className="text-lg sm:text-xl md:text-2xl font-semibold text-dark dark:text-white mb-4 sm:mb-5">
+            <div className="mt-10">
+              <h2 className="text-lg sm:text-xl md:text-2xl font-semibold text-dark dark:text-white mb-4">
                 Related Articles
               </h2>
-              <span className="mb-6 inline-block h-[2px] w-16 sm:w-20 bg-primary"></span>
-
-              {/* Grid Layout for Related Posts */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {relatedPosts.map((relatedPost, key) => (
                   <SingleBlog
                     key={key}
