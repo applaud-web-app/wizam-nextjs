@@ -173,20 +173,20 @@ export default function Post({ params }: Props) {
   <div className="w-full">
     {/* Category and Share */}
     <div className="flex justify-between items-center mb-4">
-      {/* Category Badge */}
-      <span className="inline-block bg-primary text-secondary text-sm font-semibold uppercase px-4 py-2 rounded-full">
-        {post.category.name}
-      </span>
+    {/* Category Badge */}
+    <span className="inline-block bg-primary text-secondary text-xs sm:text-sm font-semibold uppercase px-3 sm:px-4 py-1 sm:py-2 rounded-full">
+      {post.category.name}
+    </span>
 
-      {/* Share Button */}
-      <button
-        onClick={handleShare}
-        className="inline-flex items-center bg-secondary text-white text-sm font-semibold hover:bg-secondary-dark px-4 py-2 rounded-full"
-      >
-        <FaShareAlt className="mr-2 text-lg" />
-        Share
-      </button>
-    </div>
+    {/* Share Button */}
+    <button
+      onClick={handleShare}
+      className="inline-flex items-center bg-secondary text-white text-xs sm:text-sm font-semibold hover:bg-secondary-dark px-3 sm:px-4 py-1 sm:py-2 rounded-full"
+    >
+      <FaShareAlt className="mr-1 sm:mr-2 text-sm sm:text-lg" />
+      Share
+    </button>
+  </div>
 
     {/* Title */}
     <h1 className="text-2xl sm:text-2xl md:text-3xl font-bold text-dark dark:text-white mb-4">
