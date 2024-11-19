@@ -3,11 +3,15 @@
 import Link from "next/link";
 import Image from "next/image";
 import { FaPlay } from "react-icons/fa";
-import AliceCarousel from "react-alice-carousel";
-import "react-alice-carousel/lib/alice-carousel.css";
-import { FC, useState, useEffect, useMemo } from "react";
+import { FC, useState, useEffect, useMemo, useRef } from "react";
 import { MdOutlineKeyboardArrowLeft, MdOutlineKeyboardArrowRight } from "react-icons/md";
 import axios from "axios";
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Navigation } from 'swiper/modules';
+
+// Import Swiper styles
+import "swiper/css";
+import "swiper/css/navigation";
 
 interface CarouselItem {
   title: string;
@@ -21,7 +25,10 @@ const BannerSection: FC = () => {
   const [youtubeLink, setYoutubeLink] = useState<string | null>(null);
   const [isVideoPlaying, setIsVideoPlaying] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [carouselInitialized, setCarouselInitialized] = useState(false);
+
+  // References for custom navigation
+  const prevRef = useRef<HTMLDivElement>(null);
+  const nextRef = useRef<HTMLDivElement>(null);
 
   // Fetch banner data from the API
   useEffect(() => {
@@ -46,33 +53,27 @@ const BannerSection: FC = () => {
     setIsVideoPlaying(true);
   };
 
-  // Function to handle carousel initialization
-  const handleCarouselInitialized = () => {
-    setCarouselInitialized(true);
-  };
-
-  // Prepare carousel items with unique keys and optimized styles
+  // Prepare carousel items
   const preparedItems = useMemo(
     () =>
       carouselItems.map((item, index) => (
-        <div
-          key={`carousel-item-${index}`}
-          className="item flex flex-col items-center justify-center"
-        >
-          <h2
-            className="mb-6 max-w-4xl mx-auto text-2xl sm:text-4xl lg:text-6xl font-bold text-white leading-snug sm:leading-snug lg:leading-tight"
-            style={{ textShadow: "2px 2px 4px rgba(0, 0, 0, 0.4)" }}
-          >
-            {item.title}
-          </h2>
-          <p className="mb-4 max-w-2xl mx-auto text-base sm:text-lg lg:text-2xl text-white leading-relaxed">
-            {item.description}
-          </p>
+        <SwiperSlide key={`carousel-slide-${index}`}>
+          <div className="item flex flex-col items-center justify-center">
+            <h2
+              className="mb-6 max-w-4xl mx-auto text-2xl sm:text-4xl lg:text-6xl font-bold text-white leading-snug sm:leading-snug lg:leading-tight"
+              style={{ textShadow: "2px 2px 4px rgba(0, 0, 0, 0.4)" }}
+            >
+              {item.title}
+            </h2>
+            <p className="mb-4 max-w-2xl mx-auto text-base sm:text-lg lg:text-2xl text-white leading-relaxed">
+              {item.description}
+            </p>
 
-          <Link href={item.button_link} className="inline-block mt-4 primary-button">
-            {item.button_text}
-          </Link>
-        </div>
+            <Link href={item.button_link} className="inline-block mt-4 primary-button">
+              {item.button_text}
+            </Link>
+          </div>
+        </SwiperSlide>
       )),
     [carouselItems]
   );
@@ -106,55 +107,54 @@ const BannerSection: FC = () => {
       {/* Gradient Overlay */}
       <div className="absolute inset-0 bg-gradient-to-b from-blue-600 to-white opacity-75"></div>
 
-      <div className="container mx-auto  relative z-10">
+      <div className="container mx-auto relative z-10">
         {loading ? (
           <div className="text-center text-white py-20">
             <p>Loading banners...</p>
           </div>
         ) : (
           <>
-            {/* Alice Carousel Section */}
+            {/* Swiper Carousel Section with Custom Navigation */}
             <div className="relative text-center mb-8 min-h-[200px]">
               {carouselItems.length > 0 && (
-                <AliceCarousel
-                  mouseTracking
-                  infinite
-                  autoPlay
-                  autoPlayInterval={3000}
-                  disableDotsControls
-                  disableButtonsControls={false} // Enable buttons controls
-                  autoPlayStrategy="none" // Improve looping behavior
-                  responsive={{
-                    0: { items: 1 },
-                    600: { items: 1 },
-                    1024: { items: 1 },
-                  }}
-                  onInitialized={handleCarouselInitialized}
-                  renderPrevButton={() => (
-                    <button
-                      className={`absolute lg:left-0 -left-3 top-1/2 transform -translate-y-1/2 text-white p-2 rounded-full transition ${
-                        carouselInitialized ? "opacity-100" : "opacity-0"
-                      }`}
-                      aria-label="Previous Slide"
-                    >
-                      <MdOutlineKeyboardArrowLeft size={36} />
-                    </button>
-                  )}
-                  renderNextButton={() => (
-                    <button
-                      className={`absolute lg:right-0 -right-3 top-1/2 transform -translate-y-1/2 text-white p-2 rounded-full transition ${
-                        carouselInitialized ? "opacity-100" : "opacity-0"
-                      }`}
-                      aria-label="Next Slide"
-                    >
-                      <MdOutlineKeyboardArrowRight size={36} />
-                    </button>
-                  )}
-                  items={preparedItems}
-                  animationDuration={1000} // Smooth transitions
-                  controlsStrategy="responsive"
-                  touchMoveDefaultEvents={false}
-                />
+                <>
+                  <Swiper
+                    modules={[Navigation]}
+                    loop
+                    autoplay={{ delay: 3000, disableOnInteraction: true }}
+                    speed={1000}
+                    slidesPerView={1}
+                    className="w-full"
+                    navigation={{
+                      prevEl: prevRef.current,
+                      nextEl: nextRef.current,
+                    }}
+                    onBeforeInit={(swiper) => {
+                      if (swiper.params.navigation !== undefined && typeof swiper.params.navigation !== "boolean") {
+                        swiper.params.navigation.prevEl = prevRef.current;
+                        swiper.params.navigation.nextEl = nextRef.current;
+                      }
+                    }}
+                  >
+                    {preparedItems}
+                  </Swiper>
+
+                  {/* Custom Navigation Buttons */}
+                  <div
+                    ref={prevRef}
+                    className="absolute top-1/2 -left-3 transform -translate-y-1/2 z-10 cursor-pointer transition"
+                    aria-label="Previous Slide"
+                  >
+                    <MdOutlineKeyboardArrowLeft className="text-white text-2xl sm:text-3xl" />
+                  </div>
+                  <div
+                    ref={nextRef}
+                    className="absolute top-1/2 -right-3 transform -translate-y-1/2 z-10 cursor-pointer transition"
+                    aria-label="Next Slide"
+                  >
+                    <MdOutlineKeyboardArrowRight className="text-white text-2xl sm:text-3xl" />
+                  </div>
+                </>
               )}
             </div>
 

@@ -96,7 +96,7 @@ const HomeBlogSection = ({}: HomeBlogSectionProps) => {
           <div className="text-center capitalize mt-8">
             <Link href={resourceData?.button_link || "/knowledge-hub"}>
               <span className="primary-button">
-                {resourceData?.button_text || "More Resources"}
+                {resourceData?.button_text || "More in Knowledge Hub"}
               </span>
             </Link>
           </div>
