@@ -1,9 +1,8 @@
 "use client";
 
 import Loader from "@/components/Common/Loader";
-import { AiOutlineArrowRight, AiOutlineClockCircle } from "react-icons/ai"; // For icons
+import { AiOutlineArrowRight } from "react-icons/ai"; // For icons
 import { MdOutlineBookmarks } from "react-icons/md";
-
 import { useSearchParams } from "next/navigation"; // Import useSearchParams
 import { useState, useEffect, useRef } from "react";
 import {
@@ -11,21 +10,16 @@ import {
   FaArrowRight,
   FaRegWindowClose,
   FaArrowLeft,
-  FaBook,
-  FaClock,
-  FaRegSmile,
-  FaRegFrown,
   FaCircle,
+  FaHourglass,
 } from "react-icons/fa";
 import Cookies from "js-cookie";
 import { useRouter } from "next/navigation";
 import axios from "axios";
 import { toast } from "react-toastify";
 import { Tooltip } from 'flowbite-react';
-
 import Link from "next/link";
 import NoData from "@/components/Common/NoData";
-import { FaHourglass } from "react-icons/fa6";
 
 // Option interface
 interface Option {
@@ -39,11 +33,14 @@ interface Question {
   question: string | string[]; // The question text
   options?: string[];
 }
+
+// SavedAnswer interface
 interface SavedAnswer {
   id: number;
   type: string;
   answer: any;
 }
+
 // QuizData interface
 interface ExamData {
   question_view: string;
@@ -56,18 +53,15 @@ interface ExamData {
   saved_answers: SavedAnswer[];
 }
 
-export default function PlayQuizPage({ params }: { params: { slug: string } }) {
+export default function PlayExamPage({ params }: { params: { slug: string } }) {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState<number>(0);
-  const [answers, setAnswers] = useState<{ [key: number]: string[] | null }>(
-    {}
-  );
+  const [answers, setAnswers] = useState<{ [key: number]: string[] | null }>({});
   const [timeLeft, setTimeLeft] = useState<number>(1800); // Timer (in seconds)
-  const [submitted, setSubmitted] = useState<boolean>(false); // Controls whether quiz is submitted
+  const [submitted, setSubmitted] = useState<boolean>(false); // Controls whether exam is submitted
   const [slug, setSlug] = useState<string | null>(null);
   const [currentSubIndex, setCurrentSubIndex] = useState<number | null>(null);
 
   const [isInitialized, setIsInitialized] = useState(false);
-
 
   const [examData, setExamData] = useState<ExamData | null>(null);
   const router = useRouter();
@@ -81,9 +75,7 @@ export default function PlayQuizPage({ params }: { params: { slug: string } }) {
   const submittedRef = useRef<boolean>(false);
   const hasFetchedData = useRef(false);
   const searchParams = useSearchParams();
-  const [visitedQuestionIndices, setVisitedQuestionIndices] = useState<
-    Set<number>
-  >(new Set());
+  const [visitedQuestionIndices, setVisitedQuestionIndices] = useState<Set<number>>(new Set());
 
   const sid = searchParams.get("sid");
   if (!sid || Number(sid) < 0) {
@@ -91,9 +83,7 @@ export default function PlayQuizPage({ params }: { params: { slug: string } }) {
     return null;
   }
 
-  const [notReviewedQuestions, setNotReviewedQuestions] = useState<{
-    [key: number]: boolean;
-  }>({});
+  const [notReviewedQuestions, setNotReviewedQuestions] = useState<{ [key: number]: boolean }>({});
 
   // Utility function to shuffle an array
   const shuffleArray = (array: any[]) => {
@@ -106,19 +96,23 @@ export default function PlayQuizPage({ params }: { params: { slug: string } }) {
   };
 
   // State to store initial shuffled options for ORD questions
-  const [initialShuffledOptions, setInitialShuffledOptions] = useState<{
-    [key: number]: string[];
-  }>({});
+  const [initialShuffledOptions, setInitialShuffledOptions] = useState<{ [key: number]: string[] }>({});
 
   // Function to compare two arrays for equality
-  const arraysEqual = (a: any[], b: any[]) => {
-    if (a.length !== b.length) return false;
+  const arraysEqual = (a?: any[], b?: any[]) => {
+    if (a === b) return true; // Both are the same reference or both are undefined/null
+    if (!a || !b) return false; // One is undefined/null while the other isn't
+    if (a.length !== b.length) return false; // Different lengths
+  
     return a.every((value, index) => {
-      const normalize = (str: string) => str.replace(/<[^>]*>/g, "").trim();
+      const normalize = (str: any) => {
+        if (typeof str !== 'string') return str;
+        return str.replace(/<[^>]*>/g, "").trim();
+      };
       return normalize(value) === normalize(b[index]);
     });
   };
-
+  
   useEffect(() => {
     setVisitedQuestionIndices((prev) => {
       const newSet = new Set(prev);
@@ -171,127 +165,31 @@ export default function PlayQuizPage({ params }: { params: { slug: string } }) {
           });
           setTimeLeft(Math.round(parseFloat(fetchExamData.duration) * 60));
 
-          initializeAnswers({
-            title: fetchExamData.title,
-            questions: fetchExamData.questions,
-            duration: fetchExamData.duration,
-            points: fetchExamData.points,
-            question_view: fetchExamData.question_view,
-            finish_button: fetchExamData.finish_button,
-            total_time: fetchExamData.total_time,
-            saved_answers: fetchExamData.saved_answers,
-          });
-
-          // Now that examData is loaded, set up saved answers
-          if (fetchExamData.saved_answers) {
-            const formattedAnswers = fetchExamData.saved_answers.reduce(
-              (acc: any, answerData: any) => {
-                const questionType = answerData.type;
-                const questionId = answerData.id;
-                let formattedAnswer;
-                const question = fetchExamData.questions.find(
-                  (q: Question) => q.id === questionId
-                );
-
-                switch (questionType) {
-                  case "MSA":
-                    formattedAnswer =
-                      answerData.answer !== null
-                        ? [question?.options[answerData.answer - 1]]
-                        : [];
-                    break;
-                  case "MMA":
-                    answerData.answer.sort(); // Sort the indices before mapping
-                    formattedAnswer = answerData.answer.map(
-                      (index: number) => question?.options[index-1]
-                    );
-                    break;
-                  case "TOF":
-                    formattedAnswer = [
-                      answerData.answer === 1 ? "true" : (answerData.answer === 2 ? "false" : null),
-                    ];
-                    break;
-                  case "SAQ":
-                    formattedAnswer = [answerData.answer === "" ? null : answerData.answer];
-                    break;
-                  case "FIB":
-                    formattedAnswer = answerData.answer;
-                    break;
-                  case "MTF":
-                    formattedAnswer = Object.entries(answerData.answer).map(
-                      ([key, value]) => [
-                        question?.options[parseInt(key) - 1],
-                        value,
-                      ]
-                    );
-                    break;
-                  case "ORD":
-                    formattedAnswer = answerData.answer.map(
-                      (index: number) => question?.options[index]
-                    );
-                    break;
-                  case "EMQ":
-                    formattedAnswer = answerData.answer.map(
-                      (index: number) => question?.options[index - 1]
-                    );
-                    break;
-                  default:
-                    formattedAnswer = [];
-                }
-
-                acc[questionId] = formattedAnswer;
-                return acc;
-              },
-              {}
-            );
-
-            setAnswers(formattedAnswers);
-            setIsInitialized(true); // Indicate that initialization is complete
-
-            // For ORD questions, if there are saved answers, we should not shuffle the options
-            // Also, set the initialShuffledOptions to the saved answers for comparison later
-            fetchExamData.questions.forEach((question: Question) => {
-              if (question.type === "ORD") {
-                if (formattedAnswers[question.id]) {
-                  setAnswers((prev) => ({
-                    ...prev,
-                    [question.id]: [...formattedAnswers[question.id]], // Make a copy
-                  }));
-                  setInitialShuffledOptions((prev) => ({
-                    ...prev,
-                    [question.id]: [...formattedAnswers[question.id]], // Make a copy
-                  }));
-                } else {
-                  const shuffledOptions = shuffleArray(question.options || []);
-                  setAnswers((prev) => ({
-                    ...prev,
-                    [question.id]: [...shuffledOptions], // Make a copy
-                  }));
-                  setInitialShuffledOptions((prev) => ({
-                    ...prev,
-                    [question.id]: [...shuffledOptions], // Make a copy
-                  }));
-                }
-              }
-            });
+          // **Start of Local Storage Integration**
+          const localStorageKey = `examStatus_${fetchExamData.uuid}`;
+          const savedData = localStorage.getItem(localStorageKey);
+          if (savedData) {
+            try {
+              const parsedData = JSON.parse(savedData);
+              setAnswers(parsedData.answers || {});
+              setNotReviewedQuestions(parsedData.notReviewedQuestions || {});
+              setVisitedQuestionIndices(new Set(parsedData.visitedQuestionIndices || []));
+              setCurrentQuestionIndex(parsedData.currentQuestionIndex || 0);
+              setCurrentSubIndex(parsedData.currentSubIndex || null);
+              setTimeLeft(parsedData.timeLeft || Math.round(parseFloat(fetchExamData.duration) * 60));
+              setInitialShuffledOptions(parsedData.initialShuffledOptions || {}); // **Load initialShuffledOptions from local storage**
+            } catch (error) {
+              console.error('Error parsing local storage data:', error);
+              // If there's an error parsing, initialize from server data
+              initializeAnswers(fetchExamData);
+            }
           } else {
-            // If there are no saved answers, initialize ORD questions
-            fetchExamData.questions.forEach((question: Question) => {
-              if (question.type === "ORD") {
-                const shuffledOptions = shuffleArray(question.options || []);
-                setAnswers((prev) => ({
-                  ...prev,
-                  [question.id]: [...shuffledOptions], // Make a copy
-                }));
-                setInitialShuffledOptions((prev) => ({
-                  ...prev,
-                  [question.id]: [...shuffledOptions], // Make a copy
-                }));
-              }
-            });
+            // If no local storage data, initialize from server data
+            initializeAnswers(fetchExamData);
           }
+          // **End of Local Storage Integration**
         } else {
-          toast.error("No quiz found for this category");
+          toast.error("No Quiz found for this category");
         }
       } catch (error: any) {
         console.error("Error fetching practice set:", error);
@@ -339,65 +237,62 @@ export default function PlayQuizPage({ params }: { params: { slug: string } }) {
     fetchExamSet();
   }, [params, router]);
 
+  // **Modified Initialize Answers Function**
   const initializeAnswers = (fetchExamData: ExamData) => {
     const formattedAnswers: { [key: number]: string[] | null } = {};
+    const shuffledOptionsMap: { [key: number]: string[] } = {};
   
-    // Check if saved_answers and questions exist before proceeding
     if (!fetchExamData.saved_answers || !fetchExamData.questions) {
-      console.error("Missing saved_answers or questions in quiz data.");
+      console.error("Missing saved_answers or questions in Quiz data.");
       return;
     }
-  
+
     // Populate answers from saved answers in fetchExamData
     fetchExamData.questions.forEach((question) => {
       const savedAnswer = fetchExamData.saved_answers.find((ans) => ans.id === question.id);
-  
+      
       if (question.type === "ORD") {
-        if (savedAnswer && savedAnswer.answer.length > 0) {
-          // Set initial state to saved order using saved indices
-          formattedAnswers[question.id] = savedAnswer.answer.map(
-            (index: number) => question.options ? question.options[index] : ""
-          );
-  
-          // Set initial shuffled options to the saved order for later comparison
-          setInitialShuffledOptions((prev) => ({
-            ...prev,
-            [question.id]: [...(formattedAnswers[question.id] || [])], // Ensure it’s an array
-          }));
-        } else {
-          // No saved answer, initialize with a shuffled order
+         // Shuffle options and store in initialShuffledOptions
           const shuffledOptions = shuffleArray(question.options || []);
-          formattedAnswers[question.id] = shuffledOptions;
-  
-          setInitialShuffledOptions((prev) => ({
-            ...prev,
-            [question.id]: shuffledOptions,
-          }));
+          shuffledOptionsMap[question.id] = shuffledOptions;
+
+          // Set answers[question.id] to null to indicate not answered
+          formattedAnswers[question.id] = null;
+      } else if (question.type === "FIB") {
+        if (savedAnswer && Array.isArray(savedAnswer.answer)) {
+          // If the answer is already an array, use it directly
+          formattedAnswers[question.id] = savedAnswer.answer;
+        } else if (savedAnswer && typeof savedAnswer.answer === "string") {
+          // If the answer is a string (e.g., "himanshu, dev"), split it into an array
+          formattedAnswers[question.id] = savedAnswer.answer.split(",").map(ans => ans.trim());
+        } else {
+          // **Set to null if unattempted**
+          formattedAnswers[question.id] = null;
         }
       } else {
-        // For other question types, set the saved answer directly
-        formattedAnswers[question.id] = savedAnswer ? savedAnswer.answer : [];
+        // Handle other question types
+        formattedAnswers[question.id] = savedAnswer ? savedAnswer.answer : null; // Set to null if not answered
       }
     });
-  
+
     setAnswers(formattedAnswers);
+    setInitialShuffledOptions(shuffledOptionsMap); // **Set initial shuffled options**
     setIsInitialized(true);
-  
-    // Set the initial question index to the last answered question
+
+    // Set the current question index to the last answered question
     let lastAnsweredIndex = 0;
     fetchExamData.questions.forEach((question, index) => {
       const savedAnswer = fetchExamData.saved_answers.find((ans) => ans.id === question.id);
-      if (savedAnswer && savedAnswer.answer && savedAnswer.answer.length > 0) {
+      if (savedAnswer && savedAnswer.answer && (Array.isArray(savedAnswer.answer) ? savedAnswer.answer.some(ans => ans !== "") : savedAnswer.answer !== "")) {
         lastAnsweredIndex = index;
       }
     });
-    setCurrentQuestionIndex(lastAnsweredIndex);
+    setCurrentQuestionIndex(lastAnsweredIndex); // Ensure it resumes at the last answered question
   };
-  
 
   const clearAnswer = () => {
     if (!examData) {
-      return; // Exit if quizData is null
+      return; // Exit if examData is null
     }
 
     const question = examData.questions[currentQuestionIndex];
@@ -599,7 +494,7 @@ export default function PlayQuizPage({ params }: { params: { slug: string } }) {
         const updatedSubAnswers = existingAnswers[questionId] || [];
         updatedSubAnswers[subQuestionIndex] = answer[0];
         existingAnswers[questionId] = updatedSubAnswers;
-      } else if (answer.length === 2) {
+      } else if (examData?.questions.find(q => q.id === questionId)?.type === "MTF" && answer.length === 2) {
         // For MTF, handle pairs of answers
         const updatedPairs = [...(existingAnswers[questionId] || [])];
         const existingIndex = updatedPairs.findIndex(
@@ -612,7 +507,11 @@ export default function PlayQuizPage({ params }: { params: { slug: string } }) {
           updatedPairs.push(answer);
         }
         existingAnswers[questionId] = updatedPairs;
+      } else if (examData?.questions.find(q => q.id === questionId)?.type === "ORD") {
+        // For ORD, set the new order directly
+        existingAnswers[questionId] = [...answer];
       } else {
+        // For other question types, set the answer directly
         existingAnswers[questionId] = answer;
       }
 
@@ -620,11 +519,26 @@ export default function PlayQuizPage({ params }: { params: { slug: string } }) {
       const formattedAnswers = examData?.questions.map((question) => {
         const userAnswer = existingAnswers[question.id];
 
-        if (!userAnswer || userAnswer.length === 0) {
+        // **Handle Unattempted Questions Properly**
+        if (!userAnswer || (Array.isArray(userAnswer) && userAnswer.length === 0)) {
+          let blankAnswer;
+          switch (question.type) {
+            case "MSA":
+            case "TOF":
+            case "SAQ":
+              blankAnswer = null;
+              break;
+            case "ORD":
+            case "FIB":
+              blankAnswer = null; // **Set to null for ORD and FIB**
+              break;
+            default:
+              blankAnswer = [];
+          }
           return {
             id: question.id,
             type: question.type,
-            answer: [],
+            answer: blankAnswer,
           };
         }
 
@@ -668,7 +582,7 @@ export default function PlayQuizPage({ params }: { params: { slug: string } }) {
                 ? userAnswer.map((ans) =>
                     typeof ans === "string" ? ans : String(ans)
                   )
-                : [],
+                : null, // **Set to null if not an array**
             };
 
           case "MTF":
@@ -691,17 +605,15 @@ export default function PlayQuizPage({ params }: { params: { slug: string } }) {
             return {
               id: question.id,
               type: question.type,
-              answer: matches,
+              answer: Object.keys(matches).length > 0 ? matches : null,
             };
 
-            case "ORD":
-              return {
-                id: question.id,
-                type: question.type,
-                answer: (answers[question.id] || []).map((opt) =>
-                  question.options ? question.options.indexOf(opt) : -1
-                ),
-              };
+          case "ORD":
+            return {
+              id: question.id,
+              type: question.type,
+              answer: userAnswer ? [...userAnswer] : null, // **Set to current order or null**
+            };
 
           case "EMQ":
             const filteredAnswers = userAnswer.map((ans: string) => {
@@ -714,7 +626,7 @@ export default function PlayQuizPage({ params }: { params: { slug: string } }) {
             return {
               id: question.id,
               type: question.type,
-              answer: filteredAnswers.length > 0 ? filteredAnswers : [],
+              answer: filteredAnswers.length > 0 ? filteredAnswers : null,
             };
 
           default:
@@ -736,32 +648,36 @@ export default function PlayQuizPage({ params }: { params: { slug: string } }) {
   };
 
   const saveAnswerProgress = async (uuid: any, formattedAnswers: any) => {
-    // Return early if quizData or uuid is null
+    // Return early if examData or uuid is null
     if (!examData || !uuid) return;
-  
+
     try {
       const ordQuestionIds = examData.questions
-        .filter((question) => question.type === "ORD")
-        .map((question) => question.id);
-  
-      const answersToSave = formattedAnswers.map((answer: { id: number; answer: number[]; }) => {
+      .filter((question) => question.type === "ORD")
+      .map((question) => question.id);
+
+      const answersToSave = formattedAnswers
+      .map((answer: { id: number; answer: any }) => {
         // Check for ORD answers if they match initial shuffled options
         if (ordQuestionIds.includes(answer.id)) {
           const initialOrder = initialShuffledOptions[answer.id] || [];
-          const currentOrder = answer.answer.map((index: number) =>
-            examData.questions.find((q) => q.id === answer.id)?.options?.[index]
-          );
-  
+          const currentOrder = answers[answer.id] || [];
+
           // Only save if the order has changed
-          if (arraysEqual(initialOrder, currentOrder)) {
+          if (
+            !arraysEqual(currentOrder, initialOrder)
+          ) {
+            return answer;
+          } else {
             return null;
           }
         }
         return answer;
-      }).filter(Boolean); // Filter out null values where answers are unchanged
-  
+      })
+      .filter(Boolean);// Filter out null values where answers are unchanged
+
       if (answersToSave.length === 0) return; // If no answers to save, skip API call
-  
+
       const response = await axios.post(
         `${process.env.NEXT_PUBLIC_API_URL}/save-quiz-answer-progress/${uuid}`,
         { answers: answersToSave },
@@ -771,7 +687,7 @@ export default function PlayQuizPage({ params }: { params: { slug: string } }) {
           },
         }
       );
-  
+
       if (response.data.status) {
         console.log("Answer progress saved successfully:", response.data.message);
       } else {
@@ -783,7 +699,6 @@ export default function PlayQuizPage({ params }: { params: { slug: string } }) {
       toast.error("Failed to save answer progress.");
     }
   };
-  
 
   const handleNextQuestion = () => {
     if (
@@ -814,12 +729,26 @@ export default function PlayQuizPage({ params }: { params: { slug: string } }) {
       (question: Question) => {
         const userAnswer = answersRef.current[question.id];
 
-        // Ensure that blank answers are submitted if no answer is provided
-        if (!userAnswer || userAnswer.length === 0) {
+        // **Handle Unattempted Questions Properly**
+        if (!userAnswer || (Array.isArray(userAnswer) && userAnswer.length === 0)) {
+          let blankAnswer;
+          switch (question.type) {
+            case "MSA":
+            case "TOF":
+            case "SAQ":
+              blankAnswer = null;
+              break;
+            case "ORD":
+            case "FIB":
+              blankAnswer = null; // **Set to null for ORD and FIB**
+              break;
+            default:
+              blankAnswer = [];
+          }
           return {
             id: question.id,
             type: question.type,
-            answer: [],
+            answer: blankAnswer,
           };
         }
 
@@ -841,7 +770,7 @@ export default function PlayQuizPage({ params }: { params: { slug: string } }) {
                 question.options ? question.options.indexOf(ans) + 1 : 1
               ), // Increment each index by 1
             };
-              
+
           case "TOF":
             return {
               id: question.id,
@@ -864,7 +793,7 @@ export default function PlayQuizPage({ params }: { params: { slug: string } }) {
                 ? userAnswer.map((ans) =>
                     typeof ans === "string" ? ans : String(ans)
                   )
-                : [],
+                : null, // **Set to null if not an array**
             };
 
           case "MTF":
@@ -887,17 +816,28 @@ export default function PlayQuizPage({ params }: { params: { slug: string } }) {
             return {
               id: question.id,
               type: question.type,
-              answer: matches,
+              answer: Object.keys(matches).length > 0 ? matches : null,
             };
 
           case "ORD":
-            return {
-              id: question.id,
-              type: question.type,
-              answer: userAnswer.map((opt: string) =>
-                question.options ? question.options.indexOf(opt) : -1
-              ),
-            };
+              // Only include answer if user has rearranged options
+              if (
+                Array.isArray(userAnswer) &&
+                !arraysEqual(userAnswer, initialShuffledOptions[question.id])
+              ) {
+                return {
+                  id: question.id,
+                  type: question.type,
+                  answer: userAnswer ? [...userAnswer] : null,
+                };
+              } else {
+                // User hasn't rearranged, so consider it unanswered
+                return {
+                  id: question.id,
+                  type: question.type,
+                  answer: null,
+                };
+              }
 
           case "EMQ":
             const filteredAnswers = userAnswer.map((ans: string) => {
@@ -910,7 +850,7 @@ export default function PlayQuizPage({ params }: { params: { slug: string } }) {
             return {
               id: question.id,
               type: question.type,
-              answer: filteredAnswers.length > 0 ? filteredAnswers : [],
+              answer: filteredAnswers.length > 0 ? filteredAnswers : null,
             };
 
           default:
@@ -939,11 +879,14 @@ export default function PlayQuizPage({ params }: { params: { slug: string } }) {
 
       if (response.data.status) {
         toast.success("Quiz submitted successfully!");
+        // **Clear Local Storage Upon Successful Submission**
+        const localStorageKey = `examStatus_${uuid}`;
+        localStorage.removeItem(localStorageKey);
       } else {
-        toast.error("Error submitting quiz");
+        toast.error("Error submitting Quiz");
       }
     } catch (error) {
-      console.error("Error submitting quiz:", error);
+      console.error("Error submitting Quiz:", error);
       toast.error("An error occurred during submission");
     }
   };
@@ -965,13 +908,16 @@ export default function PlayQuizPage({ params }: { params: { slug: string } }) {
       const question = examData?.questions.find(
         (q) => q.id === parseInt(questionId)
       );
-
-      if (Array.isArray(answer)) {
-        if (question?.type === "ORD") {
-          if (!arraysEqual(answer, initialShuffledOptions[questionId])) {
-            count++;
-          }
-        } else if (answer.some((ans) => ans !== null && ans !== "")) {
+  
+      if (question?.type === "ORD") {
+        if (
+          Array.isArray(answer) &&
+          !arraysEqual(answer, initialShuffledOptions[questionId])
+        ) {
+          count++;
+        }
+      } else if (Array.isArray(answer)) {
+        if (answer.some((ans) => ans !== null && ans !== "")) {
           count++;
         }
       } else if (answer !== null && answer !== "") {
@@ -995,26 +941,29 @@ export default function PlayQuizPage({ params }: { params: { slug: string } }) {
 
   const moveItem = (questionId: number, fromIndex: number, toIndex: number) => {
     setAnswers((prevAnswers) => {
-      const currentAnswers = prevAnswers[questionId] || [];
-
-      if (toIndex < 0 || toIndex >= currentAnswers.length) {
+      const answerArray = prevAnswers[questionId];
+      const optionsToModify = Array.isArray(answerArray)
+        ? [...answerArray]
+        : [...initialShuffledOptions[questionId]];
+  
+      if (toIndex < 0 || toIndex >= optionsToModify.length) {
         return prevAnswers;
       }
-
-      const reorderedAnswers = [...currentAnswers];
-      const [movedItem] = reorderedAnswers.splice(fromIndex, 1);
-      reorderedAnswers.splice(toIndex, 0, movedItem);
-
+  
+      const [movedItem] = optionsToModify.splice(fromIndex, 1);
+      optionsToModify.splice(toIndex, 0, movedItem);
+  
       return {
         ...prevAnswers,
-        [questionId]: reorderedAnswers,
+        [questionId]: optionsToModify,
       };
     });
   };
+  
 
   const getTotalQuestionCount = (): number => {
     if (!examData || !examData.questions) {
-      return 0; // Return 0 or a fallback value if quizData or questions are undefined
+      return 0; // Return 0 or a fallback value if QuizData or questions are undefined
     }
 
     return examData.questions.reduce((count, question) => {
@@ -1043,28 +992,25 @@ export default function PlayQuizPage({ params }: { params: { slug: string } }) {
   };
 
   useEffect(() => {
-    if (examData?.questions && !isInitialized) {
-      examData.questions.forEach((question) => {
-        if (question.type === "ORD") {
-          if (answers[question.id]) {
-            // Do not re-initialize if answers are already present
-            return;
-          }
-          const shuffledOptions = shuffleArray(question.options || []);
-          setAnswers((prev) => ({
-            ...prev,
-            [question.id]: [...shuffledOptions],
-          }));
-          setInitialShuffledOptions((prev) => ({
-            ...prev,
-            [question.id]: [...shuffledOptions],
-          }));
-        }
-      });
-      setIsInitialized(true); // Set initialization flag to true
-    }
+    // **Removed the Redundant useEffect for Shuffling ORD Options**
+    // All ORD initialization is now handled in initializeAnswers
   }, [examData]);
-  
+
+  // **Persist Progress to Local Storage**
+  useEffect(() => {
+    if (!uuid) return;
+    const localStorageKey = `examStatus_${uuid}`;
+    const dataToSave = {
+      answers,
+      notReviewedQuestions,
+      visitedQuestionIndices: Array.from(visitedQuestionIndices),
+      currentQuestionIndex,
+      currentSubIndex,
+      timeLeft,
+      initialShuffledOptions, // **Include initialShuffledOptions in local storage**
+    };
+    localStorage.setItem(localStorageKey, JSON.stringify(dataToSave));
+  }, [uuid, answers, notReviewedQuestions, visitedQuestionIndices, currentQuestionIndex, currentSubIndex, timeLeft, initialShuffledOptions]);
 
   const renderQuestion = (question: Question) => {
     const baseQuestionNumber = getAdjustedQuestionIndex();
@@ -1093,7 +1039,9 @@ export default function PlayQuizPage({ params }: { params: { slug: string } }) {
                       }}
                     ></p>
                     {question.options?.map((option, index) => {
-                      const isChecked = answers[question.id]?.includes(option);
+                       const isChecked = Array.isArray(answers[question.id]) 
+                       ? answers[question.id]?.includes(option) 
+                       : false;
                       return (
                         <label
                           key={index}
@@ -1208,7 +1156,6 @@ export default function PlayQuizPage({ params }: { params: { slug: string } }) {
                 </div>
               );
             }
-            
 
             case "TOF": {
               return (
@@ -1219,6 +1166,7 @@ export default function PlayQuizPage({ params }: { params: { slug: string } }) {
                     </h5>
                   </div>
                   <div className="space-y-4 p-4 w-full">
+
                     <p
                       className="mb-4 bg-white p-3 rounded-lg"
                       dangerouslySetInnerHTML={{
@@ -1227,6 +1175,8 @@ export default function PlayQuizPage({ params }: { params: { slug: string } }) {
                           : question.question,
                       }}
                     ></p>
+
+                    {/* "True" Option */}
                     <label
                       className={`flex items-center justify-between border p-3 rounded-lg cursor-pointer transition-all bg-white hover:bg-yellow-100 ${
                         answers[question.id]?.includes("true")
@@ -1261,9 +1211,7 @@ export default function PlayQuizPage({ params }: { params: { slug: string } }) {
                         onChange={() =>
                           handleAnswerChange(question.id, ["true"])
                         }
-                        checked={
-                          answers[question.id]?.includes("true") || false
-                        }
+                        checked={answers[question.id]?.includes("true") || false} // Only checked if true is explicitly saved
                         className={`cursor-pointer focus:ring-1 focus:ring-defaultcolor ${
                           answers[question.id]?.includes("true")
                             ? "checked:bg-defaultcolor"
@@ -1271,6 +1219,8 @@ export default function PlayQuizPage({ params }: { params: { slug: string } }) {
                         }`}
                       />
                     </label>
+
+                    {/* "False" Option */}
                     <label
                       className={`flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-all bg-white hover:bg-yellow-100 ${
                         answers[question.id]?.includes("false")
@@ -1305,9 +1255,7 @@ export default function PlayQuizPage({ params }: { params: { slug: string } }) {
                         onChange={() =>
                           handleAnswerChange(question.id, ["false"])
                         }
-                        checked={
-                          answers[question.id]?.includes("false") || false
-                        }
+                        checked={answers[question.id]?.includes("false") || false} // Only checked if false is explicitly saved
                         className={`cursor-pointer focus:ring-1 focus:ring-defaultcolor ${
                           answers[question.id]?.includes("false")
                             ? "checked:bg-defaultcolor"
@@ -1375,16 +1323,18 @@ export default function PlayQuizPage({ params }: { params: { slug: string } }) {
                           <select
                             className="flex-1 p-2 rounded border border-gray-300 focus:ring-1 focus:ring-defaultcolor focus:border-defaultcolor w-full sm:w-auto appearance-none"
                             onChange={(e) =>
-                              handleAnswerChange(question.id, [
-                                opt,
-                                e.target.value,
-                              ])
+                              handleAnswerChange(
+                                question.id,
+                                [
+                                  opt,
+                                  e.target.value,
+                                ],
+                                undefined
+                              )
                             }
-                            value={
-                              answers[question.id]?.find(
-                                (pair) => pair[0] === opt
-                              )?.[1] || ""
-                            }
+                            value={answers[question.id]?.find(
+                              (pair) => pair[0] === opt
+                            )?.[1] || ""}
                           >
                             <option value="">Select match</option>
                             {question.options
@@ -1393,7 +1343,9 @@ export default function PlayQuizPage({ params }: { params: { slug: string } }) {
                                 <option
                                   key={j}
                                   value={match}
-                                  dangerouslySetInnerHTML={{ __html: match }}
+                                  dangerouslySetInnerHTML={{
+                                    __html: match,
+                                  }}
                                 ></option>
                               ))}
                           </select>
@@ -1405,6 +1357,11 @@ export default function PlayQuizPage({ params }: { params: { slug: string } }) {
             }
 
             case "ORD": {
+              const answerArray = answers[question.id];
+              const optionsToDisplay = Array.isArray(answerArray)
+                ? answerArray
+                : initialShuffledOptions[question.id] || [];
+            
               return (
                 <div className="flex justify-normal bg-[#f6f7f9]">
                   <div className="bg-defaultcolor p-3">
@@ -1417,7 +1374,7 @@ export default function PlayQuizPage({ params }: { params: { slug: string } }) {
                       Arrange in sequence (Use the arrows to reorder):
                     </p>
                     <ul>
-                      {answers[question.id]?.map((option, index) => (
+                      {optionsToDisplay.map((option, index) => (
                         <li
                           key={index}
                           className="p-3 bg-white rounded-lg mb-2 flex items-center justify-between"
@@ -1440,10 +1397,7 @@ export default function PlayQuizPage({ params }: { params: { slug: string } }) {
                               onClick={() =>
                                 moveItem(question.id, index, index + 1)
                               }
-                              disabled={
-                                index ===
-                                (answers[question.id]?.length || 0) - 1
-                              }
+                              disabled={index === optionsToDisplay.length - 1}
                             >
                               ↓
                             </button>
@@ -1458,12 +1412,11 @@ export default function PlayQuizPage({ params }: { params: { slug: string } }) {
 
             case "FIB": {
               const numberOfBlanks = parseInt(question.options?.[0] ?? "0", 10);
+            
               return (
                 <div className="flex justify-normal bg-[#f6f7f9]">
                   <div className="bg-defaultcolor p-3">
-                    <h5 className="text-white font-semibold text-3xl">
-                      {questionNumber}
-                    </h5>
+                    <h5 className="text-white font-semibold text-3xl">{questionNumber}</h5>
                   </div>
                   <div className="space-y-4 p-4 w-full">
                     <p
@@ -1480,14 +1433,17 @@ export default function PlayQuizPage({ params }: { params: { slug: string } }) {
                         type="text"
                         className="p-3 w-full rounded-lg border border-gray-300 focus:ring-1 focus:ring-defaultcolor focus:border-defaultcolor mb-2"
                         placeholder={`Answer ${index + 1}`}
-                        value={answers[question.id]?.[index] || ""}
+                        value={
+                          Array.isArray(answers[question.id])
+                            ? answers[question.id]?.[index] ?? ""
+                            : "" // Default to an empty string if not initialized
+                        }
                         onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                          const newAnswers = [
-                            ...(answers[question.id] ||
-                              Array(numberOfBlanks).fill("")),
-                          ];
-                          newAnswers[index] = e.target.value;
-                          handleAnswerChange(question.id, newAnswers);
+                          const currentAnswers = Array.isArray(answers[question.id])
+                            ? [...answers[question.id]!]
+                            : Array(numberOfBlanks).fill(""); // Initialize with blank values if null/undefined
+                          currentAnswers[index] = e.target.value; // Update the specific blank's value
+                          handleAnswerChange(question.id, currentAnswers); // Update the answers state
                         }}
                       />
                     ))}
@@ -1495,6 +1451,7 @@ export default function PlayQuizPage({ params }: { params: { slug: string } }) {
                 </div>
               );
             }
+
             case "EMQ": {
               const mainQuestion = Array.isArray(question.question)
                 ? question.question[0]
@@ -1549,15 +1506,16 @@ export default function PlayQuizPage({ params }: { params: { slug: string } }) {
                             value={answers[question.id]?.[subIndex] || ""}
                           >
                             <option value="">Select an answer</option>
-                            {question.options?.map((option, optionIndex) => (
-                              <option
-                                key={optionIndex}
-                                value={option}
-                                dangerouslySetInnerHTML={{
-                                  __html: option,
-                                }}
-                              ></option>
-                            ))}
+                            {question.options
+                              ?.map((option, optionIndex) => (
+                                <option
+                                  key={optionIndex}
+                                  value={option}
+                                  dangerouslySetInnerHTML={{
+                                    __html: option,
+                                  }}
+                                ></option>
+                              ))}
                           </select>
                         </div>
                       </div>
@@ -1596,184 +1554,228 @@ export default function PlayQuizPage({ params }: { params: { slug: string } }) {
 
             {/* Navigation Buttons */}
             <div className="flex flex-wrap justify-between mt-6 items-center">
-              {/* First set of buttons */}
-              <div className="flex space-x-4">
-              <Tooltip content="Clear Answer" placement="top">
-                <button
-                  className="flex items-center justify-center w-16 h-12 rounded-lg focus:outline-none border border-gray-600 text-gray-600"
-                  onClick={clearAnswer}
-                >
-                  <FaRegWindowClose size={20} />
-                </button>
-                </Tooltip>
+              
+                  <div className="flex space-x-4">
+                  {/* Clear Answer Button with Tooltip */}
+                  <Tooltip content="Clear Answer" placement="top">
+                    <button
+                      className="flex items-center justify-center w-16 h-12 rounded-lg focus:outline-none border border-gray-600 text-gray-600"
+                      onClick={clearAnswer}
+                    >
+                      <FaRegWindowClose size={20} />
+                    </button>
+                  </Tooltip>
 
+                  {/* "Not Reviewed" Button with Tooltip */}
+                  <Tooltip content="Mark as Not Reviewed" placement="top">
+                    <button
+                      className={`flex items-center justify-center w-16 h-12 rounded-lg border focus:outline-none ${
+                        notReviewedQuestions[examData.questions[currentQuestionIndex].id]
+                          ? "bg-[#C9BC0F] text-white"
+                          : "bg-gray-400 text-white"
+                      }`}
+                      onClick={() =>
+                        toggleNotReviewed(examData.questions[currentQuestionIndex].id)
+                      }
+                    >
+                      <MdOutlineBookmarks size={20} />
+                    </button>
+                  </Tooltip>  
+                </div>
 
-                {/* "Not Reviewed" Button */}
-                <Tooltip content="Mark as Not Reviewed" placement="top">
+                {/* Second set of buttons */}
+
                 <button
-                  className={`flex items-center justify-center w-16 h-12 rounded-lg border  focus:outline-none  ${
-                    notReviewedQuestions[
-                      examData.questions[currentQuestionIndex].id
-                    ]
-                      ? "bg-[#C9BC0F] text-white"
-                      : "bg-gray-400 text-white"
-                  }`}
-                  onClick={() =>
-                    toggleNotReviewed(
-                      examData.questions[currentQuestionIndex].id
-                    )
-                  }
+                  className="flex items-center justify-center w-32 h-12 bg-white text-defaultcolor border border-defaultcolor rounded-lg disabled:opacity-50"
+                  disabled={currentQuestionIndex === 0}
+                  onClick={handlePreviousQuestion}
                 >
-                  <MdOutlineBookmarks size={20} />
+                  <FaArrowLeft className="inline mr-2" /> Previous
                 </button>
-                </Tooltip>  
+
+                {currentQuestionIndex < examData.questions.length - 1 ? (
+                  <button
+                    className="flex items-center justify-center w-32 h-12 bg-defaultcolor text-white rounded-lg hover:bg-defaultcolor-dark transition-colors"
+                    onClick={handleNextQuestion}
+                  >
+                    Next <FaArrowRight className="inline ml-2" />
+                  </button>
+                ) : examData?.finish_button === "enable" ? (
+                  <button
+                    className="flex items-center justify-center w-32 h-12 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
+                    onClick={handleFinishClick}
+                  >
+                    Submit Quiz
+                  </button>
+                ) : null}
               </div>
-
-              {/* Second set of buttons */}
-
-              <button
-                className="flex items-center justify-center w-32 h-12 bg-white text-defaultcolor border border-defaultcolor rounded-lg disabled:opacity-50"
-                disabled={currentQuestionIndex === 0}
-                onClick={handlePreviousQuestion}
-              >
-                <FaArrowLeft className="inline mr-2" /> Previous
-              </button>
-
-              {currentQuestionIndex < examData.questions.length - 1 ? (
-                <button
-                  className="flex items-center justify-center w-32 h-12 bg-defaultcolor text-white rounded-lg hover:bg-defaultcolor-dark transition-colors"
-                  onClick={handleNextQuestion}
-                >
-                  Next <FaArrowRight className="inline ml-2" />
-                </button>
-              ) : examData?.finish_button === "enable" ? (
-                <button
-                  className="flex items-center justify-center w-32 h-12 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
-                  onClick={handleFinishClick}
-                >
-                  Submit Quiz
-                </button>
-              ) : null}
-            </div>
-          </>
-        ) : (
-          <div className="text-center">
-            <FaCheckCircle
-              className="inline text-green-600 mr-2 mb-3"
-              size={42}
-            />
-            <h1 className="text-3xl font-bold mb-4 text-green-600">
+            </>
+          ) : (
+            <div className="text-center">
+              <FaCheckCircle
+                className="inline text-green-600 mr-2 mb-3"
+                size={42}
+              />
+              <h1 className="text-3xl font-bold mb-4 text-green-600">
               Quiz Submitted
-            </h1>
-            <p className="text-lg text-gray-600">
-              Thank you for completing the quiz. Your answers have been
-              submitted successfully!
-            </p>
-            <div>
-              <Link
-                href={`/dashboard/quiz-result/${uuid}`}
-                className="mt-4 text-center w-full bg-defaultcolor text-white font-semibold py-2 px-4 rounded hover:bg-defaultcolor-dark transition-colors flex justify-center items-center"
-              >
-                Go to Result
-                <AiOutlineArrowRight className="ml-2" />
-              </Link>
+              </h1>
+              <p className="text-lg text-gray-600">
+                Thank you for completing the Quiz. Your answers have been
+                submitted successfully!
+              </p>
+              <div>
+                <Link
+                  href={`/dashboard/quiz-result/${uuid}`}
+                  className="mt-4 text-center w-full bg-defaultcolor text-white font-semibold py-2 px-4 rounded hover:bg-defaultcolor-dark transition-colors flex justify-center items-center"
+                >
+                  Go to Result
+                  <AiOutlineArrowRight className="ml-2" />
+                </Link>
+              </div>
             </div>
-          </div>
-        )}
-      </div>
-      {!submitted && timeLeft > 0 && (
-        <div className="w-full md:w-1/4 bg-white shadow-sm rounded-lg">
-          <div className="p-4 flex items-center space-x-3">
-            <FaCircle className="text-green-400" />
-            <p>
-              {getAnsweredCount()}/{getTotalQuestionCount()} answered
-            </p>
-          </div>
+          )}
+        </div>
+        {!submitted && timeLeft > 0 && (
+          <div className="w-full md:w-1/4 bg-white shadow-sm rounded-lg">
+            <div className="p-4 flex items-center space-x-3">
+              <FaCircle className="text-green-400" />
+              <p>
+                {getAnsweredCount()}/{getTotalQuestionCount()} answered
+              </p>
+            </div>
 
-          <div className="px-4 py-6  bg-gray-100  border-y  border-gray-200">
-            <div className="h-3 w-full bg-gray-200 rounded-full relative">
-              <div
-                className="h-full bg-quaternary rounded-full"
-                style={{
-                  width: `${
+            <div className="px-4 py-6  bg-gray-100  border-y  border-gray-200">
+              <div className="h-3 w-full bg-gray-200 rounded-full relative">
+                <div
+                  className="h-full bg-quaternary rounded-full"
+                  style={{
+                    width: `${
+                      (getAnsweredCount() / getTotalQuestionCount()) * 100
+                    }%`,
+                  }}
+                ></div>
+                <span
+                  className="absolute top-[-8px] text-white text-sm bg-quaternary border border-white px-3 py-0.5 rounded-full"
+                  style={{
+                    left: `${
+                      (getAnsweredCount() / getTotalQuestionCount()) * 100 - 2
+                    }%`,
+                  }}
+                >
+                  {Math.round(
                     (getAnsweredCount() / getTotalQuestionCount()) * 100
-                  }%`,
-                }}
-              ></div>
-              <span
-                className="absolute top-[-8px] text-white text-sm bg-quaternary border border-white px-3 py-0.5 rounded-full"
-                style={{
-                  left: `${
-                    (getAnsweredCount() / getTotalQuestionCount()) * 100 - 2
-                  }%`,
-                }}
-              >
-                {Math.round(
-                  (getAnsweredCount() / getTotalQuestionCount()) * 100
-                )}
-                %
-              </span>
+                  )}
+                  %
+                </span>
+              </div>
             </div>
-          </div>
 
-          {/* Time Remaining */}
-          <div className="text-center flex space-x-3 items-center bg-[#ffc300] p-4 ">
-            <FaHourglass className="text-black" size={24} />
-            <p className="text-3xl font-bold text-black">
-              {formatTimeLeft(timeLeft)}
-            </p>
-          </div>
+            {/* Time Remaining */}
+            <div className="text-center flex space-x-3 items-center bg-[#ffc300] p-4 ">
+              <FaHourglass className="text-black" size={24} />
+              <p className="text-3xl font-bold text-black">
+                {formatTimeLeft(timeLeft)}
+              </p>
+            </div>
 
-          <div className="h-6 bg-gray-100  border-y  border-gray-200"></div>
+            <div className="h-6 bg-gray-100  border-y  border-gray-200"></div>
 
-          <div className="p-4">
-            {/* Question Navigation Grid */}
-            {examData.question_view === "enable" ? (
-              <div className="flex items-center justify-center flex-wrap gap-3 text-center">
-                {examData.questions.reduce(
-                  (acc: JSX.Element[], question, questionIndex) => {
-                    const questionId = question.id;
+            <div className="p-4">
+              {/* Question Navigation Grid */}
+              {examData.question_view === "enable" ? (
+                <div className="flex items-center justify-center flex-wrap gap-3 text-center">
+                  {examData.questions.reduce(
+                    (acc: JSX.Element[], question, questionIndex) => {
+                      const questionId = question.id;
 
-                    // Check if question has been answered based on its type
-                    const isAnswered = (() => {
-                      if (question.type === "ORD") {
-                        const userAnswer = answers[questionId];
-                        const initialOptions =
-                          initialShuffledOptions[questionId];
-                        if (!userAnswer || !initialOptions) return false;
-                        const normalizeArray = (arr: string[]) =>
-                          arr.map((str) => str.replace(/<[^>]*>/g, "").trim());
-                        const userNormalized = normalizeArray(userAnswer);
-                        const initialNormalized =
-                          normalizeArray(initialOptions);
-                        return !arraysEqual(userNormalized, initialNormalized);
+                      // Check if question has been answered based on its type
+                      const isAnswered = (() => {
+                        if (question.type === "ORD") {
+                          const userAnswer = answers[questionId];
+                          const initialOptions =
+                            initialShuffledOptions[questionId];
+                          if (!userAnswer || !initialOptions) return false;
+                          return !arraysEqual(userAnswer, initialOptions);
+                        } else {
+                          return (
+                            Array.isArray(answers[questionId]) &&
+                            answers[questionId]?.some(
+                              (ans) => ans !== null && ans !== ""
+                            )
+                          );
+                        }
+                      })();
+
+                      // Handle EMQ questions with sub-questions
+                      if (
+                        question.type === "EMQ" &&
+                        Array.isArray(question.question)
+                      ) {
+                        const subQuestions = question.question.slice(1); // Exclude main question text
+
+                        subQuestions.forEach((_, subIndex) => {
+                          const adjustedIndex = acc.length + 1;
+                          const isActive =
+                            currentQuestionIndex === questionIndex &&
+                            currentSubIndex === subIndex;
+                          const isAnswered =
+                            !!answers[questionId]?.[subIndex] &&
+                            answers[questionId][subIndex] !== "";
+                          const isNotReviewed =
+                            !!notReviewedQuestions[questionId];
+                          const isVisited =
+                            visitedQuestionIndices.has(adjustedIndex);
+
+                          // Determine colors based on status
+                          let borderColor = "border-[#989898]";
+                          let textColor = "text-[#989898]";
+                          let bottomDivColor = "bg-[#989898]";
+
+                          if (isActive) {
+                            borderColor = "border-defaultcolor";
+                            textColor = "text-defaultcolor";
+                            bottomDivColor = "bg-defaultcolor";
+                          } else if (isNotReviewed) {
+                            borderColor = "border-[#C9BC0F]";
+                            textColor = "text-[#C9BC0F]";
+                            bottomDivColor = "bg-[#C9BC0F]";
+                          } else if (isAnswered) {
+                            borderColor = "border-[#76b51b]";
+                            textColor = "text-[#76b51b]";
+                            bottomDivColor = "bg-[#76b51b]";
+                          } else if (isVisited) {
+                            borderColor = "border-[#E74444]";
+                            textColor = "text-[#E74444]";
+                            bottomDivColor = "bg-[#E74444]";
+                          }
+
+                          acc.push(
+                            <div
+                              key={`${questionIndex}-${subIndex}`}
+                              className={`relative flex items-center justify-center text-lg w-12 h-12 border ${borderColor} ${textColor} transition duration-200 bg-white`}
+                              onClick={() => {
+                                setCurrentQuestionIndex(questionIndex); // Set the question index
+                                setCurrentSubIndex(subIndex); // Set the sub-question index
+                              }}
+                              style={{ cursor: "pointer" }}
+                            >
+                              {adjustedIndex}
+                              <div
+                                className={`absolute inset-x-0 bottom-0 h-2 ${bottomDivColor}`}
+                              />
+                            </div>
+                          );
+                        });
                       } else {
-                        return (
+                        // For non-EMQ questions, add a single navigation item
+                        const adjustedIndex = acc.length + 1;
+                        const isActive = currentQuestionIndex === questionIndex;
+                        const isNotReviewed = !!notReviewedQuestions[questionId];
+                        const isAnswered =
                           Array.isArray(answers[questionId]) &&
                           answers[questionId]?.some(
                             (ans) => ans !== null && ans !== ""
-                          )
-                        );
-                      }
-                    })();
-
-                    // Handle EMQ questions with sub-questions
-                    if (
-                      question.type === "EMQ" &&
-                      Array.isArray(question.question)
-                    ) {
-                      const subQuestions = question.question.slice(1); // Exclude main question text
-
-                      subQuestions.forEach((_, subIndex) => {
-                        const adjustedIndex = acc.length + 1;
-                        const isActive =
-                          currentQuestionIndex === questionIndex &&
-                          currentSubIndex === subIndex;
-                        const isAnswered =
-                          !!answers[questionId]?.[subIndex] &&
-                          answers[questionId][subIndex] !== "";
-                        const isNotReviewed =
-                          !!notReviewedQuestions[questionId];
+                          );
                         const isVisited =
                           visitedQuestionIndices.has(adjustedIndex);
 
@@ -1802,11 +1804,11 @@ export default function PlayQuizPage({ params }: { params: { slug: string } }) {
 
                         acc.push(
                           <div
-                            key={`${questionIndex}-${subIndex}`}
+                            key={questionId} // Use questionId as key
                             className={`relative flex items-center justify-center text-lg w-12 h-12 border ${borderColor} ${textColor} transition duration-200 bg-white`}
                             onClick={() => {
-                              setCurrentQuestionIndex(questionIndex); // Set the question index
-                              setCurrentSubIndex(subIndex); // Set the sub-question index
+                              setCurrentQuestionIndex(questionIndex); // Maintain question index for display
+                              setCurrentSubIndex(null); // Reset sub-index for non-EMQ questions
                             }}
                             style={{ cursor: "pointer" }}
                           >
@@ -1816,85 +1818,103 @@ export default function PlayQuizPage({ params }: { params: { slug: string } }) {
                             />
                           </div>
                         );
-                      });
-                    } else {
-                      // For non-EMQ questions, add a single navigation item
-                      const adjustedIndex = acc.length + 1;
-                      const isActive = currentQuestionIndex === questionIndex;
-                      const isNotReviewed = !!notReviewedQuestions[questionId];
-                      const isVisited =
-                        visitedQuestionIndices.has(adjustedIndex);
-
-                      // Determine colors based on isAnswered status using questionId to handle reordering
-                      let borderColor = "border-[#989898]";
-                      let textColor = "text-[#989898]";
-                      let bottomDivColor = "bg-[#989898]";
-
-                      if (isActive) {
-                        borderColor = "border-defaultcolor";
-                        textColor = "text-defaultcolor";
-                        bottomDivColor = "bg-defaultcolor";
-                      } else if (isNotReviewed) {
-                        borderColor = "border-[#C9BC0F]";
-                        textColor = "text-[#C9BC0F]";
-                        bottomDivColor = "bg-[#C9BC0F]";
-                      } else if (isAnswered) {
-                        borderColor = "border-[#76b51b]";
-                        textColor = "text-[#76b51b]";
-                        bottomDivColor = "bg-[#76b51b]";
-                      } else if (isVisited) {
-                        borderColor = "border-[#E74444]";
-                        textColor = "text-[#E74444]";
-                        bottomDivColor = "bg-[#E74444]";
                       }
 
-                      acc.push(
-                        <div
-                          key={questionId} // Use questionId as key
-                          className={`relative flex items-center justify-center text-lg w-12 h-12 border ${borderColor} ${textColor} transition duration-200 bg-white`}
-                          onClick={() => {
-                            setCurrentQuestionIndex(questionIndex); // Maintain question index for display
-                            setCurrentSubIndex(null); // Reset sub-index for non-EMQ questions
-                          }}
-                          style={{ cursor: "pointer" }}
-                        >
-                          {adjustedIndex}
-                          <div
-                            className={`absolute inset-x-0 bottom-0 h-2 ${bottomDivColor}`}
-                          />
-                        </div>
-                      );
-                    }
+                      return acc;
+                    },
+                    []
+                  )}
+                </div>
+              ) : (
+                // The else block remains unchanged
+                <div className="flex items-center justify-center flex-wrap gap-3 text-center">
+                  {examData.questions.reduce(
+                    (acc: JSX.Element[], question, questionIndex) => {
+                      const questionId = question.id;
 
-                    return acc;
-                  },
-                  []
-                )}
-              </div>
-            ) : (
-              // The else block remains unchanged
-              <div className="flex items-center justify-center flex-wrap gap-3 text-center">
-                {examData.questions.reduce(
-                  (acc: JSX.Element[], question, questionIndex) => {
-                    const questionId = question.id;
+                      // Check if question has been answered based on its type
+                      const isAnswered = (() => {
+                        if (question.type === "ORD") {
+                          const userAnswer = answers[questionId];
+                          const initialOptions =
+                            initialShuffledOptions[questionId];
+                          if (!userAnswer || !initialOptions) return false;
+                          return !arraysEqual(userAnswer, initialOptions);
+                        } else {
+                          return (
+                            Array.isArray(answers[questionId]) &&
+                            answers[questionId]?.some(
+                              (ans) => ans !== null && ans !== ""
+                            )
+                          );
+                        }
+                      })();
 
-                    // Handle EMQ questions with sub-questions
-                    if (
-                      question.type === "EMQ" &&
-                      Array.isArray(question.question)
-                    ) {
-                      const subQuestions = question.question.slice(1); // Exclude main question text
+                      // Handle EMQ questions with sub-questions
+                      if (
+                        question.type === "EMQ" &&
+                        Array.isArray(question.question)
+                      ) {
+                        const subQuestions = question.question.slice(1); // Exclude main question text
 
-                      subQuestions.forEach((_, subIndex) => {
+                        subQuestions.forEach((_, subIndex) => {
+                          const adjustedIndex = acc.length + 1;
+                          const isActive =
+                            currentQuestionIndex === questionIndex &&
+                            currentSubIndex === subIndex;
+                          const isAnswered =
+                            !!answers[questionId]?.[subIndex] &&
+                            answers[questionId][subIndex] !== "";
+                          const isNotReviewed =
+                            !!notReviewedQuestions[questionId];
+                          const isVisited =
+                            visitedQuestionIndices.has(adjustedIndex);
+
+                          // Determine colors based on status
+                          let borderColor = "border-[#989898]";
+                          let textColor = "text-[#989898]";
+                          let bottomDivColor = "bg-[#989898]";
+
+                          if (isActive) {
+                            borderColor = "border-defaultcolor";
+                            textColor = "text-defaultcolor";
+                            bottomDivColor = "bg-defaultcolor";
+                          } else if (isNotReviewed) {
+                            borderColor = "border-[#C9BC0F]";
+                            textColor = "text-[#C9BC0F]";
+                            bottomDivColor = "bg-[#C9BC0F]";
+                          } else if (isAnswered) {
+                            borderColor = "border-[#76b51b]";
+                            textColor = "text-[#76b51b]";
+                            bottomDivColor = "bg-[#76b51b]";
+                          } else if (isVisited) {
+                            borderColor = "border-[#E74444]";
+                            textColor = "text-[#E74444]";
+                            bottomDivColor = "bg-[#E74444]";
+                          }
+
+                          acc.push(
+                            <div
+                              key={`${questionIndex}-${subIndex}`}
+                              className={`relative flex items-center justify-center text-lg w-12 h-12 border ${borderColor} ${textColor} transition duration-200 bg-white cursor-not-allowed`}
+                            >
+                              {adjustedIndex}
+                              <div
+                                className={`absolute inset-x-0 bottom-0 h-2 ${bottomDivColor}`}
+                              />
+                            </div>
+                          );
+                        });
+                      } else {
+                        // For non-EMQ questions, add a single navigation item
                         const adjustedIndex = acc.length + 1;
-                        const isActive =
-                          currentQuestionIndex === questionIndex &&
-                          currentSubIndex === subIndex;
+                        const isActive = currentQuestionIndex === questionIndex;
+                        const isNotReviewed = !!notReviewedQuestions[questionId];
                         const isAnswered =
-                          !!answers[questionId]?.[subIndex] &&
-                          answers[questionId][subIndex] !== "";
-                        const isNotReviewed =
-                          !!notReviewedQuestions[questionId];
+                          Array.isArray(answers[questionId]) &&
+                          answers[questionId]?.some(
+                            (ans) => ans !== null && ans !== ""
+                          );
                         const isVisited =
                           visitedQuestionIndices.has(adjustedIndex);
 
@@ -1923,7 +1943,7 @@ export default function PlayQuizPage({ params }: { params: { slug: string } }) {
 
                         acc.push(
                           <div
-                            key={`${questionIndex}-${subIndex}`}
+                            key={questionId}
                             className={`relative flex items-center justify-center text-lg w-12 h-12 border ${borderColor} ${textColor} transition duration-200 bg-white cursor-not-allowed`}
                           >
                             {adjustedIndex}
@@ -1932,136 +1952,54 @@ export default function PlayQuizPage({ params }: { params: { slug: string } }) {
                             />
                           </div>
                         );
-                      });
-                    } else {
-                      // For non-EMQ questions, add a single navigation item
-                      const adjustedIndex = acc.length + 1;
-                      const isActive = currentQuestionIndex === questionIndex;
-                      const isAnswered =
-                        Array.isArray(answers[questionId]) &&
-                        answers[questionId]?.some(
-                          (ans) => ans !== null && ans !== ""
-                        );
-                      const isNotReviewed = !!notReviewedQuestions[questionId];
-                      const isVisited =
-                        visitedQuestionIndices.has(adjustedIndex);
-
-                      // Determine colors based on status
-                      let borderColor = "border-[#989898]";
-                      let textColor = "text-[#989898]";
-                      let bottomDivColor = "bg-[#989898]";
-
-                      if (isActive) {
-                        borderColor = "border-defaultcolor";
-                        textColor = "text-defaultcolor";
-                        bottomDivColor = "bg-defaultcolor";
-                      } else if (isNotReviewed) {
-                        borderColor = "border-[#C9BC0F]";
-                        textColor = "text-[#C9BC0F]";
-                        bottomDivColor = "bg-[#C9BC0F]";
-                      } else if (isAnswered) {
-                        borderColor = "border-[#76b51b]";
-                        textColor = "text-[#76b51b]";
-                        bottomDivColor = "bg-[#76b51b]";
-                      } else if (isVisited) {
-                        borderColor = "border-[#E74444]";
-                        textColor = "text-[#E74444]";
-                        bottomDivColor = "bg-[#E74444]";
                       }
 
-                      acc.push(
-                        <div
-                          key={questionIndex}
-                          className={`relative flex items-center justify-center text-lg w-12 h-12 border ${borderColor} ${textColor} transition duration-200 bg-white cursor-not-allowed`}
-                        >
-                          {adjustedIndex}
-                          <div
-                            className={`absolute inset-x-0 bottom-0 h-2 ${bottomDivColor}`}
-                          />
-                        </div>
-                      );
-                    }
-
-                    return acc;
-                  },
-                  []
-                )}
-              </div>
-            )}
-          </div>
-
-          <div className="h-6 bg-gray-100  border-y  border-gray-200"></div>
-
-          {/* Legend */}
-          <div className="flex justify-between items-center flex-wrap text-center p-4">
-            <div className="flex items-center w-1/2 space-x-2">
-              <div className="w-4 h-4 bg-[#76b51b]"></div>
-              <span>Answered</span>
-            </div>
-            <div className="flex items-center w-1/2 space-x-2">
-              <div className="w-4 h-4 bg-[#C9BC0F]"></div>
-              <span>Under Review</span>
-            </div>
-            <div className="flex items-center w-1/2 space-x-2">
-              <div className="w-4 h-4 bg-[#E74444]"></div>
-              <span>Unanswered</span>
-            </div>
-            <div className="flex items-center w-1/2 space-x-2">
-              <div className="w-4 h-4 bg-[#989898]"></div>
-              <span>Not Visited</span>
-            </div>
-          </div>
-
-          {/* <div className="h-6 bg-gray-100  border-y  border-gray-200"></div> */}
-
-          {/* Answered, Skipped, and Not Reviewed Count */}
-          {/* <div className="flex justify-around items-center space-x-2 text-center p-4">
-            <div className="w-1/3 flex items-center justify-center space-x-2 px-5 py-1 rounded-md bg-green-100 shadow-inner">
-              <FaRegSmile className="text-green-600" size={20} />
-              <span className="text-md font-medium text-green-700">
-                Attempted:{" "}
-                <span className="text-lg font-semibold">
-                  {getAnsweredCount()}
-                </span>
-              </span>
-            </div>
-            <div className="w-1/3  flex items-center justify-center space-x-2 px-5 py-1 rounded-md bg-yellow-100 shadow-inner">
-              <FaRegFrown className="text-yellow-600" size={20} />
-              <span className="text-md font-medium text-yellow-700">
-                Skipped:{" "}
-                <span className="text-lg font-semibold">
-                  {getSkippedCount()}
-                </span>
-              </span>
-            </div>
-            <div className="w-1/3  flex items-center justify-center space-x-2 px-5 py-1 rounded-md bg-orange-100 shadow-inner">
-              <FaRegSmile className="text-orange-600" size={20} />
-              <span className="text-md font-medium text-orange-700">
-                Under Review:{" "}
-                <span className="text-lg font-semibold">
-                  {getNotReviewedCount()}
-                </span>
-              </span>
-            </div>
-          </div> */}
-
-          <div className="h-6 bg-gray-100  border-y  border-gray-200"></div>
-
-          {/* quiz Instructions */}
-          <div className="p-4 text-center">
-              {examData?.finish_button === "enable" && (
-                <button
-                  className="bg-[#E74444] block text-white w-full px-4 py-2 rounded-lg hover:bg-green-600 transition-colors"
-                  onClick={handleFinishClick}
-                >
-                  Finish Quiz
-                </button>
+                      return acc;
+                    },
+                    []
+                  )}
+                </div>
               )}
             </div>
 
+            <div className="h-6 bg-gray-100  border-y  border-gray-200"></div>
+
+            {/* Legend */}
+            <div className="flex justify-between items-center flex-wrap text-center p-4">
+              <div className="flex items-center w-1/2 space-x-2">
+                <div className="w-4 h-4 bg-[#76b51b]"></div>
+                <span>Answered</span>
+              </div>
+              <div className="flex items-center w-1/2 space-x-2">
+                <div className="w-4 h-4 bg-[#C9BC0F]"></div>
+                <span>Under Review</span>
+              </div>
+              <div className="flex items-center w-1/2 space-x-2">
+                <div className="w-4 h-4 bg-[#E74444]"></div>
+                <span>Unanswered</span>
+              </div>
+              <div className="flex items-center w-1/2 space-x-2">
+                <div className="w-4 h-4 bg-[#989898]"></div>
+                <span>Not Visited</span>
+              </div>
+            </div>
+
+            {/* Quiz Instructions */}
+            <div className="p-4 text-center">
+                {examData?.finish_button === "enable" && (
+                  <button
+                    className="bg-[#E74444] block text-white w-full px-4 py-2 rounded-lg hover:bg-green-600 transition-colors"
+                    onClick={handleFinishClick}
+                  >
+                    Finish Quiz
+                  </button>
+                )}
+              </div>
+
+            </div>
+          )}
+          {showModal && <ConfirmationModal />}{" "}
         </div>
-      )}
-      {showModal && <ConfirmationModal />}{" "}
-    </div>
-  );
+    
+    );
 }
