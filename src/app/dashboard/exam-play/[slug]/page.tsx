@@ -1039,7 +1039,9 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
                       }}
                     ></p>
                     {question.options?.map((option, index) => {
-                      const isChecked = answers[question.id]?.includes(option);
+                       const isChecked = Array.isArray(answers[question.id]) 
+                       ? answers[question.id]?.includes(option) 
+                       : false;
                       return (
                         <label
                           key={index}

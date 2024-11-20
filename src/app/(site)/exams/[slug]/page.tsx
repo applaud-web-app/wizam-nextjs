@@ -126,12 +126,14 @@ const ExamDetailPage = ({ params }: ExamDetailProps) => {
 
     const token = Cookies.get("jwt");
     if (token) {
+      Cookies.set("category_id", exam.subcategory_id);
+      Cookies.set("category_name", exam.name);
       Cookies.set(
         "redirect_url",
-        `/dashboard/exam-detail/${slug}?sid=${exam.schedule_id}`,
+        `/dashboard/exam-detail/${slug}?sid=${exam.schedule_id ?? 0}`,
         { expires: 1 }
       );
-      router.push(`/dashboard/exam-detail/${slug}?sid=${exam.schedule_id}`);
+      router.push(`/dashboard/exam-detail/${slug}?sid=${exam.schedule_id ?? 0}`);
     } else {
       toast.error("Login to continue!", {
         position: "top-right",
@@ -146,7 +148,7 @@ const ExamDetailPage = ({ params }: ExamDetailProps) => {
       Cookies.set("category_name", exam.name);
       Cookies.set(
         "redirect_url",
-        `/dashboard/exam-detail/${slug}?sid=${exam.schedule_id}`,
+        `/dashboard/exam-detail/${slug}?sid=${exam.schedule_id ?? 0}`,
         { expires: 1 }
       );
       router.push("/signin");

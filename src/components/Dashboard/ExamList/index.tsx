@@ -1,5 +1,4 @@
 "use client";
-
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import axios from "axios";
@@ -10,10 +9,7 @@ import Loader from "@/components/Common/Loader";
 import NoData from "@/components/Common/NoData";
 import { FiPlay } from "react-icons/fi";
 import { MdLockOutline } from "react-icons/md";
-
 import { format } from "date-fns";
-
-
 interface Exam {
   id: number;
   exam_type_slug: string;
@@ -29,7 +25,8 @@ interface Exam {
   duration_mode: string;
   exam_duration: number;
   is_resume: boolean;
-  total_attempts: number | null | string; // Updated to include string
+  total_attempts: number | null | string;
+  is_public: number; // Added this line
   schedules: {
     schedule_id: number;
     schedule_type: string;
@@ -41,16 +38,15 @@ interface Exam {
   };
 }
 
+
 const CACHE_KEY = "serverTimeCache";
 const CACHE_DURATION = 60000; // 1 minute in milliseconds
-
 export default function ExamList() {
   const [exams, setExams] = useState<Exam[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [serverTime, setServerTime] = useState<Date | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
-
   const getCachedServerTime = (): Date | null => {
     const cachedData = sessionStorage.getItem(CACHE_KEY);
     if (cachedData) {
@@ -61,25 +57,21 @@ export default function ExamList() {
     }
     return null;
   };
-
   const cacheServerTime = (time: Date) => {
     sessionStorage.setItem(
       CACHE_KEY,
       JSON.stringify({ serverTime: time.toISOString(), timestamp: Date.now() })
     );
   };
-
   useEffect(() => {
     const fetchData = async () => {
       try {
         const jwt = Cookies.get("jwt");
         const category_id = Cookies.get("category_id");
-
         if (!jwt || !category_id) {
           setError("Authentication or category data is missing.");
           return;
         }
-
         let cachedServerTime = getCachedServerTime();
         if (!cachedServerTime) {
           const timeResponse = await axios.get("/api/time");
@@ -87,7 +79,6 @@ export default function ExamList() {
           cacheServerTime(cachedServerTime);
         }
         setServerTime(cachedServerTime);
-
         const examsResponse = await axios.get(
           `${process.env.NEXT_PUBLIC_API_URL}/exam-all`,
           {
@@ -95,11 +86,13 @@ export default function ExamList() {
             params: { category: category_id },
           }
         );
-
         const currentTime = cachedServerTime || new Date();
-
         // Filter out exams that are over or completed
         const filteredExams = examsResponse.data.data.filter((exam: Exam) => {
+          if (exam.is_public === 1) {
+            return true; // Include public exams regardless of schedule
+          }
+        
           const { schedules } = exam;
           const startDateTime = new Date(
             `${schedules.start_date}T${schedules.start_time}`
@@ -108,9 +101,7 @@ export default function ExamList() {
             schedules.end_date && schedules.end_time
               ? new Date(`${schedules.end_date}T${schedules.end_time}`)
               : null;
-
           let isOver = false;
-
           if (
             schedules.schedule_type === "flexible" ||
             schedules.schedule_type === "fixed"
@@ -121,7 +112,6 @@ export default function ExamList() {
           } else if (schedules.schedule_type === "attempts") {
             // For 'attempts' schedule type, additional logic may be required
           }
-
           // Exclude exams that are over
           return !isOver;
         });
@@ -133,10 +123,8 @@ export default function ExamList() {
         setLoading(false);
       }
     };
-
     fetchData();
   }, []);
-
   // Add this useEffect to update serverTime every second
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -149,17 +137,14 @@ export default function ExamList() {
       if (interval) clearInterval(interval);
     };
   }, [serverTime]);
-
   const handlePayment = async (slug: string) => {
     try {
       const jwt = Cookies.get("jwt");
       const type = "exams";
-
       if (!jwt) {
         toast.error("User is not authenticated. Please log in.");
         return;
       }
-
       const response = await axios.get(
         `${process.env.NEXT_PUBLIC_API_URL}/user-subscription`,
         {
@@ -169,7 +154,6 @@ export default function ExamList() {
           params: { type },
         }
       );
-
       if (response.data.status === true) {
         router.push(`/dashboard/exam-detail/${slug}`);
       } else {
@@ -195,26 +179,27 @@ export default function ExamList() {
   };
 
   const formatDateTime = (dateString: string, timeString: string | null) => {
+    if (!dateString) return "Always Available";
     const date = new Date(`${dateString}T${timeString || "00:00"}`);
-    return date.toLocaleDateString("en-GB") + " " + date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    return (
+      date.toLocaleDateString("en-GB") +
+      " " +
+      date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+    );
   };
 
   if (loading) {
     return <Loader />;
   }
-
   if (error) {
     return <div className="text-red-500 text-center p-5">{error}</div>;
   }
-
   if (exams.length === 0) {
     return <NoData message="No exams available at the moment" />;
   }
-
   return (
     <div className="mb-5">
       <h2 className="text-lg lg:text-2xl font-bold mb-3">All Exams</h2>
-
       <div className="overflow-x-auto rounded-lg shadow-sm">
         <table className="min-w-full table-auto rounded-lg overflow-hidden text-nowrap">
           <thead className="bg-defaultcolor text-white">
@@ -233,10 +218,8 @@ export default function ExamList() {
             {exams.map((exam, index) => {
               const { schedules } = exam;
               const currentTime = serverTime || new Date();
-
               let isUpcoming = false;
               let isAvailable = false;
-
               const startDateTime = new Date(
                 `${schedules.start_date}T${schedules.start_time}`
               );
@@ -245,33 +228,62 @@ export default function ExamList() {
                   ? new Date(`${schedules.end_date}T${schedules.end_time}`)
                   : null;
 
-              if (
-                schedules.schedule_type === "flexible" ||
-                schedules.schedule_type === "fixed"
-              ) {
-                if (currentTime < startDateTime) {
-                  isUpcoming = true;
-                } else {
-                  isAvailable = true;
-                }
-              } else if (schedules.schedule_type === "attempts") {
-                if (currentTime < startDateTime) {
-                  isUpcoming = true;
-                } else {
-                  isAvailable = true;
+              if (exam.is_public === 1) {
+                // Public exams are always available
+                isAvailable = true;
+              } else {
+                if (
+                  schedules.schedule_type === "flexible" ||
+                  schedules.schedule_type === "fixed"
+                ) {
+                  if (currentTime < startDateTime) {
+                    isUpcoming = true;
+                  } else {
+                    isAvailable = true;
+                  }
+                } else if (schedules.schedule_type === "attempts") {
+                  if (currentTime < startDateTime) {
+                    isUpcoming = true;
+                  } else {
+                    isAvailable = true;
+                  }
                 }
               }
+            
+              // let scheduleInfo;
+              // if (schedules.schedule_type === "flexible") {
+              //   scheduleInfo = `${formatDateTime(schedules.start_date, schedules.start_time)} - ${formatDateTime(schedules.end_date!, schedules.end_time)}`;
+              // } else if (schedules.schedule_type === "fixed") {
+              //   scheduleInfo = `Fixed - ${formatDateTime(schedules.start_date, schedules.start_time)}`;
+              // } else if (schedules.schedule_type === "attempts") {
+              //   scheduleInfo = `From ${formatDateTime(schedules.start_date, schedules.start_time)}`;
+              // } else {
+              //   scheduleInfo = `${formatDateTime(schedules.start_date, schedules.start_time)}`;
+              // }
 
               let scheduleInfo;
               if (schedules.schedule_type === "flexible") {
-                scheduleInfo = `${formatDateTime(schedules.start_date, schedules.start_time)} - ${formatDateTime(schedules.end_date!, schedules.end_time)}`;
+                scheduleInfo = `${formatDateTime(
+                  schedules.start_date,
+                  schedules.start_time
+                )} - ${formatDateTime(schedules.end_date!, schedules.end_time)}`;
               } else if (schedules.schedule_type === "fixed") {
-                scheduleInfo = `Fixed - ${formatDateTime(schedules.start_date, schedules.start_time)}`;
+                scheduleInfo = `Fixed - ${formatDateTime(
+                  schedules.start_date,
+                  schedules.start_time
+                )}`;
               } else if (schedules.schedule_type === "attempts") {
-                scheduleInfo = `From ${formatDateTime(schedules.start_date, schedules.start_time)}`;
+                scheduleInfo = `From ${formatDateTime(
+                  schedules.start_date,
+                  schedules.start_time
+                )}`;
               } else {
-                scheduleInfo = `${formatDateTime(schedules.start_date, schedules.start_time)}`;
+                scheduleInfo = `${formatDateTime(
+                  schedules.start_date,
+                  schedules.start_time
+                )}`;
               }
+
 
               return (
                 <tr key={index} className="hover:bg-gray-50">
@@ -298,7 +310,7 @@ export default function ExamList() {
                   <td className="p-4">
                     {isUpcoming ? (
                       <button
-                        className="bg-[#ffc300] hover:bg-yellow-500 text-white py-1 px-5 rounded-full font-semibold text-sm cursor-not-allowed inline-flex items-center space-x-1 w-32"
+                        className="bg-[#FFC300] hover:bg-yellow-500 text-white py-1 px-5 rounded-full font-semibold text-sm cursor-not-allowed inline-flex items-center space-x-1 w-32"
                         disabled
                       >
                         <MdLockOutline className="flex-shrink-0" />
@@ -306,15 +318,15 @@ export default function ExamList() {
                       </button>
                     ) : exam.is_resume ? (
                       <Link
-                        href={`/dashboard/exam-play/${exam.slug}?sid=${schedules.schedule_id}`}
-                        className="text-white bg-[#C9BC0F] px-5 py-1 rounded-full hover:bg-[#928c38] transition duration-200 inline-flex items-center justify-center space-x-1 font-semibold text-sm w-32"
+                        href={`/dashboard/exam-play/${exam.slug}?sid=${schedules.schedule_id ?? 0}`}
+                        className="text-white bg-[#C9BC0F] px-5 py-1 rounded-full hover:bg-[#928C38] transition duration-200 inline-flex items-center justify-center space-x-1 font-semibold text-sm w-32"
                       >
                         <FiPlay />
                         <span>Resume</span>
                       </Link>
                     ) : exam.is_free === 1 ? (
                       <Link
-                        href={`/dashboard/exam-detail/${exam.slug}?sid=${schedules.schedule_id}`}
+                        href={`/dashboard/exam-detail/${exam.slug}?sid=${schedules.schedule_id ?? 0}`}
                         className="bg-green-600 text-white px-5 py-1 rounded-full font-semibold text-sm hover:bg-green-700 transition duration-200 inline-flex items-center justify-center w-32"
                       >
                         Start Exam
@@ -324,7 +336,7 @@ export default function ExamList() {
                         className="bg-defaultcolor text-white py-1 px-5 rounded-full font-semibold text-sm hover:bg-defaultcolor-dark w-32"
                         onClick={() =>
                           handlePayment(
-                            `/dashboard/exam-detail/${exam.slug}?sid=${schedules.schedule_id}`
+                            `/dashboard/exam-detail/${exam.slug}?sid=${schedules.schedule_id ?? 0}`
                           )
                         }
                       >

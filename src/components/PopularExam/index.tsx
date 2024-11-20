@@ -70,21 +70,21 @@ const PopularExams = () => {
           const allExams = examsResponse.data.data;
 
           // Filter exams based on their availability
-          const validExams = allExams.filter((exam: PopularExam) => {
-            const startDateTime = new Date(
-              `${exam.start_date}T${exam.start_time}`
-            );
-            const endDateTime = exam.end_date
-              ? new Date(`${exam.end_date}T${exam.end_time}`)
-              : null;
+          // const validExams = allExams.filter((exam: PopularExam) => {
+          //   const startDateTime = new Date(
+          //     `${exam.start_date}T${exam.start_time}`
+          //   );
+          //   const endDateTime = exam.end_date
+          //     ? new Date(`${exam.end_date}T${exam.end_time}`)
+          //     : null;
 
-            return (
-              startDateTime <= currentTime &&
-              (!endDateTime || endDateTime >= currentTime)
-            );
-          });
+          //   return (
+          //     startDateTime <= currentTime &&
+          //     (!endDateTime || endDateTime >= currentTime)
+          //   );
+          // });
 
-          setExams(validExams);
+          setExams(allExams);
         } else {
           setError("Failed to fetch popular exams.");
         }
