@@ -730,12 +730,12 @@ const PracticeTestResult = ({ params }: PracticeTestResultProps) => {
         <h1 className="text-3xl font-bold">{userPracticeResult.title}</h1>
       </div>
 
-      <div className="flex items-center space-x-3 flex-wrap mb-3">
-        {/* <div className="mb-1">
+      {/* <div className="flex items-center space-x-3 flex-wrap mb-3">
+        <div className="mb-1">
           <p className="text-lg">
             Practice Set: {practiceData.practice_result_type}
           </p>
-        </div> */}
+        </div>
 
         <div className="flex items-center mb-1">
           <FaRegCalendarAlt className=" mr-2" />
@@ -745,8 +745,8 @@ const PracticeTestResult = ({ params }: PracticeTestResultProps) => {
         <div className="flex items-center mb-1">
           <FaClock className="mr-2" />
           <p className="text-lg">{practiceData.practice_result_time}</p>
-        </div>
-      </div>
+        </div> 
+      </div> */}
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
         <button
