@@ -14,21 +14,23 @@ import NoData from "@/components/Common/NoData";
 
 interface Quiz {
   id: number;
-  exam_type_name: string;
-  slug: string;
+  exam_type_slug: string;
   title: string | null;
-  duration_mode: string;
-  exam_duration: number | null;
-  point_mode: string | null;
-  point: number | null;
   is_free: number;
-  is_resume: number;
-  total_attempts: number | null | string; // Updated to include string
+  price: number | null;
   total_questions: number;
-  total_marks: number | string;
+  total_marks: number;
   total_time: number;
+  point: number | null;
+  slug: string;
+  point_mode: string | null;
+  duration_mode: string;
+  exam_duration: number;
+  is_resume: boolean;
+  total_attempts: number | null | string;
+  is_public: number; // Added this line
   schedules: {
-    schedule_id: string;
+    schedule_id: number;
     schedule_type: string;
     start_date: string;
     start_time: string;
@@ -93,15 +95,46 @@ export default function QuizList() {
           }
         );
 
-        const upcomingQuizzes = quizzesResponse.data.data.filter((quiz: Quiz) => {
+        const currentTime = cachedServerTime || new Date();
+
+        // const upcomingQuizzes = quizzesResponse.data.data.filter((quiz: Quiz) => {
+        //   const endDateTime =
+        //     quiz.schedules.end_date && quiz.schedules.end_time
+        //       ? new Date(`${quiz.schedules.end_date}T${quiz.schedules.end_time}`)
+        //       : null;
+        //   return !endDateTime || endDateTime >= cachedServerTime;
+        // });
+
+        // Filter out quizs that are over or completed
+        const filteredQuiz = quizzesResponse.data.data.filter((quiz: Quiz) => {
+          if (quiz.is_public === 1) {
+            return true; // Include public quizs regardless of schedule
+          }
+        
+          const { schedules } = quiz;
+          const startDateTime = new Date(
+            `${schedules.start_date}T${schedules.start_time}`
+          );
           const endDateTime =
-            quiz.schedules.end_date && quiz.schedules.end_time
-              ? new Date(`${quiz.schedules.end_date}T${quiz.schedules.end_time}`)
+            schedules.end_date && schedules.end_time
+              ? new Date(`${schedules.end_date}T${schedules.end_time}`)
               : null;
-          return !endDateTime || endDateTime >= cachedServerTime;
+          let isOver = false;
+          if (
+            schedules.schedule_type === "flexible" ||
+            schedules.schedule_type === "fixed"
+          ) {
+            if (endDateTime && currentTime > endDateTime) {
+              isOver = true;
+            }
+          } else if (schedules.schedule_type === "attempts") {
+            // For 'attempts' schedule type, additional logic may be required
+          }
+          // Exclude exams that are over
+          return !isOver;
         });
 
-        setQuizzes(upcomingQuizzes);
+        setQuizzes(filteredQuiz);
       } catch (error) {
         setError("Failed to fetch data from the server.");
       } finally {
@@ -112,14 +145,17 @@ export default function QuizList() {
     fetchData();
   }, []);
 
-  // Update serverTime every second and refresh quiz availability
   useEffect(() => {
-    const intervalId = setInterval(() => {
-      setServerTime(new Date());
-    }, 1000);
-
-    return () => clearInterval(intervalId);
-  }, []);
+    let interval: NodeJS.Timeout;
+    if (serverTime) {
+      interval = setInterval(() => {
+        setServerTime((prevTime) => new Date(prevTime!.getTime() + 1000));
+      }, 1000);
+    }
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [serverTime]);
 
   const handlePayment = async (slug: string) => {
     try {
@@ -164,8 +200,13 @@ export default function QuizList() {
   };
 
   const formatDateTime = (dateString: string, timeString: string | null) => {
+    if (!dateString) return "Always Available";
     const date = new Date(`${dateString}T${timeString || "00:00"}`);
-    return date.toLocaleDateString("en-GB") + " " + date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    return (
+      date.toLocaleDateString("en-GB") +
+      " " +
+      date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+    );
   };
 
   if (loading) {
@@ -200,22 +241,62 @@ export default function QuizList() {
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
             {quizzes.map((quiz, index) => {
-              const { schedules } = quiz;
-              const quizStartDateTime = new Date(
-                `${schedules.start_date}T${schedules.start_time}`
-              );
-              const currentTime = serverTime || new Date();
-              const isUpcoming = quizStartDateTime > currentTime;
+               const { schedules } = quiz;
+               const currentTime = serverTime || new Date();
+               let isUpcoming = false;
+               let isAvailable = false;
+               const startDateTime = new Date(
+                 `${schedules.start_date}T${schedules.start_time}`
+               );
+               const endDateTime =
+                 schedules.end_date && schedules.end_time
+                   ? new Date(`${schedules.end_date}T${schedules.end_time}`)
+                   : null;
+ 
+               if (quiz.is_public === 1) {
+                 // Public quizs are always available
+                 isAvailable = true;
+               } else {
+                 if (
+                   schedules.schedule_type === "flexible" ||
+                   schedules.schedule_type === "fixed"
+                 ) {
+                   if (currentTime < startDateTime) {
+                     isUpcoming = true;
+                   } else {
+                     isAvailable = true;
+                   }
+                 } else if (schedules.schedule_type === "attempts") {
+                   if (currentTime < startDateTime) {
+                     isUpcoming = true;
+                   } else {
+                     isAvailable = true;
+                   }
+                 }
+               }
 
-              let scheduleInfo;
-              if (schedules.schedule_type === "flexible") {
-                scheduleInfo = `${formatDateTime(schedules.start_date, schedules.start_time)} - ${formatDateTime(schedules.end_date!, schedules.end_time)}`;
-              } else if (schedules.schedule_type === "fixed") {
-                scheduleInfo = `Fixed - ${formatDateTime(schedules.start_date, schedules.start_time)}`;
-              } else {
-                scheduleInfo = `${formatDateTime(schedules.start_date, schedules.start_time)}`;
-              }
-
+               let scheduleInfo;
+               if (schedules.schedule_type === "flexible") {
+                 scheduleInfo = `${formatDateTime(
+                   schedules.start_date,
+                   schedules.start_time
+                 )} - ${formatDateTime(schedules.end_date!, schedules.end_time)}`;
+               } else if (schedules.schedule_type === "fixed") {
+                 scheduleInfo = `Fixed - ${formatDateTime(
+                   schedules.start_date,
+                   schedules.start_time
+                 )}`;
+               } else if (schedules.schedule_type === "attempts") {
+                 scheduleInfo = `From ${formatDateTime(
+                   schedules.start_date,
+                   schedules.start_time
+                 )}`;
+               } else {
+                 scheduleInfo = `${formatDateTime(
+                   schedules.start_date,
+                   schedules.start_time
+                 )}`;
+               }
               return (
                 <tr key={index} className="hover:bg-gray-50">
                   <td className="p-4">{index + 1}</td>
