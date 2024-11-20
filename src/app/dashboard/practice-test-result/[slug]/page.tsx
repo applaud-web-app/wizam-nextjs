@@ -11,6 +11,7 @@ import {
   FaQuestionCircle,
   FaMinusCircle,
   FaClock,
+  FaRegCalendarAlt,
 } from "react-icons/fa";
 import { toast } from "react-toastify";
 import Cookies from "js-cookie";
@@ -42,6 +43,7 @@ ChartJS.register(
   Title
 );
 
+// TypeScript interfaces
 interface Option {
   text: string;
   image?: string;
@@ -59,13 +61,16 @@ interface Question {
   options?: (Option | string)[];
 }
 
-interface TestData {
+interface PracticeTestData {
   title: string;
   duration: string;
+  practice_result_type: string;
+  practice_result_date: string;
+  practice_result_time: string;
   questions: Question[];
 }
 
-interface UserPracticeTestResult {
+interface UserPracticeResult {
   title: string;
   correctCount: number;
   wrongCount: number;
@@ -74,6 +79,7 @@ interface UserPracticeTestResult {
   marks: number;
   timeTaken?: number;
   uuid: string;
+  download_report: number;
 }
 
 interface LeaderboardEntry {
@@ -89,13 +95,14 @@ interface PracticeTestResultProps {
 }
 
 const PracticeTestResult = ({ params }: PracticeTestResultProps) => {
-  const [testData, setTestData] = useState<TestData | null>(null);
-  const [userPracticeTestResult, setUserPracticeTestResult] = useState<UserPracticeTestResult | null>(
+  const [practiceData, setPracticeData] = useState<PracticeTestData | null>(
     null
   );
+  const [userPracticeResult, setUserPracticeResult] =
+    useState<UserPracticeResult | null>(null);
   const [leaderBoard, setLeaderBoard] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
-  const [activeTab, setActiveTab] = useState<string>("A");
+  const [activeTab, setActiveTab] = useState<string>("A"); // New state for tabs
   const router = useRouter();
 
   const handleTabClick = (tab: string) => setActiveTab(tab);
@@ -103,7 +110,7 @@ const PracticeTestResult = ({ params }: PracticeTestResultProps) => {
   useEffect(() => {
     const { slug } = params;
 
-    const fetchPracticeTestResults = async () => {
+    const fetchPracticeResults = async () => {
       try {
         const response = await axios.get(
           `${process.env.NEXT_PUBLIC_API_URL}/practice-set-result/${slug}`,
@@ -117,9 +124,12 @@ const PracticeTestResult = ({ params }: PracticeTestResultProps) => {
         if (response.data.status) {
           const resultData = response.data;
 
-          setTestData({
+          setPracticeData({
             title: resultData.pratice.title,
             duration: resultData.pratice.duration,
+            practice_result_date: resultData.pratice.practice_result_date,
+            practice_result_time: resultData.pratice.practice_result_time,
+            practice_result_type: resultData.pratice.practice_result_type,
             questions: resultData.exam_preview.map((p: any) => ({
               id: p.question_id,
               type: p.question_type,
@@ -132,7 +142,7 @@ const PracticeTestResult = ({ params }: PracticeTestResultProps) => {
             })),
           });
 
-          setUserPracticeTestResult({
+          setUserPracticeResult({
             title: resultData.pratice.title,
             correctCount: parseInt(resultData.result.correct),
             wrongCount: parseInt(resultData.result.incorrect),
@@ -141,29 +151,30 @@ const PracticeTestResult = ({ params }: PracticeTestResultProps) => {
             status: resultData.result.status,
             timeTaken: resultData.result.timeTaken,
             uuid: resultData.result.uuid,
+            download_report: resultData.pratice.download_report,
           });
 
           setLeaderBoard(resultData.leaderBoard || []);
         } else {
-          toast.error("No Test results found for this category");
+          toast.error("No practice test results found for this category");
         }
       } catch (error) {
-        toast.error("Error fetching test results: " + error);
+        toast.error("Error fetching practice test results: " + error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchPracticeTestResults();
+    fetchPracticeResults();
   }, [params, router]);
 
-  if (loading || !testData || !userPracticeTestResult) {
+  if (loading || !practiceData || !userPracticeResult) {
     return <Loader />;
   }
 
   const passingScore = 0.6;
-  const totalQuestions = testData.questions.length;
-  const percentageCorrect = userPracticeTestResult.correctCount / totalQuestions;
+  const totalQuestions = practiceData.questions.length;
+  const percentageCorrect = userPracticeResult.correctCount / totalQuestions;
   const passed = percentageCorrect >= passingScore;
 
   const formatTimeTaken = (timeInMinutes?: number) => {
@@ -171,74 +182,89 @@ const PracticeTestResult = ({ params }: PracticeTestResultProps) => {
     return `${timeInMinutes} min`;
   };
 
- 
   const renderOptions = (question: Question) => {
     const correctAnswerDisplay =
-    typeof question.correctAnswer === "object" && !Array.isArray(question.correctAnswer)
-      ? Object.entries(question.correctAnswer)
-          .map(([key, value]) => `${key}: ${value}`)
-          .join(", ")
-      : Array.isArray(question.correctAnswer)
-      ? question.correctAnswer.join(", ")
-      : question.correctAnswer || "N/A";
+      typeof question.correctAnswer === "object" &&
+      !Array.isArray(question.correctAnswer)
+        ? Object.entries(question.correctAnswer)
+            .map(([key, value]) => `${key}: ${value}`)
+            .join(", ")
+        : Array.isArray(question.correctAnswer)
+        ? question.correctAnswer.join(", ")
+        : question.correctAnswer || "N/A";
 
-      const userAnswerDisplay =
-      question.userAnswer && Array.isArray(question.userAnswer) && question.userAnswer.length > 0
-      ? question.userAnswer.join(", ")
-      : "Unanswered";
+    const userAnswerDisplay =
+      question.userAnswer &&
+      (Array.isArray(question.userAnswer)
+        ? question.userAnswer.length > 0
+          ? question.userAnswer.join(", ")
+          : "Unanswered"
+        : typeof question.userAnswer === "string" &&
+          question.userAnswer.trim() !== ""
+        ? question.userAnswer
+        : "Unanswered");
 
     switch (question.type) {
       case "MSA": // Multiple Single Answer
 
       case "TOF": // True or False
-      return (
-        <div className="mb-4">
-          {question.options?.map((option, index) => (
-            <div
-              key={index}
-              className={`flex justify-between border items-center p-3 rounded-md mb-2 ${
-                typeof question.correctAnswer === "string" && parseInt(question.correctAnswer) - 1 === index
-                  ? "bg-green-500 text-white"
-                  : typeof question.userAnswer === "number" && question.userAnswer - 1 === index
-                  ? "bg-red-500 text-white"
-                  : "bg-white"
-              }`}
-            >
-              {/* Left Circle Icon with letter */}
-              <span
-                className={`flex items-center justify-center w-6 h-6 rounded-full  mr-2 font-bold ${
-                  typeof question.correctAnswer === "string" && parseInt(question.correctAnswer) - 1 === index
-                    ? "bg-white text-green-500"
-                    : typeof question.userAnswer === "number" && question.userAnswer - 1 === index
-                    ? "bg-white text-red-500"
-                    : "bg-gray-200 text-gray-700"
+        return (
+          <div className="mb-4">
+            {question.options?.map((option, index) => (
+              <div
+                key={index}
+                className={`flex justify-between border items-center p-3 rounded-md mb-2 ${
+                  typeof question.correctAnswer === "string" &&
+                  parseInt(question.correctAnswer) - 1 === index
+                    ? "bg-green-500 text-white"
+                    : typeof question.userAnswer === "number" &&
+                      question.userAnswer - 1 === index
+                    ? "bg-red-500 text-white"
+                    : "bg-white"
                 }`}
               >
-                {String.fromCharCode(65 + index)}
-              </span>
+                {/* Left Circle Icon with letter */}
+                <span
+                  className={`flex items-center justify-center w-6 h-6 rounded-full  mr-2 font-bold ${
+                    typeof question.correctAnswer === "string" &&
+                    parseInt(question.correctAnswer) - 1 === index
+                      ? "bg-white text-green-500"
+                      : typeof question.userAnswer === "number" &&
+                        question.userAnswer - 1 === index
+                      ? "bg-white text-red-500"
+                      : "bg-gray-200 text-gray-700"
+                  }`}
+                >
+                  {String.fromCharCode(65 + index)}
+                </span>
 
-              {/* Option text */}
-              <div
-                className="flex-grow"
-                dangerouslySetInnerHTML={{
-                  __html: typeof option === "string" ? option : (option as Option).text,
-                }}
-              />
+                {/* Option text */}
+                <div
+                  className="flex-grow"
+                  dangerouslySetInnerHTML={{
+                    __html:
+                      typeof option === "string"
+                        ? option
+                        : (option as Option).text,
+                  }}
+                />
 
-              {/* Right Icon for correct or incorrect indication */}
-              <span className="ml-2">
-                {typeof question.correctAnswer === "string" && parseInt(question.correctAnswer) - 1 === index ? (
-                  <FaCheck className="text-white" />
-                ) : typeof question.userAnswer === "number" && question.userAnswer - 1 === index ? (
-                  <FaTimes className="text-white" />
-                ) : (
-                  <FaRegCircle className="text-gray-400" />
-                )}
-              </span>
-            </div>
-          ))}
-        </div>
-      );
+                {/* Right Icon for correct or incorrect indication */}
+                <span className="ml-2">
+                  {typeof question.correctAnswer === "string" &&
+                  parseInt(question.correctAnswer) - 1 === index ? (
+                    <FaCheck className="text-white" />
+                  ) : typeof question.userAnswer === "number" &&
+                    question.userAnswer - 1 === index ? (
+                    <FaTimes className="text-white" />
+                  ) : (
+                    <FaRegCircle className="text-gray-400" />
+                  )}
+                </span>
+              </div>
+            ))}
+          </div>
+        );
 
       case "MMA": // Multiple Match Answer
         return (
@@ -249,7 +275,7 @@ const PracticeTestResult = ({ params }: PracticeTestResultProps) => {
                 question.correctAnswer.includes((index + 1).toString()); // Checking if (index + 1) is in correctAnswer array as string
               const isUserAnswer =
                 Array.isArray(question.userAnswer) &&
-                question.userAnswer.includes(index+1); // Checking if index is in userAnswer array
+                question.userAnswer.includes(index + 1); // Checking if index is in userAnswer array
 
               return (
                 <div
@@ -311,16 +337,16 @@ const PracticeTestResult = ({ params }: PracticeTestResultProps) => {
             {Array.from({ length: blanks }).map((_, index) => (
               <div key={index} className="p-4 bg-white rounded-lg mb-2">
                 {/* User's Answer */}
-                <p className="font-semibold text-red-500">
-                  Your Answer:{" "}
+                <p className="font-semibold">
+                  <span className="text-defaultcolor">Your Answer:</span>{" "}
                   {Array.isArray(question.userAnswer)
-                    ? question.userAnswer[index] || "No Answer"
-                    : "No Answer"}
+                    ? question.userAnswer[index] || "No answer"
+                    : "No answer"}
                 </p>
 
                 {/* Correct Answer */}
-                <p className="font-semibold text-green-600">
-                  Correct:{" "}
+                <p className="font-semibold">
+                  <span className="text-green-600">Correct Answer:</span>{" "}
                   {Array.isArray(question.correctAnswer)
                     ? question.correctAnswer[index] || "N/A"
                     : "N/A"}
@@ -348,20 +374,21 @@ const PracticeTestResult = ({ params }: PracticeTestResultProps) => {
                   className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center"
                 >
                   {/* Display the option label from question.options based on key */}
-                  <div className="p-2 rounded bg-white">
+                  <div className="p-2 py-5 rounded bg-white">
                     <span className="text-gray-500 font-semibold">
-                      Your Answer:
+                      Match {key}
                     </span>{" "}
                     <div
                       dangerouslySetInnerHTML={{
-                        __html: question.options?.[parseInt(key) - 1] || key, // Adjusts to zero-based index
+                        __html:
+                          question.options?.[parseInt(key) - 1] || key, // Adjusts to zero-based index
                       }}
                     />
                   </div>
 
                   {/* Display user's selected answer */}
-                  <div className="p-2 rounded bg-yellow-50">
-                    <span className="text-yellow-500 font-semibold">
+                  <div className="p-2 rounded bg-white">
+                    <span className="text-defaultcolor font-semibold">
                       Your Answer:
                     </span>{" "}
                     {userAnswerPairs[index] ? (
@@ -378,11 +405,13 @@ const PracticeTestResult = ({ params }: PracticeTestResultProps) => {
                   </div>
 
                   {/* Display correct answer */}
-                  <div className="p-2 rounded bg-green-50">
+                  <div className="p-2 rounded bg-white">
                     <span className="text-green-500 font-semibold">
                       Correct:
                     </span>{" "}
-                    <div dangerouslySetInnerHTML={{ __html: correctValue }} />
+                    <div
+                      dangerouslySetInnerHTML={{ __html: correctValue }}
+                    />
                   </div>
                 </div>
               ))}
@@ -395,11 +424,7 @@ const PracticeTestResult = ({ params }: PracticeTestResultProps) => {
           <div className="p-4 bg-white rounded-lg">
             <p className="font-medium">
               Your Answer:{" "}
-              <span
-                dangerouslySetInnerHTML={{
-                  __html: userAnswerDisplay,
-                }}
-              />
+              <span>{userAnswerDisplay}</span>
             </p>
             <p className="text-green-600">
               Correct Answer:{" "}
@@ -411,64 +436,134 @@ const PracticeTestResult = ({ params }: PracticeTestResultProps) => {
             </p>
           </div>
         );
-      case "ORD": // Ordering
-        return (
-          <div>
-            <ul>
-              {Array.isArray(question.userAnswer) ? (
-                question.userAnswer.map((answerIndex: any, index) => (
-                  <li
-                    key={index}
-                    className=" mb-2 flex items-center justify-between gap-3"
-                  >
-                    {/* User's Answer */}
-                    <div className="flex-1 p-4 bg-white rounded-lg">
-                      <p className="font-semibold text-red-500">Your Answer:</p>
-                      <span
-                        dangerouslySetInnerHTML={{
-                          __html:
-                            question.options && question.options[answerIndex]
-                              ? question.options[answerIndex]
-                              : "No answer provided",
-                        }}
-                      />
-                    </div>
 
-                    {/* Correct Answer */}
-                    <div className="flex-1 p-4 bg-white rounded-lg">
-                      <p className="font-semibold text-green-500">
-                        Correct Answer:
-                      </p>
-                      <span
-                        dangerouslySetInnerHTML={{
-                          __html:
-                            Array.isArray(question.correctAnswer) &&
-                            index < question.correctAnswer.length &&
-                            question.options &&
-                            question.options[
-                              question.correctAnswer[index] as unknown as number
-                            ]
-                              ? question.options[
-                                  question.correctAnswer[
-                                    index
-                                  ] as unknown as number
-                                ]
-                              : "No correct answer available",
-                        }}
-                      />
-                    </div>
-                  </li>
-                ))
-              ) : (
-                <li className="p-4 bg-white rounded-lg mb-2 flex items-center justify-between">
-                  {typeof question.userAnswer === "string"
-                    ? question.userAnswer
-                    : "No answer provided"}
-                </li>
-              )}
-            </ul>
-          </div>
-        );
+      case "ORD": // Ordering
+        const userAnswer = question.userAnswer;
+        const correctAnswer = question.correctAnswer;
+
+        if (
+          !userAnswer ||
+          (Array.isArray(userAnswer) && userAnswer.length === 0)
+        ) {
+          // User hasn't answered the question
+          return (
+            <div className="grid sm:grid-cols-2 rounded-xl gap-3">
+              <div className="mt-2">
+                <p className="font-semibold text-defaultcolor mb-3">
+                  Your Answer:
+                </p>
+                <ul className="">
+                  {Array.isArray(correctAnswer) &&
+                    correctAnswer.map((answer, index) => (
+                      <li
+                        key={index}
+                        className="flex rounded-xl bg-white mb-3 p-3"
+                      >
+                        {index + 1}.{" "}
+                        <div className="text-red-500"> No answer</div>
+                      </li>
+                    ))}
+                </ul>
+              </div>
+              <div className="mt-2">
+                <p className="font-semibold text-green-500 mb-3">
+                  Correct Answer:
+                </p>
+                <ul className="">
+                  {Array.isArray(correctAnswer) &&
+                    correctAnswer.map((answer, index) => (
+                      <li
+                        key={index}
+                        className="flex rounded-xl bg-white mb-3  p-3"
+                      >
+                        {index + 1}.{" "}
+                        <div dangerouslySetInnerHTML={{ __html: answer }} />
+                      </li>
+                    ))}
+                </ul>
+              </div>
+            </div>
+          );
+        } else if (Array.isArray(userAnswer)) {
+          // User has answered the question
+          return (
+            <div className="grid sm:grid-cols-2 rounded-xl gap-3">
+              <div className="mt-2">
+                <p className="font-semibold text-defaultcolor mb-3">
+                  Your Answer:
+                </p>
+                <ul className="">
+                  {userAnswer.map((answer, index) => (
+                    <li
+                      key={index}
+                      className="flex rounded-xl bg-white mb-3  p-3"
+                    >
+                      {index + 1}.{" "}
+                      <div dangerouslySetInnerHTML={{ __html: answer }} />
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div className="mt-2">
+                <p className="font-semibold text-green-500 mb-3">
+                  Correct Answer:
+                </p>
+                <ul className="">
+                  {Array.isArray(correctAnswer) &&
+                    correctAnswer.map((answer, index) => (
+                      <li
+                        key={index}
+                        className="flex rounded-xl bg-white mb-3  p-3"
+                      >
+                        {index + 1}.{" "}
+                        <div dangerouslySetInnerHTML={{ __html: answer }} />
+                      </li>
+                    ))}
+                </ul>
+              </div>
+            </div>
+          );
+        } else {
+          // Handle other possible types if necessary
+          return (
+            <div className=" grid sm:grid-cols-2 rounded-xl gap-3">
+              <div className="mt-2">
+                <p className="font-semibold text-defaultcolor mb-3">
+                  Your Answer:
+                </p>
+                <ul className="list-decimal list-inside">
+                  {Array.isArray(correctAnswer) &&
+                    correctAnswer.map((answer, index) => (
+                      <li
+                        key={index}
+                        className="flex rounded-xl bg-white mb-3 p-3"
+                      >
+                        {index + 1}.{" "}
+                        <div className="text-red-500"> No answer</div>
+                      </li>
+                    ))}
+                </ul>
+              </div>
+              <div className="mt-2">
+                <p className="font-semibold text-green-500 mb-3">
+                  Correct Answer:
+                </p>
+                <ul className="list-decimal list-inside">
+                  {Array.isArray(correctAnswer) &&
+                    correctAnswer.map((answer, index) => (
+                      <li
+                        key={index}
+                        className="flex rounded-xl bg-white mb-3  p-3"
+                      >
+                        {index + 1}.{" "}
+                        <div dangerouslySetInnerHTML={{ __html: answer }} />
+                      </li>
+                    ))}
+                </ul>
+              </div>
+            </div>
+          );
+        }
 
       case "EMQ": // Extended Matching Questions
         return (
@@ -574,37 +669,39 @@ const PracticeTestResult = ({ params }: PracticeTestResultProps) => {
     if (!question.isUnanswered) {
       questionStatus = question.isCorrect ? "Correct" : "Wrong";
     }
-  
+
     // Define badge color based on status
     const badgeColor =
-    questionStatus === "Correct"
-      ? "bg-green-200 text-green-800"
-      : questionStatus === "Wrong"
-      ? "bg-red-200 text-red-800"
-      : "bg-yellow-200 text-yellow-800"; // Yellow for Unanswered
-  
+      questionStatus === "Correct"
+        ? "bg-green-200 text-green-800"
+        : questionStatus === "Wrong"
+        ? "bg-red-200 text-red-800"
+        : "bg-yellow-200 text-yellow-800"; // Yellow for Unanswered
+
     return (
       <div
         key={question.id}
         className={`p-2 lg:p-4 border-l-[6px] lg:border-l-[12px] bg-[#f6f7f9] ${
           questionStatus === "Unanswered"
-          ? "border-yellow-500"
-          : questionStatus === "Correct"
-          ? "border-green-500"
-          : "border-red-500"
+            ? "border-yellow-500"
+            : questionStatus === "Correct"
+            ? "border-green-500"
+            : "border-red-500"
         }`}
       >
         <div className="flex justify-between items-center mb-2">
           <h3 className="text-base font-semibold">
             <span className="underline">Question {index + 1}:</span>
           </h3>
-          
+
           {/* Status Badge */}
-          <span className={`px-2 py-1 text-xs font-semibold rounded ${badgeColor}`}>
+          <span
+            className={`px-2 py-1 text-xs font-semibold rounded ${badgeColor}`}
+          >
             {questionStatus}
           </span>
         </div>
-  
+
         <div
           className="bg-white px-3 py-4 rounded-lg mb-4"
           dangerouslySetInnerHTML={{
@@ -618,21 +715,42 @@ const PracticeTestResult = ({ params }: PracticeTestResultProps) => {
     );
   };
 
+  // Render Leaderboard and Question Results
   return (
     <div className="dashboard-page">
-      <div className="flex items-center space-x-3 mb-6">
+      {/* START  */}
+
+      <div className="flex items-center space-x-3 mb-3">
         <button
           onClick={() => router.back()}
           className="text-gray-500 hover:text-defaultcolor flex items-center"
         >
           <FaArrowLeftLong className="text-gray-900" size={24} />
         </button>
-        <h1 className="text-3xl font-bold">{userPracticeTestResult.title}</h1>
+        <h1 className="text-3xl font-bold">{userPracticeResult.title}</h1>
+      </div>
+
+      <div className="flex items-center space-x-3 flex-wrap mb-3">
+        {/* <div className="mb-1">
+          <p className="text-lg">
+            Practice Set: {practiceData.practice_result_type}
+          </p>
+        </div> */}
+
+        <div className="flex items-center mb-1">
+          <FaRegCalendarAlt className=" mr-2" />
+          <p className="text-lg">{practiceData.practice_result_date}</p>
+        </div>
+
+        <div className="flex items-center mb-1">
+          <FaClock className="mr-2" />
+          <p className="text-lg">{practiceData.practice_result_time}</p>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
         <button
-          className={`px-4 py-2 text-lg border-b-4 bg-white text-gray-900 ${
+          className={`px-4 py-2 text-lg border-b-4  bg-white text-gray-900 ${
             activeTab === "A" ? "border-defaultcolor" : "border-gray-200"
           }`}
           onClick={() => handleTabClick("A")}
@@ -640,7 +758,7 @@ const PracticeTestResult = ({ params }: PracticeTestResultProps) => {
           Analysis
         </button>
         <button
-          className={`px-4 py-2 text-lg border-b-4 bg-white text-gray-900 ${
+          className={`px-4 py-2 text-lg border-b-4  bg-white text-gray-900 ${
             activeTab === "B" ? "border-defaultcolor" : "border-gray-200"
           }`}
           onClick={() => handleTabClick("B")}
@@ -648,120 +766,178 @@ const PracticeTestResult = ({ params }: PracticeTestResultProps) => {
           Solution
         </button>
         <button
-          className={`px-4 py-2 text-lg border-b-4 bg-white text-gray-900 ${
+          className={`px-4 py-2 text-lg border-b-4  bg-white text-gray-900 ${
             activeTab === "C" ? "border-defaultcolor" : "border-gray-200"
           }`}
           onClick={() => handleTabClick("C")}
         >
           Top Scores
         </button>
-        <PracticeReportCard uuid={userPracticeTestResult.uuid} />
+       
+       
+          <PracticeReportCard uuid={userPracticeResult.uuid} />
+      
       </div>
 
       {activeTab === "A" && (
         <div>
+          {/* Pass or Fail Message */}
           <div className="text-center mb-8">
             {passed ? (
               <div className="bg-white p-8 rounded-lg shadow-sm">
-                <FaCheckCircle className="text-green-500 mx-auto mb-3" size={60} />
+                <FaCheckCircle
+                  className="text-green-500 mx-auto mb-3"
+                  size={60}
+                />
                 <h1 className="text-3xl font-bold text-green-600 uppercase">
                   Congratulations! You Passed!
                 </h1>
+                <p className="text-gray-700 mt-2">
+                  You successfully met the passing criteria for this practice
+                  test.
+                </p>
               </div>
             ) : (
               <div className="bg-white p-8 rounded-lg shadow-sm">
-                <FaTimesCircle className="text-red-500 mx-auto mb-3" size={60} />
+                <FaTimesCircle
+                  className="text-red-500 mx-auto mb-3"
+                  size={60}
+                />
                 <h1 className="text-3xl font-bold text-red-600 uppercase">
                   Sorry, You Failed
                 </h1>
+                <p className="text-gray-700 mt-2">
+                  Review your performance below to understand areas for
+                  improvement.
+                </p>
               </div>
             )}
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
-            <ResultCard
-              title="Total Questions"
-              value={totalQuestions}
-              icon={<FaQuestionCircle className="text-blue-700" size={32} />}
-            />
-            <ResultCard
-              title="Correct Answers"
-              value={userPracticeTestResult.correctCount}
-              icon={<FaCheckCircle className="text-green-700" size={32} />}
-            />
-            <ResultCard
-              title="Wrong Answers"
-              value={userPracticeTestResult.wrongCount}
-              icon={<FaTimesCircle className="text-red-700" size={32} />}
-            />
-            <ResultCard
-              title="Unanswered"
-              value={userPracticeTestResult.skippedCount}
-              icon={<FaMinusCircle className="text-orange-700" size={32} />}
-            />
-            <ResultCard
-              title="Marks"
-              value={userPracticeTestResult.marks}
-              icon={<FaRibbon className="text-purple-700" size={32} />}
-            />
-            <ResultCard
-              title="Time Taken"
-              value={formatTimeTaken(userPracticeTestResult.timeTaken)}
-              icon={<FaClock className="text-teal-700" size={32} />}
-            />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-            <div className="bg-white p-6 rounded-lg shadow-sm">
-              <h2 className="text-lg font-semibold mb-2">Answer Distribution</h2>
-              <div className="mx-auto" style={{ width: '100%', maxWidth: '300px', height: 'auto' }}>
-
-              
-                <Doughnut
-                  data={{
-                    labels: ["Correct", "Incorrect", "Unanswered"],
-                    datasets: [
-                      {
-                        data: [
-                          userPracticeTestResult.correctCount,
-                          userPracticeTestResult.wrongCount,
-                          userPracticeTestResult.skippedCount,
-                        ],
-                        backgroundColor: ["#4CAF50", "#F44336", "#FF9800"],
-                      },
-                    ],
-                  }}
-                  options={{
-                    responsive: true,
-                    plugins: {
-                      legend: { position: "bottom" },
-                    },
-                  }}
-                />
-              </div>
+          <div className="bg-white lg:p-6 p-3 rounded-lg shadow-sm">
+            {/* Summary Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mb-6">
+              <ResultCard
+                title="Total Questions"
+                value={totalQuestions}
+                icon={<FaQuestionCircle className="text-blue-700" size={32} />}
+              />
+              <ResultCard
+                title="Correct Answers"
+                value={userPracticeResult.correctCount}
+                icon={<FaCheckCircle className="text-green-700" size={32} />}
+              />
+              <ResultCard
+                title="Wrong Answers"
+                value={userPracticeResult.wrongCount}
+                icon={<FaTimesCircle className="text-red-700" size={32} />}
+              />
+              <ResultCard
+                title="Unanswered"
+                value={userPracticeResult.skippedCount}
+                icon={<FaMinusCircle className="text-yellow-500" size={32} />}
+              />
+              <ResultCard
+                title="Marks"
+                value={userPracticeResult.marks}
+                icon={<FaRibbon className="text-purple-700" size={32} />}
+              />
+              <ResultCard
+                title="Time Taken"
+                value={formatTimeTaken(userPracticeResult.timeTaken)}
+                icon={<FaClock className="text-teal-700" size={32} />}
+              />
             </div>
 
-            <div className="bg-white p-6 rounded-lg shadow-sm">
-              <h2 className="text-lg font-semibold mb-2">Score Comparison</h2>
-              <Bar
-                data={{
-                  labels: ["Your Score", "Passing Score"],
-                  datasets: [
-                    {
-                      label: "Score",
-                      data: [
-                        userPracticeTestResult.correctCount,
-                        Math.ceil(totalQuestions * passingScore),
+            {/* Chart Section */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-8">
+              {/* Answer Distribution Chart */}
+              <div className="border border-gray-200 p-3 rounded-lg">
+                <h2 className="text-lg font-semibold text-gray-800 mb-2">
+                  Answer Distribution
+                </h2>
+                <p className="text-sm text-gray-600">
+                  A breakdown of your answers, showing correct, incorrect, and
+                  Unanswered responses.
+                </p>
+                <div
+                  className="mx-auto"
+                  style={{
+                    width: "100%",
+                    maxWidth: "300px",
+                    height: "auto",
+                  }}
+                >
+                  <Doughnut
+                    data={{
+                      labels: ["Correct", "Incorrect", "Unanswered"],
+                      datasets: [
+                        {
+                          data: [
+                            userPracticeResult.correctCount,
+                            userPracticeResult.wrongCount,
+                            userPracticeResult.skippedCount,
+                          ],
+                          backgroundColor: ["#4CAF50", "#F44336", "#FF9800"],
+                        },
                       ],
-                      backgroundColor: ["#4CAF50", "#FFC107"],
-                    },
-                  ],
-                }}
-                options={{
-                  responsive: true,
-                  scales: { y: { beginAtZero: true, max: totalQuestions } },
-                }}
-              />
+                    }}
+                    options={{
+                      responsive: true,
+                      plugins: {
+                        legend: { position: "bottom" },
+                        tooltip: {
+                          callbacks: {
+                            label: (context) =>
+                              `${context.label}: ${context.raw}`,
+                          },
+                        },
+                      },
+                    }}
+                  />
+                </div>
+              </div>
+
+              {/* Score Comparison Chart */}
+              <div className="border border-gray-200 p-3 rounded-lg">
+                <h2 className="text-lg font-semibold text-gray-800 mb-2">
+                  Score Comparison
+                </h2>
+                <p className="text-sm text-gray-600">
+                  See how your score compares to the passing score.
+                </p>
+                <div className="mx-auto">
+                  <Bar
+                    data={{
+                      labels: ["Your Score", "Passing Score"],
+                      datasets: [
+                        {
+                          label: "Score",
+                          data: [
+                            userPracticeResult.correctCount,
+                            Math.ceil(totalQuestions * passingScore),
+                          ],
+                          backgroundColor: ["#4CAF50", "#FFC107"],
+                        },
+                      ],
+                    }}
+                    options={{
+                      responsive: true,
+                      plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                          callbacks: {
+                            label: (context) => `Score: ${context.raw}`,
+                          },
+                        },
+                      },
+                      scales: {
+                        y: { beginAtZero: true, max: totalQuestions },
+                      },
+                    }}
+                  />
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -769,9 +945,10 @@ const PracticeTestResult = ({ params }: PracticeTestResultProps) => {
 
       {activeTab === "B" && (
         <div>
-            <div className="mb-8 bg-white p-5 rounded-lg shadow-sm">
+          {/* Render Questions */}
+          <div className="mb-8 bg-white p-5 rounded-lg shadow-sm">
             <div className="space-y-6">
-              {testData.questions.map((question, index) =>
+              {practiceData.questions.map((question, index) =>
                 renderQuestionResult(question, index)
               )}
             </div>
@@ -780,14 +957,18 @@ const PracticeTestResult = ({ params }: PracticeTestResultProps) => {
       )}
 
       {activeTab === "C" && (
-       <div className="mb-8 bg-white shadow-sm p-1 rounded-lg">
-          {leaderBoard.length > 0 ? (
-            <LeaderboardTable entries={leaderBoard} />
-          ) : (
-            <NoData message="No leaderboard data available." /> 
-          )}
+        <div>
+          {/* Leaderboard */}
+          <div className="mb-8 bg-white shadow-sm p-1 rounded-lg">
+            {leaderBoard.length > 0 ? (
+              <LeaderboardTable entries={leaderBoard} />
+            ) : (
+              <NoData message="No leaderboard data available." />
+            )}
+          </div>
         </div>
       )}
+      {/* ENDING */}
     </div>
   );
 };
@@ -803,56 +984,63 @@ const ResultCard = ({
   icon?: React.ReactNode;
 }) => {
   return (
-    <div className="flex items-center p-5 border border-gray-200 rounded-lg bg-white shadow-sm">
+    <div className="flex items-center p-5 border border-gray-200 rounded-lg">
+      {/* Icon Section */}
       <div className="mr-4 flex items-center justify-center w-14 h-14 rounded-full bg-gray-100">
         {icon}
       </div>
+
+      {/* Text Section */}
       <div>
         <h3 className="text-base font-medium text-gray-600">{title}</h3>
-        <p className="text-2xl lg:text-3xl font-semibold text-gray-800">{value}</p>
+        <p className="text-2xl lg:text-3xl font-semibold text-gray-800">
+          {value}
+        </p>
       </div>
     </div>
   );
 };
 
-const LeaderboardTable = ({ entries }: { entries: LeaderboardEntry[] }) => (
-  <div className="overflow-x-auto rounded-lg">
-    <table className="min-w-full table-auto rounded-lg overflow-hidden">
-      <thead className="bg-defaultcolor text-white">
-        <tr>
-          <th className="py-3 px-6 text-left">S.No</th>
-          <th className="py-3 px-6 text-left">Username</th>
-          <th className="py-3 px-6 text-left">Score</th>
-          <th className="py-3 px-6 text-left">Status</th>
-        </tr>
-      </thead>
-      <tbody>
-        {entries.map((entry, index) => (
-          <tr
-            key={index}
-            className={`border-b ${
-              index % 2 === 0 ? "bg-white" : "bg-white"
-            } hover:bg-gray-200`}
-          >
-            <td className="py-3 px-6">{index + 1}</td>
-            <td className="py-3 px-6">{entry.username}</td>
-            <td className="py-3 px-6">{entry.score}</td>
-            <td className="py-3 px-6">
-              {entry.status === "PASS" ? (
-                <span className="inline-block px-3 py-1 text-sm font-semibold text-green-700 bg-green-200 rounded-full">
-                  Passed
-                </span>
-              ) : (
-                <span className="inline-block px-3 py-1 text-sm font-semibold text-red-700 bg-red-200 rounded-full">
-                  Failed
-                </span>
-              )}
-            </td>
+const LeaderboardTable = ({ entries }: { entries: LeaderboardEntry[] }) => {
+  return (
+    <div className="overflow-x-auto rounded-lg">
+      <table className="min-w-full table-auto rounded-lg overflow-hidden">
+        <thead className="bg-defaultcolor text-white">
+          <tr>
+            <th className="py-3 px-6 text-left">S.No</th>
+            <th className="py-3 px-6 text-left">Username</th>
+            <th className="py-3 px-6 text-left">Score</th>
+            <th className="py-3 px-6 text-left">Status</th>
           </tr>
-        ))}
-      </tbody>
-    </table>
-  </div>
-);
+        </thead>
+        <tbody>
+          {entries.map((entry, index) => (
+            <tr
+              key={index}
+              className={`border-b transition duration-300 ${
+                index % 2 === 0 ? "bg-white" : "bg-white"
+              } hover:bg-gray-200`}
+            >
+              <td className="py-3 px-6">{index + 1}</td>
+              <td className="py-3 px-6">{entry.username}</td>
+              <td className="py-3 px-6">{entry.score}</td>
+              <td className="py-3 px-6">
+                {entry.status === "PASS" ? (
+                  <span className="inline-block px-3 py-1 text-sm font-semibold text-green-700 bg-green-200 rounded-full">
+                    Passed
+                  </span>
+                ) : (
+                  <span className="inline-block px-3 py-1 text-sm font-semibold text-red-700 bg-red-200 rounded-full">
+                    Failed
+                  </span>
+                )}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+};
 
 export default PracticeTestResult;
