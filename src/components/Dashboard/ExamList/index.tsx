@@ -47,6 +47,7 @@ export default function ExamList() {
   const [serverTime, setServerTime] = useState<Date | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
+  
   const getCachedServerTime = (): Date | null => {
     const cachedData = sessionStorage.getItem(CACHE_KEY);
     if (cachedData) {
@@ -79,6 +80,7 @@ export default function ExamList() {
           cacheServerTime(cachedServerTime);
         }
         setServerTime(cachedServerTime);
+
         const examsResponse = await axios.get(
           `${process.env.NEXT_PUBLIC_API_URL}/exam-all`,
           {
@@ -86,7 +88,9 @@ export default function ExamList() {
             params: { category: category_id },
           }
         );
+
         const currentTime = cachedServerTime || new Date();
+
         // Filter out exams that are over or completed
         const filteredExams = examsResponse.data.data.filter((exam: Exam) => {
           if (exam.is_public === 1) {
@@ -137,6 +141,8 @@ export default function ExamList() {
       if (interval) clearInterval(interval);
     };
   }, [serverTime]);
+
+  
   const handlePayment = async (slug: string) => {
     try {
       const jwt = Cookies.get("jwt");

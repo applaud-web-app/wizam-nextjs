@@ -22,17 +22,18 @@ interface QuizDetail {
   questions: number;
   time: string;
   marks: number | string;
-  is_free: number;
+  is_free: number; // 1 for free, 0 for paid
   is_resume: boolean;
-  total_attempts: number | null | string; // Updated to include string
+  is_public: number;
+  total_attempts: number | null | string;
   schedule: {
+    schedule_id: string;
     start_date: string;
     start_time: string;
     end_date: string | null;
     end_time: string | null;
     grace_period: string | null;
     schedule_type: string;
-    schedule_id: string;
   };
 }
 
@@ -151,8 +152,13 @@ export default function QuizTypeDetailPage({ params }: { params: { slug: string 
   };
 
   const formatDateTime = (dateString: string, timeString: string | null) => {
+    if (!dateString) return "Always Available";
     const date = new Date(`${dateString}T${timeString || "00:00"}`);
-    return date.toLocaleDateString("en-GB") + " " + date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    return (
+      date.toLocaleDateString("en-GB") +
+      " " +
+      date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+    );
   };
 
   if (loading) {
