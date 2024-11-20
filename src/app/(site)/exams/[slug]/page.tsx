@@ -166,7 +166,7 @@ const ExamDetailPage = ({ params }: ExamDetailProps) => {
               <p className="text-xl font-bold text-blue-500">
                 {exam.start_date
                   ? `${exam.start_date} ${exam.start_time || ""}`
-                  : "N/A"}
+                  : "Always Available"}
                 {exam.end_date && exam.end_time
                   ? ` to ${exam.end_date} ${exam.end_time}`
                   : ""}
