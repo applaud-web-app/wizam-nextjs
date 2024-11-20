@@ -81,6 +81,7 @@ const About: React.FC = () => {
           .edititor_box_area, 
           .edititor_box_area * {
              all: revert !important;
+             clear:both;
           }
         `}
       </style>
