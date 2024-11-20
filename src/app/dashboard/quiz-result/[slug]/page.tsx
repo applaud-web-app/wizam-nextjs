@@ -18,7 +18,7 @@ import Cookies from "js-cookie";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 import Loader from "@/components/Common/Loader";
-import ExamReportGenerator from "@/components/ReportCardGenerator";
+import QuizReportCard from "@/components/QuizReportCard";
 import { FaArrowLeftLong } from "react-icons/fa6";
 import {
   Chart as ChartJS,
@@ -119,16 +119,21 @@ const ExamResult = ({ params }: ExamResultProps) => {
             },
           }
         );
-
+    
         if (response.data.status) {
           const resultData = response.data;
-
+    
+          if (!resultData.quiz) {
+            toast.error("Quiz data is missing in the response.");
+            return;
+          }
+    
           setExamData({
-            title: resultData.exam.title,
-            duration: resultData.exam.duration,
-            exam_result_date: resultData.exam.exam_result_date,
-            exam_result_time: resultData.exam.exam_result_time,
-            exam_result_type: resultData.exam.exam_result_type,
+            title: resultData.quiz.title,
+            duration: resultData.quiz.duration,
+            exam_result_date: resultData.quiz.exam_result_date,
+            exam_result_time: resultData.quiz.exam_result_time,
+            exam_result_type: resultData.quiz.exam_result_type,
             questions: resultData.exam_preview.map((q: any) => ({
               id: q.question_id,
               type: q.question_type,
@@ -140,29 +145,31 @@ const ExamResult = ({ params }: ExamResultProps) => {
               options: q.question_option || [],
             })),
           });
-
+    
           setUserExamResult({
             correctCount: parseInt(resultData.result.correct),
             wrongCount: parseInt(resultData.result.incorrect),
             skippedCount: resultData.result.skipped,
-            marks: parseInt(resultData.result.marks),
+            marks: parseFloat(resultData.result.marks),
             status: resultData.result.status,
             timeTaken: resultData.result.timeTaken,
             uuid: resultData.result.uuid,
-            download_report: resultData.exam.download_report,
-            title: resultData.exam.title,
+            download_report: resultData.quiz.download_report ? 1 : 0,
+            title: resultData.quiz.title,
           });
-
+    
           setLeaderBoard(resultData.leaderBoard || []);
         } else {
           toast.error("No quiz results found for this category");
         }
       } catch (error) {
+        console.error(error);
         toast.error("Error fetching quiz results: " + error);
       } finally {
         setLoading(false);
       }
     };
+    
 
     fetchExamResults();
   }, [params, router]);
@@ -762,9 +769,9 @@ const ExamResult = ({ params }: ExamResultProps) => {
           Top Scores
         </button>
         {/* Check if download_report is enabled */}
-        {userExamResult?.download_report === 1 && (
-          <ExamReportGenerator uuid={userExamResult.uuid} />
-        )}
+        {/* {userExamResult?.download_report === 1 && ( */}
+          <QuizReportCard uuid={userExamResult.uuid} />
+        {/* )} */}
       </div>
 
       {activeTab === "A" && (
