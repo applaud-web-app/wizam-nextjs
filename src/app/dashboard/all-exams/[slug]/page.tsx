@@ -21,7 +21,8 @@ interface ExamDetail {
   marks: number | string;
   is_free: number; // 1 for free, 0 for paid
   is_resume: boolean;
-  total_attempts: number | null | string; 
+  is_public: number;
+  total_attempts: number | null | string;
   schedule: {
     schedule_id: string;
     start_date: string;
@@ -37,9 +38,13 @@ const CACHE_KEY = "serverTimeCache";
 const CACHE_DURATION = 60000; // 1 minute in milliseconds
 
 const formatDateTime = (dateString: string, timeString: string | null) => {
-  if (!dateString) return "N/A";
+  if (!dateString) return "Always Available";
   const date = new Date(`${dateString}T${timeString || "00:00"}`);
-  return date.toLocaleDateString("en-GB") + " " + date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  return (
+    date.toLocaleDateString("en-GB") +
+    " " +
+    date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+  );
 };
 
 export default function ExamDetailPage({ params }: { params: { slug: string } }) {
@@ -162,8 +167,6 @@ export default function ExamDetailPage({ params }: { params: { slug: string } })
     }
   };
 
-
-
   if (loading) {
     return <Loader />;
   }
@@ -211,25 +214,35 @@ export default function ExamDetailPage({ params }: { params: { slug: string } })
               let isAvailable = false;
               let isOver = false;
 
-              const startDateTime = new Date(`${schedule.start_date}T${schedule.start_time}`);
+              const startDateTime = new Date(
+                `${schedule.start_date}T${schedule.start_time}`
+              );
               const endDateTime =
                 schedule.end_date && schedule.end_time
                   ? new Date(`${schedule.end_date}T${schedule.end_time}`)
                   : null;
 
-              if (schedule.schedule_type === "flexible" || schedule.schedule_type === "fixed") {
-                if (currentTime < startDateTime) {
-                  isUpcoming = true;
-                } else if (endDateTime && currentTime > endDateTime) {
-                  isOver = true;
-                } else {
-                  isAvailable = true;
-                }
-              } else if (schedule.schedule_type === "attempts") {
-                if (currentTime < startDateTime) {
-                  isUpcoming = true;
-                } else {
-                  isAvailable = true;
+              if (exam.is_public === 1) {
+                // Public exams are always available
+                isAvailable = true;
+              } else {
+                if (
+                  schedule.schedule_type === "flexible" ||
+                  schedule.schedule_type === "fixed"
+                ) {
+                  if (currentTime < startDateTime) {
+                    isUpcoming = true;
+                  } else if (endDateTime && currentTime > endDateTime) {
+                    isOver = true;
+                  } else {
+                    isAvailable = true;
+                  }
+                } else if (schedule.schedule_type === "attempts") {
+                  if (currentTime < startDateTime) {
+                    isUpcoming = true;
+                  } else {
+                    isAvailable = true;
+                  }
                 }
               }
 
@@ -240,13 +253,25 @@ export default function ExamDetailPage({ params }: { params: { slug: string } })
 
               let scheduleInfo;
               if (schedule.schedule_type === "flexible") {
-                scheduleInfo = `${formatDateTime(schedule.start_date, schedule.start_time)} - ${formatDateTime(schedule.end_date!, schedule.end_time)}`;
+                scheduleInfo = `${formatDateTime(
+                  schedule.start_date,
+                  schedule.start_time
+                )} - ${formatDateTime(schedule.end_date!, schedule.end_time)}`;
               } else if (schedule.schedule_type === "fixed") {
-                scheduleInfo = `Fixed - ${formatDateTime(schedule.start_date, schedule.start_time)}`;
+                scheduleInfo = `Fixed - ${formatDateTime(
+                  schedule.start_date,
+                  schedule.start_time
+                )}`;
               } else if (schedule.schedule_type === "attempts") {
-                scheduleInfo = `From ${formatDateTime(schedule.start_date, schedule.start_time)}`;
+                scheduleInfo = `From ${formatDateTime(
+                  schedule.start_date,
+                  schedule.start_time
+                )}`;
               } else {
-                scheduleInfo = `${formatDateTime(schedule.start_date, schedule.start_time)}`;
+                scheduleInfo = `${formatDateTime(
+                  schedule.start_date,
+                  schedule.start_time
+                )}`;
               }
 
               return (
@@ -255,8 +280,10 @@ export default function ExamDetailPage({ params }: { params: { slug: string } })
                   <td className="p-4">{exam.title}</td>
                   <td className="p-4">{scheduleInfo}</td>
                   <td className="p-4">
-                    {exam.total_attempts === "" || exam.total_attempts === null || exam.total_attempts === undefined
-                      ? '-'
+                    {exam.total_attempts === "" ||
+                    exam.total_attempts === null ||
+                    exam.total_attempts === undefined
+                      ? "-"
                       : exam.total_attempts}
                   </td>
                   <td className="p-4">{exam.questions}</td>
@@ -273,7 +300,7 @@ export default function ExamDetailPage({ params }: { params: { slug: string } })
                       </button>
                     ) : exam.is_resume ? (
                       <Link
-                        href={`/dashboard/exam-play/${exam.slug}?sid=${schedule.schedule_id}`}
+                        href={`/dashboard/exam-play/${exam.slug}?sid=${schedule.schedule_id ?? 0}`}
                         className="text-white bg-[#C9BC0F] px-5 py-1 rounded-full hover:bg-[#928c38] transition duration-200 inline-flex items-center justify-center space-x-1 font-semibold text-sm w-32"
                       >
                         <FiPlay />
@@ -281,7 +308,7 @@ export default function ExamDetailPage({ params }: { params: { slug: string } })
                       </Link>
                     ) : exam.is_free === 1 ? (
                       <Link
-                        href={`/dashboard/exam-detail/${exam.slug}?sid=${schedule.schedule_id}`}
+                        href={`/dashboard/exam-detail/${exam.slug}?sid=${schedule.schedule_id ?? 0}`}
                         className="bg-green-600 text-white px-5 py-1 rounded-full font-semibold text-sm hover:bg-green-700 transition duration-200 inline-flex items-center justify-center w-32"
                       >
                         Start Exam
@@ -290,9 +317,7 @@ export default function ExamDetailPage({ params }: { params: { slug: string } })
                       <button
                         className="bg-defaultcolor text-white py-1 px-5 rounded-full font-semibold text-sm hover:bg-defaultcolor-dark w-32"
                         onClick={() =>
-                          handlePayment(
-                            `${exam.slug}?sid=${schedule.schedule_id}`
-                          )
+                          handlePayment(`${exam.slug}?sid=${schedule.schedule_id ?? 0}`)
                         }
                       >
                         Pay Now
@@ -316,25 +341,35 @@ export default function ExamDetailPage({ params }: { params: { slug: string } })
           let isAvailable = false;
           let isOver = false;
 
-          const startDateTime = new Date(`${schedule.start_date}T${schedule.start_time}`);
+          const startDateTime = new Date(
+            `${schedule.start_date}T${schedule.start_time}`
+          );
           const endDateTime =
             schedule.end_date && schedule.end_time
               ? new Date(`${schedule.end_date}T${schedule.end_time}`)
               : null;
 
-          if (schedule.schedule_type === "flexible" || schedule.schedule_type === "fixed") {
-            if (currentTime < startDateTime) {
-              isUpcoming = true;
-            } else if (endDateTime && currentTime > endDateTime) {
-              isOver = true;
-            } else {
-              isAvailable = true;
-            }
-          } else if (schedule.schedule_type === "attempts") {
-            if (currentTime < startDateTime) {
-              isUpcoming = true;
-            } else {
-              isAvailable = true;
+          if (exam.is_public === 1) {
+            // Public exams are always available
+            isAvailable = true;
+          } else {
+            if (
+              schedule.schedule_type === "flexible" ||
+              schedule.schedule_type === "fixed"
+            ) {
+              if (currentTime < startDateTime) {
+                isUpcoming = true;
+              } else if (endDateTime && currentTime > endDateTime) {
+                isOver = true;
+              } else {
+                isAvailable = true;
+              }
+            } else if (schedule.schedule_type === "attempts") {
+              if (currentTime < startDateTime) {
+                isUpcoming = true;
+              } else {
+                isAvailable = true;
+              }
             }
           }
 
@@ -345,13 +380,25 @@ export default function ExamDetailPage({ params }: { params: { slug: string } })
 
           let scheduleInfo;
           if (schedule.schedule_type === "flexible") {
-            scheduleInfo = `${formatDateTime(schedule.start_date, schedule.start_time)} - ${formatDateTime(schedule.end_date!, schedule.end_time)}`;
+            scheduleInfo = `${formatDateTime(
+              schedule.start_date,
+              schedule.start_time
+            )} - ${formatDateTime(schedule.end_date!, schedule.end_time)}`;
           } else if (schedule.schedule_type === "fixed") {
-            scheduleInfo = `Fixed - ${formatDateTime(schedule.start_date, schedule.start_time)}`;
+            scheduleInfo = `Fixed - ${formatDateTime(
+              schedule.start_date,
+              schedule.start_time
+            )}`;
           } else if (schedule.schedule_type === "attempts") {
-            scheduleInfo = `From ${formatDateTime(schedule.start_date, schedule.start_time)}`;
+            scheduleInfo = `From ${formatDateTime(
+              schedule.start_date,
+              schedule.start_time
+            )}`;
           } else {
-            scheduleInfo = `${formatDateTime(schedule.start_date, schedule.start_time)}`;
+            scheduleInfo = `${formatDateTime(
+              schedule.start_date,
+              schedule.start_time
+            )}`;
           }
 
           return (
@@ -388,7 +435,8 @@ export default function ExamDetailPage({ params }: { params: { slug: string } })
                 </div>
               </div>
               <div className="text-gray-700 mb-3">
-                <span className="font-semibold">Available Between:</span> {scheduleInfo}
+                <span className="font-semibold">Available Between:</span>{" "}
+                {scheduleInfo}
               </div>
               {isUpcoming ? (
                 <button
@@ -400,7 +448,7 @@ export default function ExamDetailPage({ params }: { params: { slug: string } })
                 </button>
               ) : exam.is_resume ? (
                 <Link
-                  href={`/dashboard/exam-play/${exam.slug}?sid=${schedule.schedule_id}`}
+                  href={`/dashboard/exam-play/${exam.slug}?sid=${schedule.schedule_id ?? 0}`}
                   className="text-white bg-[#C9BC0F] px-5 py-2 rounded-full hover:bg-[#928c38] transition duration-200 inline-flex items-center justify-center space-x-1 font-semibold text-sm w-full"
                 >
                   <FiPlay />
@@ -408,14 +456,16 @@ export default function ExamDetailPage({ params }: { params: { slug: string } })
                 </Link>
               ) : exam.is_free === 1 ? (
                 <Link
-                  href={`/dashboard/exam-detail/${exam.slug}?sid=${schedule.schedule_id}`}
+                  href={`/dashboard/exam-detail/${exam.slug}?sid=${schedule.schedule_id ?? 0}`}
                   className="bg-green-600 text-white px-5 py-2 rounded-full font-semibold text-sm hover:bg-green-700 transition duration-200 inline-flex items-center justify-center w-full"
                 >
                   Start Exam
                 </Link>
               ) : (
                 <button
-                  onClick={() => handlePayment(`${exam.slug}?sid=${schedule.schedule_id}`)}
+                  onClick={() =>
+                    handlePayment(`${exam.slug}?sid=${schedule.schedule_id ?? 0}`)
+                  }
                   className="bg-defaultcolor text-white py-2 px-5 rounded-full font-semibold text-sm hover:bg-defaultcolor-dark w-full"
                 >
                   Pay Now

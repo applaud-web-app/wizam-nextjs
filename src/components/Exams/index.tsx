@@ -42,18 +42,18 @@ const Exams = () => {
           const exams = examResponse.data.data;
   
           // Filter exams to include upcoming and currently active exams
-          const validExams = exams.filter((exam: any) => {
-            const examStartDateTime = new Date(`${exam.start_date}T${exam.start_time}`);
-            const examEndDateTime = exam.end_date ? new Date(`${exam.end_date}T${exam.end_time}`) : null;
+          // const validExams = exams.filter((exam: any) => {
+          //   const examStartDateTime = new Date(`${exam.start_date}T${exam.start_time}`);
+          //   const examEndDateTime = exam.end_date ? new Date(`${exam.end_date}T${exam.end_time}`) : null;
   
-            return (
-              examStartDateTime >= currentTime || // Upcoming exams
-              (examStartDateTime <= currentTime && (!examEndDateTime || examEndDateTime >= currentTime)) // Currently active exams
-            );
-          });
+          //   return (
+          //     examStartDateTime >= currentTime || // Upcoming exams
+          //     (examStartDateTime <= currentTime && (!examEndDateTime || examEndDateTime >= currentTime)) // Currently active exams
+          //   );
+          // });
   
-          setExams(validExams);
-          setFilteredExams(validExams); // Show all exams by default
+          setExams(exams);
+          setFilteredExams(exams); // Show all exams by default
           setCourses(courseResponse.data.data);
           setExamPacks(examPackResponse.data.data);
         } else {
