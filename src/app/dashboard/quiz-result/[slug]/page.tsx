@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import {
   FaCheckCircle,
   FaTimesCircle,
+  FaRegCalendarAlt,
   FaCheck,
   FaTimes,
   FaRegCircle,
@@ -11,13 +12,14 @@ import {
   FaQuestionCircle,
   FaMinusCircle,
   FaClock,
-  FaRegCalendarAlt,
 } from "react-icons/fa";
 import { toast } from "react-toastify";
 import Cookies from "js-cookie";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 import Loader from "@/components/Common/Loader";
+import ExamReportGenerator from "@/components/ReportCardGenerator";
+import { FaArrowLeftLong } from "react-icons/fa6";
 import {
   Chart as ChartJS,
   ArcElement,
@@ -29,8 +31,7 @@ import {
   Title,
 } from "chart.js";
 import { Doughnut, Bar } from "react-chartjs-2";
-import { FaArrowLeftLong } from "react-icons/fa6";
-import QuizReportCard from "@/components/QuizReportCard";
+import NoData from "@/components/Common/NoData";
 
 ChartJS.register(
   ArcElement,
@@ -42,6 +43,7 @@ ChartJS.register(
   Title
 );
 
+// TypeScript interfaces
 interface Option {
   text: string;
   image?: string;
@@ -59,16 +61,16 @@ interface Question {
   options?: (Option | string)[];
 }
 
-interface QuizData {
+interface ExamData {
   title: string;
-  exam_result_time: string;
-  exam_result_date: string;
-  exam_result_type: string;
   duration: string;
+  exam_result_type: string;
+  exam_result_date: string;
+  exam_result_time: string;
   questions: Question[];
 }
 
-interface UserQuizResult {
+interface UserExamResult {
   title: string;
   correctCount: number;
   wrongCount: number;
@@ -77,6 +79,7 @@ interface UserQuizResult {
   marks: number;
   timeTaken?: number;
   uuid: string;
+  download_report: number;
 }
 
 interface LeaderboardEntry {
@@ -85,20 +88,20 @@ interface LeaderboardEntry {
   status: string;
 }
 
-interface QuizResultProps {
+interface ExamResultProps {
   params: {
     slug: string;
   };
 }
 
-const QuizResult = ({ params }: QuizResultProps) => {
-  const [quizData, setQuizData] = useState<QuizData | null>(null);
-  const [userQuizResult, setUserQuizResult] = useState<UserQuizResult | null>(
+const ExamResult = ({ params }: ExamResultProps) => {
+  const [examData, setExamData] = useState<ExamData | null>(null);
+  const [userExamResult, setUserExamResult] = useState<UserExamResult | null>(
     null
   );
   const [leaderBoard, setLeaderBoard] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
-  const [activeTab, setActiveTab] = useState<string>("A");
+  const [activeTab, setActiveTab] = useState<string>("A"); // New state for tabs
   const router = useRouter();
 
   const handleTabClick = (tab: string) => setActiveTab(tab);
@@ -106,7 +109,7 @@ const QuizResult = ({ params }: QuizResultProps) => {
   useEffect(() => {
     const { slug } = params;
 
-    const fetchQuizResults = async () => {
+    const fetchExamResults = async () => {
       try {
         const response = await axios.get(
           `${process.env.NEXT_PUBLIC_API_URL}/quiz-result/${slug}`,
@@ -120,12 +123,12 @@ const QuizResult = ({ params }: QuizResultProps) => {
         if (response.data.status) {
           const resultData = response.data;
 
-          setQuizData({
-            title: resultData.quiz.title,
-            exam_result_type: resultData.quiz.exam_result_type,
-            exam_result_date: resultData.quiz.exam_result_date,
-            exam_result_time: resultData.quiz.exam_result_time,
-            duration: resultData.quiz.duration,
+          setExamData({
+            title: resultData.exam.title,
+            duration: resultData.exam.duration,
+            exam_result_date: resultData.exam.exam_result_date,
+            exam_result_time: resultData.exam.exam_result_time,
+            exam_result_type: resultData.exam.exam_result_type,
             questions: resultData.exam_preview.map((q: any) => ({
               id: q.question_id,
               type: q.question_type,
@@ -138,8 +141,7 @@ const QuizResult = ({ params }: QuizResultProps) => {
             })),
           });
 
-          setUserQuizResult({
-            title: resultData.quiz.title,
+          setUserExamResult({
             correctCount: parseInt(resultData.result.correct),
             wrongCount: parseInt(resultData.result.incorrect),
             skippedCount: resultData.result.skipped,
@@ -147,6 +149,8 @@ const QuizResult = ({ params }: QuizResultProps) => {
             status: resultData.result.status,
             timeTaken: resultData.result.timeTaken,
             uuid: resultData.result.uuid,
+            download_report: resultData.exam.download_report,
+            title: resultData.exam.title,
           });
 
           setLeaderBoard(resultData.leaderBoard || []);
@@ -160,16 +164,16 @@ const QuizResult = ({ params }: QuizResultProps) => {
       }
     };
 
-    fetchQuizResults();
+    fetchExamResults();
   }, [params, router]);
 
-  if (loading || !quizData || !userQuizResult) {
+  if (loading || !examData || !userExamResult) {
     return <Loader />;
   }
 
   const passingScore = 0.6;
-  const totalQuestions = quizData.questions.length;
-  const percentageCorrect = userQuizResult.correctCount / totalQuestions;
+  const totalQuestions = examData.questions.length;
+  const percentageCorrect = userExamResult.correctCount / totalQuestions;
   const passed = percentageCorrect >= passingScore;
 
   const formatTimeTaken = (timeInMinutes?: number) => {
@@ -177,7 +181,6 @@ const QuizResult = ({ params }: QuizResultProps) => {
     return `${timeInMinutes} min`;
   };
 
- 
   const renderOptions = (question: Question) => {
     const correctAnswerDisplay =
     typeof question.correctAnswer === "object" && !Array.isArray(question.correctAnswer)
@@ -188,10 +191,20 @@ const QuizResult = ({ params }: QuizResultProps) => {
       ? question.correctAnswer.join(", ")
       : question.correctAnswer || "N/A";
 
+    // const userAnswerDisplay =
+    //   question.userAnswer && Array.isArray(question.userAnswer) && question.userAnswer.length > 0
+    //     ? question.userAnswer.join(", ")
+    //     : "Unanswered";
+
     const userAnswerDisplay =
-    question.userAnswer && Array.isArray(question.userAnswer) && question.userAnswer.length > 0
-    ? question.userAnswer.join(", ")
-    : "Unanswered";
+    question.userAnswer &&
+    (Array.isArray(question.userAnswer)
+      ? question.userAnswer.length > 0
+        ? question.userAnswer.join(", ")
+        : "Unanswered"
+      : typeof question.userAnswer === "string" && question.userAnswer.trim() !== ""
+      ? question.userAnswer
+      : "Unanswered");
 
     switch (question.type) {
       case "MSA": // Multiple Single Answer
@@ -262,10 +275,10 @@ const QuizResult = ({ params }: QuizResultProps) => {
             {question.options?.map((option, index: any) => {
               const isCorrectAnswer =
                 Array.isArray(question.correctAnswer) &&
-                question.correctAnswer.includes((index + 1).toString()); // Checking if (index + 1) is in correctAnswer array as string
+                question.correctAnswer.includes((index + 1).toString());  // Checking if (index + 1) is in correctAnswer array as string
               const isUserAnswer =
                 Array.isArray(question.userAnswer) &&
-                question.userAnswer.includes(index+1); // Checking if index is in userAnswer array
+                question.userAnswer.includes(index + 1); // Checking if index is in userAnswer array
 
               return (
                 <div
@@ -327,16 +340,16 @@ const QuizResult = ({ params }: QuizResultProps) => {
             {Array.from({ length: blanks }).map((_, index) => (
               <div key={index} className="p-4 bg-white rounded-lg mb-2">
                 {/* User's Answer */}
-                <p className="font-semibold text-red-500">
-                  Your Answer:{" "}
+                <p className="font-semibold">
+                  <span className="text-defaultcolor">Your Answer:</span>{" "}
                   {Array.isArray(question.userAnswer)
-                    ? question.userAnswer[index] || "No Answer"
-                    : "No Answer"}
+                    ? question.userAnswer[index] || "No answer"
+                    : "No answer"}
                 </p>
 
                 {/* Correct Answer */}
-                <p className="font-semibold text-green-600">
-                  Correct:{" "}
+                <p className="font-semibold">
+                  <span className="text-green-600">Correct Answer:</span>{" "}
                   {Array.isArray(question.correctAnswer)
                     ? question.correctAnswer[index] || "N/A"
                     : "N/A"}
@@ -364,9 +377,9 @@ const QuizResult = ({ params }: QuizResultProps) => {
                   className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center"
                 >
                   {/* Display the option label from question.options based on key */}
-                  <div className="p-2 rounded bg-white">
+                  <div className="p-2 py-5 rounded bg-white">
                     <span className="text-gray-500 font-semibold">
-                      Your Answer:
+                      Match {key}
                     </span>{" "}
                     <div
                       dangerouslySetInnerHTML={{
@@ -376,8 +389,8 @@ const QuizResult = ({ params }: QuizResultProps) => {
                   </div>
 
                   {/* Display user's selected answer */}
-                  <div className="p-2 rounded bg-yellow-50">
-                    <span className="text-yellow-500 font-semibold">
+                  <div className="p-2 rounded bg-white">
+                    <span className="text-defaultcolor font-semibold">
                       Your Answer:
                     </span>{" "}
                     {userAnswerPairs[index] ? (
@@ -394,7 +407,7 @@ const QuizResult = ({ params }: QuizResultProps) => {
                   </div>
 
                   {/* Display correct answer */}
-                  <div className="p-2 rounded bg-green-50">
+                  <div className="p-2 rounded bg-white">
                     <span className="text-green-500 font-semibold">
                       Correct:
                     </span>{" "}
@@ -411,11 +424,7 @@ const QuizResult = ({ params }: QuizResultProps) => {
           <div className="p-4 bg-white rounded-lg">
             <p className="font-medium">
               Your Answer:{" "}
-              <span
-                dangerouslySetInnerHTML={{
-                  __html: userAnswerDisplay,
-                }}
-              />
+              <span>{userAnswerDisplay}</span>
             </p>
             <p className="text-green-600">
               Correct Answer:{" "}
@@ -428,65 +437,98 @@ const QuizResult = ({ params }: QuizResultProps) => {
           </div>
         );
 
-      case "ORD": // Ordering
-        return (
-          <div>
-            <ul>
-              {Array.isArray(question.userAnswer) ? (
-                question.userAnswer.map((answerIndex: any, index) => (
-                  <li
-                    key={index}
-                    className=" mb-2 flex items-center justify-between gap-3"
-                  >
-                    {/* User's Answer */}
-                    <div className="flex-1 p-4 bg-white rounded-lg">
-                      <p className="font-semibold text-red-500">Your Answer:</p>
-                      <span
-                        dangerouslySetInnerHTML={{
-                          __html:
-                            question.options && question.options[answerIndex]
-                              ? question.options[answerIndex]
-                              : "No answer provided",
-                        }}
-                      />
-                    </div>
-
-                    {/* Correct Answer */}
-                    <div className="flex-1 p-4 bg-white rounded-lg">
-                      <p className="font-semibold text-green-500">
-                        Correct Answer:
-                      </p>
-                      <span
-                        dangerouslySetInnerHTML={{
-                          __html:
-                            Array.isArray(question.correctAnswer) &&
-                            index < question.correctAnswer.length &&
-                            question.options &&
-                            question.options[
-                              question.correctAnswer[index] as unknown as number
-                            ]
-                              ? question.options[
-                                  question.correctAnswer[
-                                    index
-                                  ] as unknown as number
-                                ]
-                              : "No correct answer available",
-                        }}
-                      />
-                    </div>
-                  </li>
-                ))
-              ) : (
-                <li className="p-4 bg-white rounded-lg mb-2 flex items-center justify-between">
-                  {typeof question.userAnswer === "string"
-                    ? question.userAnswer
-                    : "No answer provided"}
-                </li>
-              )}
-            </ul>
-          </div>
-        );
-
+        case "ORD": {
+          const userAnswer = question.userAnswer;
+          const correctAnswer = question.correctAnswer;
+    
+          if (
+            !userAnswer ||
+            (Array.isArray(userAnswer) && userAnswer.length === 0)
+          ) {
+            // User hasn't answered the question
+            return (
+              <div className="grid sm:grid-cols-2 rounded-xl gap-3">
+                <div className="mt-2">
+                  <p className="font-semibold text-defaultcolor mb-3">Your Answer:</p>
+                  <ul className="">
+                    {Array.isArray(correctAnswer) &&
+                      correctAnswer.map((answer, index) => (
+                        <li key={index} className="flex rounded-xl bg-white mb-3 p-3">
+                          {index+1}. <div className="text-red-500"> No answer</div>
+                        </li>
+                      ))}
+                  </ul>
+                </div>
+                <div className="mt-2">
+                  <p className="font-semibold text-green-500 mb-3">Correct Answer:</p>
+                  <ul className="">
+                    {Array.isArray(correctAnswer) &&
+                      correctAnswer.map((answer, index) => (
+                        <li key={index} className="flex rounded-xl bg-white mb-3  p-3">
+                          {index+1}.  <div dangerouslySetInnerHTML={{ __html: answer }} />
+                        </li>
+                      ))}
+                  </ul>
+                </div>
+              </div>
+            );
+          } else if (Array.isArray(userAnswer)) {
+            // User has answered the question
+            return (
+              <div className="grid sm:grid-cols-2 rounded-xl gap-3">
+                <div className="mt-2">
+                  <p className="font-semibold text-defaultcolor mb-3">Your Answer:</p>
+                  <ul className="">
+                    {userAnswer.map((answer, index) => (
+                      <li key={index} className="flex rounded-xl bg-white mb-3  p-3">
+                        {index+1}.  <div dangerouslySetInnerHTML={{ __html: answer }} />
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                <div className="mt-2">
+                  <p className="font-semibold text-green-500 mb-3">Correct Answer:</p>
+                  <ul className="">
+                    {Array.isArray(correctAnswer) &&
+                      correctAnswer.map((answer, index) => (
+                        <li key={index} className="flex rounded-xl bg-white mb-3  p-3">
+                          {index+1}.  <div dangerouslySetInnerHTML={{ __html: answer }} />
+                        </li>
+                      ))}
+                  </ul>
+                </div>
+              </div>
+            );
+          } else {
+            // Handle other possible types if necessary
+            return (
+              <div className=" grid sm:grid-cols-2 rounded-xl gap-3">
+                <div className="mt-2">
+                  <p className="font-semibold text-defaultcolor mb-3">Your Answer:</p>
+                  <ul className="list-decimal list-inside">
+                    {Array.isArray(correctAnswer) &&
+                      correctAnswer.map((answer, index) => (
+                        <li key={index} className="flex rounded-xl bg-white mb-3 p-3">
+                          {index+1}.  <div className="text-red-500"> No answer</div>
+                        </li>
+                      ))}
+                  </ul>
+                </div>
+                <div className="mt-2">
+                  <p className="font-semibold text-green-500 mb-3">Correct Answer:</p>
+                  <ul className="list-decimal list-inside">
+                    {Array.isArray(correctAnswer) &&
+                      correctAnswer.map((answer, index) => (
+                        <li key={index} className="flex rounded-xl bg-white mb-3  p-3">
+                          {index+1}.  <div dangerouslySetInnerHTML={{ __html: answer }} />
+                        </li>
+                      ))}
+                  </ul>
+                </div>
+              </div>
+            );
+          }
+        }
       case "EMQ": // Extended Matching Questions
         return (
           <div>
@@ -585,7 +627,36 @@ const QuizResult = ({ params }: QuizResultProps) => {
     }
   };
 
+  // const renderQuestionResult = (question: Question, index: number) => {
+  //   return (
+  //     <div
+  //       key={question.id}
+  //       className={`p-2 lg:p-4 border-l-[6px] lg:border-l-[12px] bg-[#f6f7f9] ${
+  //         !question.userAnswer ||
+  //         (Array.isArray(question.userAnswer) &&
+  //           question.userAnswer.length === 0)
+  //           ? "border-yellow-500"
+  //           : "border-green-500"
+  //       }`}
+  //     >
+  //       <h3 className="text-base font-semibold mb-2">
+  //         <span className="underline">Question {index + 1}:</span>{" "}
+  //         <div
+  //           className="bg-white p-2 rounded-lg"
+  //           dangerouslySetInnerHTML={{
+  //             __html: Array.isArray(question.question)
+  //               ? question.question[0]
+  //               : question.question,
+  //           }}
+  //         />
+  //       </h3>
+  //       {renderOptions(question)}
+  //     </div>
+  //   );
+  // };
+
   const renderQuestionResult = (question: Question, index: number) => {
+    // Determine question status based on user's answer and correctness
     let questionStatus = "Unanswered";
     if (!question.isUnanswered) {
       questionStatus = question.isCorrect ? "Correct" : "Wrong";
@@ -614,13 +685,19 @@ const QuizResult = ({ params }: QuizResultProps) => {
           <h3 className="text-base font-semibold">
             <span className="underline">Question {index + 1}:</span>
           </h3>
+          
+          {/* Status Badge */}
           <span className={`px-2 py-1 text-xs font-semibold rounded ${badgeColor}`}>
             {questionStatus}
           </span>
         </div>
-        <div className="bg-white p-2 rounded-lg"
+  
+        <div
+          className="bg-white px-3 py-4 rounded-lg mb-4"
           dangerouslySetInnerHTML={{
-            __html: Array.isArray(question.question) ? question.question[0] : question.question,
+            __html: Array.isArray(question.question)
+              ? question.question[0]
+              : question.question,
           }}
         />
         {renderOptions(question)}
@@ -628,8 +705,11 @@ const QuizResult = ({ params }: QuizResultProps) => {
     );
   };
 
+  // Render Leaderboard and Question Results
   return (
     <div className="dashboard-page">
+      {/* START  */}
+
       <div className="flex items-center space-x-3 mb-3">
         <button
           onClick={() => router.back()}
@@ -637,28 +717,28 @@ const QuizResult = ({ params }: QuizResultProps) => {
         >
           <FaArrowLeftLong className="text-gray-900" size={24} />
         </button>
-        <h1 className="text-3xl font-bold">{userQuizResult.title}</h1>
+        <h1 className="text-3xl font-bold">{userExamResult.title}</h1>
       </div>
 
       <div className="flex items-center space-x-3 flex-wrap mb-3">
-          <div className="mb-1">
-            <p className="text-lg">Quiz Packs: {quizData.exam_result_type}</p>
-          </div>
-          
-          <div className="flex items-center mb-1">
-            <FaRegCalendarAlt  className=" mr-2" />
-            <p className="text-lg">{quizData.exam_result_date}</p>
-          </div>
-
-          <div className="flex items-center mb-1">
-            <FaClock className="mr-2" />
-            <p className="text-lg">{quizData.exam_result_time}</p>
-          </div>
+        <div className="mb-1">
+          <p className="text-lg">Quiz Packs: {examData.exam_result_type}</p>
         </div>
+
+        <div className="flex items-center mb-1">
+          <FaRegCalendarAlt className=" mr-2" />
+          <p className="text-lg">{examData.exam_result_date}</p>
+        </div>
+
+        <div className="flex items-center mb-1">
+          <FaClock className="mr-2" />
+          <p className="text-lg">{examData.exam_result_time}</p>
+        </div>
+      </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
         <button
-          className={`px-4 py-2 text-lg border-b-4 bg-white text-gray-900 ${
+          className={`px-4 py-2 text-lg border-b-4  bg-white text-gray-900 ${
             activeTab === "A" ? "border-defaultcolor" : "border-gray-200"
           }`}
           onClick={() => handleTabClick("A")}
@@ -666,7 +746,7 @@ const QuizResult = ({ params }: QuizResultProps) => {
           Analysis
         </button>
         <button
-          className={`px-4 py-2 text-lg border-b-4 bg-white text-gray-900 ${
+          className={`px-4 py-2 text-lg border-b-4  bg-white text-gray-900 ${
             activeTab === "B" ? "border-defaultcolor" : "border-gray-200"
           }`}
           onClick={() => handleTabClick("B")}
@@ -674,132 +754,184 @@ const QuizResult = ({ params }: QuizResultProps) => {
           Solution
         </button>
         <button
-          className={`px-4 py-2 text-lg border-b-4 bg-white text-gray-900 ${
+          className={`px-4 py-2 text-lg border-b-4  bg-white text-gray-900 ${
             activeTab === "C" ? "border-defaultcolor" : "border-gray-200"
           }`}
           onClick={() => handleTabClick("C")}
         >
           Top Scores
         </button>
-        <QuizReportCard uuid={userQuizResult.uuid} />
+        {/* Check if download_report is enabled */}
+        {userExamResult?.download_report === 1 && (
+          <ExamReportGenerator uuid={userExamResult.uuid} />
+        )}
       </div>
 
       {activeTab === "A" && (
         <div>
+          {/* Pass or Fail Message */}
           <div className="text-center mb-8">
             {passed ? (
               <div className="bg-white p-8 rounded-lg shadow-sm">
-                <FaCheckCircle className="text-green-500 mx-auto mb-3" size={60} />
+                <FaCheckCircle
+                  className="text-green-500 mx-auto mb-3"
+                  size={60}
+                />
                 <h1 className="text-3xl font-bold text-green-600 uppercase">
                   Congratulations! You Passed!
                 </h1>
+                <p className="text-gray-700 mt-2">
+                  You successfully met the passing criteria for this Quiz.
+                </p>
               </div>
             ) : (
               <div className="bg-white p-8 rounded-lg shadow-sm">
-                <FaTimesCircle className="text-red-500 mx-auto mb-3" size={60} />
+                <FaTimesCircle
+                  className="text-red-500 mx-auto mb-3"
+                  size={60}
+                />
                 <h1 className="text-3xl font-bold text-red-600 uppercase">
                   Sorry, You Failed
                 </h1>
+                <p className="text-gray-700 mt-2">
+                  Review your performance below to understand areas for
+                  improvement.
+                </p>
               </div>
             )}
           </div>
 
-        <div className="bg-white lg:p-6 p-3 rounded-lg shadow-sm">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mb-6 ">
-            <ResultCard
-              title="Total Questions"
-              value={totalQuestions}
-              icon={<FaQuestionCircle className="text-blue-700" size={32} />}
-            />
-            <ResultCard
-              title="Correct Answers"
-              value={userQuizResult.correctCount}
-              icon={<FaCheckCircle className="text-green-700" size={32} />}
-            />
-            <ResultCard
-              title="Wrong Answers"
-              value={userQuizResult.wrongCount}
-              icon={<FaTimesCircle className="text-red-700" size={32} />}
-            />
-            <ResultCard
-              title="Unanswered"
-              value={userQuizResult.skippedCount}
-              icon={<FaMinusCircle className="text-orange-700" size={32} />}
-            />
-            <ResultCard
-              title="Marks"
-              value={userQuizResult.marks}
-              icon={<FaRibbon className="text-purple-700" size={32} />}
-            />
-            <ResultCard
-              title="Time Taken"
-              value={formatTimeTaken(userQuizResult.timeTaken)}
-              icon={<FaClock className="text-teal-700" size={32} />}
-            />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className=" p-3 rounded-lg border border-gray-200">
-              <h2 className="text-lg font-semibold mb-2">Answer Distribution</h2>
-              <div className="mx-auto" style={{ width: '100%', maxWidth: '300px', height: 'auto' }}>
-
-              
-                <Doughnut
-                  data={{
-                    labels: ["Correct", "Incorrect", "Unanswered"],
-                    datasets: [
-                      {
-                        data: [
-                          userQuizResult.correctCount,
-                          userQuizResult.wrongCount,
-                          userQuizResult.skippedCount,
-                        ],
-                        backgroundColor: ["#4CAF50", "#F44336", "#FF9800"],
-                      },
-                    ],
-                  }}
-                  options={{
-                    responsive: true,
-                    plugins: {
-                      legend: { position: "bottom" },
-                    },
-                  }}
-                />
-              </div>
-            </div>
-
-            <div className=" p-3 rounded-lg border border-gray-200">
-              <h2 className="text-lg font-semibold mb-2">Score Comparison</h2>
-              <Bar
-                data={{
-                  labels: ["Your Score", "Passing Score"],
-                  datasets: [
-                    {
-                      label: "Score",
-                      data: [
-                        userQuizResult.correctCount,
-                        Math.ceil(totalQuestions * passingScore),
-                      ],
-                      backgroundColor: ["#4CAF50", "#FFC107"],
-                    },
-                  ],
-                }}
-                options={{
-                  responsive: true,
-                  scales: { y: { beginAtZero: true, max: totalQuestions } },
-                }}
+          <div className="bg-white lg:p-6 p-3 rounded-lg shadow-sm">
+            {/* Summary Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mb-6">
+              <ResultCard
+                title="Total Questions"
+                value={totalQuestions}
+                icon={<FaQuestionCircle className="text-blue-700" size={32} />}
+              />
+              <ResultCard
+                title="Correct Answers"
+                value={userExamResult.correctCount}
+                icon={<FaCheckCircle className="text-green-700" size={32} />}
+              />
+              <ResultCard
+                title="Wrong Answers"
+                value={userExamResult.wrongCount}
+                icon={<FaTimesCircle className="text-red-700" size={32} />}
+              />
+              <ResultCard
+                title="Unanswered"
+                value={userExamResult.skippedCount}
+                icon={<FaMinusCircle className="text-yellow-500" size={32} />}
+              />
+              <ResultCard
+                title="Marks"
+                value={userExamResult.marks}
+                icon={<FaRibbon className="text-purple-700" size={32} />}
+              />
+              <ResultCard
+                title="Time Taken"
+                value={formatTimeTaken(userExamResult.timeTaken)}
+                icon={<FaClock className="text-teal-700" size={32} />}
               />
             </div>
+
+            {/* Chart Section */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-8">
+              {/* Answer Distribution Chart */}
+              <div className="border border-gray-200 p-3 rounded-lg  ">
+                <h2 className="text-lg font-semibold text-gray-800 mb-2">
+                  Answer Distribution
+                </h2>
+                <p className="text-sm text-gray-600">
+                  A breakdown of your answers, showing correct, incorrect, and
+                  Unanswered responses.
+                </p>
+                <div
+                  className="mx-auto"
+                  style={{ width: "100%", maxWidth: "300px", height: "auto" }}
+                >
+                  <Doughnut
+                    data={{
+                      labels: ["Correct", "Incorrect", "Unanswered"],
+                      datasets: [
+                        {
+                          data: [
+                            userExamResult.correctCount,
+                            userExamResult.wrongCount,
+                            userExamResult.skippedCount,
+                          ],
+                          backgroundColor: ["#4CAF50", "#F44336", "#FF9800"],
+                        },
+                      ],
+                    }}
+                    options={{
+                      responsive: true,
+                      plugins: {
+                        legend: { position: "bottom" },
+                        tooltip: {
+                          callbacks: {
+                            label: (context) =>
+                              `${context.label}: ${context.raw}`,
+                          },
+                        },
+                      },
+                    }}
+                  />
+                </div>
+              </div>
+
+              {/* Score Comparison Chart */}
+              <div className="border border-gray-200 p-3 rounded-lg ">
+                <h2 className="text-lg font-semibold text-gray-800 mb-2">
+                  Score Comparison
+                </h2>
+                <p className="text-sm text-gray-600 ">
+                  See how your score compares to the passing score.
+                </p>
+                <div className="mx-auto">
+                  <Bar
+                    data={{
+                      labels: ["Your Score", "Passing Score"],
+                      datasets: [
+                        {
+                          label: "Score",
+                          data: [
+                            userExamResult.correctCount,
+                            Math.ceil(totalQuestions * passingScore),
+                          ],
+                          backgroundColor: ["#4CAF50", "#FFC107"],
+                        },
+                      ],
+                    }}
+                    options={{
+                      responsive: true,
+                      plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                          callbacks: {
+                            label: (context) => `Score: ${context.raw}`,
+                          },
+                        },
+                      },
+                      scales: {
+                        y: { beginAtZero: true, max: totalQuestions },
+                      },
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
           </div>
-        </div>
         </div>
       )}
 
       {activeTab === "B" && (
         <div>
-            <div className="mb-8 bg-white p-5 rounded-lg shadow-sm">
+          {/* Render Questions */}
+          <div className="mb-8 bg-white p-5 rounded-lg shadow-sm">
             <div className="space-y-6">
-              {quizData.questions.map((question, index) =>
+              {examData.questions.map((question, index) =>
                 renderQuestionResult(question, index)
               )}
             </div>
@@ -808,19 +940,22 @@ const QuizResult = ({ params }: QuizResultProps) => {
       )}
 
       {activeTab === "C" && (
-       <div className="mb-8 bg-white shadow-sm p-1 rounded-lg">
-          {leaderBoard.length > 0 ? (
-            <LeaderboardTable entries={leaderBoard} />
-          ) : (
-            <p>No leaderboard data available.</p>
-          )}
+        <div>
+          {/* Tab C Content - Leaderboard */}
+          <div className="mb-8 bg-white shadow-sm p-1 rounded-lg">
+            {leaderBoard.length > 0 ? (
+              <LeaderboardTable entries={leaderBoard} />
+            ) : (
+              <NoData message="No leaderboard data available." />
+            )}
+          </div>
         </div>
       )}
+      {/* ENDING */}
     </div>
   );
 };
 
-// Helper Components
 const ResultCard = ({
   title,
   value,
@@ -831,56 +966,63 @@ const ResultCard = ({
   icon?: React.ReactNode;
 }) => {
   return (
-    <div className="flex items-center p-5 border border-gray-200 rounded-lg bg-white ">
+    <div className="flex items-center p-5 border border-gray-200 rounded-lg ">
+      {/* Icon Section */}
       <div className="mr-4 flex items-center justify-center w-14 h-14 rounded-full bg-gray-100">
         {icon}
       </div>
+
+      {/* Text Section */}
       <div>
         <h3 className="text-base font-medium text-gray-600">{title}</h3>
-        <p className="text-2xl lg:text-3xl font-semibold text-gray-800">{value}</p>
+        <p className="text-2xl lg:text-3xl font-semibold text-gray-800">
+          {value}
+        </p>
       </div>
     </div>
   );
 };
 
-const LeaderboardTable = ({ entries }: { entries: LeaderboardEntry[] }) => (
-  <div className="overflow-x-auto rounded-lg">
-    <table className="min-w-full table-auto rounded-lg overflow-hidden">
-      <thead className="bg-defaultcolor text-white">
-        <tr>
-          <th className="py-3 px-6 text-left">S.No</th>
-          <th className="py-3 px-6 text-left">Username</th>
-          <th className="py-3 px-6 text-left">Score</th>
-          <th className="py-3 px-6 text-left">Status</th>
-        </tr>
-      </thead>
-      <tbody>
-        {entries.map((entry, index) => (
-          <tr
-            key={index}
-            className={`border-b ${
-              index % 2 === 0 ? "bg-white" : "bg-white"
-            } hover:bg-gray-200`}
-          >
-            <td className="py-3 px-6">{index + 1}</td>
-            <td className="py-3 px-6">{entry.username}</td>
-            <td className="py-3 px-6">{entry.score}</td>
-            <td className="py-3 px-6">
-              {entry.status === "PASS" ? (
-                <span className="inline-block px-3 py-1 text-sm font-semibold text-green-700 bg-green-200 rounded-full">
-                  Passed
-                </span>
-              ) : (
-                <span className="inline-block px-3 py-1 text-sm font-semibold text-red-700 bg-red-200 rounded-full">
-                  Failed
-                </span>
-              )}
-            </td>
+const LeaderboardTable = ({ entries }: { entries: LeaderboardEntry[] }) => {
+  return (
+    <div className="overflow-x-auto rounded-lg ">
+      <table className="min-w-full table-auto rounded-lg overflow-hidden">
+        <thead className="bg-defaultcolor text-white">
+          <tr>
+            <th className="py-3 px-6 text-left">S.No</th>
+            <th className="py-3 px-6 text-left">Username</th>
+            <th className="py-3 px-6 text-left">Score</th>
+            <th className="py-3 px-6 text-left">Status</th>
           </tr>
-        ))}
-      </tbody>
-    </table>
-  </div>
-);
+        </thead>
+        <tbody>
+          {entries.map((entry, index) => (
+            <tr
+              key={index}
+              className={`border-b transition duration-300 ${
+                index % 2 === 0 ? "bg-white" : "bg-white"
+              } hover:bg-gray-200`}
+            >
+              <td className="py-3 px-6">{index + 1}</td>
+              <td className="py-3 px-6">{entry.username}</td>
+              <td className="py-3 px-6">{entry.score}</td>
+              <td className="py-3 px-6">
+                {entry.status === "PASS" ? (
+                  <span className="inline-block px-3 py-1 text-sm font-semibold text-green-700 bg-green-200 rounded-full">
+                    Passed
+                  </span> // Badge for Passed status
+                ) : (
+                  <span className="inline-block px-3 py-1 text-sm font-semibold text-red-700 bg-red-200 rounded-full">
+                    Failed
+                  </span> // Badge for Failed status
+                )}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+};
 
-export default QuizResult;
+export default ExamResult;
