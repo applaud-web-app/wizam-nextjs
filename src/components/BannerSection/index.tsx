@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { FaPlay } from "react-icons/fa";
-import { FC, useState, useEffect, useMemo, useRef } from "react";
+import { FC, useState, useEffect, useMemo } from "react";
 import {
   MdOutlineKeyboardArrowLeft,
   MdOutlineKeyboardArrowRight,
@@ -29,9 +29,9 @@ const BannerSection: FC = () => {
   const [isVideoPlaying, setIsVideoPlaying] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  // References for custom navigation
-  const prevRef = useRef<HTMLDivElement>(null);
-  const nextRef = useRef<HTMLDivElement>(null);
+  // Use state for custom navigation elements
+  const [prevEl, setPrevEl] = useState<HTMLElement | null>(null);
+  const [nextEl, setNextEl] = useState<HTMLElement | null>(null);
 
   // Fetch banner data from the API
   useEffect(() => {
@@ -131,22 +131,13 @@ const BannerSection: FC = () => {
                   <Swiper
                     modules={[Navigation, Autoplay]}
                     loop
-                    autoplay={{ delay: 1000 }}
+                    autoplay={{ delay: 3000 }}
                     speed={1000}
                     slidesPerView={1}
                     className="w-full"
                     navigation={{
-                      prevEl: prevRef.current,
-                      nextEl: nextRef.current,
-                    }}
-                    onBeforeInit={(swiper) => {
-                      if (
-                        swiper.params.navigation !== undefined &&
-                        typeof swiper.params.navigation !== "boolean"
-                      ) {
-                        swiper.params.navigation.prevEl = prevRef.current;
-                        swiper.params.navigation.nextEl = nextRef.current;
-                      }
+                      prevEl,
+                      nextEl,
                     }}
                   >
                     {preparedItems}
@@ -154,14 +145,14 @@ const BannerSection: FC = () => {
 
                   {/* Custom Navigation Buttons */}
                   <div
-                    ref={prevRef}
+                    ref={(node) => setPrevEl(node)}
                     className="absolute top-1/2 -left-3 transform -translate-y-1/2 z-10 cursor-pointer transition"
                     aria-label="Previous Slide"
                   >
                     <MdOutlineKeyboardArrowLeft className="text-white text-2xl sm:text-3xl" />
                   </div>
                   <div
-                    ref={nextRef}
+                    ref={(node) => setNextEl(node)}
                     className="absolute top-1/2 -right-3 transform -translate-y-1/2 z-10 cursor-pointer transition"
                     aria-label="Next Slide"
                   >
