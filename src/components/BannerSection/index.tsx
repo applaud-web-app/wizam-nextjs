@@ -4,10 +4,13 @@ import Link from "next/link";
 import Image from "next/image";
 import { FaPlay } from "react-icons/fa";
 import { FC, useState, useEffect, useMemo, useRef } from "react";
-import { MdOutlineKeyboardArrowLeft, MdOutlineKeyboardArrowRight } from "react-icons/md";
+import {
+  MdOutlineKeyboardArrowLeft,
+  MdOutlineKeyboardArrowRight,
+} from "react-icons/md";
 import axios from "axios";
 import { Swiper, SwiperSlide } from "swiper/react";
-import { Navigation } from 'swiper/modules';
+import { Navigation, Autoplay } from "swiper/modules";
 
 // Import Swiper styles
 import "swiper/css";
@@ -34,7 +37,9 @@ const BannerSection: FC = () => {
   useEffect(() => {
     const fetchBannerData = async () => {
       try {
-        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/banners`);
+        const response = await axios.get(
+          `${process.env.NEXT_PUBLIC_API_URL}/banners`
+        );
         if (response.data.status) {
           setCarouselItems(response.data.data.banner);
           setYoutubeLink(response.data.data.youtube[0]?.description || null);
@@ -69,7 +74,10 @@ const BannerSection: FC = () => {
               {item.description}
             </p>
 
-            <Link href={item.button_link} className="inline-block mt-4 primary-button">
+            <Link
+              href={item.button_link}
+              className="inline-block mt-4 primary-button"
+            >
               {item.button_text}
             </Link>
           </div>
@@ -83,7 +91,9 @@ const BannerSection: FC = () => {
     try {
       const url = new URL(link);
       if (url.hostname.includes("youtu.be")) {
-        return `https://www.youtube.com/embed/${url.pathname.slice(1)}?autoplay=1`;
+        return `https://www.youtube.com/embed/${url.pathname.slice(
+          1
+        )}?autoplay=1`;
       } else if (url.hostname.includes("youtube.com")) {
         const videoId = url.searchParams.get("v");
         if (videoId) {
@@ -119,9 +129,9 @@ const BannerSection: FC = () => {
               {carouselItems.length > 0 && (
                 <>
                   <Swiper
-                    modules={[Navigation]}
+                    modules={[Navigation, Autoplay]}
                     loop
-                    autoplay={{ delay: 3000, disableOnInteraction: true }}
+                    autoplay={{ delay: 1000 }}
                     speed={1000}
                     slidesPerView={1}
                     className="w-full"
@@ -130,7 +140,10 @@ const BannerSection: FC = () => {
                       nextEl: nextRef.current,
                     }}
                     onBeforeInit={(swiper) => {
-                      if (swiper.params.navigation !== undefined && typeof swiper.params.navigation !== "boolean") {
+                      if (
+                        swiper.params.navigation !== undefined &&
+                        typeof swiper.params.navigation !== "boolean"
+                      ) {
                         swiper.params.navigation.prevEl = prevRef.current;
                         swiper.params.navigation.nextEl = nextRef.current;
                       }
