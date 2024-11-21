@@ -1,4 +1,3 @@
-// components/PricingCard.tsx
 "use client";
 
 import { loadStripe } from "@stripe/stripe-js";
@@ -6,6 +5,7 @@ import React from "react";
 import { useRouter } from "next/navigation";
 import axios from "axios";
 import Cookies from "js-cookie";
+import { useSiteSettings } from "@/context/SiteContext"; // Import the hook
 
 interface PricingCardProps {
   title: string;
@@ -36,6 +36,12 @@ const PricingCard: React.FC<PricingCardProps> = ({
   isAuthenticated,
 }) => {
   const router = useRouter(); // For route navigation
+
+  // Access site settings from the SiteContext
+  const { siteSettings } = useSiteSettings();
+
+  // Fallback currency symbol in case it's null or undefined
+  const currencySymbol = siteSettings?.currency_symbol || "$";
 
   const handleCheckout = async () => {
     const stripe = await stripePromise;
@@ -112,7 +118,8 @@ const PricingCard: React.FC<PricingCardProps> = ({
         {title}
       </h3>
       <p className="text-4xl sm:text-5xl font-bold text-secondary text-center mb-4">
-        ${price}
+        {currencySymbol}
+        {price}
       </p>
       <p className="text-gray-500 text-center mb-6">
         {priceType === "monthly" ? "Per month" : "One-time payment"}

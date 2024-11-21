@@ -6,6 +6,7 @@ import Cookies from "js-cookie";
 import Loader from "@/components/Common/Loader";
 import NoData from "@/components/Common/NoData";
 import InvoiceGenerator from "@/components/Common/InvoiceGenerator";
+import { useSiteSettings } from "@/context/SiteContext"; // Import SiteContext hook
 
 interface PaymentData {
   payment_id: string;
@@ -21,6 +22,12 @@ const Payment: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [selectedInvoiceId, setSelectedInvoiceId] = useState<string | null>(null);
   const [downloading, setDownloading] = useState<string | null>(null);
+
+  // Access site settings
+  const { siteSettings } = useSiteSettings();
+
+  // Use currency_symbol from SiteContext
+  const currencySymbol = siteSettings?.currency_symbol || "$";
 
   useEffect(() => {
     const fetchPayments = async () => {
@@ -103,11 +110,16 @@ const Payment: React.FC = () => {
                 <tr key={payment.payment_id} className="hover:bg-gray-50">
                   <td className="p-4">{payment.payment_id}</td>
                   <td className="p-4">
-                    ${parseFloat(payment.amount).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                    {currencySymbol}
+                    {parseFloat(payment.amount).toLocaleString(undefined, {
+                      minimumFractionDigits: 2,
+                    })}
                   </td>
                   <td className="p-4">{payment.currency.toUpperCase()}</td>
                   <td className="p-4">{new Date(payment.created_at).toLocaleString()}</td>
-                  <td className="p-4 capitalize">{getStatusBadge(payment.status == "succeeded" ? "paid" : payment.status)}</td>
+                  <td className="p-4 capitalize">
+                    {getStatusBadge(payment.status === "succeeded" ? "paid" : payment.status)}
+                  </td>
                   <td className="p-4">
                     <button
                       onClick={() => handleDownloadInvoice(payment.payment_id)}

@@ -4,6 +4,7 @@ import axios from "axios";
 import Cookies from "js-cookie";
 import Loader from "@/components/Common/Loader";
 import NoData from "@/components/Common/NoData";
+import { useSiteSettings } from "@/context/SiteContext"; // Import the SiteContext hook
 
 interface SubscriptionData {
   id: string;
@@ -20,17 +21,26 @@ const Subscription: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Access site settings from the SiteContext
+  const { siteSettings } = useSiteSettings();
+
+  // Fallback currency symbol
+  const currencySymbol = siteSettings?.currency_symbol || "$";
+
   useEffect(() => {
     const fetchSubscriptions = async () => {
       try {
         const token = Cookies.get("jwt");
         if (!token) throw new Error("Authorization token not found.");
 
-        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/my-subscription`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        const response = await axios.get(
+          `${process.env.NEXT_PUBLIC_API_URL}/my-subscription`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
 
         // Check if subscriptions exist and is an array
         if (response.data.status && Array.isArray(response.data.subscriptions)) {
@@ -61,14 +71,21 @@ const Subscription: React.FC = () => {
         badgeClass = "bg-gray-100 text-gray-800";
         break;
     }
-    return <span className={`px-2 py-1 rounded-full text-xs font-semibold ${badgeClass}`}>{status}</span>;
+    return (
+      <span
+        className={`px-2 py-1 rounded-full text-xs font-semibold ${badgeClass}`}
+      >
+        {status}
+      </span>
+    );
   };
 
   if (loading) return <Loader />;
 
   if (error) return <p className="text-red-500">Error: {error}</p>;
 
-  if (subscriptions.length === 0) return <NoData message="No subscriptions found." />;
+  if (subscriptions.length === 0)
+    return <NoData message="No subscriptions found." />;
 
   return (
     <div className="w-full">
@@ -83,7 +100,6 @@ const Subscription: React.FC = () => {
                 <th className="p-3 text-left">Duration</th>
                 <th className="p-3 text-left">Features</th>
                 <th className="p-3 text-left">Status</th>
-               
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
@@ -92,7 +108,10 @@ const Subscription: React.FC = () => {
                   <td className="p-4">{index + 1}</td>
                   <td className="p-4">{subscription.plan_name}</td>
                   <td className="p-4">
-                    ${subscription.plan_price.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                    {currencySymbol}
+                    {subscription.plan_price.toLocaleString(undefined, {
+                      minimumFractionDigits: 2,
+                    })}
                   </td>
                   <td className="p-4">{`${subscription.purchase_date} to ${subscription.ends_date}`}</td>
                   <td className="p-4">
@@ -104,7 +123,6 @@ const Subscription: React.FC = () => {
                     ))}
                   </td>
                   <td className="p-4">{getStatusBadge(subscription.status)}</td>
-                 
                 </tr>
               ))}
             </tbody>
