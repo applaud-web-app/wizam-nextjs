@@ -51,7 +51,7 @@ export default function UserProfile() {
   const fetchProfileData = async (): Promise<void> => {
     const jwt = Cookies.get("jwt");
     if (!jwt) {
-      router.push("/signin");
+      router.push("/login");
       return;
     }
 
@@ -71,12 +71,12 @@ export default function UserProfile() {
         });
         setProfileImage(profile.image || "/images/default-user.png");
       } else if (response.data.status === false && response.data.message === "Unauthorized") {
-        router.push("/signin");
+        router.push("/login");
       }
     } catch (error) {
       console.error("Error fetching profile data:", error);
       toast.error("Error fetching profile data");
-      router.push("/signin");
+      router.push("/login");
       setProfileImage("/images/default-user.png");
     } finally {
       setLoading(false); // Stop loading
@@ -116,7 +116,7 @@ export default function UserProfile() {
   const handleProfileSubmit = async (values: ProfileFormValues): Promise<void> => {
     const jwt = Cookies.get("jwt");
     if (!jwt) {
-       router.push("/signin");
+       router.push("/login");
        return;
     }
  
@@ -163,7 +163,7 @@ export default function UserProfile() {
   const handlePasswordSubmit = async (values: PasswordFormValues): Promise<void> => {
     const jwt = Cookies.get("jwt");
     if (!jwt) {
-      router.push("/signin");
+      router.push("/login");
       return;
     }
 
@@ -199,7 +199,7 @@ export default function UserProfile() {
   const handleLogoutFromAllDevices = async (): Promise<void> => {
     const jwt = Cookies.get("jwt");
     if (!jwt) {
-      router.push("/signin");
+      router.push("/login");
       return;
     }
 
@@ -217,7 +217,7 @@ export default function UserProfile() {
       if (response.data.status === true) {
         // Remove the JWT cookie
         Cookies.remove("jwt");
-        router.push("/signin");
+        router.push("/login");
         toast.success("Logged out from all devices successfully");
       } else {
         toast.error(`Logout failed: ${response.data.message}`);

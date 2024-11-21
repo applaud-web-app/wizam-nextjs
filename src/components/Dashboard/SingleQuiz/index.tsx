@@ -64,7 +64,7 @@ export default function SingleQuiz({ slug }: SingleQuizProps) {
         const { status, data } = error.response;
         if (status === 401) {
           toast.error("User is not authenticated. Please log in.");
-          router.push("/signin");
+          router.push("/login");
         } else if (status === 404) {
           toast.error("Please buy a subscription to access this course.");
           router.push("/pricing");
@@ -117,7 +117,7 @@ export default function SingleQuiz({ slug }: SingleQuizProps) {
           // Handle specific error statuses
           if (status === 401) {
             toast.error("User is not authenticated. Please log in.");
-            router.push("/signin"); // Redirect to sign-in page
+            router.push("/login"); // Redirect to sign-in page
           } else if (status === 404) {
             toast.error("Please buy a subscription to access this course.");
             Cookies.set("redirect_url", `/dashboard/quiz-detail/${slug}?sid=${sid}`, {

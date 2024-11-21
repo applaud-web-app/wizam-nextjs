@@ -151,7 +151,7 @@ const ExamDetailPage = ({ params }: ExamDetailProps) => {
         `/dashboard/exam-detail/${slug}?sid=${exam.schedule_id ?? 0}`,
         { expires: 1 }
       );
-      router.push("/signin");
+      router.push("/login");
     }
   };
 

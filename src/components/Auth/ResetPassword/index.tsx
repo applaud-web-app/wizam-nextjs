@@ -63,7 +63,7 @@ const ResetPassword = () => {
           autoClose: 3000,
         });
         setTimeout(() => {
-          router.push("/signin");
+          router.push("/login");
         }, 1000);
       } else {
         toast.error(result.message || "Failed to reset password.", {

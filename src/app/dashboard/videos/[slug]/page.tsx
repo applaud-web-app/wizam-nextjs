@@ -55,7 +55,7 @@ export default function VideoDetailPage({ params }: { params: { slug: string } }
           
           if (status === 401) {
             toast.error('User is not authenticated. Please log in.');
-            router.push("/signin");
+            router.push("/login");
           } else if (status === 404) {
             toast.error('Please buy a subscription to access this course.');
             router.push("/pricing");

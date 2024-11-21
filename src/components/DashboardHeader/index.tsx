@@ -78,7 +78,7 @@ export default function Header({ toggleSidebar }: HeaderProps) {
   const fetchProfileData = async () => {
     const jwt = Cookies.get("jwt");
     if (!jwt) {
-      router.push("/signin");
+      router.push("/login");
       return;
     }
 

@@ -154,7 +154,7 @@ export default function ExamDetailPage({ params }: { params: { slug: string } })
         const { status, data } = error.response;
         if (status === 401) {
           toast.error("User is not authenticated. Please log in.");
-          router.push("/signin");
+          router.push("/login");
         } else if (status === 403 || status === 404) {
           toast.error("Please buy a subscription to access this course.");
           router.push("/pricing");

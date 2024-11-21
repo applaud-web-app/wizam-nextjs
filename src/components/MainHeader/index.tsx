@@ -320,7 +320,7 @@ const Header = () => {
                       tabIndex={-1}
                     >
                       <Link
-                        href="/signin"
+                        href="/login"
                         className="block px-4 py-2 text-gray-800 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-600"
                         onClick={() => setLoginDropdownOpen(false)}
                       >
@@ -466,7 +466,7 @@ const Header = () => {
                   </Link>
 
                   <Link
-                    href="/signin"
+                    href="/login"
                     className="flex items-center justify-center border border-secondary bg-secondary font-semibold text-white py-2 px-6 rounded-full hover:bg-white hover:text-secondary transition w-full"
                   >
                     Student Log in
@@ -490,7 +490,7 @@ const Header = () => {
                     {loginDropdownOpen && (
                       <div className="absolute w-full bg-white dark:bg-dark shadow-lg border rounded-lg py-2 z-50" tabIndex={-1}>
                          <Link
-                          href="/signin"
+                          href="/login"
                           className="block px-4 py-2 text-gray-800 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-600"
                           onClick={() => setLoginDropdownOpen(false)}
                         >

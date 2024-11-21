@@ -119,7 +119,7 @@ export default function QuizTypeDetailPage({ params }: { params: { slug: string 
       const jwt = Cookies.get("jwt");
       if (!jwt) {
         toast.error("User is not authenticated. Please log in.");
-        router.push("/signin");
+        router.push("/login");
         return;
       }
 
@@ -137,7 +137,7 @@ export default function QuizTypeDetailPage({ params }: { params: { slug: string 
     } catch (error: any) {
       if (error.response?.status === 401) {
         toast.error("User is not authenticated. Please log in.");
-        router.push("/signin");
+        router.push("/login");
       } else if (error.response?.status === 403) {
         toast.error("Upgrade subscription to access this feature.");
         router.push("/pricing");

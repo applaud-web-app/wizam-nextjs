@@ -153,7 +153,7 @@ const SignIn = () => {
         <div className="relative mt-16 bg-white rounded-lg lg:shadow-lg shadow-sm  z-10">
           <div className="p-6 lg:p-14">
             <h2 className="text-2xl font-bold text-left text-gray-800">
-              Sign in to your account
+              Log in to your account
             </h2>
 
             <Formik
@@ -230,7 +230,7 @@ const SignIn = () => {
                       loading ? "opacity-50 cursor-not-allowed" : ""
                     }`}
                   >
-                    {loading ? "Signing In..." : "Sign In"}
+                    {loading ? "Logining..." : "Login"}
                   </button>
                 </Form>
               )}

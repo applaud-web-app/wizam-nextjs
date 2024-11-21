@@ -50,7 +50,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       (error) => {
         if (error.response?.status === 401 || error.response?.status === 403) {
           localStorage.removeItem("token");
-          router.push("/signin");
+          router.push("/login");
         }
         return Promise.reject(error);
       }
@@ -65,7 +65,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
   // Determine if Header and Footer should be hidden on certain pages
   const noHeaderFooter =
-    pathname === "/signin" ||
+    pathname === "/login" ||
     pathname === "/signup" ||
     pathname === "/forget-password" ||
     pathname === "/reset-password" ||

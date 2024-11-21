@@ -52,7 +52,7 @@ export default function LessonsPage() {
         const { status } = error.response;
         if (status === 401) {
           toast.error('Please log in.');
-          router.push("/signin");
+          router.push("/login");
         } else {
           toast.error("An error occurred. Please try again.");
         }
