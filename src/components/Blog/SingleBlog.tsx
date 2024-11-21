@@ -5,7 +5,7 @@ import Link from "next/link";
 // Define the Blog type locally in this file
 type Blog = {
   title: string;
-  coverImage: string;
+  coverImage: string | null;
   excerpt: string;
   date: string;
   slug: string;
@@ -19,14 +19,17 @@ const SingleBlog = ({ blog }: { blog: Blog }) => {
       {/* Image Section */}
       <div className="relative  overflow-hidden rounded-t-lg">
         <Link href={`/knowledge-hub/${slug}`} aria-label="blog cover" className="block h-full">
+          {coverImage != null ? 
+         
           <Image
             src={coverImage}
             alt={title}
             className="w-full h-full object-contain transition-transform duration-300 ease-in-out group-hover:rotate-6 group-hover:scale-110"
             width={408}
             height={280}
-          />
-        </Link>
+          /> : ""}
+      
+         </Link>
       </div>
       {/* Content Section */}
       <div className="flex flex-col flex-1 p-6">

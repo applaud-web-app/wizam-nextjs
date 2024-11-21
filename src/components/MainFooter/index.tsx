@@ -4,7 +4,9 @@ import axios from 'axios';
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { FaFacebookF, FaLinkedinIn, FaInstagram, FaYoutube, FaTwitter } from "react-icons/fa";
+import { FaFacebookF, FaLinkedinIn, FaInstagram, FaYoutube } from "react-icons/fa";
+import { FaSquareXTwitter } from "react-icons/fa6";
+
 import { MdOutlineArrowOutward } from "react-icons/md";
 import { useSiteSettings } from "@/context/SiteContext";
 
@@ -175,7 +177,7 @@ const Footer = () => {
             )}
             {siteSettings.twitter && (
               <Link href={siteSettings.twitter} aria-label="Twitter" className="text-gray-400 hover:text-green-400">
-                <FaTwitter />
+                <FaSquareXTwitter  />
               </Link>
             )}
           </div>

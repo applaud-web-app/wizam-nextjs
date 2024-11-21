@@ -20,7 +20,7 @@ interface BlogPost {
   title: string;
   content: string;
   short_description: string;
-  image: string;
+  image: string | null;
   slug: string;
   created_at: string;
   blog_image: string;
@@ -34,7 +34,7 @@ interface ApiResponse {
 
 interface Blog {
   title: string;
-  coverImage: string;
+  coverImage: string | null;
   excerpt: string;
   date: string;
   slug: string;
@@ -62,7 +62,7 @@ const ArchiveBlogs: React.FC<ArchiveBlogsProps> = ({ year }) => {
         if (response.data.status) {
           const mappedBlogs: Blog[] = response.data.data.map((item: BlogPost) => ({
             title: item.title,
-            coverImage: item.image || "/images/blog/default.png", // Use a default image if none provided
+            coverImage: item.image, 
             excerpt: item.short_description,
             date: item.created_at,
             slug: item.slug,

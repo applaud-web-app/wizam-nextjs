@@ -203,8 +203,8 @@ const SignUp = () => {
           <footer className="mt-12 text-left text-sm text-gray-500 z-10">
             <p>
               © Wizam •{" "}
-              <Link href="/contact" className="hover:underline">
-                Contact
+              <Link href="/contact-us" className="hover:underline">
+                Contact Us
               </Link>{" "}
               •{" "}
               <Link href="/privacy-policy" className="hover:underline">

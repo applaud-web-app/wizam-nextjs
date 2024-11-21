@@ -257,11 +257,11 @@ const SignIn = () => {
       <footer className="mt-12 text-center text-sm text-gray-500 z-10">
         <p>
           © Wizam •{" "}
-          <Link href="/contact" className="hover:underline">
+          <Link href="/contact-us" className="hover:underline">
             Contact
           </Link>{" "}
           •{" "}
-          <Link href="/privacy" className="hover:underline">
+          <Link href="/privacy-policy" className="hover:underline">
             Privacy & Terms
           </Link>
         </p>

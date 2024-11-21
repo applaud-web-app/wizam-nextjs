@@ -1,5 +1,7 @@
 import Link from "next/link";
-import { FaFacebook, FaTwitter, FaLinkedin, FaInstagram } from "react-icons/fa";
+import { FaFacebook,  FaLinkedin, FaInstagram } from "react-icons/fa";
+import { FaSquareXTwitter } from "react-icons/fa6";
+
 import { useSiteSettings } from "@/context/SiteContext"; // Import the SiteContext to access site settings
 
 export default function Footer() {
@@ -55,7 +57,7 @@ export default function Footer() {
                   className="text-gray-100 hover:text-white"
                   aria-label="Twitter"
                 >
-                  <FaTwitter className="w-5 h-5" />
+                  <FaSquareXTwitter  className="w-5 h-5" />
                 </a>
               )}
               {siteSettings?.linkedin && (
