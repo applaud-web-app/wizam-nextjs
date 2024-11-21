@@ -53,7 +53,7 @@ const CallToAction = () => {
 
   return (
     <section className="relative bg-tertiary ">
-      <div className="bg-[#2179DE] py-20 rounded-b-3xl		">
+      <div className="bg-[#2179DE] py-20 rounded-bl-3xl		">
           <div className="container mx-auto">
             <div className="text-center">
               {/* Dynamic Heading */}
