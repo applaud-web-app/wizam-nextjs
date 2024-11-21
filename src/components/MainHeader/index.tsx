@@ -295,7 +295,7 @@ const Header = () => {
                   onClick={handleLogout}
                   className="bg-primary font-semibold text-secondary py-2 px-6 rounded-full hover:bg-primary-dark transition"
                 >
-                  Sign Out
+                  Sign out
                 </button>
               </>
             ) : (
@@ -311,7 +311,7 @@ const Header = () => {
                     onClick={handleLoginDropdownToggle}
                     className="flex items-center login-dropdown-toggle border border-primary font-semibold text-secondary py-2 px-6 rounded-full hover:bg-primary hover:text-secondary transition"
                   >
-                    Login <BsChevronDown className="ml-1" />
+                    Log in <BsChevronDown className="ml-1" />
                   </button>
 
                   {loginDropdownOpen && (
@@ -324,7 +324,7 @@ const Header = () => {
                         className="block px-4 py-2 text-gray-800 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-600"
                         onClick={() => setLoginDropdownOpen(false)}
                       >
-                        Student Login
+                        Student Log in
                       </Link>
 
                       <Link
@@ -332,7 +332,7 @@ const Header = () => {
                         className="block px-4 py-2 text-gray-800 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-600"
                         onClick={() => setLoginDropdownOpen(false)}
                       >
-                        Teacher Login
+                        Teacher Log in
                       </Link>
                     </div>
                   )}
@@ -453,7 +453,7 @@ const Header = () => {
                     onClick={handleLogout}
                     className="bg-primary text-secondary py-2 px-6  rounded-full hover:bg-primary-dark transition w-full text-center"
                   >
-                    Sign Out
+                    Sign out
                   </button>
                 </>
               ) : (
@@ -469,14 +469,14 @@ const Header = () => {
                     href="/signin"
                     className="flex items-center justify-center border border-secondary bg-secondary font-semibold text-white py-2 px-6 rounded-full hover:bg-white hover:text-secondary transition w-full"
                   >
-                    Student Login
+                    Student Log in
                   </Link>
 
                   <Link
                     href={`${process.env.NEXT_PUBLIC_BACKEND_URL}`}
                     className="flex items-center justify-center border border-gray-500 bg-transparent font-semibold text-gray-600 py-2 px-6 rounded-full hover:bg-gray-100 hover:border-gray-600 transition w-full"
                   >
-                    Teacher Login
+                    Teacher Log in
                   </Link>
 
                   {/* <div className="relative w-full" ref={dropdownRef}>
