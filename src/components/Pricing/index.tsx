@@ -135,7 +135,7 @@ const Pricing = () => {
                 price={plan.price}
                 features={Array.isArray(plan.features) ? plan.features : []}
                 buttonLabel={isAuthenticated ? "Get Started" : "Pay Now"}
-                buttonLink={isAuthenticated ? "" : "/login"} // Navigate to login if not authenticated
+                buttonLink={isAuthenticated ? "" : "/register"} // Navigate to login if not authenticated
                 popular={plan.popular}
                 priceId={plan.stripe_price_id}
                 priceType={plan.price_type}
