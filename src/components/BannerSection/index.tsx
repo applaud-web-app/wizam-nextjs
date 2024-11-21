@@ -131,7 +131,7 @@ const BannerSection: FC = () => {
                   <Swiper
                     modules={[Navigation, Autoplay]}
                     loop
-                    autoplay={{ delay: 3000 }}
+                    autoplay={{ delay: 5000 }}
                     speed={1000}
                     slidesPerView={1}
                     className="w-full"
