@@ -115,7 +115,7 @@ const Footer = () => {
           <div className="col-span-2 lg:col-span-1">
             <h4 className="mb-4 font-semibold text-xl leading-snug">Contact Us</h4>
             <ul className="text-sm text-white">
-              <li className="mb-2">{siteSettings.address}</li>
+              <li className="mb-2 w-[90%]">{siteSettings.address}</li>
               <li className="mb-2">
                 <Link href={`tel:${siteSettings.number}`} className="hover:text-green-400">{siteSettings.number}</Link>
               </li>
