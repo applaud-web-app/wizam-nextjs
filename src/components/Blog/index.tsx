@@ -112,7 +112,7 @@ const Blog = () => {
   }
 
   return (
-    <section className="pb-10 pt-20 lg:pb-20 lg:pt-[120px]">
+    <section className="pb-10 pt-20 lg:pb-20 lg:pt-20 bg-gray-50">
       <div className="container">
         {/* Main Grid Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

@@ -12,7 +12,6 @@ import {
   LinkedinShareButton,
 } from "react-share";
 import axios from "axios";
-import Link from "next/link";
 
 interface Category {
   id: number;
@@ -43,25 +42,10 @@ interface RelatedPost {
   category: Category | null;
 }
 
-interface RecentPost {
-  title: string;
-  image: string | null;
-  slug: string;
-  created_at: string;
-  category: Category | null;
-}
-
-interface ArchiveItem {
-  year: number;
-  count: number;
-}
-
 interface ApiResponse {
   status: boolean;
   data: BlogPost;
   related: RelatedPost[];
-  recent: RecentPost[];
-  archive: ArchiveItem[];
 }
 
 interface Blog {
@@ -74,8 +58,6 @@ interface Blog {
 
 export default function PostClient({ post }: { post: BlogPost }) {
   const [relatedPosts, setRelatedPosts] = useState<Blog[]>([]);
-  const [recentPosts, setRecentPosts] = useState<RecentPost[]>([]);
-  const [archive, setArchive] = useState<ArchiveItem[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -87,7 +69,7 @@ export default function PostClient({ post }: { post: BlogPost }) {
         );
 
         if (response.data.status) {
-          const { related, recent, archive } = response.data;
+          const { related } = response.data;
 
           // Process Related Posts
           const relatedBlogs = related.map((relatedPost: RelatedPost) => ({
@@ -98,12 +80,6 @@ export default function PostClient({ post }: { post: BlogPost }) {
             slug: relatedPost.slug,
           }));
           setRelatedPosts(relatedBlogs);
-
-          // Set Recent Posts
-          setRecentPosts(response.data.recent);
-
-          // Set Archive Data
-          setArchive(response.data.archive);
         } else {
           setError("Failed to load blog data.");
         }
@@ -141,10 +117,7 @@ export default function PostClient({ post }: { post: BlogPost }) {
       </section>
       <section className="py-8 sm:py-12 md:py-16 dark:bg-dark relative bg-gray-50">
         <div className="container -mt-[100px] lg:-mt-[250px] ">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Main Content */}
-            <div className="lg:col-span-2">
-              <div className="bg-white shadow p-4 sm:p-5 md:p-6 lg:p-8 rounded-lg">
+        <div className="bg-white shadow p-4 sm:p-5 md:p-6 lg:p-8 rounded-lg">
                 <div className="w-full">
                   {/* Blog Category */}
                   <div className="mb-4">
@@ -241,9 +214,7 @@ export default function PostClient({ post }: { post: BlogPost }) {
                         className="h-auto w-full mb-8 rounded-lg"
                       />
                     </div>
-                  ) : (
-                    <></>
-                  )}
+                  ) : null}
 
                   <div
                     className="text-gray-700 dark:text-gray-300 mb-6"
@@ -255,76 +226,6 @@ export default function PostClient({ post }: { post: BlogPost }) {
                   />
                 </div>
               </div>
-            </div>
-
-            <aside>
-              {/* Recent Blogs */}
-              <div className="mb-5 bg-white shadow p-3 sm:p-5 lg:p-6 rounded-lg">
-                <h3 className="text-xl font-semibold text-gray-800 dark:text-white">
-                  Recent Blogs
-                </h3>
-                <hr className="h-px my-4 bg-gray-200 border-0 dark:bg-gray-700" />
-
-                <ul className="space-y-6">
-                  {recentPosts.map((recentPost, index) => (
-                    <li key={index} className="flex space-x-3">
-                      <div className="flex-shrink-0 w-12 h-12">
-                        {recentPost.image != null ? (
-                          <Image
-                            src={recentPost.image}
-                            alt={recentPost.title}
-                            width={48}
-                            height={48}
-                            objectFit="cover"
-                            className="rounded-sm w-12 h-12"
-                          />
-                        ) : (
-                          <></>
-                        )}
-                      </div>
-                      <div>
-                        <Link
-                          href={`/knowledge-hub/${recentPost.slug}`}
-                          className="font-semibold text-gray-800 dark:text-white hover:underline"
-                        >
-                          {recentPost.title}
-                        </Link>
-                        <p className="text-xs text-gray-500 mt-1">
-                          Posted on{" "}
-                          {format(
-                            new Date(recentPost.created_at),
-                            "dd MMM yyyy"
-                          )}
-                        </p>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-              {/* Archive */}
-              <div className="bg-white shadow p-3 sm:p-5 lg:p-6 rounded-lg">
-                <h3 className="text-xl font-semibold text-gray-800 dark:text-white">
-                  Archive
-                </h3>
-                <hr className="h-px my-4 bg-gray-200 border-0 dark:bg-gray-700" />
-
-                <ul className="space-y-4">
-                  {archive.map((item, index) => (
-                    <li key={index}>
-                      <Link
-                        href={`/knowledge-hub/archive/${item.year}`}
-                        className="flex justify-between items-center font-medium text-gray-800 dark:text-white hover:underline"
-                      >
-                        <span>{item.year}</span>
-                        <span className="text-sm text-gray-500">{`(${item.count})`}</span>
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </aside>
-          </div>
 
           {/* Related Articles */}
           {relatedPosts.length > 0 && (
