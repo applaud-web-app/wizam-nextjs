@@ -111,7 +111,7 @@ const Footer = () => {
           </div>
 
           <div className="col-span-2 lg:col-span-1">
-            <h4 className="mb-4 font-semibold text-xl leading-snug">Contact</h4>
+            <h4 className="mb-4 font-semibold text-xl leading-snug">Contact Us</h4>
             <ul className="text-sm text-white">
               <li className="mb-2">{siteSettings.address}</li>
               <li className="mb-2">

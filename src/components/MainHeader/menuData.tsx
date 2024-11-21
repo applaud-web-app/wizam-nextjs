@@ -26,19 +26,18 @@ const menuData: Menu[] = [
     path: "/pricing",
     newTab: false,
   },
-
   {
     id: 4,
     title: "Knowledge Hub",
     path: "/knowledge-hub",
     newTab: false,
   },
-  {
-    id: 5,
-    title: "About Us",
-    path: "/about-us",
-    newTab: false,
-  },
+  // {
+  //   id: 5,
+  //   title: "About Us",
+  //   path: "/about-us",
+  //   newTab: false,
+  // },
 
 ];
 export default menuData;

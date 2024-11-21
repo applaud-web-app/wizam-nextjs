@@ -85,10 +85,10 @@ export default function Footer() {
 
           {/* Footer Internal Links */}
           <div className="flex space-x-4">
-            <Link href="/terms-and-conditions">
+            <Link href="/terms-and-conditions" target="_blank">
               <span className="text-gray-100 hover:text-white">Terms & Conditions</span>
             </Link>
-            <Link href="/privacy-policy">
+            <Link href="/privacy-policy" target="_blank">
               <span className="text-gray-100 hover:text-white">Privacy Policy</span>
             </Link>
           </div>
