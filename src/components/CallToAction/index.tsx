@@ -52,28 +52,31 @@ const CallToAction = () => {
   }
 
   return (
-    <section className="relative z-10 overflow-hidden bg-[#2179DE] py-20">
-      <div className="container mx-auto">
-        <div className="text-center">
-          {/* Dynamic Heading */}
-          <h2 className="mb-6 text-4xl font-bold text-white sm:text-5xl">
-            {data.title}
-          </h2>
+    <section className="relative bg-tertiary ">
+      <div className="bg-[#2179DE] py-20 rounded-b-3xl		">
+          <div className="container mx-auto">
+            <div className="text-center">
+              {/* Dynamic Heading */}
+              <h2 className="mb-6 text-4xl font-bold text-white sm:text-5xl">
+                {data.title}
+              </h2>
 
-          {/* Dynamic Description */}
-          <p className="mb-8 max-w-xl mx-auto text-lg leading-relaxed text-gray-100">
-            {data.description}
-          </p>
+              {/* Dynamic Description */}
+              <p className="mb-8 max-w-xl mx-auto text-lg leading-relaxed text-gray-100">
+                {data.description}
+              </p>
 
-          {/* Dynamic Button */}
-          <Link
-            href={data.button_link || "/"} // Fallback to "/" if button_link is empty
-            className="primary-button"
-          >
-            {data.button_text || "Get Started"}
-          </Link>
-        </div>
+              {/* Dynamic Button */}
+              <Link
+                href={data.button_link || "/"} // Fallback to "/" if button_link is empty
+                className="primary-button"
+              >
+                {data.button_text || "Get Started"}
+              </Link>
+            </div>
+          </div>
       </div>
+  
 
       {/* Background SVG Decorations */}
     </section>
