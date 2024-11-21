@@ -231,19 +231,19 @@ export default function PostClient({ post }: { post: BlogPost }) {
                   </div>
 
                   {/* Blog Content */}
-                  {
-                    post.image != null ? (
+                  {post.image != null ? (
                     <div className="mb-8">
-                        <Image
-                          src={post.image}
-                          alt={post.title}
-                          width={1288}
-                          height={550}
-                          className="h-auto w-full mb-8 rounded-lg"
-                        />
-                      </div>
-                    ) : <></>
-                  }
+                      <Image
+                        src={post.image}
+                        alt={post.title}
+                        width={1288}
+                        height={550}
+                        className="h-auto w-full mb-8 rounded-lg"
+                      />
+                    </div>
+                  ) : (
+                    <></>
+                  )}
 
                   <div
                     className="text-gray-700 dark:text-gray-300 mb-6"
@@ -268,20 +268,20 @@ export default function PostClient({ post }: { post: BlogPost }) {
                 <ul className="space-y-6">
                   {recentPosts.map((recentPost, index) => (
                     <li key={index} className="flex space-x-3">
-                          <div className="flex-shrink-0 w-12 h-12">
-                      {
-                        recentPost.image != null ? (
-                            <Image
-                                src={recentPost.image}
-                                alt={recentPost.title}
-                              width={48}
-                              height={48}
-                                objectFit="cover"
-                                className="rounded-sm w-12 h-12"
-                              />
-                          ) : <></>
-                        }
-                            </div>
+                      <div className="flex-shrink-0 w-12 h-12">
+                        {recentPost.image != null ? (
+                          <Image
+                            src={recentPost.image}
+                            alt={recentPost.title}
+                            width={48}
+                            height={48}
+                            objectFit="cover"
+                            className="rounded-sm w-12 h-12"
+                          />
+                        ) : (
+                          <></>
+                        )}
+                      </div>
                       <div>
                         <Link
                           href={`/knowledge-hub/${recentPost.slug}`}
