@@ -301,7 +301,7 @@ const Header = () => {
             ) : (
               <>
                 <Link
-                  href="/signup"
+                  href="/register"
                   className="flex items-center border border-primary bg-primary font-semibold text-secondary py-2 px-6 rounded-full hover:bg-secondary hover:border-secondary hover:text-primary transition"
                 >
                   Register <MdOutlineArrowForwardIos className="ms-1" />
@@ -459,7 +459,7 @@ const Header = () => {
               ) : (
                 <>
                   <Link
-                    href="/signup"
+                    href="/register"
                     className="flex items-center justify-center border border-primary bg-primary font-semibold text-secondary py-2 px-6 rounded-full hover:bg-primary-dark  transition w-full"
                   >
                     Register <MdOutlineArrowForwardIos className="ms-1" />

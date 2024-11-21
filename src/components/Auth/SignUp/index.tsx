@@ -93,7 +93,7 @@ const SignUp = () => {
           pauseOnHover: true,
           draggable: true,
         });
-        router.push("/signup");
+        router.push("/register");
       }
     } catch (error: any) {
       if (error.response && error.response.data && error.response.data.errors) {
@@ -110,7 +110,7 @@ const SignUp = () => {
             pauseOnHover: true,
             draggable: true,
           });
-          router.push("/signup");
+          router.push("/register");
         });
       } else {
         toast.error("An error occurred. Please try again later.", {
@@ -121,7 +121,7 @@ const SignUp = () => {
           pauseOnHover: true,
           draggable: true,
         });
-        router.push("/signup");
+        router.push("/register");
       }
     } finally {
       setIsSubmitting(false);
@@ -214,7 +214,7 @@ const SignUp = () => {
           </footer>
         </div>
 
-        {/* Signup Form */}
+        {/* Register Form */}
         <div className="w-full bg-white shadow-sm lg:shadow-lg rounded-lg order-1 md:order-2 lg:order-2 col-span-2">
           <div className="p-5 lg:p-10">
             <h2 className="text-2xl font-semibold text-left text-gray-800 mb-6">
@@ -381,7 +381,7 @@ const SignUp = () => {
                       disabled={isSubmitting}
                       className="w-full bg-defaultcolor text-white py-2 px-4 rounded-md hover:bg-defaultcolor-dark transition"
                     >
-                      {isSubmitting ? "Submitting..." : "Sign Up"}
+                      {isSubmitting ? "Submitting..." : "Register"}
                     </button>
                   </div>
                 </Form>

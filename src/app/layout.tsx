@@ -66,7 +66,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   // Determine if Header and Footer should be hidden on certain pages
   const noHeaderFooter =
     pathname === "/login" ||
-    pathname === "/signup" ||
+    pathname === "/register" ||
     pathname === "/forget-password" ||
     pathname === "/reset-password" ||
     pathname === "/email-sent" ||

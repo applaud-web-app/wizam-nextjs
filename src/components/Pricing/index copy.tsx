@@ -131,7 +131,7 @@ const Pricing = () => {
                   price={plan.price}
                   features={Array.isArray(plan.features) ? plan.features : []}
                   buttonLabel="Get Started"
-                  buttonLink="/signup"
+                  buttonLink="/register"
                   popular={plan.popular}
                   priceId={plan.stripe_price_id} // Dynamic priceId
                   priceType={plan.price_type} // Use price_type to determine fixed or monthly

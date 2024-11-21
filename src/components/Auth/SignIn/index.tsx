@@ -243,7 +243,7 @@ const SignIn = () => {
             <p className="text-sm text-gray-600 bg-[#F6F9FC] rounded-sm p-4">
               Don’t have an account?{" "}
               <Link
-                href="/signup"
+                href="/register"
                 className="text-defaultcolor font-bold hover:underline"
               >
                 Sign Up
