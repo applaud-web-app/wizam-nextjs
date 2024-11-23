@@ -476,7 +476,7 @@ const Header = () => {
                     href={`${process.env.NEXT_PUBLIC_BACKEND_URL}`}
                     className="flex items-center justify-center border border-gray-500 bg-transparent font-semibold text-gray-600 py-2 px-6 rounded-full hover:bg-gray-100 hover:border-gray-600 transition w-full"
                   >
-                    Teacher Log In
+                    Teacher Log in
                   </Link>
 
                
