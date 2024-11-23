@@ -1,44 +1,24 @@
-const { createServer } = require('http');
-const { parse } = require('url');
-const next = require('next');
+const { createServer } = require("http");
+const next = require("next");
 
-const dev = process.env.NODE_ENV !== 'production';
-const hostname = 'localhost';
-const port = 3000;
-
-// Initialize Next.js app with App Router
-const app = next({ dev, hostname, port });
+const port = process.env.PORT || 3000; // Default to 3000 if no port is specified
+const dev = process.env.NODE_ENV !== "production"; // Check environment
+const app = next({ dev });
 const handle = app.getRequestHandler();
 
+// Prepare the Next.js app
 app.prepare().then(() => {
-  createServer(async (req, res) => {
-    try {
-      // Parse the incoming request URL
-      const parsedUrl = parse(req.url, true);
-      const { pathname, query } = parsedUrl;
+  const server = createServer((req, res) => {
+    // Pass requests to Next.js
+    handle(req, res);
+  });
 
-      // Custom route handling
-      if (pathname === '/a') {
-        // Render the App Router's /a route
-        await app.render(req, res, '/a/page', query);
-      } else if (pathname === '/b') {
-        // Render the App Router's /b route
-        await app.render(req, res, '/b/page', query);
-      } else {
-        // Default handler for all other routes
-        await handle(req, res, parsedUrl);
-      }
-    } catch (err) {
-      console.error('Error occurred handling', req.url, err);
-      res.statusCode = 500;
-      res.end('Internal Server Error');
-    }
-  })
-    .once('error', (err) => {
-      console.error(err);
+  // Start the server
+  server.listen(port, (err) => {
+    if (err) {
+      console.error("Failed to start server:", err);
       process.exit(1);
-    })
-    .listen(port, hostname, () => {
-      console.log(`> Ready on http://${hostname}:${port}`);
-    });
+    }
+    console.log(`> Server is running on http://localhost:${port}`);
+  });
 });

@@ -1,0 +1,10 @@
+{
+    "redirects": [
+      {
+        "source": "https://www.wizam.com/:path*",
+        "destination": "https://wizam.com/:path*",
+        "permanent": true
+      }
+    ]
+  }
+  
