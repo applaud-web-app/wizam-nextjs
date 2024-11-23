@@ -479,35 +479,7 @@ const Header = () => {
                     Teacher Log in
                   </Link>
 
-                  {/* <div className="relative w-full" ref={dropdownRef}>
-                    <button
-                      onClick={handleLoginDropdownToggle}
-                      className="flex items-center justify-center border border-primary font-semibold text-secondary py-2 px-6 rounded-full hover:bg-primary hover:text-secondary transition w-full"
-                    >
-                      Login <BsChevronDown className="ml-1" />
-                    </button>
-
-                    {loginDropdownOpen && (
-                      <div className="absolute w-full bg-white dark:bg-dark shadow-lg border rounded-lg py-2 z-50" tabIndex={-1}>
-                         <Link
-                          href="/login"
-                          className="block px-4 py-2 text-gray-800 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-600"
-                          onClick={() => setLoginDropdownOpen(false)}
-                        >
-                          Student Login
-                        </Link>
-                        
-                        <Link
-                          href={`${process.env.NEXT_PUBLIC_BACKEND_URL}`}
-                          className="block px-4 py-2 text-gray-800 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-600"
-                          onClick={() => setLoginDropdownOpen(false)}
-                        >
-                          Teacher Login
-                        </Link>
-                       
-                      </div>
-                    )}
-                  </div> */}
+               
                 </>
               )}
             </ul>
