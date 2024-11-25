@@ -246,6 +246,7 @@ const SignUp = () => {
                       type="text"
                       id="firstName"
                       name="firstName"
+                       autoComplete="off"
                       className="w-full bg-white border border-gray-300 rounded-md py-2 px-4 text-gray-700 focus:outline-none focus:ring-1 focus:ring-defaultcolor focus:border-defaultcolor transition"
                       placeholder="First Name"
                     />
@@ -261,6 +262,7 @@ const SignUp = () => {
                       type="text"
                       id="lastName"
                       name="lastName"
+                       autoComplete="off"
                       className="w-full bg-white border border-gray-300 rounded-md py-2 px-4 text-gray-700 focus:outline-none focus:ring-1 focus:ring-defaultcolor focus:border-defaultcolor transition"
                       placeholder="Last Name"
                     />
@@ -296,6 +298,7 @@ const SignUp = () => {
                       type="tel"
                       id="phoneNumber"
                       name="phoneNumber"
+                       autoComplete="off"
                       className="w-full bg-white border border-gray-300 rounded-md py-2 px-4 text-gray-700 focus:outline-none focus:ring-1 focus:ring-defaultcolor focus:border-defaultcolor transition"
                       placeholder="Phone Number"
                     />
@@ -311,6 +314,7 @@ const SignUp = () => {
                       type="email"
                       id="email"
                       name="email"
+                       autoComplete="off"
                       className="w-full bg-white border border-gray-300 rounded-md py-2 px-4 text-gray-700 focus:outline-none focus:ring-1 focus:ring-defaultcolor focus:border-defaultcolor transition"
                       placeholder="Enter your email address"
                     />
@@ -327,6 +331,7 @@ const SignUp = () => {
                         type={showPassword ? "text" : "password"}
                         id="password"
                         name="password"
+                         autoComplete="off"
                         className="w-full bg-white border border-gray-300 rounded-md py-2 px-4 text-gray-700 focus:outline-none focus:ring-1 focus:ring-defaultcolor focus:border-defaultcolor transition"
                         placeholder="Enter Password"
                       />
@@ -350,6 +355,7 @@ const SignUp = () => {
                       type={showPassword ? "text" : "password"}
                       id="confirmPassword"
                       name="confirmPassword"
+                       autoComplete="off"
                       className="w-full bg-white border border-gray-300 rounded-md py-2 px-4 text-gray-700 focus:outline-none focus:ring-1 focus:ring-defaultcolor focus:border-defaultcolor transition"
                       placeholder="Enter Confirm Password"
                     />
