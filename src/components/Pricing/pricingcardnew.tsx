@@ -1,3 +1,4 @@
+// components/PricingCard.tsx
 "use client";
 
 import { loadStripe } from "@stripe/stripe-js";
@@ -6,13 +7,9 @@ import { useRouter } from "next/navigation";
 import axios from "axios";
 import Cookies from "js-cookie";
 import { useSiteSettings } from "@/context/SiteContext";
-import {
-  FaBook,
-  FaVideo,
-  FaChalkboardTeacher,
-  FaTasks,
-  FaQuestionCircle,
-} from "react-icons/fa";
+
+// Importing icons for different feature categories
+import { FaBook, FaVideo, FaChalkboardTeacher, FaTasks, FaQuestionCircle } from "react-icons/fa";
 
 interface PricingCardProps {
   title: string;
@@ -32,11 +29,10 @@ interface PricingCardProps {
   isAuthenticated: boolean;
 }
 
-const stripePromise = loadStripe(
-  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!
-);
+// Load Stripe instance
+const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
 
-const PricingCardNew: React.FC<PricingCardProps> = ({
+const PricingCard: React.FC<PricingCardProps> = ({
   title,
   price,
   examNames,
@@ -54,7 +50,11 @@ const PricingCardNew: React.FC<PricingCardProps> = ({
   isAuthenticated,
 }) => {
   const router = useRouter();
+
+  // Access site settings from the SiteContext
   const { siteSettings } = useSiteSettings();
+
+  // Fallback currency symbol in case it's null or undefined
   const currencySymbol = siteSettings?.currency_symbol || "$";
 
   const handleCheckout = async () => {
@@ -66,9 +66,10 @@ const PricingCardNew: React.FC<PricingCardProps> = ({
       return;
     }
 
-    const successUrl = Cookies.get("redirect_url") || "/dashboard";
+    const successUrl = Cookies.get("redirect_url") ? Cookies.get("redirect_url") : '/dashboard';
 
     try {
+      // Send the POST request to create a checkout session
       const response = await axios.post(
         `${process.env.NEXT_PUBLIC_API_URL}/create-checkout-session`,
         {
@@ -79,11 +80,12 @@ const PricingCardNew: React.FC<PricingCardProps> = ({
         },
         {
           headers: {
-            Authorization: `Bearer ${Cookies.get("jwt")}` || "",
+            Authorization: `Bearer ${Cookies.get("jwt")}`,
           },
         }
       );
 
+      // Check if the response indicates success
       if (response.status !== 200) {
         console.error("Error during checkout:", response.data);
         alert(`Failed to initiate checkout: ${response.data.error}`);
@@ -96,6 +98,7 @@ const PricingCardNew: React.FC<PricingCardProps> = ({
         throw new Error("Failed to create session ID.");
       }
 
+      // Redirect to Stripe Checkout
       const { error } = await stripe.redirectToCheckout({ sessionId });
 
       if (error) {
@@ -104,10 +107,7 @@ const PricingCardNew: React.FC<PricingCardProps> = ({
       }
     } catch (error: any) {
       console.error("Error during checkout:", error);
-      alert(
-        error?.response?.data?.error ||
-          "Failed to initiate checkout. Please try again."
-      );
+      alert(error?.response?.data?.error || "Failed to initiate checkout. Please try again.");
     }
   };
 
@@ -120,119 +120,112 @@ const PricingCardNew: React.FC<PricingCardProps> = ({
   };
 
   return (
-    <div className="relative flex flex-col md:flex-row bg-white  shadow-md hover:shadow-xl transition-shadow duration-300 ">
-      {popular && (
-        <div className="absolute -top-3 right-3 bg-yellow-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-md">
-          Most Popular
+    <div className="relative rounded-lg shadow-md p-4 sm:p-6 hover:shadow-xl transition-shadow duration-300 bg-white flex flex-col">
+    {/* Popular Badge */}
+    {popular && (
+      <div className="absolute -top-3 right-3 bg-yellow-500 text-white text-xs sm:text-sm font-bold px-2 sm:px-3 py-1 rounded-full shadow-md">
+        Most Popular
+      </div>
+    )}
+  
+    {/* Plan Title */}
+    <h3 className="text-lg sm:text-xl font-bold text-gray-800 mb-4 text-center">
+      {title}
+    </h3>
+  
+    {/* Price Display */}
+    <div className="flex items-end justify-center space-x-1 mb-3">
+      <p className="text-3xl sm:text-4xl font-extrabold text-secondary text-center">
+        {currencySymbol}
+        {price}
+      </p>
+      <p className="text-sm sm:text-base text-gray-600 text-center">
+        / {priceType === "monthly" ? "Per Month" : "One Time"}
+      </p>
+    </div>
+  
+    {/* Description */}
+    <p className="text-xs sm:text-sm text-gray-500 text-center mb-6">
+      {description}
+    </p>
+  
+    {/* Features List */}
+    <div className="flex-1 space-y-4">
+      {examNames.length > 0 && (
+        <div>
+          <div className="flex items-center mb-2">
+            <FaBook className="text-blue-500 mr-2" />
+            <h4 className="text-sm sm:text-base font-semibold text-gray-700">
+              Exams ({examNames.length})
+            </h4>
+          </div>
+          <ul className="list-disc list-inside text-xs sm:text-sm text-gray-600 space-y-1">
+            {examNames.map((exam, index) => (
+              <li key={index}>{exam}</li>
+            ))}
+          </ul>
         </div>
       )}
-
-      {/* Left Section */}
-      <div className="flex-shrink-0 bg-gradient-to-r from-blue-500 to-blue-700 text-white p-6 md:p-8 flex flex-col justify-center items-center w-full md:w-1/3">
-        <h3 className="text-lg md:text-2xl font-bold mb-2">{title}</h3>
-        <p className="text-3xl md:text-4xl font-extrabold">
-          {currencySymbol}
-          {price}
-        </p>
-        <p className="text-sm md:text-lg">
-          {priceType === "monthly" ? "Per Month" : "One-Time Payment"}
-        </p>
-      </div>
-
-      {/* Right Section */}
-      <div className="flex-grow p-4 md:p-6 space-y-4">
-        {/* Description */}
-        {description && (
-          <div className="mb-2 md:mb-4">
-            <p className="text-xs md:text-sm text-gray-600">{description}</p>
-          </div>
-        )}
-
-        {/* Features */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-4">
-          {examNames.length > 0 && (
-            <div>
-              <h4 className="flex items-center text-gray-800 font-semibold mb-1 md:mb-2 text-sm md:text-base">
-                <FaBook className="text-blue-500 mr-2" />
-                Exams ({examNames.length})
-              </h4>
-              <ul className="text-gray-600 text-xs md:text-sm list-disc list-inside">
-                {examNames.map((exam, index) => (
-                  <li key={index}>{exam}</li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          {lessonNames.length > 0 && (
-            <div>
-              <h4 className="flex items-center text-gray-800 font-semibold mb-1 md:mb-2 text-sm md:text-base">
-                <FaChalkboardTeacher className="text-green-500 mr-2" />
-                Lessons ({lessonNames.length})
-              </h4>
-              <ul className="text-gray-600 text-xs md:text-sm list-disc list-inside">
-                {lessonNames.map((lesson, index) => (
-                  <li key={index}>{lesson}</li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          {videoNames.length > 0 && (
-            <div>
-              <h4 className="flex items-center text-gray-800 font-semibold mb-1 md:mb-2 text-sm md:text-base">
-                <FaVideo className="text-red-500 mr-2" />
-                Videos ({videoNames.length})
-              </h4>
-              <ul className="text-gray-600 text-xs md:text-sm list-disc list-inside">
-                {videoNames.map((video, index) => (
-                  <li key={index}>{video}</li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          {practiceNames.length > 0 && (
-            <div>
-              <h4 className="flex items-center text-gray-800 font-semibold mb-1 md:mb-2 text-sm md:text-base">
-                <FaTasks className="text-purple-500 mr-2" />
-                Practice Sets ({practiceNames.length})
-              </h4>
-              <ul className="text-gray-600 text-xs md:text-sm list-disc list-inside">
-                {practiceNames.map((practice, index) => (
-                  <li key={index}>{practice}</li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          {quizNames.length > 0 && (
-            <div>
-              <h4 className="flex items-center text-gray-800 font-semibold mb-1 md:mb-2 text-sm md:text-base">
-                <FaQuestionCircle className="text-indigo-500 mr-2" />
-                Quizzes ({quizNames.length})
-              </h4>
-              <ul className="text-gray-600 text-xs md:text-sm list-disc list-inside">
-                {quizNames.map((quiz, index) => (
-                  <li key={index}>{quiz}</li>
-                ))}
-              </ul>
-            </div>
-          )}
-        </div>
-
-        {/* Button */}
+  
+      {lessonNames.length > 0 && (
         <div>
-          <button
-            onClick={handleClick}
-            className="mt-4 w-full py-2 md:py-3 text-white bg-blue-600 rounded-md text-sm md:text-base font-semibold hover:bg-blue-700 transition-colors"
-          >
-            {buttonLabel}
-          </button>
+          <div className="flex items-center mb-2">
+            <FaChalkboardTeacher className="text-green-500 mr-2" />
+            <h4 className="text-sm sm:text-base font-semibold text-gray-700">
+              Lessons ({lessonNames.length})
+            </h4>
+          </div>
+         
         </div>
-      </div>
+      )}
+  
+      {videoNames.length > 0 && (
+        <div>
+          <div className="flex items-center mb-2">
+            <FaVideo className="text-red-500 mr-2" />
+            <h4 className="text-sm sm:text-base font-semibold text-gray-700">
+              Videos ({videoNames.length})
+            </h4>
+          </div>
+       
+        </div>
+      )}
+  
+      {practiceNames.length > 0 && (
+        <div>
+          <div className="flex items-center mb-2">
+            <FaTasks className="text-purple-500 mr-2" />
+            <h4 className="text-sm sm:text-base font-semibold text-gray-700">
+              Practice Sets ({practiceNames.length})
+            </h4>
+          </div>
+       
+        </div>
+      )}
+  
+      {quizNames.length > 0 && (
+        <div>
+          <div className="flex items-center mb-2">
+            <FaQuestionCircle className="text-indigo-500 mr-2" />
+            <h4 className="text-sm sm:text-base font-semibold text-gray-700">
+              Quizzes ({quizNames.length})
+            </h4>
+          </div>
+         
+        </div>
+      )}
     </div>
+  
+    {/* Call-to-Action Button */}
+    <button
+      className="mt-4 sm:mt-6 w-full bg-primary text-secondary py-2 sm:py-3 rounded-md font-semibold hover:bg-primary-dark transition-colors text-sm sm:text-base g"
+      onClick={handleClick}
+    >
+      {buttonLabel}
+    </button>
+  </div>  
+  
   );
 };
 
-export default PricingCardNew;
+export default PricingCard;
