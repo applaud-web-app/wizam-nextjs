@@ -6,6 +6,7 @@ import axios from "axios";
 import NoData from "../Common/NoData";
 import PricingCard from "./pricingcard";
 import Cookies from "js-cookie";
+import PricingCardNew from "./pricingcardnew";
 
 interface PricingPlan {
   id: number;
@@ -16,19 +17,22 @@ interface PricingPlan {
   discount: number;
   description: string | null;
   sort_order: number;
-  feature_access: number;
-  features: string[] | string | null;
   popular: boolean;
   category_name: string;
   stripe_product_id: string;
   stripe_price_id: string;
+  exam_names: string[];
+  quiz_names: string[];
+  lesson_names: string[];
+  practice_names: string[];
+  video_names: string[];
 }
 
 interface PricingApiResponse {
   status: boolean;
   data: {
     pricing: PricingPlan[];
-    customer_id: string | null; // Include customer_id in the response
+    customer_id: string | null;
   };
 }
 
@@ -36,9 +40,9 @@ const Pricing = () => {
   const [category, setCategory] = useState<string>("");
   const [pricingPlans, setPricingPlans] = useState<PricingPlan[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
-  const [customerId, setCustomerId] = useState<string | null>(null); // State for customer_id
+  const [customerId, setCustomerId] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false); // New state for authentication
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
 
   useEffect(() => {
     const fetchPricingPlans = async () => {
@@ -59,17 +63,17 @@ const Pricing = () => {
         if (response.data.status) {
           const plans = response.data.data.pricing.map((plan) => ({
             ...plan,
-            features:
-              typeof plan.features === "string"
-                ? JSON.parse(plan.features)
-                : Array.isArray(plan.features)
-                ? plan.features
-                : [],
             popular: !!plan.popular,
+            // Ensure all feature names are arrays
+            exam_names: Array.isArray(plan.exam_names) ? plan.exam_names : [],
+            quiz_names: Array.isArray(plan.quiz_names) ? plan.quiz_names : [],
+            lesson_names: Array.isArray(plan.lesson_names) ? plan.lesson_names : [],
+            practice_names: Array.isArray(plan.practice_names) ? plan.practice_names : [],
+            video_names: Array.isArray(plan.video_names) ? plan.video_names : [],
           }));
 
           setPricingPlans(plans);
-          setCustomerId(response.data.data.customer_id); // Set the customer_id from the response
+          setCustomerId(response.data.data.customer_id);
 
           const uniqueCategories = Array.from(new Set(plans.map((plan) => plan.category_name)));
           setCategories(uniqueCategories);
@@ -127,23 +131,51 @@ const Pricing = () => {
             <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-500"></div>
           </div>
         ) : filteredPlans.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
             {filteredPlans.map((plan) => (
               <PricingCard
                 key={plan.id}
                 title={plan.name}
                 price={plan.price}
-                features={Array.isArray(plan.features) ? plan.features : []}
+                examNames={plan.exam_names}
+                quizNames={plan.quiz_names}
+                description={plan.description} 
+                lessonNames={plan.lesson_names}
+                practiceNames={plan.practice_names}
+                videoNames={plan.video_names}
                 buttonLabel={isAuthenticated ? "Get Started" : "Pay Now"}
-                buttonLink={isAuthenticated ? "" : "/register"} // Navigate to login if not authenticated
+                buttonLink={isAuthenticated ? "" : "/register"}
                 popular={plan.popular}
                 priceId={plan.stripe_price_id}
                 priceType={plan.price_type}
                 customerId={customerId}
-                isAuthenticated={isAuthenticated} // Pass authentication state
-              />
+                isAuthenticated={isAuthenticated} />
             ))}
           </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-1 gap-8">
+            {filteredPlans.map((plan) => (
+              <PricingCardNew
+                key={plan.id}
+                title={plan.name}
+                price={plan.price}
+                examNames={plan.exam_names}
+                quizNames={plan.quiz_names}
+                description={plan.description} 
+                lessonNames={plan.lesson_names}
+                practiceNames={plan.practice_names}
+                videoNames={plan.video_names}
+                buttonLabel={isAuthenticated ? "Get Started" : "Pay Now"}
+                buttonLink={isAuthenticated ? "" : "/register"}
+                popular={plan.popular}
+                priceId={plan.stripe_price_id}
+                priceType={plan.price_type}
+                customerId={customerId}
+                isAuthenticated={isAuthenticated} />
+            ))}
+          </div>
+          </>
         ) : (
           <div className="flex justify-center items-center py-10">
             <NoData message="No pricing plans available for this category." />

@@ -1,3 +1,4 @@
+// components/PricingCard.tsx
 "use client";
 
 import { loadStripe } from "@stripe/stripe-js";
@@ -5,19 +6,27 @@ import React from "react";
 import { useRouter } from "next/navigation";
 import axios from "axios";
 import Cookies from "js-cookie";
-import { useSiteSettings } from "@/context/SiteContext"; // Import the hook
+import { useSiteSettings } from "@/context/SiteContext";
+
+// Importing icons for different feature categories
+import { FaBook, FaVideo, FaChalkboardTeacher, FaTasks, FaQuestionCircle } from "react-icons/fa";
 
 interface PricingCardProps {
   title: string;
   price: string;
-  features: string[];
+  examNames: string[];
+  quizNames: string[];
+  description: string | null;
+  lessonNames: string[];
+  practiceNames: string[];
+  videoNames: string[];
   buttonLabel: string;
-  buttonLink: string; // Link to navigate if not authenticated
+  buttonLink: string;
   popular?: boolean;
-  priceId: string; // The price ID for the Stripe checkout
-  priceType: string; // "fixed" or "monthly"
-  customerId: string | null; // Stripe customer ID (can be null)
-  isAuthenticated: boolean; // Authentication state
+  priceId: string;
+  priceType: string;
+  customerId: string | null;
+  isAuthenticated: boolean;
 }
 
 // Load Stripe instance
@@ -26,7 +35,12 @@ const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!
 const PricingCard: React.FC<PricingCardProps> = ({
   title,
   price,
-  features,
+  examNames,
+  quizNames,
+  lessonNames,
+  practiceNames,
+  videoNames,
+  description,
   buttonLabel,
   buttonLink,
   popular = false,
@@ -35,7 +49,7 @@ const PricingCard: React.FC<PricingCardProps> = ({
   customerId,
   isAuthenticated,
 }) => {
-  const router = useRouter(); // For route navigation
+  const router = useRouter();
 
   // Access site settings from the SiteContext
   const { siteSettings } = useSiteSettings();
@@ -78,9 +92,8 @@ const PricingCard: React.FC<PricingCardProps> = ({
         return;
       }
 
-      const { sessionId } = response.data; // Get sessionId from the response
+      const { sessionId } = response.data;
 
-      // Check if the sessionId is available
       if (!sessionId) {
         throw new Error("Failed to create session ID.");
       }
@@ -102,56 +115,116 @@ const PricingCard: React.FC<PricingCardProps> = ({
     if (isAuthenticated) {
       handleCheckout();
     } else {
-      router.push(buttonLink); // Navigate to the provided link if not authenticated
+      router.push(buttonLink);
     }
   };
 
   return (
-    <div className="relative rounded-lg shadow-sm p-6 sm:p-8 hover:shadow-lg transition-shadow duration-300 bg-white">
-      {popular && (
-        <div className="absolute -top-3 right-3 bg-yellow-500 text-white text-sm font-bold px-3 py-1 rounded-full shadow-md">
-          Most Popular
-        </div>
-      )}
-
-      <h3 className="text-xl sm:text-2xl font-bold text-gray-800 mb-4 text-center">
-        {title}
-      </h3>
-      <p className="text-4xl sm:text-5xl font-bold text-secondary text-center mb-4">
+    <div className="relative rounded-lg shadow-md p-4 sm:p-6 hover:shadow-xl transition-shadow duration-300 bg-white flex flex-col">
+    {/* Popular Badge */}
+    {popular && (
+      <div className="absolute -top-3 right-3 bg-yellow-500 text-white text-xs sm:text-sm font-bold px-2 sm:px-3 py-1 rounded-full shadow-md">
+        Most Popular
+      </div>
+    )}
+  
+    {/* Plan Title */}
+    <h3 className="text-lg sm:text-xl font-bold text-gray-800 mb-4 text-center">
+      {title}
+    </h3>
+  
+    {/* Price Display */}
+    <div className="flex items-end justify-center space-x-1 mb-3">
+      <p className="text-3xl sm:text-4xl font-extrabold text-secondary text-center">
         {currencySymbol}
         {price}
       </p>
-      <p className="text-gray-500 text-center mb-6">
-        {priceType === "monthly" ? "Per month" : "One-time payment"}
+      <p className="text-sm sm:text-base text-gray-600 text-center">
+        / {priceType === "monthly" ? "Per Month" : "One Time"}
       </p>
-
-      <ul className="text-gray-600 mb-8 space-y-3">
-        {features.map((feature, index) => (
-          <li key={index} className="flex items-center">
-            <svg
-              className="w-5 h-5 text-green-500"
-              fill="currentColor"
-              viewBox="0 0 20 20"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                fillRule="evenodd"
-                d="M16.707 5.293a1 1 0 00-1.414 0L8 12.586l-3.293-3.293a1 1 0 00-1.414 1.414l4 4a1 1 0 001.414 0l8-8a1 1 0 000-1.414z"
-                clipRule="evenodd"
-              />
-            </svg>
-            <span className="ml-3">{feature}</span>
-          </li>
-        ))}
-      </ul>
-
-      <button
-        className="block w-full primary-button"
-        onClick={handleClick} // Either checkout or navigate
-      >
-        {buttonLabel}
-      </button>
     </div>
+  
+    {/* Description */}
+    <p className="text-xs sm:text-sm text-gray-500 text-center mb-6">
+      {description}
+    </p>
+  
+    {/* Features List */}
+    <div className="flex-1 space-y-4">
+      {examNames.length > 0 && (
+        <div>
+          <div className="flex items-center mb-2">
+            <FaBook className="text-blue-500 mr-2" />
+            <h4 className="text-sm sm:text-base font-semibold text-gray-700">
+              Exams ({examNames.length})
+            </h4>
+          </div>
+          <ul className="list-disc list-inside text-xs sm:text-sm text-gray-600 space-y-1">
+            {examNames.map((exam, index) => (
+              <li key={index}>{exam}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+  
+      {lessonNames.length > 0 && (
+        <div>
+          <div className="flex items-center mb-2">
+            <FaChalkboardTeacher className="text-green-500 mr-2" />
+            <h4 className="text-sm sm:text-base font-semibold text-gray-700">
+              Lessons ({lessonNames.length})
+            </h4>
+          </div>
+         
+        </div>
+      )}
+  
+      {videoNames.length > 0 && (
+        <div>
+          <div className="flex items-center mb-2">
+            <FaVideo className="text-red-500 mr-2" />
+            <h4 className="text-sm sm:text-base font-semibold text-gray-700">
+              Videos ({videoNames.length})
+            </h4>
+          </div>
+       
+        </div>
+      )}
+  
+      {practiceNames.length > 0 && (
+        <div>
+          <div className="flex items-center mb-2">
+            <FaTasks className="text-purple-500 mr-2" />
+            <h4 className="text-sm sm:text-base font-semibold text-gray-700">
+              Practice Sets ({practiceNames.length})
+            </h4>
+          </div>
+       
+        </div>
+      )}
+  
+      {quizNames.length > 0 && (
+        <div>
+          <div className="flex items-center mb-2">
+            <FaQuestionCircle className="text-indigo-500 mr-2" />
+            <h4 className="text-sm sm:text-base font-semibold text-gray-700">
+              Quizzes ({quizNames.length})
+            </h4>
+          </div>
+         
+        </div>
+      )}
+    </div>
+  
+    {/* Call-to-Action Button */}
+    <button
+      className="mt-4 sm:mt-6 w-full bg-primary text-secondary py-2 sm:py-3 rounded-md font-semibold hover:bg-primary-dark transition-colors text-sm sm:text-base g"
+      onClick={handleClick}
+    >
+      {buttonLabel}
+    </button>
+  </div>  
+  
   );
 };
 
