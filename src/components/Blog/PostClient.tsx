@@ -204,7 +204,7 @@ export default function PostClient({ post }: { post: BlogPost }) {
                   </div>
 
                   {/* Blog Content */}
-                  {post.image != null ? (
+                  {/* {post.image != null ? (
                     <div className="mb-8">
                       <Image
                         src={post.image}
@@ -214,7 +214,7 @@ export default function PostClient({ post }: { post: BlogPost }) {
                         className="h-auto w-full mb-8 rounded-lg"
                       />
                     </div>
-                  ) : null}
+                  ) : null} */}
 
                   <div
                     className="text-gray-700 dark:text-gray-300 mb-6"
