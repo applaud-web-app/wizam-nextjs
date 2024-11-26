@@ -29,7 +29,6 @@ const BannerSection: FC = () => {
   const [isVideoPlaying, setIsVideoPlaying] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  // Use state for custom navigation elements
   const [prevEl, setPrevEl] = useState<HTMLElement | null>(null);
   const [nextEl, setNextEl] = useState<HTMLElement | null>(null);
 
@@ -190,10 +189,11 @@ const BannerSection: FC = () => {
                     src="/images/hero/banner.png"
                     alt="Wizam Banner"
                     layout="fill"
+                  
                     objectFit="cover"
                     className="mx-auto h-auto p-3 rounded-lg"
                     priority
-                  
+                 
                   />
 
                   {/* Play Button and Logo Overlay */}
@@ -213,7 +213,7 @@ const BannerSection: FC = () => {
                       height={60}
                       quality={100}
                       className="w-[120px] sm:w-[200px] lg:w-[260px] h-auto object-contain mx-auto"
-                      loading="lazy"
+                     
                     />
                     <p className="text-tertiary text-md sm:text-lg lg:text-3xl font-bold">
                       In 1 minute
