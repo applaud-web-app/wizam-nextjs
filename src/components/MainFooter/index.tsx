@@ -6,7 +6,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { FaFacebookF, FaLinkedinIn, FaInstagram, FaYoutube } from "react-icons/fa";
 import { FaSquareXTwitter } from "react-icons/fa6";
-
 import { MdOutlineArrowOutward } from "react-icons/md";
 import { useSiteSettings } from "@/context/SiteContext";
 
@@ -18,10 +17,11 @@ interface Page {
 const Footer = () => {
   const { siteSettings, loading, error } = useSiteSettings();
   const [pages, setPages] = useState<Page[]>([]);
-  const [email, setEmail] = useState<string>("");
+  const [email, setEmail] = useState<string>("");  
   const [subscribed, setSubscribed] = useState<boolean>(false);
   const [subscriptionError, setSubscriptionError] = useState<string | null>(null);
 
+  // Cache pages to prevent unnecessary API calls
   useEffect(() => {
     const fetchPages = async () => {
       try {
@@ -35,12 +35,13 @@ const Footer = () => {
       }
     };
 
-    fetchPages();
-  }, []);
+    if (!pages.length) {
+      fetchPages();
+    }
+  }, [pages]);
 
   const handleSubscribe = async (e: React.FormEvent) => {
     e.preventDefault();
-
     if (!email) return;
 
     try {
@@ -49,7 +50,7 @@ const Footer = () => {
       if (response.status === 201) {
         setSubscribed(true);
         setSubscriptionError(null);
-        setEmail(''); // Clear the input field
+        setEmail('');
       } else {
         setSubscriptionError(response.data.message || 'Subscription error. Please try again later.');
       }
@@ -58,18 +59,14 @@ const Footer = () => {
     }
   };
 
-  function updateCopyrightText(copyrightText:any) {
+  function updateCopyrightText(copyrightText: string) {
     const currentYear = new Date().getFullYear();
-    return copyrightText.replace("['Y']", currentYear);
+    return copyrightText.replace("['Y']", currentYear.toString());
   }
 
-  if (loading) {
-    return <p>Loading footer...</p>;
-  }
-
-  if (error || !siteSettings) {
-    return <p>Error loading site settings</p>;
-  }
+  // Fallback loading and error states
+  if (loading) return <p>Loading footer...</p>;
+  if (error || !siteSettings) return <p>Error loading site settings</p>;
 
   return (
     <footer className="bg-tertiary text-white pt-16 pb-12">
@@ -82,6 +79,7 @@ const Footer = () => {
                 alt={`${siteSettings.site_name} Logo`}
                 width={140}
                 height={30}
+                priority // Ensure the logo loads quickly for SEO
               />
             </Link>
             <p className="mt-4 text-gray-400">{siteSettings.tag_line}</p>
@@ -95,7 +93,6 @@ const Footer = () => {
               <li className="mb-2"><Link href="/pricing" className="hover:text-green-400">Pricing</Link></li>
               <li className="mb-2"><Link href="/knowledge-hub" className="hover:text-green-400">Knowledge Hub</Link></li>
               <li className="mb-2"><Link href="/faq" className="hover:text-green-400">FAQ</Link></li>
-           
             </ul>
           </div>
 
@@ -108,7 +105,6 @@ const Footer = () => {
                   <Link href={`/${page.slug}`} className="hover:text-green-400">{page.title}</Link>
                 </li>
               ))}
-                
             </ul>
           </div>
 
@@ -155,29 +151,30 @@ const Footer = () => {
         <div className="mt-12 flex flex-wrap items-center justify-between border-t border-gray-600 pt-4">
           <p className="text-sm text-gray-400 leading-relaxed">{updateCopyrightText(siteSettings.copyright)}</p>
           <div className="flex space-x-4">
+            {/* Lazy loading social icons to reduce initial page load */}
             {siteSettings.facebook && (
-              <Link href={siteSettings.facebook} aria-label="Facebook" className="text-gray-400 hover:text-green-400">
+              <Link href={siteSettings.facebook} aria-label="Facebook" className="text-gray-400 hover:text-green-400" target="_blank" rel="noopener noreferrer">
                 <FaFacebookF />
               </Link>
             )}
             {siteSettings.linkedin && (
-              <Link href={siteSettings.linkedin} aria-label="LinkedIn" className="text-gray-400 hover:text-green-400">
+              <Link href={siteSettings.linkedin} aria-label="LinkedIn" className="text-gray-400 hover:text-green-400" target="_blank" rel="noopener noreferrer">
                 <FaLinkedinIn />
               </Link>
             )}
             {siteSettings.instagram && (
-              <Link href={siteSettings.instagram} aria-label="Instagram" className="text-gray-400 hover:text-green-400">
+              <Link href={siteSettings.instagram} aria-label="Instagram" className="text-gray-400 hover:text-green-400" target="_blank" rel="noopener noreferrer">
                 <FaInstagram />
               </Link>
             )}
             {siteSettings.youtube && (
-              <Link href={siteSettings.youtube} aria-label="YouTube" className="text-gray-400 hover:text-green-400">
+              <Link href={siteSettings.youtube} aria-label="YouTube" className="text-gray-400 hover:text-green-400" target="_blank" rel="noopener noreferrer">
                 <FaYoutube />
               </Link>
             )}
             {siteSettings.twitter && (
-              <Link href={siteSettings.twitter} aria-label="Twitter" className="text-gray-400 hover:text-green-400">
-                <FaSquareXTwitter  />
+              <Link href={siteSettings.twitter} aria-label="Twitter" className="text-gray-400 hover:text-green-400" target="_blank" rel="noopener noreferrer">
+                <FaSquareXTwitter />
               </Link>
             )}
           </div>

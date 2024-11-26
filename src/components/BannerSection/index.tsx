@@ -165,15 +165,25 @@ const BannerSection: FC = () => {
             {/* Banner Image Section */}
             <div className="relative mt-6 bg-white/20 p-2 sm:p-3 lg:p-3 rounded-lg max-w-full sm:max-w-[600px] lg:max-w-[835px] h-[190px] sm:h-[400px] lg:h-[480px] mx-auto">
               {isVideoPlaying && youtubeLink ? (
-                <iframe
-                  width="100%"
-                  height="100%"
-                  src={getYouTubeEmbedLink(youtubeLink)}
-                  title="YouTube video player"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                  className="rounded-lg"
-                ></iframe>
+                <div
+                  className="video-container"
+                  style={{
+                    position: "relative",
+                    paddingBottom: "56.25%",
+                    height: 0,
+                    overflow: "hidden",
+                    maxWidth: "100%",
+                  }}
+                >
+                  <iframe
+                    src={getYouTubeEmbedLink(youtubeLink)}
+                    width="100%"
+                    height="100%"
+                    style={{ position: "absolute", top: 0, left: 0 }}
+                    allowFullScreen
+                    title="YouTube video player"
+                  ></iframe>
+                </div>
               ) : (
                 <>
                   <Image
@@ -181,8 +191,9 @@ const BannerSection: FC = () => {
                     alt="Wizam Banner"
                     layout="fill"
                     objectFit="cover"
-                    className="mx-auto p-3 rounded-lg"
+                    className="mx-auto h-auto p-3 rounded-lg"
                     priority
+                  
                   />
 
                   {/* Play Button and Logo Overlay */}
@@ -202,6 +213,7 @@ const BannerSection: FC = () => {
                       height={60}
                       quality={100}
                       className="w-[120px] sm:w-[200px] lg:w-[260px] h-auto object-contain mx-auto"
+                      loading="lazy"
                     />
                     <p className="text-tertiary text-md sm:text-lg lg:text-3xl font-bold">
                       In 1 minute
