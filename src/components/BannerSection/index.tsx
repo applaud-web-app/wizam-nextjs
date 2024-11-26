@@ -160,7 +160,7 @@ const BannerSection: FC = () => {
                 </>
               )}
             </div>
-            
+
             {/* Banner Image Section */}
             <div className="relative mt-6 bg-white/20 p-2 sm:p-3 lg:p-3 rounded-lg max-w-full sm:max-w-[600px] lg:max-w-[835px] h-[190px] sm:h-[400px] lg:h-[480px] mx-auto">
               {isVideoPlaying && youtubeLink ? (
@@ -174,6 +174,7 @@ const BannerSection: FC = () => {
                     maxWidth: "100%",
                   }}
                 >
+
                   <iframe
                     src={getYouTubeEmbedLink(youtubeLink)}
                     width="100%"
@@ -185,6 +186,7 @@ const BannerSection: FC = () => {
                 </div>
               ) : (
                 <>
+                
                   <Image
                     src="/images/hero/banner.png"
                     alt="Wizam Banner"
