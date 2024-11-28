@@ -182,7 +182,7 @@ export default function SingleExam({ slug }: SingleExamProps) {
               <span className="text-lg font-semibold text-gray-700">Duration</span>
             </div>
             <span className="bg-green-100 text-green-600 text-sm font-bold px-3 py-1 rounded-full">
-              {examDetails.duration} min
+              {examDetails.duration}
             </span>
           </div>
 

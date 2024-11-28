@@ -309,15 +309,10 @@ export default function QuizList() {
                   </td>
                   <td className="p-4">{quiz.total_questions || "-"}</td>
                   <td className="p-4">
-                    {quiz.point_mode === "manual"
-                      ? quiz.point! * quiz.total_questions
-                      : quiz.total_marks}
+                      {quiz.total_marks}
                   </td>
                   <td className="p-4">
-                    {quiz.duration_mode === "manual"
-                      ? quiz.exam_duration
-                      : Math.floor(quiz.total_time / 60)}{" "}
-                    min
+                    {quiz.total_time}
                   </td>
                  
 

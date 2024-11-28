@@ -180,19 +180,10 @@ export default function UpcomingExamsTable({ upcomingExams, serverTime }: Upcomi
                       : '-'}
                   </td> {/* Updated Cell */}
                   <td className="p-4">
-                    {duration_mode === "manual"
-                      ? exam_duration
-                      : exam_duration !== null
-                      ? Math.floor(parseInt(total_time, 10) / 60)
-                      : '-'}{" "}
-                    min
+                    {total_time}
                   </td>
                   <td className="p-4">{total_questions}</td>
-                  <td className="p-4">
-                    {point_mode === "manual"
-                      ? (parseInt(total_questions, 10) * (point || 0)).toString()
-                      : total_marks}
-                  </td>
+                  <td className="p-4">{total_marks}</td>
                   <td className="p-4">
                     {isUpcoming ? (
                       <button

@@ -303,15 +303,10 @@ export default function ExamList() {
                   </td>
                   <td className="p-4">{exam.total_questions || "-"}</td>
                   <td className="p-4">
-                    {exam.point_mode === "manual"
-                      ? Number(exam.point) * exam.total_questions
-                      : exam.total_marks}
+                    {exam.total_marks}
                   </td>
                   <td className="p-4">
-                    {exam.duration_mode === "manual"
-                      ? exam.exam_duration
-                      : Math.floor(exam.total_time / 60)}{" "}
-                    min
+                    {exam.total_time}
                   </td>
                   <td className="p-4">
                     {isUpcoming ? (
@@ -340,11 +335,7 @@ export default function ExamList() {
                     ) : (
                       <button
                         className="bg-defaultcolor text-white py-1 px-5 rounded-full font-semibold text-sm hover:bg-defaultcolor-dark w-32"
-                        onClick={() =>
-                          handlePayment(
-                            `/dashboard/exam-detail/${exam.slug}?sid=${schedules.schedule_id ?? 0}`
-                          )
-                        }
+                        onClick={() =>handlePayment(`/dashboard/exam-detail/${exam.slug}?sid=${schedules.schedule_id ?? 0}`)}
                       >
                         Pay Now
                       </button>

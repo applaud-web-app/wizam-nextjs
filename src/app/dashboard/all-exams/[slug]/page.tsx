@@ -288,7 +288,7 @@ export default function ExamDetailPage({ params }: { params: { slug: string } })
                   </td>
                   <td className="p-4">{exam.questions}</td>
                   <td className="p-4">{exam.marks}</td>
-                  <td className="p-4">{exam.time} mins</td>
+                  <td className="p-4">{exam.time}</td>
                   <td className="p-4">
                     {isUpcoming ? (
                       <button
