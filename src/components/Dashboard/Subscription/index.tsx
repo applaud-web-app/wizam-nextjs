@@ -13,7 +13,7 @@ interface SubscriptionData {
   purchase_date: string;
   ends_date: string;
   status: string;
-  features: string[];
+  type: string;
 }
 
 const Subscription: React.FC = () => {
@@ -61,10 +61,10 @@ const Subscription: React.FC = () => {
   const getStatusBadge = (status: string) => {
     let badgeClass = "";
     switch (status) {
-      case "Active":
+      case "active":
         badgeClass = "bg-green-100 text-green-800";
         break;
-      case "Ended":
+      case "expiry":
         badgeClass = "bg-red-100 text-red-800";
         break;
       default:
@@ -97,8 +97,8 @@ const Subscription: React.FC = () => {
                 <th className="p-3 text-left rounded-tl-lg">S.No</th>
                 <th className="p-3 text-left">Plan Name</th>
                 <th className="p-3 text-left">Plan Price</th>
+                <th className="p-3 text-left">Type</th>
                 <th className="p-3 text-left">Duration</th>
-                <th className="p-3 text-left">Features</th>
                 <th className="p-3 text-left">Status</th>
               </tr>
             </thead>
@@ -106,23 +106,18 @@ const Subscription: React.FC = () => {
               {subscriptions.map((subscription, index) => (
                 <tr key={subscription.id} className="hover:bg-gray-50">
                   <td className="p-4">{index + 1}</td>
-                  <td className="p-4">{subscription.plan_name}</td>
+                  <td className="p-4 capitalize">{subscription.plan_name}</td>
                   <td className="p-4">
                     {currencySymbol}
                     {subscription.plan_price.toLocaleString(undefined, {
                       minimumFractionDigits: 2,
                     })}
                   </td>
-                  <td className="p-4">{`${subscription.purchase_date} to ${subscription.ends_date}`}</td>
-                  <td className="p-4">
-                    {subscription.features?.map((feature, idx) => (
-                      <span key={idx} className="text-gray-600 pr-3">
-                        {feature}
-                        {idx < subscription.features.length - 1 && ", "}
-                      </span>
-                    ))}
+                  <td className="p-4 capitalize">
+                    {subscription.type}
                   </td>
-                  <td className="p-4">{getStatusBadge(subscription.status)}</td>
+                  <td className="p-4">{`${subscription.purchase_date} to ${subscription.ends_date}`}</td>
+                  <td className="p-4 capitalize">{getStatusBadge(subscription.status)}</td>
                 </tr>
               ))}
             </tbody>
