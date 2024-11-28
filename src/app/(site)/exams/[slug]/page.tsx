@@ -202,7 +202,7 @@ const ExamDetailPage = ({ params }: ExamDetailProps) => {
             dangerouslySetInnerHTML={{ __html: exam.description }}
           ></div>
 
-          <div className="mt-8">
+          {/* <div className="mt-8">
             <div className="flex items-start">
               <input
                 id="instruction-checkbox"
@@ -226,7 +226,7 @@ const ExamDetailPage = ({ params }: ExamDetailProps) => {
             >
               {buttonText}
             </button>
-          </div>
+          </div> */}
         </div>
       </section>
     </main>

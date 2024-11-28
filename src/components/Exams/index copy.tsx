@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import { Pagination } from "flowbite-react";
 import Link from "next/link";
-import { FaArrowRight, FaRedo } from "react-icons/fa"; // Add FaRedo for reset icon
+import { FaArrowRight } from "react-icons/fa";
 import axios from "axios";
 import Loader from "../Common/Loader"; // Import Loader component
 import NoData from "../Common/NoData"; // Import NoData component
@@ -14,9 +14,9 @@ const Exams = () => {
   const [exams, setExams] = useState([]);
   const [filteredExams, setFilteredExams] = useState([]);
   const [courses, setCourses] = useState([]);
-  const [pricingData, setPricingData] = useState([]); // Pricing data for filtering
+  const [examPacks, setExamPacks] = useState([]);
   const [selectedCourse, setSelectedCourse] = useState("");
-  const [selectedPricingPlan, setSelectedPricingPlan] = useState(""); // Selected pricing plan
+  const [selectedExamPack, setSelectedExamPack] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -29,15 +29,22 @@ const Exams = () => {
   useEffect(() => {
     const fetchExamsAndCourses = async () => {
       try {
+        // Get the current server time from the API and cache it
+        const timeResponse = await axios.get(`/api/time`);
+        const currentTime = new Date(timeResponse.data.serverTime);
+  
         // Fetch all exams
         const examResponse = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/exams`);
         const courseResponse = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/course`);
-
-        if (examResponse.data.status && courseResponse.data.status) {
+        const examPackResponse = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/course-exam-type`);
+  
+        if (examResponse.data.status && courseResponse.data.status && examPackResponse.data.status) {
           const exams = examResponse.data.data;
+
           setExams(exams);
           setFilteredExams(exams); // Show all exams by default
           setCourses(courseResponse.data.data);
+          setExamPacks(examPackResponse.data.data);
         } else {
           setError("Failed to fetch data.");
         }
@@ -47,82 +54,42 @@ const Exams = () => {
         setLoading(false);
       }
     };
-
+  
     fetchExamsAndCourses();
   }, []);
-
-  // Fetch pricing data when a course is selected
-  useEffect(() => {
-    if (selectedCourse) {
-      const fetchPricingData = async () => {
-        try {
-          const pricingResponse = await axios.get(
-            `${process.env.NEXT_PUBLIC_API_URL}/pricing/${selectedCourse}`
-          );
-
-          if (pricingResponse.data.status) {
-            setPricingData(pricingResponse.data.data);
-            setSelectedPricingPlan(""); // Reset pricing plan when a new course is selected
-          } else {
-            setPricingData([]); // Reset pricing data if the API fails
-          }
-        } catch (error) {
-          setError("An error occurred while fetching pricing data.");
-        }
-      };
-
-      fetchPricingData();
-    }
-  }, [selectedCourse]);
+  
 
   // Handle course change
   const handleCourseChange = (courseId: string) => {
     setSelectedCourse(courseId);
-    setSelectedPricingPlan(""); // Reset pricing plan when course changes
-  };
-
-  // Handle pricing plan change
-  const handlePricingPlanChange = (pricingPlan: string) => {
-    setSelectedPricingPlan(pricingPlan);
+    setSelectedExamPack(""); // Reset exam pack on course change 
   };
 
   // Handle submit to filter exams
   const handleFilterSubmit = () => {
     setFiltering(true); // Show "Filtering..." and disable the button
 
-    setTimeout(async () => {
-      try {
-        // Ensure both course and pricing plan are selected
-        if (selectedCourse && selectedPricingPlan) {
-          // Fetch filtered exams from the /exam-filter/{category}/{plan} API
-          const filterResponse = await axios.get(
-            `${process.env.NEXT_PUBLIC_API_URL}/exam-filter/${selectedCourse}/${selectedPricingPlan}`
-          );
+    setTimeout(() => {
+      let filtered = exams;
 
-          if (filterResponse.data.status) {
-            setFilteredExams(filterResponse.data.data);
-          } else {
-            setFilteredExams([]); // No exams found after applying filter
-          }
-        } else {
-          // If either course or pricing plan is missing, show all exams
-          setFilteredExams(exams);
-        }
-      } catch (error) {
-        setError("An error occurred while fetching filtered exams.");
-      } finally {
-        setFiltering(false); // Re-enable the button after filtering
+      if (selectedCourse) {
+        filtered = filtered.filter(
+          (exam: any) => exam.subcategory_id === parseInt(selectedCourse)
+        );
       }
-    }, 500); // Simulate a delay to show the filtering process
-  };
 
-  // Reset all filters and fetch all exams again
-  const handleReset = async () => {
-    setSelectedCourse(""); // Reset course filter
-    setSelectedPricingPlan(""); // Reset pricing plan filter
-    setPricingData([]); // Clear pricing data
-    setFilteredExams(exams); // Reset exams to the full list
-    setCurrentPage(1); // Reset to the first page
+      if (selectedExamPack) {
+        filtered = filtered.filter(
+          (exam: any) => exam.exam_type_id === parseInt(selectedExamPack)
+        );
+      }
+
+      setFilteredExams(filtered);
+      setCurrentPage(1); // Reset pagination to the first page
+
+      // Re-enable the button and remove the "Filtering..." text after filtering
+      setFiltering(false);
+    }, 500); // Simulate a delay to show the filtering process
   };
 
   // Truncate long strings for title or description
@@ -176,45 +143,34 @@ const Exams = () => {
             </select>
 
             <select
-              id="selectPricingPlan"
-              value={selectedPricingPlan}
-              onChange={(e) => handlePricingPlanChange(e.target.value)}
+              id="selectExamPack"
+              value={selectedExamPack}
+              onChange={(e) => setSelectedExamPack(e.target.value)}
               className="w-full rounded-lg border border-gray-300 bg-gray-50 px-4 py-3 text-gray-700 transition focus:outline-none focus:ring-2 focus:ring-gray-300"
-              disabled={pricingData.length === 0}
             >
-              <option value="">Select Pricing Plan</option>
-              {pricingData.map((plan: any) => (
-                <option key={plan.id} value={plan.id}>
-                  {plan.name}({plan.price})
+              <option value="">Select Course Plan</option>
+              {examPacks.map((pack: any) => (
+                <option key={pack.id} value={pack.id}>
+                  {pack.name}
                 </option>
               ))}
             </select>
           </div>
 
-          {/* Filter & Reset Buttons */}
-          <div className="flex gap-4">
-            <button
-              onClick={handleFilterSubmit}
-              disabled={filtering} // Disable the button while filtering
-              className={`w-full rounded-lg ${
-                filtering
-                  ? "bg-primary cursor-not-allowed" // Change color and cursor when disabled
-                  : "bg-primary cursor-pointer"
-              } px-6 py-3 font-semibold text-secondary transition duration-300 ease-in-out ${
-                filtering ? "" : "hover:bg-secondary hover:text-primary"
-              }`}
-            >
-              {filtering ? "Submitting..." : "Submit"}
-            </button>
-
-            <button
-              onClick={handleReset}
-              className=" rounded-lg bg-secondary cursor-pointer px-6 py-3 font-semibold text-white hover:bg-secondary-dark transition duration-300 ease-in-out flex items-center justify-center gap-2"
-            >
-              <FaRedo size={20} />
-              Reset
-            </button>
-          </div>
+          {/* Filter Button */}
+          <button
+            onClick={handleFilterSubmit}
+            disabled={filtering} // Disable the button while filtering 
+            className={`w-full rounded-lg ${
+              filtering
+                ? "bg-primary cursor-not-allowed" // Change color and cursor when disabled
+                : "bg-primary cursor-pointer"
+            } px-6 py-3 font-semibold text-secondary transition duration-300 ease-in-out ${
+              filtering ? "" : "hover:bg-secondary hover:text-primary"
+            }`}
+          >
+            {filtering ? "Submitting..." : "Submit"}
+          </button>
         </div>
 
         <hr className="h-px my-8 bg-gray-200 border-0 dark:bg-gray-700" />
@@ -254,7 +210,7 @@ const Exams = () => {
                     />
 
                     {/* Exam Details */}
-                    <div className="flex justify-between divide-x-2 text-sm text-gray-700">
+                    <div className="mb-4 flex justify-between divide-x-2 text-sm text-gray-700">
                       <div>
                         <span className="block font-bold">Duration</span>
                         <span>{exam.exam_duration || "N/A"}</span>
@@ -269,10 +225,10 @@ const Exams = () => {
                       </div>
                     </div>
 
-                    {/* <hr className="mb-4 h-px border-0 bg-gray-200" /> */}
+                    <hr className="mb-4 h-px border-0 bg-gray-200" />
 
                     {/* Price */}
-                    {/* <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         {exam.is_free ? (
                           <span className="text-xl font-bold text-dark">
@@ -296,7 +252,7 @@ const Exams = () => {
                       <div className="flex items-center text-defaultcolor font-semibold">
                         <FaArrowRight size={24} />
                       </div>
-                    </div> */}
+                    </div>
                   </div>
                 </div>
               </Link>

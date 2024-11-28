@@ -1,5 +1,3 @@
-"use client";
-
 import React, { useEffect, useState } from "react";
 import { pdf, Document, Page, Text, View, Font, StyleSheet, Image } from "@react-pdf/renderer";
 import Cookies from "js-cookie";
@@ -11,11 +9,39 @@ interface InvoiceGeneratorProps {
   onDownloadComplete: () => void;
 }
 
+interface Features {
+  exams: string[];
+  quizzes: string[];
+  practices: string[];
+  lessons: string[];
+  videos: string[];
+}
+
+interface InvoiceData {
+  billing: {
+    vendor_name: string;
+    address: string;
+    city_name: string;
+    state_name: string;
+    country_name: string;
+    zip: string;
+    phone_number: string;
+    vat_number: string;
+  };
+  payment: {
+    stripe_payment_id: string;
+    amount: string;
+    created_at: string;
+    status: string;
+  };
+  features: Features;
+}
+
 const colors = {
-  primary: "#2A3B61",
-  secondary: "#A6DCEF",
-  gray: "#e5f3ff",
-  black: "#000",
+  primary: "#004c97",    // Dark blue for headings
+  secondary: "#70a7d9",  // Lighter blue for accents
+  gray: "#f4f6f9",       // Light gray for backgrounds
+  black: "#333",         // Dark text color for readability
   white: "#fff",
 };
 
@@ -29,28 +55,26 @@ Font.register({
 
 const styles = StyleSheet.create({
   page: {
-    padding: 10,
-    fontSize: 12,
+    padding: 15,  // Increased padding for a more spacious look
+    fontSize: 12, // Slightly larger font size
     fontFamily: "Roboto",
     backgroundColor: colors.white,
     lineHeight: 1.4,
   },
   container: {
+    
+    boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
+    backgroundColor: colors.white,
     padding: 20,
-    borderRadius: 6,
-    border: "1px solid #ddd",
-    boxShadow: "0px 2px 8px rgba(0, 0, 0, 0.1)",
   },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: 20,
-    borderBottom: "2px solid #A6DCEF",
-    paddingBottom: 15,
   },
   logo: {
-    width: 90,
+    width: 100,
     height: "auto",
   },
   siteInfo: {
@@ -62,35 +86,30 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "bold",
     color: colors.primary,
-    textTransform: "uppercase",
+    marginBottom: 5,
   },
   sectionTitle: {
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: "bold",
     color: colors.primary,
     marginBottom: 10,
-    marginTop: 20,
-    borderBottom: "2px solid #A6DCEF",
-    paddingBottom: 6,
     textTransform: "uppercase",
-    backgroundColor: colors.gray,
-    padding: 5,
-    borderRadius: 4,
+    borderBottom: `2px solid ${colors.secondary}`,
+    paddingBottom: 6,
   },
   subTitle: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: "bold",
     color: colors.primary,
-    marginBottom: 6,
+    marginBottom: 5,
   },
   infoSection: {
     flexDirection: "row",
     justifyContent: "space-between",
     marginBottom: 20,
-    padding: 12,
-    borderRadius: 4,
+    padding: 15,
+  
     backgroundColor: colors.gray,
-    border: "1px solid #ddd",
   },
   billingInfo: {
     flex: 1,
@@ -101,24 +120,22 @@ const styles = StyleSheet.create({
     paddingLeft: 10,
   },
   infoText: {
-    fontSize: 12,
+    fontSize: 11,
     color: colors.black,
-    marginBottom: 4,
-    lineHeight: 1.3,
+    marginBottom: 5,
   },
   paymentDetails: {
     marginBottom: 20,
-    padding: 10,
-    borderRadius: 4,
-    border: "1px solid #ddd",
+    padding: 15,
+  
+    border: `1px solid ${colors.secondary}`,
     backgroundColor: colors.gray,
   },
   tableContainer: {
-    border: "1px solid #ddd",
-    borderRadius: 4,
+    border: `1px solid ${colors.secondary}`,
+  
+    marginBottom: 20,
     overflow: "hidden",
-    marginBottom: 10,
-    boxShadow: "0px 1px 4px rgba(0, 0, 0, 0.1)",
   },
   tableHeader: {
     flexDirection: "row",
@@ -135,22 +152,21 @@ const styles = StyleSheet.create({
   },
   tableRow: {
     flexDirection: "row",
-    borderBottom: "1px solid #eee",
+    borderBottom: `1px solid ${colors.gray}`,
     padding: 8,
-    backgroundColor: "#f9f9f9",
+    backgroundColor: "#fafafa",
   },
   tableCell: {
     flex: 1,
-    fontSize: 12,
+    fontSize: 11,
     textAlign: "center",
-    whiteSpace: "pre", 
-    lineHeight: 1.2,      
+    lineHeight: 1.4,
   },
   totalContainer: {
+    marginBottom: 30,
     padding: 15,
-    borderRadius: 4,
-    border: "1px solid #ddd",
-    marginBottom: 20,
+   
+    border: `1px solid ${colors.secondary}`,
     backgroundColor: colors.gray,
   },
   totalText: {
@@ -163,10 +179,9 @@ const styles = StyleSheet.create({
     textAlign: "center",
     fontSize: 10,
     color: colors.black,
-    marginTop: 20,
-    borderTop: "1px solid #A6DCEF",
+    marginTop: 30,
+    borderTop: `1px solid ${colors.secondary}`,
     paddingTop: 10,
-    opacity: 0.8,
   },
 });
 
@@ -178,7 +193,7 @@ const InvoiceGenerator: React.FC<InvoiceGeneratorProps> = ({ invoiceId, onDownlo
       setLoading(true);
       try {
         const token = Cookies.get("jwt") || "";
-        const [invoiceRes, userRes, siteRes] = await Promise.all([
+        const [invoiceRes, userRes, siteRes] = await Promise.all([ 
           axios.get(`${process.env.NEXT_PUBLIC_API_URL}/invoice-detail/${invoiceId}`, {
             headers: { Authorization: `Bearer ${token}` },
           }),
@@ -190,7 +205,7 @@ const InvoiceGenerator: React.FC<InvoiceGeneratorProps> = ({ invoiceId, onDownlo
           }),
         ]);
 
-        const invoiceData = invoiceRes.data.data;
+        const invoiceData: InvoiceData = invoiceRes.data.data;
         const userData = userRes.data.user;
         const siteSettings = siteRes.data.data;
 
@@ -220,7 +235,7 @@ const InvoiceGenerator: React.FC<InvoiceGeneratorProps> = ({ invoiceId, onDownlo
                     <Text style={styles.infoText}>State: {invoiceData.billing.state_name || "Not available"}</Text>
                     <Text style={styles.infoText}>Country: {invoiceData.billing.country_name || "Not available"}</Text>
                     <Text style={styles.infoText}>ZIP: {invoiceData.billing.zip || "Not available"}</Text>
-                    <Text style={styles.infoText}>Phone Number: {invoiceData.billing.phone_number || "Not available"}</Text>
+                    <Text style={styles.infoText}>Phone: {invoiceData.billing.phone_number || "Not available"}</Text>
                     <Text style={styles.infoText}>VAT Number: {invoiceData.billing.vat_number || "Not available"}</Text>
                   </View>
 
@@ -235,14 +250,12 @@ const InvoiceGenerator: React.FC<InvoiceGeneratorProps> = ({ invoiceId, onDownlo
                 <View style={styles.tableContainer}>
                   <View style={styles.tableHeader}>
                     <Text style={styles.tableHeaderCell}>Transaction ID</Text>
-                    <Text style={styles.tableHeaderCell}></Text>
-                    <Text style={styles.tableHeaderCell}>Price</Text>
-                    <Text style={styles.tableHeaderCell}>Purchase Date</Text>
+                    <Text style={styles.tableHeaderCell}>Amount</Text>
+                    <Text style={styles.tableHeaderCell}>Date</Text>
                     <Text style={styles.tableHeaderCell}>Status</Text>
                   </View>
                   <View style={styles.tableRow}>
                     <Text style={styles.tableCell}>{invoiceData.payment.stripe_payment_id || "Not available"}</Text>
-                    <Text style={styles.tableCell}></Text>
                     <Text style={styles.tableCell}>
                       {siteSettings.currency_symbol}{invoiceData.payment.amount || "Not available"}
                     </Text>
@@ -252,6 +265,34 @@ const InvoiceGenerator: React.FC<InvoiceGeneratorProps> = ({ invoiceId, onDownlo
                         : "Not applicable"}
                     </Text>
                     <Text style={styles.tableCell}>{invoiceData.payment.status || "Not available"}</Text>
+                  </View>
+                </View>
+
+                {/* Features Table */}
+                <View style={styles.tableContainer}>
+                  <View style={styles.tableHeader}>
+                    <Text style={styles.tableHeaderCell}>Exams</Text>
+                    <Text style={styles.tableHeaderCell}>Lessons</Text>
+                    <Text style={styles.tableHeaderCell}>Videos</Text>
+                    <Text style={styles.tableHeaderCell}>Quizzes</Text>
+                    <Text style={styles.tableHeaderCell}>Practices</Text>
+                  </View>
+                  <View style={styles.tableRow}>
+                    <Text style={styles.tableCell}>
+                      {invoiceData.features.exams.join(", ") || "Not available"}
+                    </Text>
+                    <Text style={styles.tableCell}>
+                      {invoiceData.features.lessons.join(", ") || "Not available"}
+                    </Text>
+                    <Text style={styles.tableCell}>
+                      {invoiceData.features.videos.join(", ") || "Not available"}
+                    </Text>
+                    <Text style={styles.tableCell}>
+                      {invoiceData.features.quizzes.join(", ") || "Not available"}
+                    </Text>
+                    <Text style={styles.tableCell}>
+                      {invoiceData.features.practices.join(", ") || "Not available"}
+                    </Text>
                   </View>
                 </View>
 
