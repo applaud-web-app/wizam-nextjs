@@ -1,92 +1,61 @@
-"use client";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import SectionTitle from "../Common/SectionTitle";
-import Image from "next/image";
-import { FaArrowRight } from "react-icons/fa";
-import Link from "next/link"; // Import Next.js Link component
+import { FaArrowRight, FaBook, FaChalkboardTeacher, FaVideo, FaTasks, FaQuestionCircle } from "react-icons/fa";
+import Link from "next/link";
 import NoData from "../Common/NoData";
 import { useSiteSettings } from "@/context/SiteContext"; // Import the context
 
-// Define the PopularExam type for the API data
-type PopularExam = {
-  img_url: string;
-  title: string;
+// Define the Pricing Plan type for the API data
+type PricingPlan = {
+  id: number;
+  name: string;
+  price_type: string;
+  duration: number;
+  price: string;
+  discount: number;
   description: string;
-  price: string | null;
-  is_free: number;
-  slug: string;
-  schedule_type: string;
-  start_date: string;
-  start_time: string;
-  end_date?: string;
-  end_time?: string;
+  exam_names: string[] | null;
+  lesson_names: string[] | null;
+  practice_names: string[] | null;
+  video_names: string[] | null;
+  quiz_names: string[] | null;
+  popular: boolean;
+  category_name: string;
+  stripe_product_id: string;
+  stripe_price_id: string;
 };
 
-// Define the SectionData type for the section title and button data
 type SectionData = {
   title: string;
   button_text: string;
   button_link: string;
 };
 
-const trimDescription = (description: string, maxLength: number): string => {
-  const plainText = description.replace(/(<([^>]+)>)/gi, "");
-  if (plainText.length > maxLength) {
-    return `${plainText.substring(0, maxLength)}...`;
-  }
-  return plainText;
-};
-
-// Function to calculate the strike price with a 20% increase
-const calculateStrikePrice = (price: number): number => {
-  return price * 1.2; // 20% increase
-};
-
-const PopularExams = () => {
-  const [exams, setExams] = useState<PopularExam[]>([]); // State to store exams
+const PricingPlans = () => {
+  const [pricingPlans, setPricingPlans] = useState<PricingPlan[]>([]); // State to store pricing plans
   const [sectionData, setSectionData] = useState<SectionData | null>(null); // State to store section data
   const [loading, setLoading] = useState<boolean>(true); // Loading state
   const [error, setError] = useState<string | null>(null); // Error state
 
   const { siteSettings } = useSiteSettings(); // Access site settings from SiteContext
 
-  // Fetch the popular exams and section data from the API using Axios
+  // Fetch the pricing plans and section data from the API using Axios
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Fetch server time
-        const timeResponse = await axios.get(`/api/time`);
-        const currentTime = new Date(timeResponse.data.serverTime);
-
-        // Fetch exams and section data concurrently
-        const [examsResponse, sectionResponse] = await Promise.all([
-          axios.get(`${process.env.NEXT_PUBLIC_API_URL}/popular-exams`),
+        // Fetch pricing plans and section data concurrently
+        const [pricingResponse, sectionResponse] = await Promise.all([
+          axios.get(`${process.env.NEXT_PUBLIC_API_URL}/popular-pricing`),
           axios.get(`${process.env.NEXT_PUBLIC_API_URL}/popular-exam-data`),
         ]);
 
         // Check for successful responses
-        if (examsResponse.data.status && examsResponse.data.data) {
-          const allExams = examsResponse.data.data;
-
-          // Filter exams based on their availability
-          // const validExams = allExams.filter((exam: PopularExam) => {
-          //   const startDateTime = new Date(
-          //     `${exam.start_date}T${exam.start_time}`
-          //   );
-          //   const endDateTime = exam.end_date
-          //     ? new Date(`${exam.end_date}T${exam.end_time}`)
-          //     : null;
-
-          //   return (
-          //     startDateTime <= currentTime &&
-          //     (!endDateTime || endDateTime >= currentTime)
-          //   );
-          // });
-
-          setExams(allExams);
+        if (pricingResponse.data.status && pricingResponse.data.data) {
+          const allPricingPlans = pricingResponse.data.data.pricing;
+          setPricingPlans(allPricingPlans);
         } else {
-          setError("Failed to fetch popular exams.");
+          setError("Failed to fetch pricing plans.");
         }
 
         if (sectionResponse.data.status && sectionResponse.data.data) {
@@ -123,74 +92,137 @@ const PopularExams = () => {
         ) : error ? (
           // Display error message
           <p className="text-center w-full text-lg text-red-600">{error}</p>
-        ) : exams.length > 0 ? (
-          // Grid Layout for Cards
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {exams.map((exam, i) => (
-              <Link
-                href={`/exams/${exam.slug}`}
+        ) : pricingPlans.length > 0 ? (
+          // Grid Layout for Pricing Cards
+          <div className="grid grid-cols-1 gap-5">
+            {pricingPlans.map((plan, i) => (
+              <div
                 key={i}
-                passHref
-                className="block bg-white shadow-md rounded-lg overflow-hidden transition hover:shadow-lg"
+                className="relative flex flex-col md:flex-row bg-white shadow-sm hover:shadow-lg transition-shadow duration-300"
               >
-                {/* Image */}
-                <Image
-                  src={exam.img_url}
-                  width={500}
-                  height={500}
-                  alt={`Exam Image for ${exam.title}`}
-                  className="w-full h-[200px] object-cover"
-                />
-                <div className="p-6">
-                  {/* Title */}
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                    {exam.title}
-                  </h3>
-                  {/* Description (trimmed to 100 characters) */}
-                  <p className="text-gray-600 mb-4">
-                    {trimDescription(exam.description, 150)}
-                  </p>
-                  <hr className="h-px my-6 bg-gray-200 border-0 dark:bg-gray-700" />
-                  {/* Price */}
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      {exam.is_free ? (
-                        <span className="text-2xl font-semibold text-gray-900">
-                          Free
-                        </span>
-                      ) : (
-                        <>
-                          {/* Display the original price */}
-                          <span className="text-2xl font-semibold text-gray-900">
-                            {siteSettings?.currency_symbol || "£"}
-                            {Number(exam.price).toFixed(2)}
-                          </span>
+                {plan.popular && (
+                  <div className="absolute -top-3 right-3 bg-yellow-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-md">
+                    Most Popular
+                  </div>
+                )}
 
-                          {/* Display the strike price with 20% increase */}
-                          <span className="text-base text-gray-500 line-through">
-                            {siteSettings?.currency_symbol || "£"}
-                            {calculateStrikePrice(Number(exam.price)).toFixed(2)}
-                          </span>
-                        </>
-                      )}
+                {/* Left Section */}
+                <div className="flex-shrink-0 bg-tertiary text-white p-6 md:p-8 flex flex-col justify-center items-center w-full md:w-1/3">
+                  <h3 className="text-lg md:text-2xl font-bold mb-3">{plan.name}</h3>
+                  <p className="text-3xl md:text-4xl font-extrabold mb-3">
+                    {siteSettings?.currency_symbol || "£"}
+                    {Number(plan.price).toFixed(2)}
+                  </p>
+                  <p className="text-sm md:text-lg">
+                    {plan.price_type === "monthly" ? "Per Month" : "One-Time Payment"}
+                  </p>
+                </div>
+
+                {/* Right Section */}
+                <div className="flex-grow p-4 md:p-6 space-y-4">
+                  {/* Description */}
+                  {plan.description && (
+                    <div className="mb-2 md:mb-4">
+                      <p className="text-xs md:text-sm text-gray-600">{plan.description}</p>
                     </div>
-                    <div className="flex items-center text-defaultcolor font-semibold">
-                      <FaArrowRight size={24} />
-                    </div>
+                  )}
+
+                  {/* Features */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-4">
+                    {Array.isArray(plan.exam_names) && plan.exam_names.length > 0 && (
+                      <div>
+                        <h4 className="flex items-center text-gray-800 font-semibold mb-1 md:mb-2 text-sm md:text-base">
+                          <FaBook className="text-blue-500 mr-2" />
+                          Exams ({plan.exam_names.length})
+                        </h4>
+                        <ul className="text-gray-600 text-xs md:text-sm list-disc list-inside">
+                          {plan.exam_names.map((exam, index) => (
+                            <li key={index}>{exam}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
+                    {Array.isArray(plan.lesson_names) && plan.lesson_names.length > 0 && (
+                      <div>
+                        <h4 className="flex items-center text-gray-800 font-semibold mb-1 md:mb-2 text-sm md:text-base">
+                          <FaChalkboardTeacher className="text-green-500 mr-2" />
+                          Lessons ({plan.lesson_names.length})
+                        </h4>
+                        <ul className="text-gray-600 text-xs md:text-sm list-disc list-inside">
+                          {plan.lesson_names.map((lesson, index) => (
+                            <li key={index}>{lesson}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
+                    {Array.isArray(plan.video_names) && plan.video_names.length > 0 && (
+                      <div>
+                        <h4 className="flex items-center text-gray-800 font-semibold mb-1 md:mb-2 text-sm md:text-base">
+                          <FaVideo className="text-red-500 mr-2" />
+                          Videos ({plan.video_names.length})
+                        </h4>
+                        <ul className="text-gray-600 text-xs md:text-sm list-disc list-inside">
+                          {plan.video_names.map((video, index) => (
+                            <li key={index}>{video}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
+                    {Array.isArray(plan.practice_names) && plan.practice_names.length > 0 && (
+                      <div>
+                        <h4 className="flex items-center text-gray-800 font-semibold mb-1 md:mb-2 text-sm md:text-base">
+                          <FaTasks className="text-purple-500 mr-2" />
+                          Practice Sets ({plan.practice_names.length})
+                        </h4>
+                        <ul className="text-gray-600 text-xs md:text-sm list-disc list-inside">
+                          {plan.practice_names.map((practice, index) => (
+                            <li key={index}>{practice}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
+                    {Array.isArray(plan.quiz_names) && plan.quiz_names.length > 0 && (
+                      <div>
+                        <h4 className="flex items-center text-gray-800 font-semibold mb-1 md:mb-2 text-sm md:text-base">
+                          <FaQuestionCircle className="text-indigo-500 mr-2" />
+                          Quizzes ({plan.quiz_names.length})
+                        </h4>
+                        <ul className="text-gray-600 text-xs md:text-sm list-disc list-inside">
+                          {plan.quiz_names.map((quiz, index) => (
+                            <li key={index}>{quiz}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Button */}
+                  <div>
+                    <Link href={`/pricing`}>
+                      <button
+                        className="mt-4 w-full py-2 md:py-3 text-secondary bg-primary rounded-md text-sm md:text-base font-semibold hover:bg-primary-dark transition-colors"
+                      >
+                        Get Started
+                      </button>
+                    </Link>
                   </div>
                 </div>
-              </Link>
+              </div>
             ))}
           </div>
         ) : (
-          // NoData component centered outside the grid
+          // No pricing plans available
           <div className="flex justify-center items-center py-8">
-            <NoData message="No popular exams available" />
+            <NoData message="No pricing plans available" />
           </div>
         )}
 
-        {/* More Exams Button */}
-        {exams.length > 0 && sectionData && (
+        {/* More Plans Button */}
+        {pricingPlans.length > 0 && sectionData && (
           <div className="text-center mt-8">
             <Link href={sectionData.button_link}>
               <span className="primary-button">{sectionData.button_text}</span>
@@ -202,4 +234,4 @@ const PopularExams = () => {
   );
 };
 
-export default PopularExams;
+export default PricingPlans;

@@ -154,7 +154,7 @@ const Pricing = () => {
             ))}
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-5">
+          {/* <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-5">
             {filteredPlans.map((plan) => (
               <PricingCardNew
                 key={plan.id}
@@ -174,7 +174,7 @@ const Pricing = () => {
                 customerId={customerId}
                 isAuthenticated={isAuthenticated} />
             ))}
-          </div>
+          </div> */}
           </>
         ) : (
           <div className="flex justify-center items-center py-10">
