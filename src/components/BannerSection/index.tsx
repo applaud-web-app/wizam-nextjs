@@ -33,6 +33,7 @@ const BannerSection: FC = () => {
   const [nextEl, setNextEl] = useState<HTMLElement | null>(null);
 
   // Fetch banner data from the API
+  
   useEffect(() => {
     const fetchBannerData = async () => {
       try {
