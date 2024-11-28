@@ -32,7 +32,7 @@ type SectionData = {
   button_link: string;
 };
 
-const PricingPlans = () => {
+const PopularExam = () => {
   const [pricingPlans, setPricingPlans] = useState<PricingPlan[]>([]); // State to store pricing plans
   const [sectionData, setSectionData] = useState<SectionData | null>(null); // State to store section data
   const [loading, setLoading] = useState<boolean>(true); // Loading state
@@ -234,4 +234,4 @@ const PricingPlans = () => {
   );
 };
 
-export default PricingPlans;
+export default PopularExam;
