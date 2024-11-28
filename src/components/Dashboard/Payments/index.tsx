@@ -9,6 +9,7 @@ import InvoiceGenerator from "@/components/Common/InvoiceGenerator";
 import { useSiteSettings } from "@/context/SiteContext"; // Import SiteContext hook
 
 interface PaymentData {
+  id: string;
   payment_id: string;
   amount: string;
   currency: string;
@@ -122,10 +123,10 @@ const Payment: React.FC = () => {
                   </td>
                   <td className="p-4">
                     <button
-                      onClick={() => handleDownloadInvoice(payment.payment_id)}
+                      onClick={() => handleDownloadInvoice(payment.id)}
                       className="bg-defaultcolor text-white px-3 py-1 text-sm rounded-full hover:bg-defaultcolor-dark transition"
                     >
-                      {downloading === payment.payment_id ? "Downloading..." : "Download Invoice"}
+                      {downloading === payment.id ? "Downloading..." : "Download Invoice"}
                     </button>
                   </td>
                 </tr>
