@@ -115,36 +115,39 @@ export default function QuizTypeDetailPage({ params }: { params: { slug: string 
   }, []);
 
   const handlePayment = async (slug: string) => {
-    try {
-      const jwt = Cookies.get("jwt");
-      if (!jwt) {
-        toast.error("User is not authenticated. Please log in.");
-        router.push("/login");
-        return;
-      }
+    // try {
+    //   const jwt = Cookies.get("jwt");
+    //   if (!jwt) {
+    //     toast.error("User is not authenticated. Please log in.");
+    //     router.push("/login");
+    //     return;
+    //   }
 
-      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/user-subscription`, {
-        headers: { Authorization: `Bearer ${jwt}` },
-        params: { type: "quizzes" },
-      });
+    //   const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/user-subscription`, {
+    //     headers: { Authorization: `Bearer ${jwt}` },
+    //     params: { type: "quizzes" },
+    //   });
 
-      if (response.data.status) {
-        router.push(`/dashboard/quiz-detail/${slug}`);
-      } else {
-        toast.error("Please buy a subscription to access this quiz.");
-        router.push("/pricing");
-      }
-    } catch (error: any) {
-      if (error.response?.status === 401) {
-        toast.error("User is not authenticated. Please log in.");
-        router.push("/login");
-      } else if (error.response?.status === 403) {
-        toast.error("Upgrade subscription to access this feature.");
-        router.push("/pricing");
-      } else {
-        toast.error("An error occurred. Please try again.");
-      }
-    }
+    //   if (response.data.status) {
+    //     router.push(`/dashboard/quiz-detail/${slug}`);
+    //   } else {
+    //     toast.error("Please buy a subscription to access this quiz.");
+    //     router.push("/pricing");
+    //   }
+    // } catch (error: any) {
+    //   if (error.response?.status === 401) {
+    //     toast.error("User is not authenticated. Please log in.");
+    //     router.push("/login");
+    //   } else if (error.response?.status === 403) {
+    //     toast.error("Upgrade subscription to access this feature.");
+    //     router.push("/pricing");
+    //   } else {
+    //     toast.error("An error occurred. Please try again.");
+    //   }
+    // }
+
+    toast.error("Please buy a subscription to access this quiz.");
+    router.push("/pricing");
   };
 
   if (loading) {

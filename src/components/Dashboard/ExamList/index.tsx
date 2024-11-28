@@ -144,44 +144,47 @@ export default function ExamList() {
 
   
   const handlePayment = async (slug: string) => {
-    try {
-      const jwt = Cookies.get("jwt");
-      const type = "exams";
-      if (!jwt) {
-        toast.error("User is not authenticated. Please log in.");
-        return;
-      }
-      const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_URL}/user-subscription`,
-        {
-          headers: {
-            Authorization: `Bearer ${jwt}`,
-          },
-          params: { type },
-        }
-      );
-      if (response.data.status === true) {
-        router.push(`/dashboard/exam-detail/${slug}`);
-      } else {
-        toast.error("Please buy a subscription to access this course.");
-        router.push("/pricing");
-      }
-    } catch (error: any) {
-      if (error.response) {
-        const { status, data } = error.response;
-        if (status === 401) {
-          toast.error("User is not authenticated. Please log in.");
-          router.push("/login");
-        } else if (status === 403 || status === 404) {
-          toast.error("Please buy a subscription to access this course.");
-          router.push("/pricing");
-        } else {
-          toast.error(`An error occurred: ${data.error || "Unknown error"}`);
-        }
-      } else {
-        toast.error("An error occurred. Please try again.");
-      }
-    }
+    // try {
+    //   const jwt = Cookies.get("jwt");
+    //   const type = "exams";
+    //   if (!jwt) {
+    //     toast.error("User is not authenticated. Please log in.");
+    //     return;
+    //   }
+    //   const response = await axios.get(
+    //     `${process.env.NEXT_PUBLIC_API_URL}/user-subscription`,
+    //     {
+    //       headers: {
+    //         Authorization: `Bearer ${jwt}`,
+    //       },
+    //       params: { type },
+    //     }
+    //   );
+    //   if (response.data.status === true) {
+    //     router.push(`/dashboard/exam-detail/${slug}`);
+    //   } else {
+    //     toast.error("Please buy a subscription to access this course.");
+    //     router.push("/pricing");
+    //   }
+    // } catch (error: any) {
+    //   if (error.response) {
+    //     const { status, data } = error.response;
+    //     if (status === 401) {
+    //       toast.error("User is not authenticated. Please log in.");
+    //       router.push("/login");
+    //     } else if (status === 403 || status === 404) {
+    //       toast.error("Please buy a subscription to access this course.");
+    //       router.push("/pricing");
+    //     } else {
+    //       toast.error(`An error occurred: ${data.error || "Unknown error"}`);
+    //     }
+    //   } else {
+    //     toast.error("An error occurred. Please try again.");
+    //   }
+    // }
+
+    toast.error("Please buy a subscription to access this exam.");
+    router.push("/pricing");
   };
 
   const formatDateTime = (dateString: string, timeString: string | null) => {

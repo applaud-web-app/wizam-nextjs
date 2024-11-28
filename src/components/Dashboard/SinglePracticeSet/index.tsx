@@ -83,7 +83,8 @@ export default function SinglePracticeSet({ slug }: SinglePracticeSetProps) {
     //     toast.error("An error occurred. Please try again.");
     //   }
     // }
-    router.push("/pricing");
+    toast.error("Please buy a subscription to access this practice set.");
+        router.push("/pricing");
   };
 
   useEffect(() => {

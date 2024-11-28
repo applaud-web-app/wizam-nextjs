@@ -6,7 +6,7 @@ import Loader from '@/components/Common/Loader';
 import NoData from '@/components/Common/NoData';
 import { useRouter } from "next/navigation";
 import { toast } from 'react-toastify';
-import { FaFolder, FaSignal, FaClock, FaBookOpen, FaLock } from "react-icons/fa";
+import { FaFolder, FaSignal, FaClock } from "react-icons/fa";
 
 interface Lesson {
   title: string;
@@ -28,37 +28,14 @@ export default function LessonsPage() {
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
-  const handlePayment = async (slug: string) => {
-    try {
-      const jwt = Cookies.get("jwt");
-      if (!jwt) {
-        toast.error("User is not authenticated. Please log in.");
-        return;
-      }
-
-      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/user-subscription`, {
-        headers: { Authorization: `Bearer ${jwt}` },
-        params: { type: "lessons" },
-      });
-
-      if (response.data.status === true) {
-        router.push(slug);
-      } else {
-        toast.error('Please buy a subscription to access this course.');
-        router.push("/pricing");
-      }
-    } catch (error: any) {
-      if (error.response) {
-        const { status } = error.response;
-        if (status === 401) {
-          toast.error('Please log in.');
-          router.push("/login");
-        } else {
-          toast.error("An error occurred. Please try again.");
-        }
-      } else {
-        toast.error("An error occurred. Please try again.");
-      }
+  const handleLessonClick = (slug: string, isFree: boolean) => {
+    if (isFree) {
+      // If the lesson is free, redirect to the lesson page
+      router.push(`/dashboard/lessons/${slug}`);
+    } else {
+      // If the lesson is paid, redirect to the pricing page and show a message
+      toast.error('Please buy a subscription to access this lesson.');
+      router.push("/pricing");
     }
   };
 
@@ -88,7 +65,7 @@ export default function LessonsPage() {
               category: lesson.lesson_syllabus,
               difficulty: lesson.lesson_level,
               readTime: `${lesson.lesson_read_time} min`,
-              isFree: lesson.isFree, // Capture isFree property
+              isFree: lesson.lesson_free === 1, // Use lesson_free to determine if the lesson is free or paid
             })),
           }));
 
@@ -125,7 +102,7 @@ export default function LessonsPage() {
             {skill.lessons.map((lesson) => (
               <div
                 key={lesson.slug}
-                onClick={() => lesson.isFree ? router.push(`/dashboard/lessons/${lesson.slug}`) : handlePayment(`/dashboard/lessons/${lesson.slug}`)}
+                onClick={() => handleLessonClick(lesson.slug, lesson.isFree)}
                 className="card bg-white rounded-lg p-5 cursor-pointer transition-all border border-gray-200 hover:border-defaultcolor "
               >
                 <h3 className="text-lg font-semibold text-gray-800 mb-2">{lesson.title}</h3>
@@ -144,16 +121,15 @@ export default function LessonsPage() {
 
                 {/* Button */}
                 <button 
-                  className={`w-full py-2 rounded-md font-semibold flex items-center justify-center gap-2 transition ${
+                  className={`w-full py-2 rounded-md font-semibold flex items-center justify-center transition ${
                     lesson.isFree ? "bg-green-500 text-white hover:bg-green-600" : "bg-defaultcolor text-white hover:bg-opacity-90"
                   }`}
                   onClick={(e) => { 
                     e.stopPropagation(); 
-                    lesson.isFree ? router.push(`/dashboard/lessons/${lesson.slug}`) : handlePayment(`/dashboard/lessons/${lesson.slug}`);
+                    handleLessonClick(lesson.slug, lesson.isFree);
                   }}
                 >
-                  {lesson.isFree ? <FaBookOpen /> : <FaLock />}
-                  {lesson.isFree ? "View Lesson" : "Subscribe to Access"}
+                  {lesson.isFree ? "Start Lesson" : "Pay Now"}
                 </button>
               </div>
             ))}

@@ -31,58 +31,15 @@ export default function VideosPage() {
   const [error, setError] = useState<string | null>(null);
   const router = useRouter(); // For redirecting to other pages
 
-   // Function to handle payment logic
-   const handlePayment = async (slug: string) =>  {
-    try {
-      // Get JWT token from cookies
-      const jwt = Cookies.get("jwt");
-      const type = "videos"; // assuming "quizzes" is the type
-
-      if (!jwt) {
-        toast.error("User is not authenticated. Please log in.");
-        return;
-      }
-
-      // Make the API request to check the user's subscription
-      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/user-subscription`, {
-        headers: {
-          Authorization: `Bearer ${jwt}`,
-        },
-        params: {
-          type: type, // Pass the type as a parameter
-        },
-      });
-
-      // Handle the response
-      if (response.data.status === true) {
-        // toast.success(`Subscription is active. Access granted for ${slug}.`);
-        router.push(`${slug}`);
-      } else {
-        toast.error('Please buy a subscription to access this course.');
-        router.push("/pricing");
-      }
-    } catch (error:any) {
-      console.log(error);
-      // Handle errors such as network issues or API errors
-      if (error.response) {
-        // API responded with an error status
-        const { status, data } = error.response;
-        
-        if (status === 401) {
-          toast.error('User is not authenticated. Please log in.');
-          router.push("/login");
-        } else if (status === 404) {
-          toast.error('Please buy a subscription to access this course.');
-          router.push("/pricing");
-        } else if (status === 403) {
-          toast.error('Feature not available in your plan. Please upgrade your subscription.');
-          router.push("/pricing");
-        } else {
-          toast.error(`An error occurred: ${data.error || 'Unknown error'}`);
-        }
-      } else {
-        toast.error("An error occurred. Please try again.");
-      }
+  // Function to handle video access or redirect based on payment condition
+  const handleVideoAccess = (slug: string, isFree: number) => {
+    if (isFree === 1) {
+      // If the video is free, allow the user to watch it
+      router.push(`/dashboard/videos/${slug}`);
+    } else {
+      // If the video is paid, redirect the user to the pricing page
+      toast.error('Please buy a subscription to access this video.');
+      router.push("/pricing");
     }
   };
 
@@ -100,7 +57,6 @@ export default function VideosPage() {
 
       try {
         const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/all-video`, {
-        
           params: {
             category: categoryId, // Pass category_id as a query parameter
           },
@@ -132,6 +88,7 @@ export default function VideosPage() {
       }
       setLoading(false);
     };
+
     fetchVideos();
   }, []);
 
@@ -151,7 +108,7 @@ export default function VideosPage() {
             <h2 className="text-xl font-semibold text-gray-800 mb-4">{skill.name}</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
               {skill.videos.map((video) => (
-                <div key={video.slug} onClick={() => handlePayment(`/dashboard/videos/${video.slug}`)}>
+                <div key={video.slug}>
                   <div className="card bg-white rounded-lg shadow-sm p-4 cursor-pointer transition-shadow border border-white hover:border-defaultcolor">
                     <div className="flex items-center mb-3">
                       <FaPlayCircle className="text-defaultcolor mr-2" /> {/* Video play icon */}
@@ -160,6 +117,23 @@ export default function VideosPage() {
                     <p className="text-gray-600">Syllabus: {video.syllabus}</p>
                     <p className="text-gray-600">Difficulty: {video.difficulty.replace(/_/g, ' ').replace(/\b\w/g, char => char.toUpperCase())}</p>
                     <p className="text-gray-600">Watch Time: {video.watchTime}</p>
+
+                    {/* Conditional rendering based on whether the video is free or paid */}
+                    {video.is_free === 1 ? (
+                      <button
+                        onClick={() => handleVideoAccess(video.slug, video.is_free)}
+                        className="bg-green-500 hover:bg-green-700 text-white px-4 py-2 rounded transition duration-200 mt-4 w-full"
+                      >
+                        Watch Now
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => handleVideoAccess(video.slug, video.is_free)}
+                        className="bg-defaultcolor hover:bg-defaultcolor-dark text-white px-4 py-2 rounded transition duration-200 mt-4 w-full"
+                      >
+                        Pay Now
+                      </button>
+                    )}
                   </div>
                 </div>
               ))}
