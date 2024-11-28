@@ -1006,11 +1006,12 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
       visitedQuestionIndices: Array.from(visitedQuestionIndices),
       currentQuestionIndex,
       currentSubIndex,
-      timeLeft,
+      // timeLeft,
       initialShuffledOptions, // **Include initialShuffledOptions in local storage**
     };
     localStorage.setItem(localStorageKey, JSON.stringify(dataToSave));
-  }, [uuid, answers, notReviewedQuestions, visitedQuestionIndices, currentQuestionIndex, currentSubIndex, timeLeft, initialShuffledOptions]);
+  // }, [uuid, answers, notReviewedQuestions, visitedQuestionIndices, currentQuestionIndex, currentSubIndex, timeLeft, initialShuffledOptions]);
+  }, [uuid, answers, notReviewedQuestions, visitedQuestionIndices, currentQuestionIndex, currentSubIndex,  initialShuffledOptions]);
 
   const renderQuestion = (question: Question) => {
     const baseQuestionNumber = getAdjustedQuestionIndex();

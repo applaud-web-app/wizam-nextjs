@@ -176,7 +176,7 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
               setVisitedQuestionIndices(new Set(parsedData.visitedQuestionIndices || []));
               setCurrentQuestionIndex(parsedData.currentQuestionIndex || 0);
               setCurrentSubIndex(parsedData.currentSubIndex || null);
-              setTimeLeft(parsedData.timeLeft || Math.round(parseFloat(fetchExamData.duration) * 60));
+              // setTimeLeft(parsedData.timeLeft || Math.round(parseFloat(fetchExamData.duration) * 60));
               setInitialShuffledOptions(parsedData.initialShuffledOptions || {}); // **Load initialShuffledOptions from local storage**
             } catch (error) {
               console.error('Error parsing local storage data:', error);
@@ -1006,11 +1006,12 @@ export default function PlayExamPage({ params }: { params: { slug: string } }) {
       visitedQuestionIndices: Array.from(visitedQuestionIndices),
       currentQuestionIndex,
       currentSubIndex,
-      timeLeft,
+      // timeLeft,
       initialShuffledOptions, // **Include initialShuffledOptions in local storage**
     };
     localStorage.setItem(localStorageKey, JSON.stringify(dataToSave));
-  }, [uuid, answers, notReviewedQuestions, visitedQuestionIndices, currentQuestionIndex, currentSubIndex, timeLeft, initialShuffledOptions]);
+  // }, [uuid, answers, notReviewedQuestions, visitedQuestionIndices, currentQuestionIndex, currentSubIndex, timeLeft, initialShuffledOptions]);
+  }, [uuid, answers, notReviewedQuestions, visitedQuestionIndices, currentQuestionIndex, currentSubIndex,  initialShuffledOptions]);
 
   const renderQuestion = (question: Question) => {
     const baseQuestionNumber = getAdjustedQuestionIndex();
