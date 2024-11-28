@@ -50,7 +50,7 @@ const PopularExam = () => {
           axios.get(`${process.env.NEXT_PUBLIC_API_URL}/popular-exam-data`),
         ]);
 
-        // Check for successful responses
+       
         if (pricingResponse.data.status && pricingResponse.data.data) {
           const allPricingPlans = pricingResponse.data.data.pricing;
           setPricingPlans(allPricingPlans);
