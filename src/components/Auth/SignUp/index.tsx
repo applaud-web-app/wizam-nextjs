@@ -1,6 +1,7 @@
 "use client";
 
-import { useState,useEffect } from "react";
+import { loadStripe } from "@stripe/stripe-js";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { FaHome } from "react-icons/fa";
@@ -17,14 +18,17 @@ import Cookies from "js-cookie";
 import { useSiteSettings } from "@/context/SiteContext"; // Import the hook to use site settings
 
 
+const stripePromise = loadStripe(
+  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!
+);
+
 const SignUp = () => {
   const { siteSettings, error } = useSiteSettings();
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [selectedCountry, setSelectedCountry] = useState("GB");
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false); // Add loading state
-
- 
+  const [emailError, setEmailError] = useState<string | null>(null); // To track email verification errors
 
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
@@ -78,12 +82,62 @@ const SignUp = () => {
   
         resetForm(); // Reset the form after success
   
-        const redirectUrl = Cookies.get("redirect_url");
-        const destination = redirectUrl ? redirectUrl : "/";
-  
-        setTimeout(() => {
-          router.push(destination);
-        }, 1000);
+        const destination = "/dashboard";
+        const priceId = Cookies.get("plan_id"); // Get the redirect URL from cookies
+        const priceType = Cookies.get("priceType");
+
+        if(priceId && priceType && priceId.trim() !== "" && priceType.trim() !== ""){
+          try {
+            const stripe = await stripePromise;
+            if (!stripe) {
+              console.warn("Stripe.js has not loaded yet.");
+              router.push(destination);
+              return;
+            }
+            const successUrl = "/dashboard";
+            const response = await axios.post(
+              `${process.env.NEXT_PUBLIC_API_URL}/create-checkout-session`,
+              {
+                priceId,
+                priceType,
+                successUrl,
+              },
+              {
+                headers: {
+                  Authorization: `Bearer ${Cookies.get("jwt")}` || "",
+                },
+              }
+            );
+      
+            if (response.status !== 200) {
+              console.error("Error during checkout:", response.data);
+              router.push(destination);
+              return;
+            }
+      
+            const { sessionId } = response.data;
+      
+            if (!sessionId) {
+              throw new Error("Failed to create session ID.");
+            }
+      
+            const { error } = await stripe.redirectToCheckout({ sessionId });
+      
+            if (error) {
+              console.warn("Stripe redirect error:", error);
+              router.push(destination);
+            }
+          } catch (error) {
+            console.error("Checkout process failed:", error);
+            // Catch any other unexpected errors and just redirect to dashboard
+            router.push(destination);
+          }
+        }else{
+          // Redirect to the destination
+          setTimeout(() => {
+            router.push(destination);
+          }, 1000);
+        }
       } else {
         toast.error(response.data.message || "An error occurred. Please try again.", {
           position: "top-right",
@@ -96,43 +150,45 @@ const SignUp = () => {
         router.push("/register");
       }
     } catch (error: any) {
-      if (error.response && error.response.data && error.response.data.errors) {
-        const errors = error.response.data.errors;
-        if (errors.email) {
-          setFieldError("email", "Email is already taken");
-        }
-        errors.forEach((errorMessage: string) => {
-          toast.error(errorMessage, {
-            position: "top-right",
-            autoClose: 5000,
-            hideProgressBar: false,
-            closeOnClick: true,
-            pauseOnHover: true,
-            draggable: true,
-          });
-          router.push("/register");
-        });
-      } else {
-        toast.error("An error occurred. Please try again later.", {
-          position: "top-right",
-          autoClose: 5000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-        });
-        router.push("/register");
-      }
+      toast.error("An error occurred. Please try again later.", {
+        position: "top-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
     } finally {
       setIsSubmitting(false);
       setSubmitting(false);
     }
   };
-  
-  
+
+  const checkEmailAvailability = async (email: string) => {
+    try {
+      const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/verify-email`, { email });
+      if (response.data.success) {
+        setEmailError(null); // Reset email error if the email is valid
+      }
+    } catch (error:any) {
+      if (error.response && error.response.data.message === "Email already Exist") {
+        setEmailError("Email already exists.");
+      }
+    }
+  };
+
+  const handleEmailChange = async (e: React.ChangeEvent<HTMLInputElement>, setFieldValue: any) => {
+    setFieldValue(e.target.name, e.target.value);
+    setEmailError(null); // Reset the email error before verifying
+    if (e.target.value) {
+      await checkEmailAvailability(e.target.value);
+    }
+  };
+
   if (error || !siteSettings) {
     return <p>Error loading site settings...</p>; // Handle the case where settings couldn't be fetched
   }
+
   return (
     <section className="relative min-h-screen flex flex-col items-center">
       {/* Header */}
@@ -235,7 +291,7 @@ const SignUp = () => {
               validationSchema={validationSchema}
               onSubmit={handleSignup}
             >
-              {({ isSubmitting }) => (
+              {({ isSubmitting, setFieldValue }) => (
                 <Form className="grid grid-cols-1 gap-8 md:grid-cols-2">
                   {/* First Name */}
                   <div className="col-span-2 md:col-span-2 lg:col-span-1">
@@ -317,7 +373,9 @@ const SignUp = () => {
                        autoComplete="off"
                       className="w-full bg-white border border-gray-300 rounded-md py-2 px-4 text-gray-700 focus:outline-none focus:ring-1 focus:ring-defaultcolor focus:border-defaultcolor transition"
                       placeholder="Enter your email address"
+                      onChange={(e:any) => handleEmailChange(e, setFieldValue)}
                     />
+                    {emailError && <div className="text-red-500 text-sm">{emailError}</div>}
                     <ErrorMessage name="email" component="div" className="text-red-500 text-sm" />
                   </div>
 
@@ -382,12 +440,12 @@ const SignUp = () => {
 
                   {/* Submit Button */}
                   <div className="col-span-2">
-                    <button
+                  <button
                       type="submit"
-                      disabled={isSubmitting}
+                      disabled={isSubmitting || !!emailError} // Disable submit if there's an email error
                       className="w-full bg-defaultcolor text-white py-2 px-4 rounded-md hover:bg-defaultcolor-dark transition"
                     >
-                      {isSubmitting ? "Submitting..." : "Register"}
+                      {isSubmitting ? "Submitting..." : "Submit"}
                     </button>
                   </div>
                 </Form>

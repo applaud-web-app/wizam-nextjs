@@ -116,6 +116,19 @@ export default function DashboardPage() {
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
+  useEffect(() => {
+    const priceId: string | undefined = Cookies.get("plan_id");
+    const priceType: string | undefined = Cookies.get("priceType");
+
+    // Check if cookies exist and remove them
+    if (priceId) {
+      Cookies.remove("plan_id");
+    }
+    if (priceType) {
+      Cookies.remove("priceType");
+    }
+  }, []); // Empty dependency array to run once on mount
+
   const getCachedServerTime = (): Date | null => {
     const cachedData = sessionStorage.getItem(CACHE_KEY);
     if (cachedData) {

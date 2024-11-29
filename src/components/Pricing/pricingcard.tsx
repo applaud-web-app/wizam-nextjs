@@ -66,7 +66,7 @@ const PricingCardNew: React.FC<PricingCardProps> = ({
       return;
     }
 
-    const successUrl = Cookies.get("redirect_url") || "/dashboard";
+    const successUrl = "/dashboard";
 
     try {
       const response = await axios.post(
@@ -115,6 +115,8 @@ const PricingCardNew: React.FC<PricingCardProps> = ({
     if (isAuthenticated) {
       handleCheckout();
     } else {
+      Cookies.set("plan_id", priceId);
+      Cookies.set("priceType", priceType);
       router.push(buttonLink);
     }
   };

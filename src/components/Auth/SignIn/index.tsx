@@ -1,5 +1,6 @@
 "use client";
 
+import { loadStripe } from "@stripe/stripe-js";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
@@ -12,6 +13,11 @@ import { toast } from "react-toastify"; // Import toast from react-toastify
 import "react-toastify/dist/ReactToastify.css"; // Import toastify styles
 import Cookies from "js-cookie";
 import { useSiteSettings } from "@/context/SiteContext"; // Import the hook to use site settings
+
+
+const stripePromise = loadStripe(
+  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!
+);
 
 const SignIn = () => {
   const { siteSettings, error } = useSiteSettings(); // Access site settings from the context
@@ -57,18 +63,64 @@ const SignIn = () => {
           draggable: true,
         });
 
-        // Check if the redirect_url cookie exists
-        const redirectUrl = Cookies.get("redirect_url"); // Get the redirect URL from cookies
-        // If redirect URL exists, redirect to that URL, otherwise go to the homepage
-        const destination = redirectUrl ? redirectUrl : "/dashboard";
 
-        // Clear the redirect_url cookie after redirection
-        // Cookies.remove('redirect_url');
+        const destination = "/dashboard";
+        const priceId = Cookies.get("plan_id"); // Get the redirect URL from cookies
+        const priceType = Cookies.get("priceType");
 
-        // Redirect to the destination
-        setTimeout(() => {
-          router.push(destination);
-        }, 1000);
+        if(priceId && priceType && priceId.trim() !== "" && priceType.trim() !== ""){
+          try {
+            const stripe = await stripePromise;
+            if (!stripe) {
+              console.warn("Stripe.js has not loaded yet.");
+              router.push(destination);
+              return;
+            }
+            const successUrl = "/dashboard";
+            const response = await axios.post(
+              `${process.env.NEXT_PUBLIC_API_URL}/create-checkout-session`,
+              {
+                priceId,
+                priceType,
+                successUrl,
+              },
+              {
+                headers: {
+                  Authorization: `Bearer ${Cookies.get("jwt")}` || "",
+                },
+              }
+            );
+      
+            if (response.status !== 200) {
+              console.error("Error during checkout:", response.data);
+              router.push(destination);
+              return;
+            }
+      
+            const { sessionId } = response.data;
+      
+            if (!sessionId) {
+              throw new Error("Failed to create session ID.");
+            }
+      
+            const { error } = await stripe.redirectToCheckout({ sessionId });
+      
+            if (error) {
+              console.warn("Stripe redirect error:", error);
+              router.push(destination);
+            }
+          } catch (error) {
+            console.error("Checkout process failed:", error);
+            // Catch any other unexpected errors and just redirect to dashboard
+            router.push(destination);
+          }
+        }else{
+          // Redirect to the destination
+          setTimeout(() => {
+            router.push(destination);
+          }, 1000);
+        }
+
       } else {
         // Display an error toast when status is false
         const errorMessage =
