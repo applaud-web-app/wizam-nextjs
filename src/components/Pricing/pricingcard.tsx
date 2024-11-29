@@ -66,9 +66,10 @@ const PricingCardNew: React.FC<PricingCardProps> = ({
       return;
     }
 
-    
-    const successUrl = "/dashboard";
 
+    const successUrl = "/dashboard";
+ 
+    
     try {
       const response = await axios.post(
         `${process.env.NEXT_PUBLIC_API_URL}/create-checkout-session`,
