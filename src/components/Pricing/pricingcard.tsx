@@ -66,6 +66,7 @@ const PricingCardNew: React.FC<PricingCardProps> = ({
       return;
     }
 
+    
     const successUrl = "/dashboard";
 
     try {
