@@ -5,6 +5,9 @@ import { FaArrowRight, FaBook, FaChalkboardTeacher, FaVideo, FaTasks, FaQuestion
 import Link from "next/link";
 import NoData from "../Common/NoData";
 import { useSiteSettings } from "@/context/SiteContext"; // Import the context
+import { useRouter } from "next/navigation";
+import Cookies from "js-cookie";
+import { loadStripe } from "@stripe/stripe-js";
 
 // Define the Pricing Plan type for the API data
 type PricingPlan = {
@@ -32,12 +35,16 @@ type SectionData = {
   button_link: string;
 };
 
+
+// Load Stripe instance
+const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
+
 const PopularExam = () => {
   const [pricingPlans, setPricingPlans] = useState<PricingPlan[]>([]); // State to store pricing plans
   const [sectionData, setSectionData] = useState<SectionData | null>(null); // State to store section data
   const [loading, setLoading] = useState<boolean>(true); // Loading state
   const [error, setError] = useState<string | null>(null); // Error state
-
+  const router = useRouter();
   const { siteSettings } = useSiteSettings(); // Access site settings from SiteContext
 
   // Fetch the pricing plans and section data from the API using Axios
@@ -72,6 +79,70 @@ const PopularExam = () => {
 
     fetchData();
   }, []);
+
+  const handleCheckout = async (priceId:any,priceType:any) => {
+    const stripe = await stripePromise;
+
+    if (!stripe) {
+      console.error("Stripe.js has not loaded yet.");
+      alert("Failed to load Stripe. Please try again later.");
+      return;
+    }
+
+    const successUrl = '/dashboard';
+
+    try {
+      // Send the POST request to create a checkout session
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_API_URL}/create-checkout-session`,
+        {
+          priceId,
+          priceType,
+          successUrl,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${Cookies.get("jwt")}`,
+          },
+        }
+      );
+
+      // Check if the response indicates success
+      if (response.status !== 200) {
+        console.error("Error during checkout:", response.data);
+        alert(`Failed to initiate checkout: ${response.data.error}`);
+        return;
+      }
+
+      const { sessionId } = response.data;
+
+      if (!sessionId) {
+        throw new Error("Failed to create session ID.");
+      }
+
+      // Redirect to Stripe Checkout
+      const { error } = await stripe.redirectToCheckout({ sessionId });
+
+      if (error) {
+        console.error("Stripe redirect error:", error);
+        alert("Failed to redirect to checkout. Please try again.");
+      }
+    } catch (error: any) {
+      console.error("Error during checkout:", error);
+      alert(error?.response?.data?.error || "Failed to initiate checkout. Please try again.");
+    }
+  };
+
+  const handleClick = (priceId:any,planType:any) => {
+    const isAuthenticated = Cookies.get("jwt");
+    if (isAuthenticated) {
+      handleCheckout(priceId,planType);
+    } else {
+      Cookies.set("plan_id", priceId);
+      Cookies.set("priceType", planType);
+      router.push("/register");
+    }
+  };
 
   return (
     <section className="pb-12 pt-20 lg:pb-[70px] lg:pt-[120px]">
@@ -202,13 +273,11 @@ const PopularExam = () => {
 
                   {/* Button */}
                   <div>
-                    <Link href={`/pricing`}>
-                      <button
+                      <button onClick={()=>{handleClick(plan.stripe_price_id,plan.price_type)}}
                         className="mt-4 w-full py-2 md:py-3 text-secondary bg-primary rounded-md text-sm md:text-base font-semibold hover:bg-primary-dark transition-colors"
                       >
                         Get Started
                       </button>
-                    </Link>
                   </div>
                 </div>
               </div>
